@@ -2,10 +2,12 @@ package id.co.ppu.collectionfast2;
 
 import android.content.DialogInterface;
 import android.content.Intent;
+import android.graphics.drawable.Drawable;
 import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
 import android.support.design.widget.FloatingActionButton;
+import android.support.design.widget.NavigationView;
 import android.support.design.widget.Snackbar;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentTransaction;
@@ -14,11 +16,12 @@ import android.support.v4.widget.DrawerLayout;
 import android.support.v7.app.ActionBarDrawerToggle;
 import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
+import android.support.v7.widget.AppCompatDrawableManager;
 import android.support.v7.widget.Toolbar;
-import android.view.View;
-import android.support.design.widget.NavigationView;
 import android.view.Menu;
 import android.view.MenuItem;
+import android.view.View;
+import android.widget.ImageView;
 import android.widget.TextView;
 
 import butterknife.BindView;
@@ -26,6 +29,7 @@ import butterknife.ButterKnife;
 import butterknife.OnClick;
 import id.co.ppu.collectionfast2.fragments.HomeFragment;
 import id.co.ppu.collectionfast2.login.LoginActivity;
+import id.co.ppu.collectionfast2.pojo.User;
 import id.co.ppu.collectionfast2.settings.SettingsActivity;
 import id.co.ppu.collectionfast2.util.Storage;
 
@@ -62,11 +66,23 @@ public class MainActivity extends AppCompatActivity
 
         View v = navigationView.getHeaderView(0);
 
+        User usr = (User) Storage.getObjPreference(getApplicationContext(), "user", User.class);
+
         TextView tvProfileName = (TextView) v.findViewById(R.id.tvProfileName);
-        tvProfileName.setText(Storage.getPrefAsString(getApplicationContext(), "username"));
+        tvProfileName.setText(usr.getFullName());
 
         TextView tvProfileEmail = (TextView) v.findViewById(R.id.tvProfileEmail);
-        tvProfileEmail.setText(Storage.getPrefAsString(getApplicationContext(), "email"));
+        tvProfileEmail.setText(usr.getEmailAddr());
+
+        // is collector photo available ?
+        boolean photoNotAvail = true;
+        if (photoNotAvail) {
+            ImageView iv = (ImageView) v.findViewById(R.id.imageView);
+            Drawable drawable = AppCompatDrawableManager.get().getDrawable(this, R.drawable.ic_account_circle_black_24dp);
+
+            iv.setImageDrawable(drawable);
+//            iv.setImageDrawable(ResourcesCompat.getDrawable(getResources(), R.drawable.ic_account_circle_black_24dp, null));
+        }
 
         if (savedInstanceState == null){
             displayView(R.id.nav_home);
@@ -76,6 +92,7 @@ public class MainActivity extends AppCompatActivity
             mSelectedNavMenuIndex = savedInstanceState.getInt(SELECTED_NAV_MENU_KEY);
             displayView(mSelectedNavMenuIndex);
         }
+
     }
 
     @Override
@@ -152,6 +169,7 @@ public class MainActivity extends AppCompatActivity
 
         if (viewId == R.id.nav_home) {
             fragment = new HomeFragment();
+
             title = getString(R.string.app_name);
 
             viewIsAtHome = true;

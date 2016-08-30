@@ -1,24 +1,17 @@
 package id.co.ppu.collectionfast2.login;
 
-import android.annotation.TargetApi;
 import android.app.ProgressDialog;
 import android.content.Intent;
 import android.content.SharedPreferences;
-import android.content.pm.PackageManager;
-import android.preference.PreferenceManager;
-import android.support.design.widget.Snackbar;
-import android.support.v7.app.AppCompatActivity;
-
-import android.os.Build;
 import android.os.Bundle;
+import android.preference.PreferenceManager;
+import android.support.v7.app.AppCompatActivity;
 import android.text.TextUtils;
 import android.util.Log;
 import android.view.KeyEvent;
 import android.view.View;
-import android.view.View.OnClickListener;
 import android.view.inputmethod.EditorInfo;
 import android.widget.AutoCompleteTextView;
-import android.widget.Button;
 import android.widget.EditText;
 import android.widget.TextView;
 
@@ -42,8 +35,6 @@ import okhttp3.ResponseBody;
 import retrofit2.Call;
 import retrofit2.Callback;
 import retrofit2.Response;
-
-import static android.Manifest.permission.READ_CONTACTS;
 
 /**
  * A login screen that offers login via email/password.
@@ -221,17 +212,32 @@ public class LoginActivity extends AppCompatActivity {
 
                 if (response.isSuccessful()) {
 
-                    ResponseLogin respLogin = response.body();
+                    final ResponseLogin respLogin = response.body();
                     Log.e("eric.onResponse", respLogin.toString());
 
                     if (respLogin.getError() != null) {
                         Utility.showDialog(LoginActivity.this, "Error (" + respLogin.getError().getErrorCode() + ")", respLogin.getError().getErrorDesc());
 
                     } else {
-                        Utility.saveObjPreference(getApplicationContext(), "user", respLogin.getData());
+                        // dump
+                        LoginActivity.this.realm.executeTransactionAsync(new Realm.Transaction() {
+                            @Override
+                            public void execute(Realm realm) {
+                                realm.copyToRealmOrUpdate(respLogin.getData());
+                            }
+                        }, new Realm.Transaction.OnSuccess() {
+                            @Override
+                            public void onSuccess() {
+                                Storage.saveObjPreference(getApplicationContext(), "user", respLogin.getData());
 
-//                            tvGetLogin.setText(Utility.getObjPreference(getApplicationContext(), "user", User.class).toString() + "\n\n" + sw.stopAndGetAsString());
-                        startActivity(new Intent(getApplicationContext(), MainActivity.class));
+                                startActivity(new Intent(getApplicationContext(), MainActivity.class));
+                            }
+                        }, new Realm.Transaction.OnError() {
+                            @Override
+                            public void onError(Throwable error) {
+                                Utility.showDialog(LoginActivity.this, "Database Problem", getString(R.string.error_contact_admin));
+                            }
+                        });
                     }
                 } else {
                     int statusCode = response.code();
@@ -266,6 +272,14 @@ public class LoginActivity extends AppCompatActivity {
     }
 
     private void loginOffline(String username, String password) {
+
+        final User usr = this.realm.where(User.class).contains("userName", username).findFirst();
+
+        if (usr == null) {
+            Utility.showDialog(this, "Invalid Login", getString(R.string.error_invalid_login));
+        } else {
+            startActivity(new Intent(getApplicationContext(), MainActivity.class));
+        }
 
     }
 }

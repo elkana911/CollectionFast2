@@ -6,7 +6,6 @@ import android.app.AlertDialog;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
-import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
 import android.provider.Settings;
 import android.provider.Settings.Secure;
@@ -16,8 +15,6 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.view.WindowManager;
 
-import com.google.gson.Gson;
-
 import id.co.ppu.collectionfast2.R;
 import okhttp3.HttpUrl;
 
@@ -26,8 +23,6 @@ public class Utility {
     public final static String[][] servers = {{"local", "192.168.0.24", "8090"}
                                             ,{"fast-mobile", "203.128.92.77", "8080"}
     };
-
-    public static final String PREF_APP = "RealmPref";
 
     public final static String INFO = "Info";
     public final static String WARNING = "Warning";
@@ -112,63 +107,6 @@ public class Utility {
                 .show();
     }
 
-    public static void savePreference(Context ctx, String key, String value){
-        SharedPreferences objPrefs = ctx.getSharedPreferences(PREF_APP, 0); // 0 - for private mode
-        SharedPreferences.Editor prefsEditor = objPrefs.edit();
-        prefsEditor.putString(key, value);
-        prefsEditor.apply(); //asynkron
-    }
-
-    public static void saveObjPreference(Context ctx, String key, Object value){
-
-        if (value == null) return;
-
-        SharedPreferences objPrefs = ctx.getSharedPreferences(PREF_APP, 0); // 0 - for private mode
-        SharedPreferences.Editor prefsEditor = objPrefs.edit();
-
-        String json = new Gson().toJson(value);
-        prefsEditor.putString(key, json);
-        prefsEditor.commit();   //synkron
-    }
-
-    public static Object getObjPreference(Context ctx, String key, Class cls){
-        String val = null;
-
-        try{
-            //Get Reg Token on shared pref
-            SharedPreferences userPrefs = ctx.getSharedPreferences(PREF_APP, 0); // 0 - for private mode
-
-            Gson gson = new Gson();
-            String json = userPrefs.getString(key, "");
-
-            return new Gson().fromJson(json, cls);
-
-        }
-        catch (Exception e){
-            return null;
-        }
-    }
-
-    public static String getPreference(Context ctx, String key){
-        String val = null;
-
-        try{
-            //Get Reg Token on shared pref
-            SharedPreferences userPrefs = ctx.getSharedPreferences(PREF_APP, 0); // 0 - for private mode
-            val = userPrefs.getString(key, "");
-        }
-        catch (Exception e){
-            return null;
-        }
-        return val;
-    }
-
-    public static void clearObjOnSharedPref(Context ctx, String ObjPref){
-        SharedPreferences objPrefs = ctx.getSharedPreferences(ObjPref, 0); // 0 - for private mode
-        SharedPreferences.Editor prefsEditor = objPrefs.edit();
-        prefsEditor.clear();
-        prefsEditor.apply();
-    }
 /*
     public static ArrayList<Order> getOrder(Context ctx){
         ArrayList<Order> orderData = null;

@@ -7,8 +7,14 @@ import android.support.v4.app.Fragment;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.EditText;
 
+import butterknife.BindView;
+import butterknife.ButterKnife;
 import id.co.ppu.collectionfast2.R;
+import id.co.ppu.collectionfast2.pojo.User;
+import id.co.ppu.collectionfast2.util.Storage;
+import id.co.ppu.collectionfast2.util.Utility;
 
 
 /**
@@ -30,6 +36,19 @@ public class HomeFragment extends Fragment {
     private String mParam2;
 
     private OnFragmentInteractionListener mListener;
+
+    @BindView(R.id.etCollectorName)
+    EditText etCollectorName;
+    @BindView(R.id.etJabatan)
+    EditText etJabatan;
+    @BindView(R.id.etNIKNo)
+    EditText etNIKNo;
+    @BindView(R.id.etAddress)
+    EditText etAddress;
+    @BindView(R.id.etEmail)
+    EditText etEmail;
+    @BindView(R.id.etPhone)
+    EditText etPhone;
 
     public HomeFragment() {
         // Required empty public constructor
@@ -66,7 +85,24 @@ public class HomeFragment extends Fragment {
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
         // Inflate the layout for this fragment
-        return inflater.inflate(R.layout.fragment_home, container, false);
+        View inflate = inflater.inflate(R.layout.fragment_home, container, false);
+
+        ButterKnife.bind(this, inflate);
+
+        Utility.setViewGroupFocusable((ViewGroup)inflate.findViewById(R.id.llFormCollector), false);
+
+        User usr = (User) Storage.getObjPreference(getContext(), "user", User.class);
+
+        if (usr != null) {
+            etCollectorName.setText(usr.getFullName());
+            etJabatan.setText(null);
+            etNIKNo.setText(usr.getUserName());
+            etAddress.setText(null);
+            etEmail.setText(usr.getEmailAddr());
+            etPhone.setText(usr.getMobilePhone());
+        }
+
+        return inflate;
     }
 
     // TODO: Rename method, update argument and hook method into UI event
