@@ -1,0 +1,65 @@
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    tools:context="id.co.ppu.collectionfast2.fragments.LKPListFragment">
+
+    <!-- TODO: Update blank fragment layout -->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical">
+        <android.support.design.widget.TextInputLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content">
+
+            <EditText
+                android:id="@+id/tvNoLKP"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:hint="No LKP"
+                android:maxLines="1"
+                android:singleLine="true"
+                android:inputType="none"
+                android:focusable="false"
+                android:focusableInTouchMode="false"
+                android:clickable="false"
+                android:text="21110827" />
+
+        </android.support.design.widget.TextInputLayout>
+
+        <android.support.design.widget.TextInputLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            app:passwordToggleEnabled="true">
+
+            <EditText
+                android:id="@+id/tvTglLKP"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:hint="Tgl LKP"
+                android:maxLines="1"
+                android:singleLine="true"
+                android:inputType="none"
+                android:focusable="false"
+                android:focusableInTouchMode="false"
+                android:clickable="false"
+                android:text="01121980" />
+
+        </android.support.design.widget.TextInputLayout>
+
+    </LinearLayout>
+
+    <co.moonmonkeylabs.realmrecyclerview.RealmRecyclerView
+        android:id="@+id/realm_recycler_view"
+        android:layout_marginTop="16dp"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        app:rrvIsRefreshable="false"
+        app:rrvSwipeToDelete="true"
+        app:rrvEmptyLayoutId="@layout/empty_view"
+        app:rrvLayoutType="LinearLayout"
+        />
+</LinearLayout>

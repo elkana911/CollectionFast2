@@ -44,7 +44,7 @@
                     android:hint="@string/prompt_username"
                     android:maxLines="1"
                     android:singleLine="true"
-                    android:text="21110827" />
+                    android:text="21150131" />
 
             </android.support.design.widget.TextInputLayout>
 
@@ -64,7 +64,7 @@
                     android:inputType="textPassword"
                     android:maxLines="1"
                     android:singleLine="true"
-                    android:text="01121980" />
+                    android:text="28121982" />
 
             </android.support.design.widget.TextInputLayout>
             <CheckBox

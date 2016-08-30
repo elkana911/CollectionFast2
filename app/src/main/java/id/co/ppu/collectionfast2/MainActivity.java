@@ -1,9 +1,9 @@
 package id.co.ppu.collectionfast2;
 
+import android.app.ProgressDialog;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.graphics.drawable.Drawable;
-import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
 import android.support.design.widget.FloatingActionButton;
@@ -18,23 +18,40 @@ import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.AppCompatDrawableManager;
 import android.support.v7.widget.Toolbar;
+import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 import android.widget.ImageView;
 import android.widget.TextView;
+import android.widget.Toast;
+
+import java.io.IOException;
 
 import butterknife.BindView;
 import butterknife.ButterKnife;
 import butterknife.OnClick;
 import id.co.ppu.collectionfast2.fragments.HomeFragment;
+import id.co.ppu.collectionfast2.fragments.LKPListFragment;
 import id.co.ppu.collectionfast2.login.LoginActivity;
+import id.co.ppu.collectionfast2.pojo.TrxLDVDetails;
+import id.co.ppu.collectionfast2.pojo.TrxLDVHeader;
 import id.co.ppu.collectionfast2.pojo.User;
+import id.co.ppu.collectionfast2.rest.ApiInterface;
+import id.co.ppu.collectionfast2.rest.ServiceGenerator;
+import id.co.ppu.collectionfast2.rest.request.RequestLKP;
+import id.co.ppu.collectionfast2.rest.response.ResponseGetLKP;
 import id.co.ppu.collectionfast2.settings.SettingsActivity;
 import id.co.ppu.collectionfast2.util.Storage;
+import id.co.ppu.collectionfast2.util.Utility;
+import io.realm.Realm;
+import okhttp3.ResponseBody;
+import retrofit2.Call;
+import retrofit2.Callback;
+import retrofit2.Response;
 
 public class MainActivity extends AppCompatActivity
-        implements NavigationView.OnNavigationItemSelectedListener, HomeFragment.OnFragmentInteractionListener {
+        implements NavigationView.OnNavigationItemSelectedListener, LKPListFragment.OnLKPSelectedListener {
 
     public static final String SELECTED_NAV_MENU_KEY = "selected_nav_menu_key";
 
@@ -42,10 +59,16 @@ public class MainActivity extends AppCompatActivity
 
     private int mSelectedNavMenuIndex = 0;
 
-    @BindView(R.id.fab) FloatingActionButton fab;
+    @BindView(R.id.fab)
+    FloatingActionButton fab;
+    @BindView(R.id.nav_view)
+    NavigationView navigationView;
+    @BindView(R.id.drawer_layout)
+    DrawerLayout drawer;
 
-    @BindView(R.id.nav_view) NavigationView navigationView;
-    @BindView(R.id.drawer_layout) DrawerLayout drawer;
+    private User currentUsr;
+
+    private Realm realm;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -53,6 +76,8 @@ public class MainActivity extends AppCompatActivity
         setContentView(R.layout.activity_main);
 
         ButterKnife.bind(this);
+
+        this.realm = Realm.getDefaultInstance();
 
         Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
@@ -66,33 +91,39 @@ public class MainActivity extends AppCompatActivity
 
         View v = navigationView.getHeaderView(0);
 
-        User usr = (User) Storage.getObjPreference(getApplicationContext(), "user", User.class);
+        currentUsr = (User) Storage.getObjPreference(getApplicationContext(), "user", User.class);
 
-        TextView tvProfileName = (TextView) v.findViewById(R.id.tvProfileName);
-        tvProfileName.setText(usr.getFullName());
+        TextView tvProfileName = ButterKnife.findById(v, R.id.tvProfileName);
+        tvProfileName.setText(currentUsr.getFullName());
 
-        TextView tvProfileEmail = (TextView) v.findViewById(R.id.tvProfileEmail);
-        tvProfileEmail.setText(usr.getEmailAddr());
+        TextView tvProfileEmail = ButterKnife.findById(v, R.id.tvProfileEmail);
+        tvProfileEmail.setText(currentUsr.getEmailAddr());
 
         // is collector photo available ?
         boolean photoNotAvail = true;
         if (photoNotAvail) {
             ImageView iv = (ImageView) v.findViewById(R.id.imageView);
             Drawable drawable = AppCompatDrawableManager.get().getDrawable(this, R.drawable.ic_account_circle_black_24dp);
-
             iv.setImageDrawable(drawable);
-//            iv.setImageDrawable(ResourcesCompat.getDrawable(getResources(), R.drawable.ic_account_circle_black_24dp, null));
         }
 
-        if (savedInstanceState == null){
+        if (savedInstanceState == null) {
             displayView(R.id.nav_home);
 //            getSupportFragmentManager().beginTransaction().replace(R.id.content_frame, new HomeFragment()).commit();
-        }else{
+        } else {
             // recover state
             mSelectedNavMenuIndex = savedInstanceState.getInt(SELECTED_NAV_MENU_KEY);
             displayView(mSelectedNavMenuIndex);
         }
 
+        loadLKP(currentUsr.getUserName());
+    }
+
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+        this.realm.close();
+        this.realm = null;
     }
 
     @Override
@@ -101,6 +132,7 @@ public class MainActivity extends AppCompatActivity
         outState.putInt(SELECTED_NAV_MENU_KEY, mSelectedNavMenuIndex);
 
     }
+
     @Override
     public void onBackPressed() {
         if (drawer.isDrawerOpen(GravityCompat.START)) {
@@ -111,9 +143,9 @@ public class MainActivity extends AppCompatActivity
             if (!viewIsAtHome) {
                 int x = getSupportFragmentManager().getBackStackEntryCount();
 
-                if (x > 1){
+                if (x > 1) {
                     getSupportFragmentManager().popBackStackImmediate();
-                }else
+                } else
                     displayView(R.id.nav_home);
             } else {
                 //display logout dialog
@@ -154,13 +186,13 @@ public class MainActivity extends AppCompatActivity
 
         if (id == R.id.nav_logout) {
             logout();
-        }else
+        } else
             displayView(id);
 
         return true;
     }
 
-    private void displayView(int viewId){
+    private void displayView(int viewId) {
         Fragment fragment = null;
         String title = null;
         viewIsAtHome = false;
@@ -175,10 +207,15 @@ public class MainActivity extends AppCompatActivity
             viewIsAtHome = true;
 
             fab.show();
-        }/* else if (viewId == R.id.nav_loa) {
+        } else if (viewId == R.id.nav_loa) {
             fragment = new LKPListFragment();
+
+            Bundle bundle = new Bundle();
+            bundle.putString("collectorCode", currentUsr.getUserName());
+            fragment.setArguments(bundle);
+
             title = "LKP List";
-        } else if (viewId == R.id.nav_paymentEntry) {
+        }/* else if (viewId == R.id.nav_paymentEntry) {
             title = "Payment Entry";
 
         } else if (viewId == R.id.nav_customerProgram) {
@@ -218,7 +255,7 @@ public class MainActivity extends AppCompatActivity
         alertDialogBuilder.setTitle("Log Out");
         alertDialogBuilder.setMessage("Are you sure?");
         //null should be your on click listener
-        alertDialogBuilder.setPositiveButton("Yes", new DialogInterface.OnClickListener(){
+        alertDialogBuilder.setPositiveButton("Yes", new DialogInterface.OnClickListener() {
 
             @Override
             public void onClick(DialogInterface dialog, int which) {
@@ -230,7 +267,7 @@ public class MainActivity extends AppCompatActivity
 
                 Intent intent = new Intent(MainActivity.this, LoginActivity.class);
                 intent.putExtra("finish", true); // if you are checking for this in your other Activities
-                if(Build.VERSION.SDK_INT >= 11) {
+                if (Build.VERSION.SDK_INT >= 11) {
                     intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_CLEAR_TASK);
                 } else {
                     intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TOP);
@@ -258,8 +295,111 @@ public class MainActivity extends AppCompatActivity
                 .setAction("Action", null).show();
     }
 
-    @Override
-    public void onFragmentInteraction(Uri uri) {
+    private void loadLKP(String collectorCode) {
+        if (currentUsr == null) {
+            return;
+        }
 
+        // load cache
+        long count = this.realm.where(TrxLDVDetails.class).count();
+        if (count > 0) {
+            return;
+        }
+
+        ApiInterface fastService =
+                ServiceGenerator.createService(ApiInterface.class, Utility.buildUrl());
+
+        final ProgressDialog mProgressDialog = new ProgressDialog(this);
+        mProgressDialog.setIndeterminate(true);
+        mProgressDialog.setCancelable(false);
+        mProgressDialog.setMessage("Get LKP for " + collectorCode + "...");
+        mProgressDialog.show();
+
+        RequestLKP request = new RequestLKP();
+        request.setCollectorCode(collectorCode);
+
+        Call<ResponseGetLKP> call = fastService.getLKP(request);
+        call.enqueue(new Callback<ResponseGetLKP>() {
+            @Override
+            public void onResponse(Call<ResponseGetLKP> call, Response<ResponseGetLKP> response) {
+
+                if (mProgressDialog.isShowing())
+                    mProgressDialog.dismiss();
+
+                if (response.isSuccessful()) {
+                    final ResponseGetLKP respGetLKP = response.body();
+
+                    if (respGetLKP.getError() != null) {
+                        Utility.showDialog(MainActivity.this, "Error (" + respGetLKP.getError().getErrorCode() + ")", respGetLKP.getError().getErrorDesc());
+                    } else {
+                        if (respGetLKP.getData().getDetails() == null) {
+
+                        } else {
+                            // save db here
+                            realm.executeTransactionAsync(new Realm.Transaction() {
+                                @Override
+                                public void execute(Realm bgRealm) {
+                                    // insert header
+                                    // wipe existing tables?
+                                    long count = bgRealm.where(TrxLDVHeader.class).count();
+                                    if (count > 0) {
+                                        bgRealm.delete(TrxLDVHeader.class);
+                                    }
+                                    bgRealm.copyToRealmOrUpdate(respGetLKP.getData().getHeader());
+
+                                    // insert details
+                                    count = bgRealm.where(TrxLDVDetails.class).count();
+                                    if (count > 0) {
+                                        bgRealm.delete(TrxLDVDetails.class);
+                                    }
+                                    bgRealm.copyToRealmOrUpdate(respGetLKP.getData().getDetails());
+
+                                }
+                            }, new Realm.Transaction.OnSuccess() {
+                                @Override
+                                public void onSuccess() {
+                                }
+                            }, new Realm.Transaction.OnError() {
+                                @Override
+                                public void onError(Throwable error) {
+                                    // Transaction failed and was automatically canceled.
+                                }
+                            });
+
+
+                        }
+                    }
+                } else {
+                    int statusCode = response.code();
+
+                    // handle request errors yourself
+                    ResponseBody errorBody = response.errorBody();
+
+                    try {
+                        Utility.showDialog(MainActivity.this, "Server Problem (" + statusCode + ")", errorBody.string());
+                    } catch (IOException e) {
+                        e.printStackTrace();
+                    }
+                }
+
+            }
+
+            @Override
+            public void onFailure(Call<ResponseGetLKP> call, Throwable t) {
+
+                Log.e("eric.onFailure", t.getMessage(), t);
+
+                if (mProgressDialog.isShowing())
+                    mProgressDialog.dismiss();
+
+                Utility.showDialog(MainActivity.this, "Server Problem", t.getMessage());
+            }
+        });
+
+    }
+
+    @Override
+    public void onLKPSelected(int position) {
+        Toast.makeText(MainActivity.this, "You select " + position, Toast.LENGTH_SHORT).show();
     }
 }
