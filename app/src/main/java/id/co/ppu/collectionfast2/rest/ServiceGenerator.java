@@ -51,7 +51,7 @@ public class ServiceGenerator {
                     Request request = requestBuilder.build();
                     Response resp = chain.proceed(request);
 
-//                    String rawJson = resp.body().string(); //dont delete this, able to see the raw
+//                    String rawJson = resp.body().string(); //dont delete this, able to see the raw. once you copy the value, quickly disable again to avoid error like "closed"
 //                    Log.e("rawJson", rawJson);
 
                     return resp;
@@ -64,15 +64,16 @@ public class ServiceGenerator {
             });
         }
 
-        OkHttpClient client = httpClient.connectTimeout(5, TimeUnit.MINUTES)
-                .readTimeout(5, TimeUnit.MINUTES)
+        OkHttpClient client = httpClient.connectTimeout(4, TimeUnit.MINUTES)
+                .readTimeout(4, TimeUnit.MINUTES)
                 .build();
 
         /*
         date pattern tolong disamakan dgn yg di server
          */
         Gson gson = new GsonBuilder()
-                .setDateFormat("yyyy-MM-dd HH:mm:ss")   //"yyyy-MM-dd'T'HH:mm:ssZ"
+                .setDateFormat("dd-MM-yyyy HH:mm:ss")   //"yyyy-MM-dd'T'HH:mm:ssZ"
+//                .setDateFormat("yyyy-MM-dd HH:mm:ss")   //"yyyy-MM-dd'T'HH:mm:ssZ"
                 .create();
 
         /*

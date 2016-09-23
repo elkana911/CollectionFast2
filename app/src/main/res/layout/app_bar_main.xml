@@ -29,6 +29,8 @@
         android:layout_height="wrap_content"
         android:layout_gravity="bottom|end"
         android:layout_margin="@dimen/fab_margin"
-        android:src="@android:drawable/ic_popup_sync" />
+        android:tint="@android:color/white"
+        app:srcCompat="@drawable/ic_assignment_black_24dp"
+        />
 
 </android.support.design.widget.CoordinatorLayout>

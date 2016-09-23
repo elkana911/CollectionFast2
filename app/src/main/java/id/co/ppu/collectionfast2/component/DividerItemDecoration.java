@@ -1,4 +1,4 @@
-package id.co.ppu.collectionfast2.fragments;
+package id.co.ppu.collectionfast2.component;
 
 import android.content.Context;
 import android.content.res.TypedArray;

@@ -10,7 +10,9 @@ import android.widget.EditText;
 import butterknife.BindView;
 import butterknife.ButterKnife;
 import id.co.ppu.collectionfast2.R;
-import id.co.ppu.collectionfast2.pojo.User;
+import id.co.ppu.collectionfast2.pojo.MstSecUser;
+import id.co.ppu.collectionfast2.pojo.MstUser;
+import id.co.ppu.collectionfast2.pojo.UserData;
 import id.co.ppu.collectionfast2.util.Storage;
 import id.co.ppu.collectionfast2.util.Utility;
 
@@ -26,14 +28,22 @@ public class HomeFragment extends Fragment {
 
     @BindView(R.id.etCollectorName)
     EditText etCollectorName;
+
     @BindView(R.id.etJabatan)
     EditText etJabatan;
+
     @BindView(R.id.etNIKNo)
     EditText etNIKNo;
+
+    @BindView(R.id.etCabang)
+    EditText etCabang;
+
     @BindView(R.id.etAddress)
     EditText etAddress;
+
     @BindView(R.id.etEmail)
     EditText etEmail;
+
     @BindView(R.id.etPhone)
     EditText etPhone;
 
@@ -76,17 +86,25 @@ public class HomeFragment extends Fragment {
 
         ButterKnife.bind(this, view);
 
-        Utility.setViewGroupFocusable((ViewGroup)view.findViewById(R.id.llFormCollector), false);
+        Utility.setViewGroupFocusable((ViewGroup) view.findViewById(R.id.llFormCollector), false);
 
-        User usr = (User) Storage.getObjPreference(getContext(), "user", User.class);
+        UserData userData = (UserData) Storage.getObjPreference(getContext(), Storage.KEY_USER, UserData.class);
 
-        if (usr != null) {
-            etCollectorName.setText(usr.getFullName());
-            etJabatan.setText(null);
-            etNIKNo.setText(usr.getUserName());
-            etAddress.setText(null);
-            etEmail.setText(usr.getEmailAddr());
-            etPhone.setText(usr.getMobilePhone());
+        if (userData.getUser() != null) {
+            MstUser user = userData.getUser().get(0);
+
+            etJabatan.setText(user.getJabatan());
+            etNIKNo.setText(user.getNik());
+            etCabang.setText(user.getBranchName());
+            etAddress.setText(user.getAlamat());
+        }
+
+        if (userData.getSecUser() != null) {
+            MstSecUser secUser = userData.getSecUser().get(0);
+
+            etPhone.setText(secUser.getMobilePhone());
+            etCollectorName.setText(secUser.getFullName());
+            etEmail.setText(secUser.getEmailAddr());
         }
 
         return view;

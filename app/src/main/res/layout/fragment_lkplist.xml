@@ -1,65 +1,99 @@
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:orientation="vertical"
-    xmlns:app="http://schemas.android.com/apk/res-auto"
-    tools:context="id.co.ppu.collectionfast2.fragments.LKPListFragment">
+    tools:context=".lkp.FragmentLKPList">
 
-    <!-- TODO: Update blank fragment layout -->
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:orientation="vertical">
-        <android.support.design.widget.TextInputLayout
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content">
+        android:background="@color/colorPrimaryDark"
+        android:orientation="vertical"
+        android:paddingRight="@dimen/activity_horizontal_margin"
+        android:paddingTop="@dimen/activity_vertical_margin">
 
-            <EditText
-                android:id="@+id/tvNoLKP"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:hint="No LKP"
-                android:maxLines="1"
-                android:singleLine="true"
-                android:inputType="none"
-                android:focusable="false"
-                android:focusableInTouchMode="false"
-                android:clickable="false"
-                android:text="21110827" />
-
-        </android.support.design.widget.TextInputLayout>
+        <CheckBox
+            android:id="@+id/cbLKPInquiry"
+            style="@android:style/Widget.Holo.CompoundButton.CheckBox"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center_horizontal"
+            android:buttonTint="@color/colorPrimary"
+            android:text="@string/lkp_inquiry"
+            android:textColor="@android:color/primary_text_dark" />
 
         <android.support.design.widget.TextInputLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            app:passwordToggleEnabled="true">
+            android:textColorHint="@android:color/primary_text_dark">
 
             <EditText
-                android:id="@+id/tvTglLKP"
+                android:id="@+id/etNoLKP"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:hint="Tgl LKP"
-                android:maxLines="1"
-                android:singleLine="true"
-                android:inputType="none"
+                android:clickable="false"
                 android:focusable="false"
                 android:focusableInTouchMode="false"
+                android:gravity="end"
+                android:hint="No LKP"
+                android:maxLines="1"
+                android:textColor="@android:color/primary_text_dark" />
+
+        </android.support.design.widget.TextInputLayout>
+
+        <android.support.design.widget.TextInputLayout
+            android:id="@+id/tilTglLKP"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:textColorHint="@android:color/primary_text_dark">
+
+            <EditText
+                android:id="@+id/etTglLKP"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
                 android:clickable="false"
-                android:text="01121980" />
+                android:focusable="false"
+                android:focusableInTouchMode="false"
+                android:gravity="end"
+                android:hint="Tgl LKP"
+                android:maxLines="1"
+                android:textColor="@android:color/primary_text_dark" />
 
         </android.support.design.widget.TextInputLayout>
 
     </LinearLayout>
 
-    <co.moonmonkeylabs.realmrecyclerview.RealmRecyclerView
-        android:id="@+id/realm_recycler_view"
-        android:layout_marginTop="16dp"
+    <TextView
+        android:id="@+id/tvSeparator"
+        style="?android:attr/listSeparatorTextViewStyle"
         android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        app:rrvIsRefreshable="false"
-        app:rrvSwipeToDelete="true"
-        app:rrvEmptyLayoutId="@layout/empty_view"
-        app:rrvLayoutType="LinearLayout"
-        />
+        android:layout_height="wrap_content"
+        android:text="No Contracts" />
+
+    <RelativeLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content">
+
+        <id.co.ppu.collectionfast2.component.RealmSearchView
+            android:id="@+id/search_view"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:layout_marginBottom="@dimen/activity_vertical_margin"
+            android:layout_marginLeft="@dimen/activity_horizontal_margin"
+            android:layout_marginRight="@dimen/activity_horizontal_margin"
+            android:layout_marginTop="@dimen/activity_vertical_margin"
+            app:rsvHint="@string/search_hint" />
+
+        <android.support.design.widget.FloatingActionButton
+
+            android:id="@+id/fab"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_centerInParent="true"
+            android:tint="@android:color/white"
+            app:srcCompat="@drawable/ic_loop_black_24dp" />
+
+    </RelativeLayout>
 </LinearLayout>

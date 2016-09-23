@@ -63,6 +63,10 @@
     <item android:title="Communicate">
         <menu>
             <item
+                android:id="@+id/nav_reset"
+                android:icon="@drawable/ic_phonelink_erase_black_24dp"
+                android:title="Reset Data" />
+            <item
                 android:id="@+id/nav_share"
                 android:icon="@drawable/ic_menu_share"
                 android:title="Share" />

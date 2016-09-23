@@ -11,7 +11,7 @@ import io.realm.annotations.PrimaryKey;
 /**
  * Created by Eric on 29-Aug-16.
  */
-public class TrxLDVHeader extends RealmObject implements Serializable {
+public class TrnLDVHeader extends RealmObject implements Serializable {
 
     @PrimaryKey
     @SerializedName("ldvNo")
@@ -25,12 +25,6 @@ public class TrxLDVHeader extends RealmObject implements Serializable {
 
     @SerializedName("collCode")
     private String collCode;
-
-    @SerializedName("spvCode")
-    private String spvCode;
-
-    @SerializedName("type")
-    private String type;
 
     @SerializedName("unitTotal")
     private Long unitTotal;
@@ -53,12 +47,6 @@ public class TrxLDVHeader extends RealmObject implements Serializable {
     @SerializedName("acTotal")
     private Long acTotal;
 
-    @SerializedName("maxEntryDays")
-    private Long maxEntryDays;
-
-    @SerializedName("coyCode")
-    private String coyCode;
-
     @SerializedName("workFlag")
     private String workFlag;
 
@@ -67,6 +55,33 @@ public class TrxLDVHeader extends RealmObject implements Serializable {
 
     @SerializedName("startedTimestamp")
     private Date startedTimestamp;
+
+    @SerializedName("closeBatch")
+    private String closeBatch;
+
+    @SerializedName("flagToEmrafin")
+    private String flagToEmrafin;
+
+    @SerializedName("dateToEmrafin")
+    private Date dateToEmrafin;
+
+    @SerializedName("flagDone")
+    private String flagDone;
+
+    @SerializedName("dateDone")
+    private Date dateDone;
+
+    @SerializedName("createdTimestamp")
+    private Date createdTimestamp;
+
+    @SerializedName("createdBy")
+    private String createdBy;
+
+    @SerializedName("lastupdateBy")
+    private String lastupdateBy;
+
+    @SerializedName("lastupdateTimestamp")
+    private Date lastupdateTimestamp;
 
     public String getLdvNo() {
         return ldvNo;
@@ -98,22 +113,6 @@ public class TrxLDVHeader extends RealmObject implements Serializable {
 
     public void setCollCode(String collCode) {
         this.collCode = collCode;
-    }
-
-    public String getSpvCode() {
-        return spvCode;
-    }
-
-    public void setSpvCode(String spvCode) {
-        this.spvCode = spvCode;
-    }
-
-    public String getType() {
-        return type;
-    }
-
-    public void setType(String type) {
-        this.type = type;
     }
 
     public Long getUnitTotal() {
@@ -172,22 +171,6 @@ public class TrxLDVHeader extends RealmObject implements Serializable {
         this.acTotal = acTotal;
     }
 
-    public Long getMaxEntryDays() {
-        return maxEntryDays;
-    }
-
-    public void setMaxEntryDays(Long maxEntryDays) {
-        this.maxEntryDays = maxEntryDays;
-    }
-
-    public String getCoyCode() {
-        return coyCode;
-    }
-
-    public void setCoyCode(String coyCode) {
-        this.coyCode = coyCode;
-    }
-
     public String getWorkFlag() {
         return workFlag;
     }
@@ -212,15 +195,85 @@ public class TrxLDVHeader extends RealmObject implements Serializable {
         this.startedTimestamp = startedTimestamp;
     }
 
+    public String getCloseBatch() {
+        return closeBatch;
+    }
+
+    public void setCloseBatch(String closeBatch) {
+        this.closeBatch = closeBatch;
+    }
+
+    public Date getCreatedTimestamp() {
+        return createdTimestamp;
+    }
+
+    public void setCreatedTimestamp(Date createdTimestamp) {
+        this.createdTimestamp = createdTimestamp;
+    }
+
+    public String getCreatedBy() {
+        return createdBy;
+    }
+
+    public void setCreatedBy(String createdBy) {
+        this.createdBy = createdBy;
+    }
+
+    public String getLastupdateBy() {
+        return lastupdateBy;
+    }
+
+    public void setLastupdateBy(String lastupdateBy) {
+        this.lastupdateBy = lastupdateBy;
+    }
+
+    public Date getLastupdateTimestamp() {
+        return lastupdateTimestamp;
+    }
+
+    public void setLastupdateTimestamp(Date lastupdateTimestamp) {
+        this.lastupdateTimestamp = lastupdateTimestamp;
+    }
+
+    public String getFlagToEmrafin() {
+        return flagToEmrafin;
+    }
+
+    public void setFlagToEmrafin(String flagToEmrafin) {
+        this.flagToEmrafin = flagToEmrafin;
+    }
+
+    public Date getDateToEmrafin() {
+        return dateToEmrafin;
+    }
+
+    public void setDateToEmrafin(Date dateToEmrafin) {
+        this.dateToEmrafin = dateToEmrafin;
+    }
+
+    public String getFlagDone() {
+        return flagDone;
+    }
+
+    public void setFlagDone(String flagDone) {
+        this.flagDone = flagDone;
+    }
+
+    public Date getDateDone() {
+        return dateDone;
+    }
+
+    public void setDateDone(Date dateDone) {
+        this.dateDone = dateDone;
+    }
+
     @Override
     public String toString() {
-        return "TrxLDVHeader{" +
+        return "TrnLDVHeader{" +
                 "ldvNo='" + ldvNo + '\'' +
                 ", ldvDate=" + ldvDate +
                 ", officeCode='" + officeCode + '\'' +
                 ", collCode='" + collCode + '\'' +
-                ", spvCode='" + spvCode + '\'' +
-                ", type='" + type + '\'' +
                 ", unitTotal=" + unitTotal +
                 ", prncAMBC=" + prncAMBC +
                 ", prncAC=" + prncAC +
@@ -228,11 +281,18 @@ public class TrxLDVHeader extends RealmObject implements Serializable {
                 ", intrAC=" + intrAC +
                 ", ambcTotal=" + ambcTotal +
                 ", acTotal=" + acTotal +
-                ", maxEntryDays=" + maxEntryDays +
-                ", coyCode='" + coyCode + '\'' +
                 ", workFlag='" + workFlag + '\'' +
                 ", approvedDate=" + approvedDate +
                 ", startedTimestamp=" + startedTimestamp +
+                ", closeBatch='" + closeBatch + '\'' +
+                ", flagToEmrafin='" + flagToEmrafin + '\'' +
+                ", dateToEmrafin=" + dateToEmrafin +
+                ", flagDone='" + flagDone + '\'' +
+                ", dateDone=" + dateDone +
+                ", createdTimestamp=" + createdTimestamp +
+                ", createdBy='" + createdBy + '\'' +
+                ", lastupdateBy='" + lastupdateBy + '\'' +
+                ", lastupdateTimestamp=" + lastupdateTimestamp +
                 '}';
     }
 }

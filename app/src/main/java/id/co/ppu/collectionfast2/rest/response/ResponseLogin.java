@@ -4,18 +4,18 @@ import com.google.gson.annotations.SerializedName;
 
 import java.io.Serializable;
 
-import id.co.ppu.collectionfast2.pojo.User;
+import id.co.ppu.collectionfast2.pojo.UserData;
 
 public class ResponseLogin extends ResponseBasic implements Serializable {
 
     @SerializedName("data")
-    private User data;
+    private UserData data;
 
-    public User getData() {
+    public UserData getData() {
         return data;
     }
 
-    public void setData(User data) {
+    public void setData(UserData data) {
         this.data = data;
     }
 

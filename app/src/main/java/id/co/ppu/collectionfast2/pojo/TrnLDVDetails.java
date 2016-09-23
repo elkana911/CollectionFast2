@@ -11,18 +11,15 @@ import io.realm.annotations.PrimaryKey;
 /**
  * Created by Eric on 29-Aug-16.
  */
-public class TrxLDVDetails extends RealmObject implements Serializable{
+public class TrnLDVDetails extends RealmObject implements Serializable {
 
-    @SerializedName("ldvNo")
-    private String ldvNo;
-
-    @PrimaryKey
-    @SerializedName("seqNo")
-    private Long seqNo;
+    @SerializedName("pk")
+    private TrnLDVDetailsPK pk;
 
     @SerializedName("period")
     private String period;
 
+    @PrimaryKey
     @SerializedName("contractNo")
     private String contractNo;
 
@@ -71,35 +68,57 @@ public class TrxLDVDetails extends RealmObject implements Serializable{
     @SerializedName("ldvFlag")
     private String ldvFlag;
 
-    @SerializedName("promiseDate")
-    private Date promiseDate;
-
     @SerializedName("workStatus")
     private String workStatus;
-
-    @SerializedName("visitSeq")
-    private Long visitSeq;
 
     @SerializedName("principalOutstanding")
     private Long principalOutstanding;
 
+    @SerializedName("occupation")
+    private String occupation;
+
+    @SerializedName("subOccupation")
+    private String subOccupation;
+
+    @SerializedName("palNo")
+    private String palNo;
+
+    @SerializedName("flagToEmrafin")
+    private String flagToEmrafin;
+
+    @SerializedName("dateToEmrafin")
+    private Date dateToEmrafin;
+
+    @SerializedName("flagDone")
+    private String flagDone;
+
+    @SerializedName("dateDone")
+    private Date dateDone;
+
     @SerializedName("startedTimestamp")
     private Date startedTimestamp;
 
-    public String getLdvNo() {
-        return ldvNo;
+    @SerializedName("createdTimestamp")
+    private Date createdTimestamp;
+
+    @SerializedName("createdBy")
+    private String createdBy;
+
+    @SerializedName("lastupdateBy")
+    private String lastupdateBy;
+
+    @SerializedName("lastupdateTimestamp")
+    private Date lastupdateTimestamp;
+
+    // perlu direlasi krn buat tampilan di lkp list
+    private TrnCollectAddr address;
+
+    public TrnLDVDetailsPK getPk() {
+        return pk;
     }
 
-    public void setLdvNo(String ldvNo) {
-        this.ldvNo = ldvNo;
-    }
-
-    public Long getSeqNo() {
-        return seqNo;
-    }
-
-    public void setSeqNo(Long seqNo) {
-        this.seqNo = seqNo;
+    public void setPk(TrnLDVDetailsPK pk) {
+        this.pk = pk;
     }
 
     public String getPeriod() {
@@ -238,28 +257,12 @@ public class TrxLDVDetails extends RealmObject implements Serializable{
         this.ldvFlag = ldvFlag;
     }
 
-    public Date getPromiseDate() {
-        return promiseDate;
-    }
-
-    public void setPromiseDate(Date promiseDate) {
-        this.promiseDate = promiseDate;
-    }
-
     public String getWorkStatus() {
         return workStatus;
     }
 
     public void setWorkStatus(String workStatus) {
         this.workStatus = workStatus;
-    }
-
-    public Long getVisitSeq() {
-        return visitSeq;
-    }
-
-    public void setVisitSeq(Long visitSeq) {
-        this.visitSeq = visitSeq;
     }
 
     public Long getPrincipalOutstanding() {
@@ -270,6 +273,30 @@ public class TrxLDVDetails extends RealmObject implements Serializable{
         this.principalOutstanding = principalOutstanding;
     }
 
+    public String getOccupation() {
+        return occupation;
+    }
+
+    public void setOccupation(String occupation) {
+        this.occupation = occupation;
+    }
+
+    public String getSubOccupation() {
+        return subOccupation;
+    }
+
+    public void setSubOccupation(String subOccupation) {
+        this.subOccupation = subOccupation;
+    }
+
+    public String getPalNo() {
+        return palNo;
+    }
+
+    public void setPalNo(String palNo) {
+        this.palNo = palNo;
+    }
+
     public Date getStartedTimestamp() {
         return startedTimestamp;
     }
@@ -278,11 +305,50 @@ public class TrxLDVDetails extends RealmObject implements Serializable{
         this.startedTimestamp = startedTimestamp;
     }
 
+    public Date getCreatedTimestamp() {
+        return createdTimestamp;
+    }
+
+    public void setCreatedTimestamp(Date createdTimestamp) {
+        this.createdTimestamp = createdTimestamp;
+    }
+
+    public TrnCollectAddr getAddress() {
+        return address;
+    }
+
+    public void setAddress(TrnCollectAddr address) {
+        this.address = address;
+    }
+
+    public String getCreatedBy() {
+        return createdBy;
+    }
+
+    public void setCreatedBy(String createdBy) {
+        this.createdBy = createdBy;
+    }
+
+    public String getLastupdateBy() {
+        return lastupdateBy;
+    }
+
+    public void setLastupdateBy(String lastupdateBy) {
+        this.lastupdateBy = lastupdateBy;
+    }
+
+    public Date getLastupdateTimestamp() {
+        return lastupdateTimestamp;
+    }
+
+    public void setLastupdateTimestamp(Date lastupdateTimestamp) {
+        this.lastupdateTimestamp = lastupdateTimestamp;
+    }
+
     @Override
     public String toString() {
-        return "TrxLDVDetails{" +
-                "ldvNo='" + ldvNo + '\'' +
-                ", seqNo=" + seqNo +
+        return "TrnLDVDetails{" +
+                "pk=" + pk +
                 ", period='" + period + '\'' +
                 ", contractNo='" + contractNo + '\'' +
                 ", custNo='" + custNo + '\'' +
@@ -300,11 +366,17 @@ public class TrxLDVDetails extends RealmObject implements Serializable{
                 ", interestAmountCollected=" + interestAmountCollected +
                 ", penaltyAmountCollected=" + penaltyAmountCollected +
                 ", ldvFlag='" + ldvFlag + '\'' +
-                ", promiseDate=" + promiseDate +
                 ", workStatus='" + workStatus + '\'' +
-                ", visitSeq=" + visitSeq +
                 ", principalOutstanding=" + principalOutstanding +
+                ", occupation='" + occupation + '\'' +
+                ", subOccupation='" + subOccupation + '\'' +
+                ", palNo='" + palNo + '\'' +
                 ", startedTimestamp=" + startedTimestamp +
+                ", createdTimestamp=" + createdTimestamp +
+                ", createdBy='" + createdBy + '\'' +
+                ", lastupdateBy='" + lastupdateBy + '\'' +
+                ", lastupdateTimestamp=" + lastupdateTimestamp +
+                ", address=" + address +
                 '}';
     }
 }

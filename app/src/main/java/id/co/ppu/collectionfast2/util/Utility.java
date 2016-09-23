@@ -7,6 +7,7 @@ import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.pm.PackageManager;
+import android.content.res.Configuration;
 import android.provider.Settings;
 import android.provider.Settings.Secure;
 import android.telephony.TelephonyManager;
@@ -15,26 +16,32 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.view.WindowManager;
 
+import java.text.DecimalFormat;
+import java.text.DecimalFormatSymbols;
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
+import java.util.Date;
+import java.util.concurrent.TimeUnit;
+
 import id.co.ppu.collectionfast2.R;
 import okhttp3.HttpUrl;
 
 public class Utility {
 
-    public final static String[][] servers = {{"local", "192.168.0.24", "8090"}
-                                            ,{"fast-mobile", "203.128.92.77", "8080"}
+    public final static String DATE_EXPIRED_YYYYMMDD = "20161001";
+
+    public final static String DATE_DISPLAY_PATTERN = "dd MMM yyyy";
+    public final static String DATE_DATA_PATTERN = "yyyyMMdd";
+
+    public final static String[][] servers = {{"local-server", "192.168.1.108", "8090"}
+                                            ,{"fast-mobile", "cmobile.radanafinance.co.id", "7001"}
     };
 
+    public final static String COLUMN_CREATED_BY = "createdBy";
+
+    public final static String LAST_UPDATE_BY = "MOBCOL";
     public final static String INFO = "Info";
     public final static String WARNING = "Warning";
-
-    public final static String ORDERPREF = "OrderPref";
-    public final static String ORDEROBJ = "Order";
-    public final static String ORDERIDPREF = "OrderIdPref";
-    public final static String ORDERIDOBJ = "OrderId";
-    public final static String USERPREF = "UserPref";
-    public final static String USEROBJ = "User";
-    public final static String REGTOKENPREF = "RegTokenPref";
-    public final static String REGTOKENOBJ = "RegToken";
 
     public static final int PERMISSION_REQUEST_LOCATION = 0;
     public static String[] PERMISSION_LOCATION = {Manifest.permission.ACCESS_COARSE_LOCATION, Manifest.permission.ACCESS_FINE_LOCATION};
@@ -42,9 +49,27 @@ public class Utility {
     public static final int PERMISSION_REQUEST_READPHONESTATE = 1;
     public static String[] PERMISSION_READPHONESTATE = {Manifest.permission.READ_PHONE_STATE};
 
-    public static HttpUrl buildUrl() {
+    public static String getServerName(int serverId) {
+        String[] s = servers[serverId];
+        return s[0];
+    }
+    public static int getServerID(String serverName) {
+        for (int i = 0; i < servers.length; i++) {
+            if (servers[i][0].equalsIgnoreCase(serverName)) {
+                return i;
+            }
+        }
+        return -1;
+    }
 
-        String[] server = servers[0];   // just change this
+    public static HttpUrl buildUrl(int serverChoice) {
+
+        if (serverChoice < 0)
+            serverChoice = 0;
+        if (serverChoice > servers.length-1)
+            serverChoice = servers.length-1;
+
+        String[] server = servers[serverChoice];   // just change this
 
         HttpUrl.Builder url = new HttpUrl.Builder()
                 .scheme("http")
@@ -207,4 +232,71 @@ public class Utility {
         view.setFocusable(enabled);
     }
 
+    public static boolean isXLargeTablet(Context context) {
+        return (context.getResources().getConfiguration().screenLayout
+                & Configuration.SCREENLAYOUT_SIZE_MASK) >= Configuration.SCREENLAYOUT_SIZE_XLARGE;
+    }
+
+    public static String leftPad(int n, int padding) {
+        return String.format("%0" + padding + "d", n);
+    }
+
+    public static String leftPad(long n, int padding) {
+        return String.format("%0" + padding + "d", n);
+    }
+
+    public static String convertDateToString(Date date, String pattern) {
+        return new SimpleDateFormat(pattern).format(date);
+    }
+
+    public static Date convertStringToDate(String date, String pattern) {
+//        SimpleDateFormat sdf1 = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss.SSS");
+        SimpleDateFormat sdf1 = new SimpleDateFormat(pattern);
+        try {
+            return sdf1.parse(date);
+        } catch (ParseException e) {
+            e.printStackTrace();
+        }
+
+        return null;
+    }
+
+    public static String convertLongToRupiah(long amount) {
+//        double harga = 250000000;
+
+        DecimalFormat kursIndonesia = (DecimalFormat) DecimalFormat.getCurrencyInstance();
+        DecimalFormatSymbols formatRp = new DecimalFormatSymbols();
+
+        formatRp.setCurrencySymbol("Rp. ");
+        formatRp.setMonetaryDecimalSeparator(',');
+        formatRp.setGroupingSeparator('.');
+        kursIndonesia.setMinimumFractionDigits(0);  // sen minta diilangin
+
+        kursIndonesia.setDecimalFormatSymbols(formatRp);
+//        System.out.printf("Harga Rupiah: %s %n", kursIndonesia.format(amount));    //Harga Rupiah: Rp. 250.000.000,00
+
+        return kursIndonesia.format(amount);
+    }
+
+
+    public static boolean isSameDay(Date date1, Date date2) {
+        // sementara sengaja always true, will be controlled on production
+        // will reset data on next day
+        SimpleDateFormat fmt = new SimpleDateFormat("yyyyMMdd");
+        return fmt.format(date1).equals(fmt.format(date2));
+    }
+
+    public static long getDateDiff(Date date1, Date date2, TimeUnit timeUnit) {
+        long diffInMillies = date2.getTime() - date1.getTime();
+        return timeUnit.convert(diffInMillies,TimeUnit.MILLISECONDS);
+    }
+
+    public static boolean isEmailValid(String email) {
+        return email.contains("@");
+    }
+
+    public static boolean isNumeric(String str)
+    {
+        return str.matches("-?\\d+(\\.\\d+)?");  //match a number with optional '-' and decimal.
+    }
 }

@@ -11,7 +11,7 @@ import io.realm.annotations.PrimaryKey;
 /**
  * Created by Eric on 23-Aug-16.
  */
-public class User extends RealmObject implements Serializable{
+public class MstSecUser extends RealmObject implements Serializable {
 
     @PrimaryKey
     @SerializedName("emailAddr")
@@ -53,8 +53,21 @@ public class User extends RealmObject implements Serializable{
     @SerializedName("bussUnit")
     private String bussUnit;
 
-    @SerializedName("phoneSN")
-    private String phoneSN;
+    @SerializedName("createdTimestamp")
+    private Date createdTimestamp;
+
+    @SerializedName("createdBy")
+    private String createdBy;
+
+    @SerializedName("lastupdateBy")
+    private String lastupdateBy;
+
+    @SerializedName("lastupdateTimestamp")
+    private Date lastupdateTimestamp;
+
+
+//    @SerializedName("phoneSN")
+//    private String phoneSN;
 
     public String getEmailAddr() {
         return emailAddr;
@@ -160,17 +173,41 @@ public class User extends RealmObject implements Serializable{
         this.bussUnit = bussUnit;
     }
 
-    public String getPhoneSN() {
-        return phoneSN;
+    public Date getCreatedTimestamp() {
+        return createdTimestamp;
     }
 
-    public void setPhoneSN(String phoneSN) {
-        this.phoneSN = phoneSN;
+    public void setCreatedTimestamp(Date createdTimestamp) {
+        this.createdTimestamp = createdTimestamp;
+    }
+
+    public String getCreatedBy() {
+        return createdBy;
+    }
+
+    public void setCreatedBy(String createdBy) {
+        this.createdBy = createdBy;
+    }
+
+    public String getLastupdateBy() {
+        return lastupdateBy;
+    }
+
+    public void setLastupdateBy(String lastupdateBy) {
+        this.lastupdateBy = lastupdateBy;
+    }
+
+    public Date getLastupdateTimestamp() {
+        return lastupdateTimestamp;
+    }
+
+    public void setLastupdateTimestamp(Date lastupdateTimestamp) {
+        this.lastupdateTimestamp = lastupdateTimestamp;
     }
 
     @Override
     public String toString() {
-        return "User{" +
+        return "MstSecUser{" +
                 "emailAddr='" + emailAddr + '\'' +
                 ", userName='" + userName + '\'' +
                 ", userPwd='" + userPwd + '\'' +
@@ -184,7 +221,10 @@ public class User extends RealmObject implements Serializable{
                 ", fullName='" + fullName + '\'' +
                 ", branchId='" + branchId + '\'' +
                 ", bussUnit='" + bussUnit + '\'' +
-                ", phoneSN='" + phoneSN + '\'' +
+                ", createdTimestamp=" + createdTimestamp +
+                ", createdBy='" + createdBy + '\'' +
+                ", lastupdateBy='" + lastupdateBy + '\'' +
+                ", lastupdateTimestamp=" + lastupdateTimestamp +
                 '}';
     }
 }
