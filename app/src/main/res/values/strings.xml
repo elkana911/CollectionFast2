@@ -216,4 +216,7 @@
     <string name="title_activity_upload_picture">Upload Picture</string>
     <string name="lkp_inquiry">LKP Inquiry</string>
     <string name="error_amount_invalid">Invalid Amount</string>
+    <string name="spinner_please_select"><![CDATA[<Please select>]]></string>
+    <string name="title_activity_payment_receive">Payment Receive</string>
+    <string name="title_activity_payment_entry">Payment Entry</string>
 </resources>

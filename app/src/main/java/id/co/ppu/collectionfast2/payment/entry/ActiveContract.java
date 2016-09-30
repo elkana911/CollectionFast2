@@ -1,4 +1,4 @@
-package id.co.ppu.collectionfast2.payment;
+package id.co.ppu.collectionfast2.payment.entry;
 
 /**
  * Created by Eric on 05-Sep-16.

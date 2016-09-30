@@ -3,6 +3,7 @@ package id.co.ppu.collectionfast2.pojo;
 import com.google.gson.annotations.SerializedName;
 
 import java.io.Serializable;
+import java.util.Date;
 
 import io.realm.RealmObject;
 
@@ -19,6 +20,9 @@ public class DisplayTrnLDVDetails extends RealmObject implements Serializable {
 
     @SerializedName("collId")
     private String collId;
+
+    @SerializedName("lkpDate")
+    private Date lkpDate;
 
     @SerializedName("contractNo")
     private String contractNo;
@@ -92,6 +96,14 @@ public class DisplayTrnLDVDetails extends RealmObject implements Serializable {
 
     public void setCollId(String collId) {
         this.collId = collId;
+    }
+
+    public Date getLkpDate() {
+        return lkpDate;
+    }
+
+    public void setLkpDate(Date lkpDate) {
+        this.lkpDate = lkpDate;
     }
 
     public String getCreatedBy() {

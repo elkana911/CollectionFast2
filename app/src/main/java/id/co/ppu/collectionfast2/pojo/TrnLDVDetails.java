@@ -1,12 +1,12 @@
 package id.co.ppu.collectionfast2.pojo;
 
+import com.google.gson.annotations.Expose;
 import com.google.gson.annotations.SerializedName;
 
 import java.io.Serializable;
 import java.util.Date;
 
 import io.realm.RealmObject;
-import io.realm.annotations.PrimaryKey;
 
 /**
  * Created by Eric on 29-Aug-16.
@@ -19,7 +19,6 @@ public class TrnLDVDetails extends RealmObject implements Serializable {
     @SerializedName("period")
     private String period;
 
-    @PrimaryKey
     @SerializedName("contractNo")
     private String contractNo;
 
@@ -110,8 +109,24 @@ public class TrnLDVDetails extends RealmObject implements Serializable {
     @SerializedName("lastupdateTimestamp")
     private Date lastupdateTimestamp;
 
+    @SerializedName("monthInst")
+    private Long monthInst;
+
+    @SerializedName("daysIntrAmbc")
+    private Long daysIntrAmbc;
+
+    @SerializedName("collectionFee")
+    private Long collectionFee;
+
+    @SerializedName("lastPaidDate")
+    private Date lastPaidDate;
+
+    @SerializedName("dpd")
+    private Long dpd;
+
     // perlu direlasi krn buat tampilan di lkp list
-    private TrnCollectAddr address;
+    @Expose(serialize = false)
+    private  TrnCollectAddr address;
 
     public TrnLDVDetailsPK getPk() {
         return pk;
@@ -345,6 +360,78 @@ public class TrnLDVDetails extends RealmObject implements Serializable {
         this.lastupdateTimestamp = lastupdateTimestamp;
     }
 
+    public String getFlagToEmrafin() {
+        return flagToEmrafin;
+    }
+
+    public void setFlagToEmrafin(String flagToEmrafin) {
+        this.flagToEmrafin = flagToEmrafin;
+    }
+
+    public Date getDateToEmrafin() {
+        return dateToEmrafin;
+    }
+
+    public void setDateToEmrafin(Date dateToEmrafin) {
+        this.dateToEmrafin = dateToEmrafin;
+    }
+
+    public String getFlagDone() {
+        return flagDone;
+    }
+
+    public void setFlagDone(String flagDone) {
+        this.flagDone = flagDone;
+    }
+
+    public Date getDateDone() {
+        return dateDone;
+    }
+
+    public void setDateDone(Date dateDone) {
+        this.dateDone = dateDone;
+    }
+
+    public Long getMonthInst() {
+        return monthInst;
+    }
+
+    public void setMonthInst(Long monthInst) {
+        this.monthInst = monthInst;
+    }
+
+    public Long getDaysIntrAmbc() {
+        return daysIntrAmbc;
+    }
+
+    public void setDaysIntrAmbc(Long daysIntrAmbc) {
+        this.daysIntrAmbc = daysIntrAmbc;
+    }
+
+    public Long getCollectionFee() {
+        return collectionFee;
+    }
+
+    public void setCollectionFee(Long collectionFee) {
+        this.collectionFee = collectionFee;
+    }
+
+    public Date getLastPaidDate() {
+        return lastPaidDate;
+    }
+
+    public void setLastPaidDate(Date lastPaidDate) {
+        this.lastPaidDate = lastPaidDate;
+    }
+
+    public Long getDpd() {
+        return dpd;
+    }
+
+    public void setDpd(Long dpd) {
+        this.dpd = dpd;
+    }
+
     @Override
     public String toString() {
         return "TrnLDVDetails{" +
@@ -371,11 +458,20 @@ public class TrnLDVDetails extends RealmObject implements Serializable {
                 ", occupation='" + occupation + '\'' +
                 ", subOccupation='" + subOccupation + '\'' +
                 ", palNo='" + palNo + '\'' +
+                ", flagToEmrafin='" + flagToEmrafin + '\'' +
+                ", dateToEmrafin=" + dateToEmrafin +
+                ", flagDone='" + flagDone + '\'' +
+                ", dateDone=" + dateDone +
                 ", startedTimestamp=" + startedTimestamp +
                 ", createdTimestamp=" + createdTimestamp +
                 ", createdBy='" + createdBy + '\'' +
                 ", lastupdateBy='" + lastupdateBy + '\'' +
                 ", lastupdateTimestamp=" + lastupdateTimestamp +
+                ", monthInst=" + monthInst +
+                ", daysIntrAmbc=" + daysIntrAmbc +
+                ", collectionFee=" + collectionFee +
+                ", lastPaidDate=" + lastPaidDate +
+                ", dpd=" + dpd +
                 ", address=" + address +
                 '}';
     }

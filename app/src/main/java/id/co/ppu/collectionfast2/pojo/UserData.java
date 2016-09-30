@@ -1,15 +1,18 @@
 package id.co.ppu.collectionfast2.pojo;
 
+import android.support.annotation.NonNull;
+
 import java.util.List;
 
 /**
  * Created by Eric on 01-Sep-16.
  */
 public class UserData {
+
+    @NonNull
     private List<MstUser> user;
     private List<MstSecUser> secUser;
-    private List<TrnContractBuckets> activeContracts;
-    
+
     private UserConfig config;
 
     public List<MstUser> getUser() {
@@ -28,20 +31,11 @@ public class UserData {
         this.secUser = secUser;
     }
 
-    public List<TrnContractBuckets> getActiveContracts() {
-        return activeContracts;
-    }
-
-    public void setActiveContracts(List<TrnContractBuckets> activeContracts) {
-        this.activeContracts = activeContracts;
-    }
-
     @Override
     public String toString() {
         return "UserData{" +
                 "user=" + user +
                 ", secUser=" + secUser +
-                ", activeContracts=" + activeContracts +
                 '}';
     }
 }

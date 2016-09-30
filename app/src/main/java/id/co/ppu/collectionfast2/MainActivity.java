@@ -7,10 +7,14 @@ import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.graphics.drawable.Drawable;
+import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
+import android.provider.MediaStore;
 import android.support.design.widget.FloatingActionButton;
 import android.support.design.widget.NavigationView;
+import android.support.design.widget.Snackbar;
+import android.support.graphics.drawable.VectorDrawableCompat;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentTransaction;
 import android.support.v4.content.ContextCompat;
@@ -19,16 +23,17 @@ import android.support.v4.view.MenuItemCompat;
 import android.support.v4.widget.DrawerLayout;
 import android.support.v7.app.ActionBarDrawerToggle;
 import android.support.v7.app.AlertDialog;
-import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.AppCompatDrawableManager;
 import android.support.v7.widget.SearchView;
 import android.support.v7.widget.Toolbar;
+import android.text.TextUtils;
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 import android.widget.ImageView;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import java.io.IOException;
 import java.util.Calendar;
@@ -39,13 +44,15 @@ import butterknife.ButterKnife;
 import butterknife.OnClick;
 import id.co.ppu.collectionfast2.fragments.HomeFragment;
 import id.co.ppu.collectionfast2.job.SyncJob;
+import id.co.ppu.collectionfast2.listener.OnLKPListListener;
+import id.co.ppu.collectionfast2.listener.OnPostRetrieveLKP;
+import id.co.ppu.collectionfast2.listener.OnPostRetrieveServerInfo;
+import id.co.ppu.collectionfast2.listener.OnPostSynchronizeData;
 import id.co.ppu.collectionfast2.lkp.ActivityScrollingLKPDetails;
 import id.co.ppu.collectionfast2.lkp.FragmentLKPList;
 import id.co.ppu.collectionfast2.lkp.FragmentSummaryLKP;
-import id.co.ppu.collectionfast2.location.LocationProvider;
-import id.co.ppu.collectionfast2.location.LocationTracker;
 import id.co.ppu.collectionfast2.login.LoginActivity;
-import id.co.ppu.collectionfast2.payment.ActivityPaymentEntry;
+import id.co.ppu.collectionfast2.payment.entry.ActivityPaymentEntri;
 import id.co.ppu.collectionfast2.pojo.DisplayTrnLDVDetails;
 import id.co.ppu.collectionfast2.pojo.HistInstallments;
 import id.co.ppu.collectionfast2.pojo.ServerInfo;
@@ -56,14 +63,33 @@ import id.co.ppu.collectionfast2.pojo.TrnLDVComments;
 import id.co.ppu.collectionfast2.pojo.TrnLDVDetails;
 import id.co.ppu.collectionfast2.pojo.TrnLDVHeader;
 import id.co.ppu.collectionfast2.pojo.TrnRVB;
+import id.co.ppu.collectionfast2.pojo.TrnRVColl;
 import id.co.ppu.collectionfast2.pojo.TrnRepo;
 import id.co.ppu.collectionfast2.pojo.TrnVehicleInfo;
+import id.co.ppu.collectionfast2.pojo.UserConfig;
 import id.co.ppu.collectionfast2.pojo.UserData;
 import id.co.ppu.collectionfast2.rest.ApiInterface;
 import id.co.ppu.collectionfast2.rest.ServiceGenerator;
 import id.co.ppu.collectionfast2.rest.request.RequestLKPByDate;
+import id.co.ppu.collectionfast2.rest.request.RequestSyncLKP;
 import id.co.ppu.collectionfast2.rest.response.ResponseGetLKP;
+import id.co.ppu.collectionfast2.rest.response.ResponseSync;
 import id.co.ppu.collectionfast2.settings.SettingsActivity;
+import id.co.ppu.collectionfast2.sync.SyncActivity;
+import id.co.ppu.collectionfast2.sync.SyncBastbj;
+import id.co.ppu.collectionfast2.sync.SyncChangeAddr;
+import id.co.ppu.collectionfast2.sync.SyncLdvComments;
+import id.co.ppu.collectionfast2.sync.SyncLdvDetails;
+import id.co.ppu.collectionfast2.sync.SyncLdvHeader;
+import id.co.ppu.collectionfast2.sync.SyncRVColl;
+import id.co.ppu.collectionfast2.sync.SyncRepo;
+import id.co.ppu.collectionfast2.sync.SyncRvb;
+import id.co.ppu.collectionfast2.sync.pojo.SyncTrnBastbj;
+import id.co.ppu.collectionfast2.sync.pojo.SyncTrnLDVComments;
+import id.co.ppu.collectionfast2.sync.pojo.SyncTrnLDVDetails;
+import id.co.ppu.collectionfast2.sync.pojo.SyncTrnLDVHeader;
+import id.co.ppu.collectionfast2.sync.pojo.SyncTrnRVColl;
+import id.co.ppu.collectionfast2.sync.pojo.SyncTrnRepo;
 import id.co.ppu.collectionfast2.util.DataUtil;
 import id.co.ppu.collectionfast2.util.Storage;
 import id.co.ppu.collectionfast2.util.Utility;
@@ -74,10 +100,14 @@ import retrofit2.Call;
 import retrofit2.Callback;
 import retrofit2.Response;
 
-public class MainActivity extends AppCompatActivity
-        implements NavigationView.OnNavigationItemSelectedListener, FragmentLKPList.OnLKPListListener {
+public class MainActivity extends SyncActivity
+        implements NavigationView.OnNavigationItemSelectedListener, OnLKPListListener {
 
     public static final String SELECTED_NAV_MENU_KEY = "selected_nav_menu_key";
+
+    private final CharSequence[] menuItems = {
+            "From Camera", "From Gallery", "Delete Photo"
+    };
 
     private boolean viewIsAtHome;
     private Menu menu;
@@ -87,6 +117,9 @@ public class MainActivity extends AppCompatActivity
     @BindView(R.id.fab)
     FloatingActionButton fab;
 
+    @BindView(R.id.coordinatorLayout)
+    View coordinatorLayout;
+
     @BindView(R.id.nav_view)
     NavigationView navigationView;
 
@@ -94,8 +127,7 @@ public class MainActivity extends AppCompatActivity
     DrawerLayout drawer;
 
     private UserData currentUser;
-
-    private Realm realm;
+    public String currentLDVNo = null;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -104,12 +136,9 @@ public class MainActivity extends AppCompatActivity
 
         ButterKnife.bind(this);
 
-        this.realm = Realm.getDefaultInstance();
-
         Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
 //        toolbar.setBackgroundColor(); bar.setBackgroundDrawable(new ColorDrawable(Color.parseColor("#0000ff")));
 //        toolbar.setBackgroundColor(Color.parseColor("#28166f"));
-//        AppCompatDrawableManager
         toolbar.setBackgroundColor(ContextCompat.getColor(this, R.color.colorPrimaryDark));
         setSupportActionBar(toolbar);
 
@@ -130,12 +159,47 @@ public class MainActivity extends AppCompatActivity
         TextView tvProfileEmail = ButterKnife.findById(v, R.id.tvProfileEmail);
         tvProfileEmail.setText(currentUser.getSecUser().get(0).getEmailAddr());
 
+        final ImageView imageView = ButterKnife.findById(v, R.id.imageView);
+        imageView.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                AlertDialog.Builder builder = new AlertDialog.Builder(MainActivity.this);
+                builder.setItems(menuItems, new DialogInterface.OnClickListener() {
+                    public void onClick(DialogInterface dialog, int item) {
+                        if (item == 0) {
+                            // from camera
+                            Intent takePicture = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
+                            startActivityForResult(takePicture, 44);//zero can be replaced with any action code
+                        } else if (item == 1) {
+                            // from gallery
+                            Intent pickPhoto = new Intent(Intent.ACTION_PICK,
+                                    android.provider.MediaStore.Images.Media.EXTERNAL_CONTENT_URI);
+                            startActivityForResult(pickPhoto, 55);//one can be replaced with any action code
+                        } else if (item == 2) {
+                            // delete
+                            Drawable icon;
+                            if (android.os.Build.VERSION.SDK_INT < Build.VERSION_CODES.M) {
+                                icon = VectorDrawableCompat.create(getResources(), R.drawable.ic_add_a_photo_black_24dp, getTheme());
+                            } else {
+                                icon = getResources().getDrawable(R.drawable.ic_add_a_photo_black_24dp, getTheme());
+                            }
+
+                            Drawable drawable = AppCompatDrawableManager.get().getDrawable(MainActivity.this, R.drawable.ic_account_circle_black_24dp);
+                            imageView.setImageDrawable(drawable);
+                        }
+                    }
+                });
+                AlertDialog alert = builder.create();
+                alert.show();
+
+            }
+        });
+
         // is collector photo available ?
         boolean photoNotAvail = true;
         if (photoNotAvail) {
-            ImageView iv = (ImageView) v.findViewById(R.id.imageView);
             Drawable drawable = AppCompatDrawableManager.get().getDrawable(this, R.drawable.ic_account_circle_black_24dp);
-            iv.setImageDrawable(drawable);
+            imageView.setImageDrawable(drawable);
         }
 
         if (savedInstanceState == null) {
@@ -147,22 +211,111 @@ public class MainActivity extends AppCompatActivity
         }
 
         // re-get
-        if (this.realm.where(ServerInfo.class).findFirst() == null) {
+        ServerInfo si = this.realm.where(ServerInfo.class).findFirst();
+        if (si == null) {
             try {
-                DataUtil.retrieveServerInfo(this.realm, this);
+                DataUtil.retrieveServerInfo(this.realm, this, new OnPostRetrieveServerInfo() {
+                    @Override
+                    public void onSuccess(final ServerInfo serverInfo) {
+                        realm.executeTransactionAsync(new Realm.Transaction() {
+                            @Override
+                            public void execute(Realm realm) {
+                                // create config
+                                UserConfig userConfig = realm.where(UserConfig.class).findFirst();
+                                if (userConfig == null) {
+                                    userConfig = new UserConfig();
+                                    userConfig.setUid(Utility.generateUUID());
+                                    userConfig.setKodeTarikRunningNumber(0L);
+                                    userConfig.setKodeRVCollRunningNumber(0L);
+
+                                    userConfig.setServerDate(serverInfo.getServerDate());
+
+                                    userConfig.setDeviceId(Utility.getDeviceId(MainActivity.this));
+
+                                }
+
+                                userConfig.setLastLogin(new Date());
+
+                                realm.copyToRealmOrUpdate(userConfig);
+
+                            }
+                        }, new Realm.Transaction.OnSuccess() {
+                            @Override
+                            public void onSuccess() {
+                                // check dates
+                                UserConfig userConfig = realm.where(UserConfig.class).findFirst();
+
+                                if (!Utility.isSameDay(userConfig.getLastLogin(), serverInfo.getServerDate())) {
+                                    Snackbar.make(coordinatorLayout, "Server date changed", Snackbar.LENGTH_SHORT).show();
+                                }
+
+                                if (userConfig.getPhotoProfileUri() != null) {
+                                    Uri uri;
+                                    uri = Uri.parse(userConfig.getPhotoProfileUri());
+
+                                    imageView.setImageURI(uri);
+                                }
+
+                            }
+                        });
+
+                    }
+
+                    @Override
+                    public void onFailure(Throwable t) {
+                        Utility.showDialog(MainActivity.this, "Error", t.getMessage());
+                    }
+                });
             } catch (Exception e) {
                 e.printStackTrace();
             }
+        } else {
+            final Date serverDate = si.getServerDate();
+
+            this.realm.executeTransactionAsync(new Realm.Transaction() {
+                @Override
+                public void execute(Realm realm) {
+                    // create config
+                    UserConfig userConfig = realm.where(UserConfig.class).findFirst();
+                    if (userConfig == null) {
+                        userConfig = new UserConfig();
+                        userConfig.setUid(Utility.generateUUID());
+                        userConfig.setKodeTarikRunningNumber(0L);
+                        userConfig.setKodeRVCollRunningNumber(0L);
+
+                        userConfig.setServerDate(serverDate);
+
+                        userConfig.setDeviceId(Utility.getDeviceId(MainActivity.this));
+
+                    }
+
+                    userConfig.setLastLogin(new Date());
+
+                    realm.copyToRealmOrUpdate(userConfig);
+
+                }
+            }, new Realm.Transaction.OnSuccess() {
+                @Override
+                public void onSuccess() {
+                    // check dates
+                    UserConfig userConfig = realm.where(UserConfig.class).findFirst();
+
+                    if (!Utility.isSameDay(userConfig.getLastLogin(), serverDate)) {
+                        Snackbar.make(coordinatorLayout, "Server date changed", Snackbar.LENGTH_SHORT).show();
+                    }
+
+                    if (userConfig.getPhotoProfileUri() != null) {
+                        Uri uri;
+                        uri = Uri.parse(userConfig.getPhotoProfileUri());
+
+                        imageView.setImageURI(uri);
+                    }
+
+                }
+            });
         }
 
-        startLocationTracker();
-    }
-
-    @Override
-    protected void onDestroy() {
-        super.onDestroy();
-        this.realm.close();
-        this.realm = null;
+//        startLocationTracker();
     }
 
     @Override
@@ -268,12 +421,35 @@ public class MainActivity extends AppCompatActivity
             return false;
         } else if (id == R.id.nav_reset) {
             resetData();
+
             return false;
         } else if (id == R.id.nav_logout) {
             logout();
+
             return false;
         } else if (id == R.id.nav_closeBatch) {
             closeBatch();
+
+            return false;
+        } else if (id == R.id.nav_manualSync) {
+
+            syncTransaction(false, new OnPostSynchronizeData() {
+                @Override
+                public void onSuccess() {
+                    Date serverDate = realm.where(ServerInfo.class).findFirst().getServerDate();
+                    retrieveLKPFromServer(currentUser.getUser().get(0).getUserId(), serverDate, true, null);
+                }
+
+                @Override
+                public void onFailure() {
+
+                }
+            });
+
+            return false;
+        } else if (id == R.id.nav_clearSyncTables) {
+            clearSyncTables();
+
             return false;
         } else
             displayView(id);
@@ -396,65 +572,6 @@ public class MainActivity extends AppCompatActivity
         alertDialogBuilder.show();
     }
 
-    private void closeBatch() {
-
-        AlertDialog.Builder alertDialogBuilder = new AlertDialog.Builder(this);
-        alertDialogBuilder.setTitle("Close Batch");
-
-//        Date serverDate = (Date) Storage.getObjPreference(getApplicationContext(), Storage.KEY_SERVER_DATE, Date.class);
-
-        alertDialogBuilder.setMessage("This action will close All today's transactions. \nAre you sure?");
-        //null should be your on click listener
-        alertDialogBuilder.setPositiveButton("Yes", new DialogInterface.OnClickListener() {
-
-            @Override
-            public void onClick(DialogInterface dialog, int which) {
-                // TODO: clear cookie
-                syncTransaction();
-
-                /*
-                while (getSupportFragmentManager().getBackStackEntryCount() > 0) {
-                    getSupportFragmentManager().popBackStackImmediate();
-                }
-
-                Intent intent = new Intent(MainActivity.this, LoginActivity.class);
-                intent.putExtra("finish", true); // if you are checking for this in your other Activities
-                if (Build.VERSION.SDK_INT >= 11) {
-                    intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_CLEAR_TASK);
-                } else {
-                    intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TOP);
-                }
-                startActivity(intent);
-//                moveTaskToBack(true);
-                finish();
-                */
-            }
-        });
-
-        alertDialogBuilder.setNegativeButton("No", new DialogInterface.OnClickListener() {
-
-            @Override
-            public void onClick(DialogInterface dialog, int which) {
-                dialog.dismiss();
-            }
-        });
-
-        alertDialogBuilder.show();
-    }
-
-    private void syncTransaction() {
-        // TODO: important !
-        Utility.showDialog(this, "Close Batch", "Cannot close batch.\nPlease finish all transactions.");
-
-        long ldvHeader = this.realm.where(TrnLDVHeader.class).equalTo("lastupdateBy", Utility.LAST_UPDATE_BY).count();
-        long ldvDetails = this.realm.where(TrnLDVDetails.class).equalTo("lastupdateBy", Utility.LAST_UPDATE_BY).count();
-        long trnRVB = this.realm.where(TrnRVB.class).equalTo("lastupdateBy", Utility.LAST_UPDATE_BY).count();
-        long trnContractBuckets = this.realm.where(TrnContractBuckets.class).equalTo("lastupdateBy", Utility.LAST_UPDATE_BY).count();
-        long trnLDVComments = this.realm.where(TrnLDVComments.class).equalTo("lastupdateBy", Utility.LAST_UPDATE_BY).count();
-        long trnRepo = this.realm.where(TrnRepo.class).equalTo("lastupdateBy", Utility.LAST_UPDATE_BY).count();
-        long trnBastbj = this.realm.where(TrnBastbj.class).equalTo("lastupdateBy", Utility.LAST_UPDATE_BY).count();
-    }
-
     private void resetData() {
 
         AlertDialog.Builder alertDialogBuilder = new AlertDialog.Builder(this);
@@ -509,21 +626,25 @@ public class MainActivity extends AppCompatActivity
     }
 
 
-
-    public void loadLKPFromServer(String collectorCode, Date lkpDate, final OnPostRetrieveLKP listener) {
+    public void retrieveLKPFromServer(final String collectorCode, Date lkpDate, boolean useCache, final OnPostRetrieveLKP listener) {
         if (currentUser == null || currentUser.getUser().size() != currentUser.getSecUser().size()) {
             return;
         }
+
+        Date serverDate = this.realm.where(ServerInfo.class).findFirst().getServerDate();
 
         final String createdBy = "JOB" + Utility.convertDateToString(lkpDate, "yyyyMMdd");
         // load cache
         long count = this.realm.where(TrnLDVHeader.class).equalTo("collCode", collectorCode)
                 .equalTo("createdBy", createdBy)
                 .count();
-        if (count > 0) {
-            if (listener != null)
-                listener.onLoadFromLocal();
-            return;
+
+        if (useCache) {
+            if (count > 0 && lkpDate.before(serverDate)) {
+                if (listener != null)
+                    listener.onLoadFromLocal();
+                return;
+            }
         }
 
         // should check apakah ada data lkp yg masih kecantol di hari kemarin
@@ -536,6 +657,18 @@ public class MainActivity extends AppCompatActivity
         mProgressDialog.setCancelable(false);
         mProgressDialog.setMessage("Getting your LKP from server.\nPlease wait...");
         mProgressDialog.show();
+
+        syncTransaction(false, new OnPostSynchronizeData() {
+            @Override
+            public void onSuccess() {
+
+            }
+
+            @Override
+            public void onFailure() {
+
+            }
+        });
 
         // tarik LKP
         RequestLKPByDate requestLKP = new RequestLKPByDate();
@@ -571,24 +704,86 @@ public class MainActivity extends AppCompatActivity
                                 public void execute(Realm bgRealm) {
                                     // insert header
                                     // wipe existing tables?
-                                    boolean d = bgRealm.where(TrnLDVHeader.class).equalTo(Utility.COLUMN_CREATED_BY, createdBy).findAll().deleteAllFromRealm();
-                                    bgRealm.copyToRealmOrUpdate(respGetLKP.getData().getHeader());
+                                    boolean d = bgRealm.where(TrnLDVHeader.class)
+                                            .equalTo("collCode", collectorCode)
+                                            .equalTo(Utility.COLUMN_CREATED_BY, createdBy)
+                                            .findAll()
+                                            .deleteAllFromRealm();
+
+                                    bgRealm.copyToRealm(respGetLKP.getData().getHeader());
+
+                                    currentLDVNo = respGetLKP.getData().getHeader().getLdvNo();
+
+                                    // refresh synctable
+                                    TrnLDVHeader _header = respGetLKP.getData().getHeader();
+                                    if (_header.getFlagDone() != null && _header.getFlagDone().equalsIgnoreCase("Y")) {
+                                        SyncTrnLDVHeader sync = bgRealm.where(SyncTrnLDVHeader.class)
+                                                .equalTo("ldvNo", _header.getLdvNo()).findFirst();
+
+                                        if (sync == null) {
+                                            sync = new SyncTrnLDVHeader();
+                                        }
+                                        sync.setLdvNo(_header.getLdvNo());
+                                        sync.setLastUpdateBy(_header.getLastupdateBy());
+                                        sync.setCreatedBy(_header.getCreatedBy());
+
+                                        sync.setSyncedDate(_header.getDateDone());
+
+                                        bgRealm.copyToRealm(sync);
+                                    }
 
                                     // insert address
                                     d = bgRealm.where(TrnCollectAddr.class).equalTo(Utility.COLUMN_CREATED_BY, createdBy).findAll().deleteAllFromRealm();
-                                    bgRealm.copyToRealmOrUpdate(respGetLKP.getData().getAddress());
+                                    bgRealm.copyToRealm(respGetLKP.getData().getAddress());
+
 
                                     // insert buckets
                                     d = bgRealm.where(TrnContractBuckets.class).equalTo(Utility.COLUMN_CREATED_BY, createdBy).findAll().deleteAllFromRealm();
-                                    bgRealm.copyToRealmOrUpdate(respGetLKP.getData().getBuckets());
+                                    bgRealm.copyToRealm(respGetLKP.getData().getBuckets());
 
                                     // insert rvb
                                     d = bgRealm.where(TrnRVB.class).equalTo(Utility.COLUMN_CREATED_BY, createdBy).findAll().deleteAllFromRealm();
-                                    bgRealm.copyToRealmOrUpdate(respGetLKP.getData().getRvb());
+                                    bgRealm.copyToRealm(respGetLKP.getData().getRvb());
+
+                                    /*
+                                    for (TrnRVB _rvb : respGetLKP.getData().getRvb()) {
+                                        if (_rvb == null)
+                                            continue;
+
+                                        if (_rvb.getFlagDone() != null && _rvb.getFlagDone().equalsIgnoreCase("Y")) {
+                                            SyncTrnRVB s = bgRealm.where(SyncTrnRVB.class)
+                                                    .equalTo("rvbNo", _rvb.getRvbNo()).findFirst();
+                                            s.setSyncedDate(_rvb.getDateDone());
+
+                                            bgRealm.copyToRealm(s);
+                                        }
+                                    }*/
+
 
                                     // insert bastbj
                                     d = bgRealm.where(TrnBastbj.class).equalTo(Utility.COLUMN_CREATED_BY, createdBy).findAll().deleteAllFromRealm();
-                                    bgRealm.copyToRealmOrUpdate(respGetLKP.getData().getBastbj());
+                                    bgRealm.copyToRealm(respGetLKP.getData().getBastbj());
+
+                                    for (TrnBastbj _bastbj : respGetLKP.getData().getBastbj()) {
+
+                                        if (_bastbj == null)
+                                            continue;
+
+                                        if (_bastbj.getFlagDone() != null && _bastbj.getFlagDone().equalsIgnoreCase("Y")) {
+                                            SyncTrnBastbj sync = bgRealm.where(SyncTrnBastbj.class)
+                                                    .equalTo("bastbjNo", _bastbj.getBastbjNo()).findFirst();
+
+                                            if (sync == null) {
+                                                sync = new SyncTrnBastbj();
+                                            }
+                                            sync.setBastbjNo(_bastbj.getBastbjNo());
+                                            sync.setLastUpdateBy(_bastbj.getLastupdateBy());
+                                            sync.setCreatedBy(_bastbj.getCreatedBy());
+                                            sync.setSyncedDate(_bastbj.getDateDone());
+
+                                            bgRealm.copyToRealm(sync);
+                                        }
+                                    }
 
                                     // insert vehicle info
                                     d = bgRealm.where(TrnVehicleInfo.class).equalTo(Utility.COLUMN_CREATED_BY, createdBy).findAll().deleteAllFromRealm();
@@ -614,9 +809,116 @@ public class MainActivity extends AppCompatActivity
                                         ldvDetails.setAddress(_address);
                                         bgRealm.copyToRealm(ldvDetails);
                                     }
-//                                    bgRealm.copyToRealmOrUpdate(respGetLKP.getData().getDetails());
+
+                                    for (TrnLDVDetails _ldvDtl : respGetLKP.getData().getDetails()) {
+                                        if (_ldvDtl == null)
+                                            continue;
+
+                                        if (_ldvDtl.getFlagDone() != null && _ldvDtl.getFlagDone().equalsIgnoreCase("Y")) {
+                                            SyncTrnLDVDetails sync = bgRealm.where(SyncTrnLDVDetails.class)
+                                                    .equalTo("ldvNo", _ldvDtl.getPk().getLdvNo())
+                                                    .equalTo("seqNo", _ldvDtl.getPk().getSeqNo())
+                                                    .equalTo("contractNo", _ldvDtl.getContractNo())
+                                                    .findFirst();
+
+                                            if (sync == null) {
+                                                sync = new SyncTrnLDVDetails();
+                                            }
+                                            sync.setLdvNo(_ldvDtl.getPk().getLdvNo());
+                                            sync.setSeqNo(_ldvDtl.getPk().getSeqNo());
+                                            sync.setContractNo(_ldvDtl.getContractNo());
+                                            sync.setLastUpdateBy(_ldvDtl.getLastupdateBy());
+                                            sync.setCreatedBy(_ldvDtl.getCreatedBy());
+                                            sync.setSyncedDate(_ldvDtl.getDateDone());
+
+                                            bgRealm.copyToRealm(sync);
+                                        }
+                                    }
+
+                                    //repo inserted by MOBCOL
+                                    d = bgRealm.where(TrnRepo.class).equalTo(Utility.COLUMN_CREATED_BY, Utility.LAST_UPDATE_BY).findAll().deleteAllFromRealm();
+                                    bgRealm.copyToRealmOrUpdate(respGetLKP.getData().getRepo());
+
+                                    for (TrnRepo _obj : respGetLKP.getData().getRepo()) {
+                                        if (_obj == null)
+                                            continue;
+
+                                        if (_obj.getFlagDone() != null && _obj.getFlagDone().equalsIgnoreCase("Y")) {
+                                            SyncTrnRepo sync = bgRealm.where(SyncTrnRepo.class)
+                                                    .equalTo("repoNo", _obj.getRepoNo())
+                                                    .findFirst();
+
+                                            if (sync == null) {
+                                                sync = new SyncTrnRepo();
+                                            }
+                                            sync.setRepoNo(_obj.getRepoNo());
+                                            sync.setLastUpdateBy(_obj.getLastupdateBy());
+                                            sync.setCreatedBy(_obj.getCreatedBy());
+                                            sync.setSyncedDate(_obj.getDateDone());
 
 
+                                            bgRealm.copyToRealm(sync);
+                                        }
+                                    }
+                                    //changeaddr ?
+
+                                    //ldvcomment ?
+                                    d = bgRealm.where(TrnLDVComments.class).equalTo(Utility.COLUMN_CREATED_BY, Utility.LAST_UPDATE_BY).findAll().deleteAllFromRealm();
+                                    bgRealm.copyToRealmOrUpdate(respGetLKP.getData().getLdvComments());
+
+                                    for (TrnLDVComments _obj : respGetLKP.getData().getLdvComments()) {
+                                        if (_obj == null)
+                                            continue;
+
+                                        if (_obj.getFlagDone() != null && _obj.getFlagDone().equalsIgnoreCase("Y")) {
+                                            SyncTrnLDVComments sync = bgRealm.where(SyncTrnLDVComments.class)
+                                                    .equalTo("ldvNo", _obj.getPk().getLdvNo())
+                                                    .equalTo("seqNo", _obj.getPk().getSeqNo())
+                                                    .equalTo("contractNo", _obj.getContractNo())
+                                                    .findFirst();
+
+                                            if (sync == null) {
+                                                sync = new SyncTrnLDVComments();
+                                            }
+                                            sync.setLdvNo(_obj.getPk().getLdvNo());
+                                            sync.setSeqNo(_obj.getPk().getSeqNo());
+                                            sync.setContractNo(_obj.getContractNo());
+                                            sync.setLastUpdateBy(_obj.getLastupdateBy());
+                                            sync.setCreatedBy(_obj.getCreatedBy());
+                                            sync.setSyncedDate(_obj.getDateDone());
+
+
+                                            bgRealm.copyToRealm(sync);
+                                        }
+                                    }
+
+                                    //rvcoll
+                                    d = bgRealm.where(TrnRVColl.class).equalTo(Utility.COLUMN_CREATED_BY, Utility.LAST_UPDATE_BY).findAll().deleteAllFromRealm();
+                                    bgRealm.copyToRealmOrUpdate(respGetLKP.getData().getRvColl());
+
+                                    for (TrnRVColl _obj : respGetLKP.getData().getRvColl()) {
+                                        if (_obj == null)
+                                            continue;
+
+                                        if (_obj.getFlagDone() != null && _obj.getFlagDone().equalsIgnoreCase("Y")) {
+                                            SyncTrnRVColl sync = bgRealm.where(SyncTrnRVColl.class)
+                                                    .equalTo("ldvNo", _obj.getLdvNo())
+                                                    .equalTo("contractNo", _obj.getContractNo())
+                                                    .findFirst();
+
+                                            if (sync == null) {
+                                                sync = new SyncTrnRVColl();
+                                            }
+                                            sync.setLdvNo(_obj.getLdvNo());
+                                            sync.setContractNo(_obj.getContractNo());
+                                            sync.setLastUpdateBy(_obj.getLastupdateBy());
+                                            sync.setCreatedBy(_obj.getCreatedBy());
+                                            sync.setSyncedDate(_obj.getDateDone());
+
+
+                                            bgRealm.copyToRealm(sync);
+                                        }
+                                    }
                                 }
                             }, new Realm.Transaction.OnSuccess() {
                                 @Override
@@ -629,6 +931,8 @@ public class MainActivity extends AppCompatActivity
                                 @Override
                                 public void onError(Throwable error) {
                                     // Transaction failed and was automatically canceled.
+                                    Toast.makeText(MainActivity.this, "Error while getting LKP", Toast.LENGTH_LONG).show();
+                                    error.printStackTrace();
                                 }
                             });
 
@@ -682,6 +986,8 @@ public class MainActivity extends AppCompatActivity
             i.putExtra(ActivityScrollingLKPDetails.PARAM_CONTRACT_NO, dtl.getContractNo());
             i.putExtra(ActivityScrollingLKPDetails.PARAM_LDV_NO, dtl.getLdvNo());
             i.putExtra(ActivityScrollingLKPDetails.PARAM_COLLECTOR_ID, dtl.getCollId());
+            i.putExtra(ActivityScrollingLKPDetails.PARAM_LKP_DATE, dtl.getLkpDate().getTime());
+            i.putExtra(ActivityScrollingLKPDetails.PARAM_WORKSTATUS, dtl.getWorkStatus());
 
             Date serverDate = this.realm.where(ServerInfo.class).findFirst().getServerDate();
             boolean isLKPInquiry = !detail.getCreatedBy().equals("JOB" + Utility.convertDateToString(serverDate, "yyyyMMdd"));
@@ -700,10 +1006,10 @@ public class MainActivity extends AppCompatActivity
 
         if (frag != null) {
 
-            loadLKPFromServer(collectorCode, lkpDate, new OnPostRetrieveLKP() {
+            retrieveLKPFromServer(collectorCode, lkpDate, false, new OnPostRetrieveLKP() {
                 @Override
                 public void onLoadFromLocal() {
-                    frag.loadLKP(collectorCode, lkpDate);
+                    currentLDVNo = frag.loadLKP(collectorCode, lkpDate);
                 }
 
                 @Override
@@ -722,8 +1028,40 @@ public class MainActivity extends AppCompatActivity
     }
 
     public void openPaymentEntry() {
-        Intent i = new Intent(this, ActivityPaymentEntry.class);
+        Intent i = new Intent(this, ActivityPaymentEntri.class);
+        // DO NOT SEND ANY PARAMs !
         startActivity(i);
+    }
+
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+        super.onActivityResult(requestCode, resultCode, data);
+
+        switch (requestCode) {
+            case 44:
+            case 55:
+                if (resultCode == RESULT_OK) {
+                    View v = navigationView.getHeaderView(0);
+                    final ImageView imageView = ButterKnife.findById(v, R.id.imageView);
+
+                    final Uri selectedImage = data.getData();
+                    imageView.setImageURI(selectedImage);
+
+                    this.realm.executeTransactionAsync(new Realm.Transaction() {
+                        @Override
+                        public void execute(Realm realm) {
+                            UserConfig userConfig = realm.where(UserConfig.class).findFirst();
+                            if (userConfig != null) {
+                                userConfig.setPhotoProfileUri(selectedImage.toString());
+                            }
+
+                            realm.copyToRealmOrUpdate(userConfig);
+                        }
+                    });
+
+                }
+
+        }
     }
 
     public void startJob() {
@@ -761,7 +1099,7 @@ public class MainActivity extends AppCompatActivity
         Log.i("fast.sync", "sync job stopped");
 
     }
-
+/*
     private void startLocationTracker() {
         // Configure the LocationTracker's broadcast receiver to run every 5 minutes.
         Intent intent = new Intent(this, LocationTracker.class);
@@ -770,13 +1108,180 @@ public class MainActivity extends AppCompatActivity
         alarmManager.setRepeating(AlarmManager.RTC_WAKEUP, Calendar.getInstance().getTimeInMillis(),
                 LocationProvider.FIVE_MINUTES, pendingIntent);
     }
+*/
 
-    public interface OnPostRetrieveLKP {
+    protected void closeBatch() {
 
-        void onLoadFromLocal();
+        AlertDialog.Builder alertDialogBuilder = new AlertDialog.Builder(this);
+        alertDialogBuilder.setTitle("Close Batch");
 
-        void onSuccess();
+//        Date serverDate = (Date) Storage.getObjPreference(getApplicationContext(), Storage.KEY_SERVER_DATE, Date.class);
 
-        void onFailure();
+        alertDialogBuilder.setMessage("This action will close All today's transactions. \nAre you sure?");
+        //null should be your on click listener
+        alertDialogBuilder.setPositiveButton("Yes", new DialogInterface.OnClickListener() {
+
+            @Override
+            public void onClick(DialogInterface dialog, int which) {
+                // TODO: clear cookie
+                syncTransaction(true, new OnPostSynchronizeData() {
+                    @Override
+                    public void onSuccess() {
+                        clearLKPTables();
+                        clearSyncTables();
+
+                        final FragmentLKPList frag = (FragmentLKPList)
+                                getSupportFragmentManager().findFragmentById(R.id.content_frame);
+
+                        if (frag != null) {
+                            frag.clearTodayList();
+                        }
+                    }
+
+                    @Override
+                    public void onFailure() {
+
+                    }
+                });
+
+            }
+        });
+
+        alertDialogBuilder.setNegativeButton("No", new DialogInterface.OnClickListener() {
+
+            @Override
+            public void onClick(DialogInterface dialog, int which) {
+                dialog.dismiss();
+            }
+        });
+
+        alertDialogBuilder.show();
     }
+
+    protected void syncTransaction(final boolean closeBatch, final OnPostSynchronizeData listener) {
+
+        if (closeBatch) {
+
+            if (TextUtils.isEmpty(currentLDVNo)) {
+                Utility.showDialog(this, "Error Close Batch", "LKP not loaded");
+                return;
+            }
+
+            this.realm.executeTransaction(new Realm.Transaction() {
+                @Override
+                public void execute(Realm realm) {
+                    TrnLDVHeader trnLDVHeader = realm.where(TrnLDVHeader.class)
+                            .equalTo("ldvNo", currentLDVNo)
+//                    .equalTo("createdBy", createdBy)
+                            .findFirst();
+
+                    trnLDVHeader.setWorkFlag("C");
+                    trnLDVHeader.setCloseBatch("Y");
+                    trnLDVHeader.setLastupdateBy(Utility.LAST_UPDATE_BY);
+                    trnLDVHeader.setLastupdateTimestamp(new Date());
+                    realm.copyToRealmOrUpdate(trnLDVHeader); // hanya di update waktu close batch
+
+                }
+            });
+
+        }
+        final SyncLdvHeader syncLdvHeader = new SyncLdvHeader(this.realm);
+        final SyncLdvDetails syncLdvDetails = new SyncLdvDetails(this.realm);
+        final SyncLdvComments syncLdvComments = new SyncLdvComments(this.realm);
+        final SyncRvb syncRvb = new SyncRvb(this.realm);
+        final SyncRVColl syncRVColl = new SyncRVColl(this.realm);
+        final SyncBastbj syncBastbj = new SyncBastbj(this.realm);
+        final SyncRepo syncRepo = new SyncRepo(this.realm);
+        final SyncChangeAddr syncChangeAddr = new SyncChangeAddr(this.realm);
+
+        boolean anyDataToSync =
+                (closeBatch && syncLdvHeader.anyDataToSync())
+                || syncLdvDetails.anyDataToSync()
+                        || syncLdvComments.anyDataToSync()
+                        || syncRvb.anyDataToSync()
+                        || syncRVColl.anyDataToSync()
+                        || syncBastbj.anyDataToSync()
+                        || syncRepo.anyDataToSync()
+                        || syncChangeAddr.anyDataToSync();
+
+        if (!anyDataToSync) {
+            Toast.makeText(this, "No Data to sync", Toast.LENGTH_SHORT).show();
+            return;
+        }
+
+        ApiInterface fastService =
+                ServiceGenerator.createService(ApiInterface.class, Utility.buildUrl(Storage.getPreferenceAsInt(getApplicationContext(), Storage.KEY_SERVER_ID, 0)));
+
+        final RequestSyncLKP req = new RequestSyncLKP();
+
+        if (closeBatch) {
+            req.setLdvHeader(syncLdvHeader.getDataToSync());
+        }
+
+        req.setRvb(syncRvb.getDataToSync());
+        req.setRvColl(syncRVColl.getDataToSync());
+        req.setLdvDetails(syncLdvDetails.getDataToSync());
+        req.setLdvComments(syncLdvComments.getDataToSync());
+        req.setBastbj(syncBastbj.getDataToSync());
+        req.setRepo(syncRepo.getDataToSync());
+        req.setChangeAddr(syncChangeAddr.getDataToSync());
+
+        Call<ResponseSync> call = fastService.syncLKP(req);
+        call.enqueue(new Callback<ResponseSync>() {
+            @Override
+            public void onResponse(Call<ResponseSync> call, Response<ResponseSync> response) {
+                final ResponseSync respSync = response.body();
+
+                if (respSync.getError() != null) {
+                    Toast.makeText(MainActivity.this, "Data Error (" + respSync.getError() + ")\n" + respSync.getError().getErrorDesc(), Toast.LENGTH_SHORT).show();
+                    return;
+                }
+
+                // TODO: tackle successful sync result here
+                if (respSync.getData() != 1)
+                    return;
+
+                if (closeBatch) {
+                    if (req.getLdvHeader() != null && req.getLdvHeader().size() > 0) {
+                        syncLdvHeader.syncData();
+                    }
+                }
+
+                if (req.getLdvDetails() != null && req.getLdvDetails().size() > 0)
+                    syncLdvDetails.syncData();
+
+                if (req.getLdvComments() != null && req.getLdvComments().size() > 0)
+                    syncLdvComments.syncData();
+
+                if (req.getRepo() != null && req.getRepo().size() > 0)
+                    syncRepo.syncData();
+
+                if (req.getRvb() != null && req.getRvb().size() > 0)
+                    syncRvb.syncData();
+
+                if (req.getRvColl() != null && req.getRvColl().size() > 0)
+                    syncRVColl.syncData();
+
+                if (req.getChangeAddr() != null && req.getChangeAddr().size() > 0)
+                    syncChangeAddr.syncData();
+
+                if (req.getBastbj() != null && req.getBastbj().size() > 0)
+                    syncBastbj.syncData();
+
+                if (listener != null)
+                    listener.onSuccess();
+            }
+
+            @Override
+            public void onFailure(Call<ResponseSync> call, Throwable t) {
+                Log.e("eric.onFailure", t.getMessage(), t);
+
+                Toast.makeText(MainActivity.this, "Sync Failed\n" + t.getMessage(), Toast.LENGTH_LONG).show();
+
+                if (listener != null)
+                    listener.onFailure();
+            }
+        });
+    }
+
 }

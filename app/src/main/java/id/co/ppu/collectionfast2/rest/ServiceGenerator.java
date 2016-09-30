@@ -2,10 +2,19 @@ package id.co.ppu.collectionfast2.rest;
 
 import android.util.Base64;
 
+import com.google.gson.ExclusionStrategy;
+import com.google.gson.FieldAttributes;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
+import com.google.gson.JsonElement;
+import com.google.gson.JsonPrimitive;
+import com.google.gson.JsonSerializationContext;
+import com.google.gson.JsonSerializer;
+import com.google.gson.annotations.Expose;
 
 import java.io.IOException;
+import java.lang.reflect.Type;
+import java.util.Date;
 import java.util.concurrent.TimeUnit;
 
 import okhttp3.HttpUrl;
@@ -74,6 +83,43 @@ public class ServiceGenerator {
         Gson gson = new GsonBuilder()
                 .setDateFormat("dd-MM-yyyy HH:mm:ss")   //"yyyy-MM-dd'T'HH:mm:ssZ"
 //                .setDateFormat("yyyy-MM-dd HH:mm:ss")   //"yyyy-MM-dd'T'HH:mm:ssZ"
+                .addDeserializationExclusionStrategy(new ExclusionStrategy() {
+                    @Override
+                    public boolean shouldSkipField(FieldAttributes f) {
+                        final Expose expose = f.getAnnotation(Expose.class);
+                        return expose != null && !expose.deserialize();
+                    }
+
+                    @Override
+                    public boolean shouldSkipClass(Class<?> clazz) {
+                        return false;
+                    }
+                })
+                .addSerializationExclusionStrategy(new ExclusionStrategy() {
+                    @Override
+                    public boolean shouldSkipField(FieldAttributes f) {
+                        final Expose expose = f.getAnnotation(Expose.class);
+                        return expose != null && !expose.serialize();
+                    }
+
+                    @Override
+                    public boolean shouldSkipClass(Class<?> clazz) {
+                        return false;
+                    }
+                })
+                /*
+                .registerTypeAdapter(Date.class, new JsonDeserializer<Date>() {
+                    @Override
+                    public Date deserialize(JsonElement json, Type typeOfT, JsonDeserializationContext context) throws JsonParseException {
+                        return json == null ? null : new Date(json.getAsLong());
+                    }
+                })*/
+                .registerTypeAdapter(Date.class, new JsonSerializer<Date>() {
+                    @Override
+                    public JsonElement serialize(Date src, Type typeOfSrc, JsonSerializationContext context) {
+                        return src == null ? null : new JsonPrimitive(src.getTime());
+                    }
+                })
                 .create();
 
         /*

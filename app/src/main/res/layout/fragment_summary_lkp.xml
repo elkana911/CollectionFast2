@@ -93,6 +93,7 @@
                 android:layout_height="wrap_content"
                 android:showDividers="beginning|end"
                 android:background="@drawable/rounded_shape"
+                android:paddingLeft="8dp"
                 android:stretchColumns="*">
 
                 <TableRow
@@ -105,6 +106,7 @@
                     <TextView
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
+                        android:background="@android:color/holo_red_light"
                         android:text="Target" />
 
                     <TextView

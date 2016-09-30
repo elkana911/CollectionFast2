@@ -6,11 +6,22 @@ import java.io.Serializable;
 import java.util.Date;
 
 import io.realm.RealmObject;
+import io.realm.annotations.PrimaryKey;
 
 /**
  * Created by Eric on 06-Sep-16.
  */
 public class UserConfig extends RealmObject implements Serializable{
+
+    @PrimaryKey
+    @SerializedName("uid")
+    private String uid;
+
+    @SerializedName("imei")
+    private String imeiDevice;
+
+    @SerializedName("deviceId")
+    private String deviceId;
 
     @SerializedName("syncMinute")
     private Long syncMinute;
@@ -18,11 +29,41 @@ public class UserConfig extends RealmObject implements Serializable{
     @SerializedName("serverDate")
     private Date serverDate;
 
+    @SerializedName("lastLogin")
+    private Date lastLogin;
+
     @SerializedName("kodeTarikRunningNumber")
     private Long kodeTarikRunningNumber;
 
     @SerializedName("kodeRVCollRunningNumber")
     private Long kodeRVCollRunningNumber;
+
+    @SerializedName("photoProfileUri")
+    private String photoProfileUri;
+
+    public String getUid() {
+        return uid;
+    }
+
+    public void setUid(String uid) {
+        this.uid = uid;
+    }
+
+    public String getImeiDevice() {
+        return imeiDevice;
+    }
+
+    public void setImeiDevice(String imeiDevice) {
+        this.imeiDevice = imeiDevice;
+    }
+
+    public String getDeviceId() {
+        return deviceId;
+    }
+
+    public void setDeviceId(String deviceId) {
+        this.deviceId = deviceId;
+    }
 
     public Long getSyncMinute() {
         return syncMinute;
@@ -56,13 +97,34 @@ public class UserConfig extends RealmObject implements Serializable{
         this.serverDate = serverDate;
     }
 
+    public Date getLastLogin() {
+        return lastLogin;
+    }
+
+    public void setLastLogin(Date lastLogin) {
+        this.lastLogin = lastLogin;
+    }
+
+    public String getPhotoProfileUri() {
+        return photoProfileUri;
+    }
+
+    public void setPhotoProfileUri(String photoProfileUri) {
+        this.photoProfileUri = photoProfileUri;
+    }
+
     @Override
     public String toString() {
         return "UserConfig{" +
-                "syncMinute=" + syncMinute +
+                "uid='" + uid + '\'' +
+                ", imeiDevice='" + imeiDevice + '\'' +
+                ", deviceId='" + deviceId + '\'' +
+                ", syncMinute=" + syncMinute +
                 ", serverDate=" + serverDate +
+                ", lastLogin=" + lastLogin +
                 ", kodeTarikRunningNumber=" + kodeTarikRunningNumber +
                 ", kodeRVCollRunningNumber=" + kodeRVCollRunningNumber +
+                ", photoProfileUri='" + photoProfileUri + '\'' +
                 '}';
     }
 }

@@ -2,8 +2,6 @@ package id.co.ppu.collectionfast2;
 
 import org.junit.Test;
 
-import id.co.ppu.collectionfast2.pojo.MstSecUser;
-
 import static org.junit.Assert.assertEquals;
 
 /**
@@ -17,14 +15,11 @@ public class ExampleUnitTest {
 
     @Test
     public void checkNull() throws Exception {
-        MstSecUser usr = new MstSecUser();
 
-        String password = "elkana";
-        if (usr == null || !usr.getUserPwd().equals(password)) {
-            System.out.println("salah");
+        String password = "0505";
+        long penerimaan = Long.valueOf(password);
 
-        } else {
-            System.out.println("bener");
-        }
+        System.out.println(password);
+        System.out.println(penerimaan);
     }
 }

@@ -22,6 +22,15 @@
             android:id="@+id/nav_closeBatch"
             android:icon="@drawable/ic_arrow_downward_black_24dp"
             android:title="Close Batch" />
+        <item
+            android:id="@+id/nav_manualSync"
+            android:icon="@drawable/ic_sync_black_24dp"
+            android:title="Manual Sync" />
+        <item
+            android:id="@+id/nav_clearSyncTables"
+            android:visible="false"
+            android:icon="@drawable/ic_phonelink_erase_black_24dp"
+            android:title="Clear Sync Tables" />
         <!--          <item
                     android:id="@+id/nav_camera"
                     android:icon="@drawable/ic_menu_camera"

@@ -4,6 +4,7 @@ import android.content.Context;
 import android.content.Intent;
 import android.graphics.Color;
 import android.os.Bundle;
+import android.support.design.widget.Snackbar;
 import android.text.TextUtils;
 import android.util.TypedValue;
 import android.view.View;
@@ -30,6 +31,7 @@ import id.co.ppu.collectionfast2.pojo.TrnLDVDetails;
 import id.co.ppu.collectionfast2.pojo.TrnLDVHeader;
 import id.co.ppu.collectionfast2.pojo.TrnRepo;
 import id.co.ppu.collectionfast2.pojo.UserConfig;
+import id.co.ppu.collectionfast2.sync.pojo.SyncTrnRepo;
 import id.co.ppu.collectionfast2.util.Utility;
 import io.realm.Realm;
 import io.realm.RealmResults;
@@ -39,6 +41,9 @@ public class ActivityRepoEntry extends BasicActivity {
     public static final String PARAM_CONTRACT_NO = "customer.contractNo";
     private String contractNo = null;
     private Date serverDate;
+
+    @BindView(R.id.activity_repo_entri)
+    View activityRepoEntri;
 
     @BindView(R.id.etContractNo)
     EditText etContractNo;
@@ -114,11 +119,16 @@ public class ActivityRepoEntry extends BasicActivity {
             etKodeTarik.setText(trnRepo.getRepoNo());
             spBASTK.setText(trnRepo.getBastbjNo());
         } else {
-            long runningNumber = 1;
-            if (userConfig == null || userConfig.getKodeTarikRunningNumber() == null) {
-            } else {
-                runningNumber = userConfig.getKodeTarikRunningNumber() +1;
-            }
+
+            // generate running number
+            if (userConfig.getKodeTarikRunningNumber() == null)
+                userConfig.setKodeTarikRunningNumber(0L);
+            long runningNumber = userConfig.getKodeTarikRunningNumber() + 1;
+
+            /* ga usah di save dulu
+            userConfig.setKodeTarikRunningNumber(runningNumber);
+            realm.copyToRealmOrUpdate(userConfig);
+            */
 
             etKodeTarik.setText(generateKodeTarik(header.getOfficeCode(), runningNumber));
 
@@ -154,6 +164,12 @@ public class ActivityRepoEntry extends BasicActivity {
             cancel = true;
         }
 
+        if (TextUtils.isEmpty(repoNo)) {
+            etKodeTarik.setError(getString(R.string.error_field_required));
+            focusView = etKodeTarik;
+            cancel = true;
+        }
+
         if (TextUtils.isEmpty(bastbjNo)) {
             spBASTK.setError(getString(R.string.error_field_required));
             focusView = spBASTK;
@@ -168,6 +184,21 @@ public class ActivityRepoEntry extends BasicActivity {
         this.realm.executeTransactionAsync(new Realm.Transaction() {
             @Override
             public void execute(Realm realm) {
+                UserConfig userConfig = realm.where(UserConfig.class).findFirst();
+                Date serverDate = realm.where(ServerInfo.class).findFirst().getServerDate();
+
+                String createdBy = "JOB" + Utility.convertDateToString(serverDate, Utility.DATE_DATA_PATTERN);
+
+                SyncTrnRepo trnSync = realm.where(SyncTrnRepo.class)
+                        .equalTo("repoNo", repoNo)
+                        .equalTo("createdBy", createdBy)
+                        .isNotNull("syncedDate")
+                        .findFirst();
+
+                if (trnSync != null) {
+                    Snackbar.make(activityRepoEntri, "Data already synced", Snackbar.LENGTH_SHORT).show();
+                    return;
+                }
                 TrnBastbj trnBastbj = realm.where(TrnBastbj.class).equalTo("bastbjNo", bastbjNo).findFirst();
                 if (trnBastbj != null) {
                     trnBastbj.setBastbjStatus("CL");
@@ -192,8 +223,15 @@ public class ActivityRepoEntry extends BasicActivity {
 
                 if (trnRepo == null) {
                     trnRepo = new TrnRepo();
+
+                    if (userConfig.getKodeTarikRunningNumber() == null)
+                        userConfig.setKodeTarikRunningNumber(0L);
+                    long runningNumber = userConfig.getKodeTarikRunningNumber() + 1;
+                    userConfig.setKodeTarikRunningNumber(runningNumber);
+                    realm.copyToRealmOrUpdate(userConfig);
+
                 }
-//                TrnRepo trnRepo = new TrnRepo();
+
                 trnRepo.setContractNo(contractNo);
                 trnRepo.setRepoNo(repoNo);
                 trnRepo.setBastbjNo(trnBastbj.getBastbjNo());
@@ -205,7 +243,7 @@ public class ActivityRepoEntry extends BasicActivity {
         }, new Realm.Transaction.OnSuccess() {
             @Override
             public void onSuccess() {
-                Toast.makeText(ActivityRepoEntry.this, "Data saved !", Toast.LENGTH_SHORT).show();
+                Toast.makeText(ActivityRepoEntry.this, "Repo saved !", Toast.LENGTH_SHORT).show();
 
             }
         }, new Realm.Transaction.OnError() {
@@ -258,10 +296,10 @@ public class ActivityRepoEntry extends BasicActivity {
         public View getView(int position, View convertView, ViewGroup parent) {
             TextView tv = new TextView(this.ctx);
 //            TextView tv = (TextView) convertView.findViewById(R.id.nama);
-            tv.setPadding(10,20,10,20);
+            tv.setPadding(10,10,10,10);
             tv.setTextColor(Color.BLACK);
             tv.setText(list.get(position).getBastbjNo());
-            tv.setTextSize(TypedValue.COMPLEX_UNIT_DIP, 20);
+            tv.setTextSize(TypedValue.COMPLEX_UNIT_DIP, 16);
 
             return tv;
         }
@@ -269,8 +307,9 @@ public class ActivityRepoEntry extends BasicActivity {
         @Override
         public View getDropDownView(int position, View convertView, ViewGroup parent) {
             TextView label = new TextView(this.ctx);
-            label.setTextColor(Color.BLACK);
+            label.setPadding(10,10,10,10);
             label.setText(list.get(position).getBastbjNo());
+            label.setTextSize(TypedValue.COMPLEX_UNIT_DIP, 16);
 
             return label;
         }

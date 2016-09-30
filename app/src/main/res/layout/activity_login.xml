@@ -42,7 +42,7 @@
                     android:layout_height="wrap_content"
                     android:hint="@string/prompt_username"
                     android:maxLines="1"
-                    android:text="21131325" />
+                    android:text="23150012" />
 
             </android.support.design.widget.TextInputLayout>
 
@@ -61,7 +61,7 @@
                     android:imeOptions="actionUnspecified"
                     android:inputType="textPassword"
                     android:maxLines="1"
-                    android:text="07041983" />
+                    android:text="25121989" />
 
             </android.support.design.widget.TextInputLayout>
 
@@ -96,13 +96,12 @@
                     android:textStyle="bold" />
             </LinearLayout>
 
-            <com.weiwangcn.betterspinner.library.material.MaterialBetterSpinner
+            <Spinner
                 android:id="@+id/spServers"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:hint="Server"
-                android:textColorHint="#05ab9a"
-                app:met_floatingLabel="normal" />
+                />
+
             <Button
                 android:id="@+id/btnTestGPS"
                 style="@style/Widget.AppCompat.Button.Colored"

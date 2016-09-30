@@ -1,9 +1,12 @@
 package id.co.ppu.collectionfast2.component;
 
+import android.content.Intent;
 import android.os.Bundle;
 import android.support.v7.app.AppCompatActivity;
 import android.view.MenuItem;
 
+import id.co.ppu.collectionfast2.R;
+import id.co.ppu.collectionfast2.settings.SettingsActivity;
 import io.realm.Realm;
 
 /**
@@ -37,6 +40,9 @@ public class BasicActivity extends AppCompatActivity {
 
         if (id == android.R.id.home) {
             finish();
+        }else  if (id == R.id.action_settings) {
+            startActivity(new Intent(this, SettingsActivity.class));
+            return true;
         }
 
         return super.onOptionsItemSelected(item);

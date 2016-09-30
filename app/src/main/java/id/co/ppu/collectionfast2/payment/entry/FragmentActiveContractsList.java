@@ -1,4 +1,4 @@
-package id.co.ppu.collectionfast2.payment;
+package id.co.ppu.collectionfast2.payment.entry;
 
 import android.app.Dialog;
 import android.content.Context;
@@ -16,15 +16,20 @@ import android.widget.FrameLayout;
 import android.widget.TextView;
 
 import java.util.ArrayList;
-import java.util.Collections;
-import java.util.Comparator;
+import java.util.Date;
 import java.util.List;
 
 import butterknife.BindView;
 import butterknife.ButterKnife;
+import co.moonmonkeylabs.realmsearchview.RealmSearchAdapter;
+import co.moonmonkeylabs.realmsearchview.RealmSearchViewHolder;
 import id.co.ppu.collectionfast2.R;
 import id.co.ppu.collectionfast2.component.DividerItemDecoration;
+import id.co.ppu.collectionfast2.component.RealmSearchView;
+import id.co.ppu.collectionfast2.pojo.DisplayTrnContractBuckets;
+import id.co.ppu.collectionfast2.pojo.ServerInfo;
 import id.co.ppu.collectionfast2.pojo.TrnContractBuckets;
+import id.co.ppu.collectionfast2.util.Utility;
 import io.realm.Realm;
 import io.realm.RealmResults;
 
@@ -52,10 +57,13 @@ public class FragmentActiveContractsList extends DialogFragment {
     private String collectorCode;
 
     private Realm realm;
-    private ActiveContractsListAdapter mAdapter;
+    private ActiveContractListAdapter mAdapter;
 
-    @BindView(R.id.recycler_view)
-    RecyclerView recycler_view;
+//    @BindView(R.id.recycler_view)
+//    RecyclerView recycler_view;
+
+    @BindView(R.id.search_view)
+    RealmSearchView search_view;
 
     public FragmentActiveContractsList() {
         // Required empty public constructor
@@ -96,37 +104,46 @@ public class FragmentActiveContractsList extends DialogFragment {
 
     private void loadList(String collectorCode) {
 
-        // since realm cant sort
-        RealmResults<TrnContractBuckets> buckets = this.realm.where(TrnContractBuckets.class).equalTo("collectorId", collectorCode).findAll();
+        Date serverDate = this.realm.where(ServerInfo.class).findFirst().getServerDate();
+        final String createdBy = "JOB" + Utility.convertDateToString(serverDate, "yyyyMMdd");
 
-        List<ActiveContract> list = new ArrayList<>();
-        for (TrnContractBuckets b : buckets) {
-            ActiveContract obj = new ActiveContract();
-            obj.setContractNo(b.getPk().getContractNo());
-            obj.setCustName(b.getCustName());
-            list.add(obj);
-        }
+        //populate
+        final RealmResults<TrnContractBuckets> _buffer = this.realm.where(TrnContractBuckets.class)
+                .equalTo("collectorId", collectorCode)
+                .equalTo("createdBy", createdBy)
+                .findAll();
 
-        // sort
-        Collections.sort(list, new Comparator<ActiveContract>() {
+        this.realm.executeTransaction(new Realm.Transaction() {
             @Override
-            public int compare(ActiveContract s1, ActiveContract s2) {
-                return s1.getContractNo().compareToIgnoreCase(s2.getContractNo());
+            public void execute(Realm realm) {
+                realm.delete(DisplayTrnContractBuckets.class);
+
+                for (TrnContractBuckets obj : _buffer) {
+                    DisplayTrnContractBuckets displayTrnContractBuckets = realm.createObject(DisplayTrnContractBuckets.class);
+
+                    displayTrnContractBuckets.setContractNo(obj.getPk().getContractNo());
+                    displayTrnContractBuckets.setCreatedBy(obj.getCreatedBy());
+                    displayTrnContractBuckets.setCustName(obj.getCustName());
+
+                    realm.copyToRealm(displayTrnContractBuckets);
+                }
             }
         });
 
+        long count = this.realm.where(DisplayTrnContractBuckets.class).count();
+
+        getDialog().setTitle("Pick Contract (" + count + ")");
 
         if (mAdapter == null) {
-            mAdapter = new ActiveContractsListAdapter(
+            mAdapter = new ActiveContractListAdapter(
                     getContext(),
-                    list
+                    this.realm,
+                    "custName"
             );
         }
-
-        RecyclerView.LayoutManager mLayoutManager = new LinearLayoutManager(getContext());
-
-        recycler_view.setLayoutManager(mLayoutManager);
-        recycler_view.setAdapter(mAdapter);
+//        RecyclerView.LayoutManager mLayoutManager = new LinearLayoutManager(getContext());
+//        recycler_view.setLayoutManager(mLayoutManager);
+        search_view.setAdapter(mAdapter);
     }
 
     @Override
@@ -137,7 +154,7 @@ public class FragmentActiveContractsList extends DialogFragment {
 
         ButterKnife.bind(this, view);
 
-        recycler_view.addItemDecoration(new DividerItemDecoration(getContext(), LinearLayoutManager.VERTICAL));
+        search_view.getRealmRecyclerView().addItemDecoration(new DividerItemDecoration(getContext(), LinearLayoutManager.VERTICAL));
 
         return view;
     }
@@ -173,7 +190,61 @@ public class FragmentActiveContractsList extends DialogFragment {
         void onContractSelected(String contractNo);
     }
 
+    public class ActiveContractListAdapter extends RealmSearchAdapter<DisplayTrnContractBuckets, ActiveContractListAdapter.DataViewHolder> {
 
+        public ActiveContractListAdapter(@NonNull Context context, @NonNull Realm realm, @NonNull String filterKey) {
+            super(context, realm, filterKey);
+        }
+
+        @Override
+        public DataViewHolder onCreateRealmViewHolder(ViewGroup viewGroup, int i) {
+            View view = inflater.inflate(R.layout.row_active_contract_list,viewGroup, false);
+            return new DataViewHolder((FrameLayout)view);
+        }
+
+        @Override
+        public void onBindRealmViewHolder(DataViewHolder dataViewHolder, int position) {
+            final DisplayTrnContractBuckets listItem = realmResults.get(position);
+
+            dataViewHolder.tvCustName.setText(listItem.getCustName());
+            dataViewHolder.tvNoContract.setText(listItem.getContractNo());
+
+            dataViewHolder.container.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View view) {
+                    if (getContext() instanceof OnActiveContractSelectedListener) {
+                        ((OnActiveContractSelectedListener) getContext()).onContractSelected(listItem.getContractNo());
+
+                        getDialog().dismiss();
+                    }
+                }
+            });
+
+        }
+
+        public class DataViewHolder extends RealmSearchViewHolder {
+
+            public FrameLayout container;
+
+            @BindView(R.id.tvNoContract)
+            TextView tvNoContract;
+
+            @BindView(R.id.tvCustName)
+            TextView tvCustName;
+
+            public DataViewHolder(FrameLayout container) {
+                super(container);
+
+                this.container = container;
+                ButterKnife.bind(this, container);
+            }
+
+            //            @OnClick(R.)
+            public void onClickItem() {
+//                _listener.onClickedItem(position);
+            }
+        }
+    }
     //    http://www.coderzheaven.com/2016/05/13/filtering-a-recyclerview-with-custom-objects/
     public class ActiveContractsListAdapter extends RecyclerView.Adapter<ActiveContractsListAdapter.DataViewHolder> {
         private List<ActiveContract> listItems, filterList;
@@ -212,19 +283,7 @@ public class FragmentActiveContractsList extends DialogFragment {
                     }
                 }
             });
-            /*
-            customViewHolder.tvNoContract.setOnClickListener(new View.OnClickListener() {
-                @Override
-                public void onClick(View view) {
-                    if (getContext() instanceof OnActiveContractSelectedListener) {
-                        ((OnActiveContractSelectedListener) getContext()).onContractSelected(listItem.getContractNo());
 
-                        getDialog().dismiss();
-                    }
-
-                }
-            });
-             */
         }
 
         @Override
@@ -232,25 +291,6 @@ public class FragmentActiveContractsList extends DialogFragment {
             return (null != filterList ? filterList.size() : 0);
         }
 
-        /*
-        @Override
-        public void onBindRealmViewHolder(DataViewHolder dataViewHolder, int position) {
-            final TrnContractBuckets detail = realmResults.get(position);
-
-            FrameLayout container = dataViewHolder.container;
-            container.setOnClickListener(new View.OnClickListener() {
-                @Override
-                public void onClick(View view) {
-//                    if (getContext() instanceof OnLKPListListener) {
-//                        ((OnLKPListListener) getContext()).onLKPSelected(detail);
-//                    }
-                }
-            });
-
-            TextView v = dataViewHolder.tvNoContract;
-            v.setText(detail.getPk().getContractNo());
-
-        }*/
 
         public class DataViewHolder extends RecyclerView.ViewHolder {
 

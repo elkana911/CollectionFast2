@@ -2,7 +2,8 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    tools:context="id.co.ppu.collectionfast2.payment.FragmentActiveContractsList">
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    tools:context="id.co.ppu.collectionfast2.payment.entry.FragmentActiveContractsList">
 
 <!--
     <id.co.ppu.collectionfast2.component.RealmSearchView
@@ -15,7 +16,6 @@
         android:layout_marginRight="@dimen/activity_horizontal_margin"
         app:rsvHint="@string/search_hint"
         />
--->
     <android.support.v7.widget.RecyclerView
         android:id="@+id/recycler_view"
         android:scrollbars="vertical"
@@ -26,4 +26,16 @@
         android:layout_marginBottom="@dimen/activity_vertical_margin"
         android:layout_marginRight="@dimen/activity_horizontal_margin"
         />
+-->
+
+    <id.co.ppu.collectionfast2.component.RealmSearchView
+        android:id="@+id/search_view"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:layout_marginBottom="@dimen/activity_vertical_margin"
+        android:layout_marginLeft="@dimen/activity_horizontal_margin"
+        android:layout_marginRight="@dimen/activity_horizontal_margin"
+        android:layout_marginTop="@dimen/activity_vertical_margin"
+        app:rsvHint="@string/search_hint" />
+
 </FrameLayout>

@@ -2,6 +2,7 @@
 <android.support.v4.widget.NestedScrollView xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/activity_scrolling_lkpdtl"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     app:layout_behavior="@string/appbar_scrolling_view_behavior"
@@ -122,6 +123,7 @@
                 android:id="@+id/etTglAkhirByr"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
+                android:gravity="right"
                 android:clickable="false"
                 android:focusable="false"
                 android:focusableInTouchMode="false"
@@ -187,7 +189,6 @@
                     android:clickable="false"
                     android:focusable="false"
                     android:focusableInTouchMode="false"
-                    android:gravity="right"
                     android:hint="Sisa Pokok"
                     android:maxLines="1" />
             </android.support.design.widget.TextInputLayout>
@@ -245,7 +246,6 @@
                     android:clickable="false"
                     android:focusable="false"
                     android:focusableInTouchMode="false"
-                    android:gravity="right"
                     android:hint="Denda"
                     android:maxLines="1" />
             </android.support.design.widget.TextInputLayout>
@@ -256,18 +256,35 @@
                 android:layout_weight="0.5">
 
                 <EditText
-                    android:id="@+id/etBiayaTagih"
+                    android:id="@+id/etDendaBerjalan"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:clickable="false"
                     android:focusable="false"
                     android:focusableInTouchMode="false"
                     android:gravity="right"
-                    android:hint="Biaya Tagih"
-                    android:inputType="number"
+                    android:hint="Denda Berjalan"
                     android:maxLines="1" />
             </android.support.design.widget.TextInputLayout>
+
         </LinearLayout>
+
+        <android.support.design.widget.TextInputLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content">
+
+            <EditText
+                android:id="@+id/etBiayaTagih"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:clickable="false"
+                android:focusable="false"
+                android:focusableInTouchMode="false"
+                android:gravity="right"
+                android:hint="Biaya Tagih"
+                android:inputType="number"
+                android:maxLines="1" />
+        </android.support.design.widget.TextInputLayout>
 
         <Button
             android:id="@+id/btnPaymentReceive"

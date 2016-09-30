@@ -3,41 +3,50 @@ package id.co.ppu.collectionfast2.lkp;
 import android.content.Intent;
 import android.os.Bundle;
 import android.support.design.widget.CollapsingToolbarLayout;
-import android.support.v7.app.AppCompatActivity;
+import android.support.design.widget.Snackbar;
 import android.support.v7.widget.Toolbar;
-import android.view.MenuItem;
 import android.view.View;
 import android.widget.AutoCompleteTextView;
 import android.widget.Button;
 import android.widget.EditText;
-import android.widget.Toast;
+
+import java.util.Date;
 
 import butterknife.BindView;
 import butterknife.ButterKnife;
 import butterknife.OnClick;
 import id.co.ppu.collectionfast2.R;
-import id.co.ppu.collectionfast2.payment.ActivityPaymentEntry;
+import id.co.ppu.collectionfast2.component.BasicActivity;
+import id.co.ppu.collectionfast2.payment.entry.ActivityPaymentEntri;
+import id.co.ppu.collectionfast2.payment.receive.ActivityPaymentReceive;
 import id.co.ppu.collectionfast2.pojo.MstUser;
-import id.co.ppu.collectionfast2.pojo.TrnContractBuckets;
+import id.co.ppu.collectionfast2.pojo.TrnLDVComments;
 import id.co.ppu.collectionfast2.pojo.TrnLDVDetails;
+import id.co.ppu.collectionfast2.pojo.TrnRVColl;
+import id.co.ppu.collectionfast2.pojo.TrnRepo;
 import id.co.ppu.collectionfast2.pojo.UserData;
 import id.co.ppu.collectionfast2.util.Storage;
 import id.co.ppu.collectionfast2.util.Utility;
-import io.realm.Realm;
+import io.realm.RealmResults;
 
-public class ActivityScrollingLKPDetails extends AppCompatActivity {
+public class ActivityScrollingLKPDetails extends BasicActivity {
 
     public static final String PARAM_CONTRACT_NO = "customer.contractNo";
     public static final String PARAM_LDV_NO = "ldvNo";
     public static final String PARAM_COLLECTOR_ID = "collector.id";
     public static final String PARAM_IS_LKP_INQUIRY = "lkpinquiry";
-
-    private Realm realm;
+    public static final String PARAM_LKP_DATE = "lkpDate";
+    public static final String PARAM_WORKSTATUS = "customer.workStatus";
 
     private String contractNo = null;
     private String ldvNo = null;
     private String collectorId = null;
+    private String workStatus = null;
     private boolean isLKPInquiry = false;
+    private Date lkpDate = null;
+
+    @BindView(R.id.activity_scrolling_lkpdtl)
+    View activityScrollingLkpdtl;
 
     @BindView(R.id.toolbar_layout)
     CollapsingToolbarLayout toolbar_layout;
@@ -78,6 +87,9 @@ public class ActivityScrollingLKPDetails extends AppCompatActivity {
     @BindView(R.id.etDenda)
     EditText etDenda;
 
+    @BindView(R.id.etDendaBerjalan)
+    EditText etDendaBerjalan;
+
     @BindView(R.id.etBiayaTagih)
     EditText etBiayaTagih;
 
@@ -88,13 +100,9 @@ public class ActivityScrollingLKPDetails extends AppCompatActivity {
 
         ButterKnife.bind(this);
 
-        this.realm = Realm.getDefaultInstance();
-
         Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
         if (getSupportActionBar() != null) {
-//            getSupportActionBar().setTitle(R.string.title_activity_lkp_form);
-//            getSupportActionBar().setSubtitle("Mobile Collection");
             getSupportActionBar().setDisplayHomeAsUpEnabled(true);
             getSupportActionBar().setHomeButtonEnabled(true);
         }
@@ -108,7 +116,9 @@ public class ActivityScrollingLKPDetails extends AppCompatActivity {
         contractNo = extras.getString(PARAM_CONTRACT_NO);
         ldvNo = extras.getString(PARAM_LDV_NO);
         collectorId = extras.getString(PARAM_COLLECTOR_ID);
+        workStatus = extras.getString(PARAM_WORKSTATUS);
         isLKPInquiry = extras.getBoolean(PARAM_IS_LKP_INQUIRY);
+        lkpDate = new Date(extras.getLong(PARAM_LKP_DATE));
 
         try {
             loadDetail(contractNo);
@@ -117,50 +127,51 @@ public class ActivityScrollingLKPDetails extends AppCompatActivity {
             finish();
         }
 
+        Button btnPaymentReceive = ButterKnife.findById(this, R.id.btnPaymentReceive);
+        Button btnVisitResultEntry = ButterKnife.findById(this, R.id.btnVisitResultEntry);
+        Button btnRepoEntry = ButterKnife.findById(this, R.id.btnRepoEntry);
+        Button btnChangeAddr = ButterKnife.findById(this, R.id.btnChangeAddr);
         if (isLKPInquiry) {
-            Button btnPaymentReceive = ButterKnife.findById(this, R.id.btnPaymentReceive);
             btnPaymentReceive.setText("PAYMENT ENTRY");
 
-            Button btnVisitResultEntry = ButterKnife.findById(this, R.id.btnVisitResultEntry);
             btnVisitResultEntry.setVisibility(View.GONE);
 
-            Button btnRepoEntry = ButterKnife.findById(this, R.id.btnRepoEntry);
             btnRepoEntry.setVisibility(View.GONE);
 
-            Button btnChangeAddr = ButterKnife.findById(this, R.id.btnChangeAddr);
             btnChangeAddr.setVisibility(View.GONE);
         }
-    }
 
-    @Override
-    protected void onDestroy() {
-        super.onDestroy();
-        if (this.realm != null) {
-            this.realm.close();
-            this.realm = null;
+        if (workStatus != null) {
+            if (workStatus.equals("W")) {
+                // udah bayar
+                btnPaymentReceive.setVisibility(View.GONE);
+
+                btnVisitResultEntry.setVisibility(View.GONE);
+
+                btnRepoEntry.setVisibility(View.GONE);
+
+                btnChangeAddr.setVisibility(View.GONE);
+
+            } else if (workStatus.equals("V")) {
+                // udah synced
+                btnPaymentReceive.setVisibility(View.GONE);
+
+                btnVisitResultEntry.setVisibility(View.GONE);
+
+                btnRepoEntry.setVisibility(View.GONE);
+            }
         }
-    }
-
-    @Override
-    public boolean onOptionsItemSelected(MenuItem item) {
-        int id = item.getItemId();
-
-        if (id == android.R.id.home) {
-            finish();
-        }
-
-        return super.onOptionsItemSelected(item);
     }
 
     public void loadDetail(String contractNo) {
 
-        if (this.realm == null) {
-            return;
-        }
+        String createdBy = "JOB" + Utility.convertDateToString(this.lkpDate, "yyyyMMdd");
 
-        TrnLDVDetails dtl = this.realm.where(TrnLDVDetails.class).equalTo("contractNo", contractNo).findFirst();
+        TrnLDVDetails dtl = this.realm.where(TrnLDVDetails.class)
+                .equalTo("contractNo", contractNo)
+                .equalTo("createdBy", createdBy)
+                .findFirst();
 
-//        setTitle(dtl.getCustName());
         toolbar_layout.setTitle(dtl.getCustName());
 
         etContractNo.setText(dtl.getContractNo());
@@ -173,60 +184,100 @@ public class ActivityScrollingLKPDetails extends AppCompatActivity {
         }
         etSisaPokok.setText(Utility.convertLongToRupiah(dtl.getPrincipalOutstanding()));
 
-//        long count = this.realm.where(TrnContractBuckets.class).count();
-
-        TrnContractBuckets contractBuckets = this.realm.where(TrnContractBuckets.class).equalTo("pk.contractNo", contractNo).findFirst();
-        if (contractBuckets == null) {
-            Toast.makeText(ActivityScrollingLKPDetails.this, "contractBuckets null for " + contractNo, Toast.LENGTH_SHORT).show();
-            /*
-            etTglAkhirByr.setText("<Error>");
-            etNoAngsuranBayar.setText("<Error>");
-            etLamaHari.setText("<Error>");
-            etAngsuran.setText("<Error>");
-            etTargetTagih.setText("<Error>");
-            */
-            return;
-        }
-
-        if (contractBuckets.getPaidDate() != null) {
-            etTglAkhirByr.setText(Utility.convertDateToString(contractBuckets.getPaidDate(), "dd-MMM-yyyy"));
+        if (dtl.getLastPaidDate() != null) {
+            etTglAkhirByr.setText(Utility.convertDateToString(dtl.getLastPaidDate(), Utility.DATE_DISPLAY_PATTERN));
         }else
             etTglAkhirByr.setText("Belum Bayar");
 
-        long noAngsuranBayar = (contractBuckets.getOvdInstNo() == null ? 0 : contractBuckets.getOvdInstNo()) -1;
+        long noAngsuranBayar = (dtl.getInstNo() == null ? 0 : dtl.getInstNo()) ;
         etNoAngsuranBayar.setText(String.valueOf(noAngsuranBayar));
-        etLamaHari.setText(String.valueOf(contractBuckets.getDpd()));
 
-        long angsuran = (contractBuckets.getPrncAmt() == null ? 0 : contractBuckets.getPrncAmt())
-                + (contractBuckets.getIntrAmt() == null ? 0 : contractBuckets.getIntrAmt());
+        etLamaHari.setText(String.valueOf(dtl.getDpd()));
+
+        long angsuran = dtl.getMonthInst() == null ? 0 : dtl.getMonthInst();
         etAngsuran.setText(Utility.convertLongToRupiah(angsuran));
 
-        long targetTagih = (contractBuckets.getPrncAMBC() == null ? 0 : contractBuckets.getPrncAMBC())
-                + (contractBuckets.getIntrAMBC() == null ? 0 : contractBuckets.getIntrAMBC());
+        long targetTagih = (dtl.getPrincipalAMBC() == null ? 0 : dtl.getPrincipalAMBC())
+                + (dtl.getInterestAMBC() == null ? 0 : dtl.getInterestAMBC());
         etTargetTagih.setText(Utility.convertLongToRupiah(targetTagih));
 
-        etDenda.setText(Utility.convertLongToRupiah(dtl.getPenaltyAMBC()));
-        etBiayaTagih.setText(Utility.convertLongToRupiah(10000L));
+        long denda = dtl.getPenaltyAMBC() == null ? 0 : dtl.getPenaltyAMBC();
+        etDenda.setText(Utility.convertLongToRupiah(denda));
+
+        long dendaBerjalan = dtl.getDaysIntrAmbc() == null ? 0 : dtl.getDaysIntrAmbc();
+        etDendaBerjalan.setText(Utility.convertLongToRupiah(dendaBerjalan));
+
+        long biayaTagih = (dtl.getCollectionFee() == null ? 0 : dtl.getCollectionFee()) ;
+        etBiayaTagih.setText(Utility.convertLongToRupiah(biayaTagih));
     }
 
     @OnClick(R.id.btnPaymentReceive)
     public void onClickPaymentReceive() {
 
-        Intent i = new Intent(this, ActivityPaymentEntry.class);
+        // should disable when user already do visit result/repo entri
+        RealmResults<TrnRepo> trnRepos = this.realm.where(TrnRepo.class)
+                .equalTo("contractNo", contractNo)
+                .equalTo("createdBy", Utility.LAST_UPDATE_BY)
+                .findAll();
 
-        i.putExtra(ActivityPaymentEntry.PARAM_CONTRACT_NO, etContractNo.getText().toString());
-        i.putExtra(ActivityPaymentEntry.PARAM_LDV_NO, this.ldvNo);
+        if (trnRepos.size() > 0) {
+            Snackbar.make(activityScrollingLkpdtl, "This contract available via Repo Entri only", Snackbar.LENGTH_SHORT).show();
+            return;
+        }
+
+        RealmResults<TrnLDVComments> trnLDVCommentses = this.realm.where(TrnLDVComments.class)
+                .equalTo("pk.ldvNo", ldvNo)
+                .equalTo("contractNo", contractNo)
+                .equalTo("createdBy", Utility.LAST_UPDATE_BY)
+                .findAll();
+
+        if (trnLDVCommentses.size() > 0) {
+            Snackbar.make(activityScrollingLkpdtl, "This contract available via Visit Result only", Snackbar.LENGTH_SHORT).show();
+            return;
+        }
+
+        Intent i = null;
         if (!isLKPInquiry) {
-            i.putExtra(ActivityPaymentEntry.PARAM_TITLE, "Payment Receive");
-        }else{
-
+            i = new Intent(this, ActivityPaymentReceive.class);
+            i.putExtra(ActivityPaymentReceive.PARAM_CONTRACT_NO, etContractNo.getText().toString());
+            i.putExtra(ActivityPaymentReceive.PARAM_LDV_NO, this.ldvNo);
+            i.putExtra(ActivityPaymentReceive.PARAM_LKP_DATE, this.lkpDate.getTime());
+            i.putExtra(ActivityPaymentReceive.PARAM_COLLECTOR_ID, this.collectorId);
+        } else {
+            i = new Intent(this, ActivityPaymentEntri.class);
+            i.putExtra(ActivityPaymentEntri.PARAM_CONTRACT_NO, etContractNo.getText().toString());
+            i.putExtra(ActivityPaymentEntri.PARAM_LDV_NO, this.ldvNo);
+            i.putExtra(ActivityPaymentEntri.PARAM_LKP_DATE, this.lkpDate.getTime());
+            i.putExtra(ActivityPaymentEntri.PARAM_COLLECTOR_ID, this.collectorId);
         }
 
         startActivity(i);
+
     }
 
     @OnClick(R.id.btnVisitResultEntry)
     public void onClickVisitResultEntry() {
+
+        // should disable when user already do payment/repo entri
+        RealmResults<TrnRepo> trnRepos = this.realm.where(TrnRepo.class)
+                .equalTo("contractNo", contractNo)
+                .equalTo("createdBy", Utility.LAST_UPDATE_BY)
+                .findAll();
+
+        if (trnRepos.size() > 0) {
+            Snackbar.make(activityScrollingLkpdtl, "This contract available via Repo Entri only", Snackbar.LENGTH_SHORT).show();
+            return;
+        }
+
+        RealmResults<TrnRVColl> trnRVColls = this.realm.where(TrnRVColl.class)
+                .equalTo("contractNo", contractNo)
+                .equalTo("createdBy", Utility.LAST_UPDATE_BY)
+                .findAll();
+
+        if (trnRVColls.size() > 0) {
+            Snackbar.make(activityScrollingLkpdtl, "This contract available via Payment only", Snackbar.LENGTH_SHORT).show();
+            return;
+        }
 
         // dibedain based on RPC job (Professional Kolektor)
         UserData currentUser = (UserData) Storage.getObjPreference(getApplicationContext(), Storage.KEY_USER, UserData.class);
@@ -247,6 +298,30 @@ public class ActivityScrollingLKPDetails extends AppCompatActivity {
     }
     @OnClick(R.id.btnRepoEntry)
     public void onClickRepoEntry() {
+
+        // should disable when user already do payment/visit result
+        // cek by createdby MOBCOL
+        RealmResults<TrnLDVComments> trnLDVCommentses = this.realm.where(TrnLDVComments.class)
+                .equalTo("pk.ldvNo", ldvNo)
+                .equalTo("contractNo", contractNo)
+                .equalTo("createdBy", Utility.LAST_UPDATE_BY)
+                .findAll();
+
+        if (trnLDVCommentses.size() > 0) {
+            Snackbar.make(activityScrollingLkpdtl, "This contract available via Visit Result only", Snackbar.LENGTH_SHORT).show();
+            return;
+        }
+
+        RealmResults<TrnRVColl> trnRVColls = this.realm.where(TrnRVColl.class)
+                .equalTo("contractNo", contractNo)
+                .equalTo("createdBy", Utility.LAST_UPDATE_BY)
+                .findAll();
+
+        if (trnRVColls.size() > 0) {
+            Snackbar.make(activityScrollingLkpdtl, "This contract available via Payment only", Snackbar.LENGTH_SHORT).show();
+            return;
+        }
+
         Intent i = new Intent(this, ActivityRepoEntry.class);
         i.putExtra(ActivityVisitResult.PARAM_CONTRACT_NO, etContractNo.getText().toString());
         startActivity(i);
@@ -273,4 +348,9 @@ public class ActivityScrollingLKPDetails extends AppCompatActivity {
         startActivity(i);
     }
 
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+        super.onActivityResult(requestCode, resultCode, data);
+
+    }
 }

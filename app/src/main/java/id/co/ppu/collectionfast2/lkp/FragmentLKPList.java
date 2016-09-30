@@ -31,13 +31,16 @@ import butterknife.ButterKnife;
 import butterknife.OnClick;
 import co.moonmonkeylabs.realmsearchview.RealmSearchAdapter;
 import co.moonmonkeylabs.realmsearchview.RealmSearchViewHolder;
+import id.co.ppu.collectionfast2.MainActivity;
 import id.co.ppu.collectionfast2.R;
 import id.co.ppu.collectionfast2.component.DividerItemDecoration;
 import id.co.ppu.collectionfast2.component.RealmSearchView;
+import id.co.ppu.collectionfast2.listener.OnLKPListListener;
 import id.co.ppu.collectionfast2.pojo.DisplayTrnLDVDetails;
 import id.co.ppu.collectionfast2.pojo.ServerInfo;
 import id.co.ppu.collectionfast2.pojo.TrnLDVDetails;
 import id.co.ppu.collectionfast2.pojo.TrnLDVHeader;
+import id.co.ppu.collectionfast2.sync.pojo.SyncTrnRVColl;
 import id.co.ppu.collectionfast2.util.Utility;
 import io.realm.Realm;
 import io.realm.RealmResults;
@@ -91,11 +94,19 @@ public class FragmentLKPList extends Fragment {
             cal.set(year, month, day);
             etTglLKP.setText(Utility.convertDateToString(cal.getTime(), Utility.DATE_DISPLAY_PATTERN));
 
-            fab.show();
+//            fab.show();
 //            fab.setVisibility(View.VISIBLE);
-            search_view.setVisibility(View.GONE);
+            search_view.setVisibility(View.INVISIBLE);
             tvSeparator.setText("No Contracts found" );
 
+            // load cache
+            final String createdBy = "JOB" + Utility.convertDateToString(cal.getTime(), "yyyyMMdd");
+            long count = realm.where(TrnLDVHeader.class).equalTo("collCode", collectorCode)
+                    .equalTo("createdBy", createdBy)
+                    .count();
+            if (count > 0) {
+                loadLKP(collectorCode, cal.getTime());
+            }
         }
     };
 
@@ -189,6 +200,18 @@ public class FragmentLKPList extends Fragment {
 
     }
 
+    @OnClick(R.id.cbLKPInquiry)
+    public void onClickLkpInquiry() {
+
+        if (cbLKPInquiry.isChecked()) {
+            if (TextUtils.isEmpty(etTglLKP.getText().toString()))
+                etTglLKP.performClick();
+
+        } else {
+
+        }
+    }
+
     @Override
     public void onAttach(Context context) {
         super.onAttach(context);
@@ -215,8 +238,9 @@ public class FragmentLKPList extends Fragment {
     /**
      *
      * @param collectorCode sementara ignore, karena gadget hanya dipakai 1 orang/collector saja
+     *                      @return ldvNo
      */
-    public void loadLKP(final String collectorCode, Date dateLKP) {
+    public String loadLKP(final String collectorCode, Date dateLKP) {
 
         final String createdBy = "JOB" + Utility.convertDateToString(dateLKP, "yyyyMMdd");
 
@@ -226,8 +250,12 @@ public class FragmentLKPList extends Fragment {
                 .findFirst();
 
         if (header == null) {
-            return;
+            return null;
         }
+
+        String ldvNo = header.getLdvNo();
+
+        ((MainActivity)getActivity()).currentLDVNo = ldvNo;
 
         etNoLKP.setText(header.getLdvNo());
         etTglLKP.setText(Utility.convertDateToString(header.getLdvDate(), Utility.DATE_DISPLAY_PATTERN));
@@ -247,7 +275,9 @@ public class FragmentLKPList extends Fragment {
 
                 for (TrnLDVDetails obj : _buffer) {
 
-                    DisplayTrnLDVDetails displayTrnLDVDetails = new DisplayTrnLDVDetails();
+                    DisplayTrnLDVDetails displayTrnLDVDetails = realm.createObject(DisplayTrnLDVDetails.class);
+
+                    displayTrnLDVDetails.setLkpDate(Utility.convertStringToDate(etTglLKP.getText().toString(), Utility.DATE_DISPLAY_PATTERN));
 
                     displayTrnLDVDetails.setSeqNo(obj.getPk().getSeqNo());
                     displayTrnLDVDetails.setLdvNo(obj.getPk().getLdvNo());
@@ -265,52 +295,46 @@ public class FragmentLKPList extends Fragment {
             }
         });
 
-        LKPListAdapter mAdapter = new LKPListAdapter(
-                    getContext(),
-                    this.realm,
-                    "custName"
-            );
-
-        long count = this.realm.where(TrnLDVDetails.class).equalTo("pk.ldvNo", header.getLdvNo())
-                .equalTo("createdBy", createdBy)
-                .count();
-
         String dateLabel = "Today";
 
         if (!Utility.isSameDay(dateLKP, serverDate)) {
             dateLabel = "Previous";
         }
 
+        long count = this.realm.where(DisplayTrnLDVDetails.class).count();
+
         tvSeparator.setText(dateLabel + " Contracts: " + count);
 
         if (count < 1) {
-            fab.show();
-            search_view.setVisibility(View.GONE);
+//            fab.show();
+            search_view.setVisibility(View.INVISIBLE);
         } else {
             search_view.setVisibility(View.VISIBLE);
-            fab.hide();
+//            fab.hide();
         }
 
+        LKPListAdapter mAdapter = new LKPListAdapter(
+                getContext(),
+                this.realm,
+                "custName"
+        );
 
         search_view.setAdapter(mAdapter);
+        search_view.getRealmRecyclerView().invalidate();
+
+        return ldvNo;
     }
 
-    /**
-     * This interface must be implemented by activities that contain this
-     * fragment to allow an interaction in this fragment to be communicated
-     * to the activity and potentially other fragments contained in that
-     * activity.
-     * <p/>
-     * See the Android Training lesson <a href=
-     * "http://developer.android.com/training/basics/fragments/communicating.html"
-     * >Communicating with Other Fragments</a> for more information.
-     */
-    // Container Activity must implement this interface
-    public interface OnLKPListListener {
-//        void onLKPSelected(String contractNo);
-        void onLKPSelected(DisplayTrnLDVDetails detail);
+    public void clearTodayList() {
 
-        void onLKPInquiry(String collectorCode, Date lkpDate);
+//        if (!tvSeparator.getText().toString().startsWith("Today"))
+//            return;
+
+        search_view.setVisibility(View.INVISIBLE);
+    }
+
+    public String getCurrentLKP() {
+        return etNoLKP.getText().toString().trim();
     }
 
     public class LKPListAdapter extends RealmSearchAdapter<DisplayTrnLDVDetails, LKPListAdapter.DataViewHolder> {
@@ -352,11 +376,32 @@ public class FragmentLKPList extends Fragment {
             TextView v = dataViewHolder.tvNoLKP;
             v.setText("Contract No: " + detail.getContractNo());
 
+            dataViewHolder.llRowLKP.setBackgroundColor(Color.WHITE);    // must
+
             if (detail.getWorkStatus().equalsIgnoreCase("V")) {
                 dataViewHolder.llRowLKP.setBackgroundColor(Color.YELLOW);
-            }else{
-                dataViewHolder.llRowLKP.setBackgroundColor(Color.WHITE);    // must
+            } else if (detail.getWorkStatus().equalsIgnoreCase("W")) {
+                dataViewHolder.llRowLKP.setBackgroundColor(Color.BLUE);
+            }
 
+            /*
+            RealmResults<TrnSync> trnSync = realm.where(TrnSync.class)
+                                            .equalTo("tblName", TrnLDVDetails.class.getSimpleName())
+                                            .equalTo("key1", detail.getLdvNo())
+                                            .equalTo("key2", detail.getContractNo())
+                                            .equalTo("createdBy", detail.getCreatedBy())
+                                            .isNotNull("syncedDate")
+                                            .findAll();
+                                            */
+            RealmResults<SyncTrnRVColl> trnSync = realm.where(SyncTrnRVColl.class)
+                    .equalTo("ldvNo", detail.getLdvNo())
+                    .equalTo("contractNo", detail.getContractNo())
+                    .equalTo("createdBy", Utility.LAST_UPDATE_BY)
+                    .isNotNull("syncedDate")
+                    .findAll();
+
+            if (trnSync.size() > 0) {
+                dataViewHolder.llRowLKP.setBackgroundColor(Color.GREEN);
             }
 
             TextView custName = dataViewHolder.tvCustName;

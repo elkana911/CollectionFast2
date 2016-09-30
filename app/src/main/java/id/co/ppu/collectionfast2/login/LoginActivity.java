@@ -4,7 +4,9 @@ import android.app.ProgressDialog;
 import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
+import android.content.res.Configuration;
 import android.graphics.Color;
+import android.net.Uri;
 import android.os.Bundle;
 import android.preference.PreferenceManager;
 import android.support.v7.app.AppCompatActivity;
@@ -18,9 +20,14 @@ import android.view.inputmethod.EditorInfo;
 import android.widget.ArrayAdapter;
 import android.widget.AutoCompleteTextView;
 import android.widget.EditText;
+import android.widget.ImageView;
+import android.widget.Spinner;
 import android.widget.TextView;
 
-import com.weiwangcn.betterspinner.library.material.MaterialBetterSpinner;
+import com.google.android.gms.appindexing.Action;
+import com.google.android.gms.appindexing.AppIndex;
+import com.google.android.gms.appindexing.Thing;
+import com.google.android.gms.common.api.GoogleApiClient;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -32,8 +39,10 @@ import butterknife.ButterKnife;
 import butterknife.OnClick;
 import id.co.ppu.collectionfast2.MainActivity;
 import id.co.ppu.collectionfast2.R;
+import id.co.ppu.collectionfast2.listener.OnPostRetrieveServerInfo;
 import id.co.ppu.collectionfast2.pojo.MstSecUser;
 import id.co.ppu.collectionfast2.pojo.MstUser;
+import id.co.ppu.collectionfast2.pojo.ServerInfo;
 import id.co.ppu.collectionfast2.rest.ApiInterface;
 import id.co.ppu.collectionfast2.rest.ServiceGenerator;
 import id.co.ppu.collectionfast2.rest.request.RequestLogin;
@@ -62,9 +71,17 @@ public class LoginActivity extends AppCompatActivity {
     EditText mPasswordView;
 
     @BindView(R.id.spServers)
-    MaterialBetterSpinner spServers;
+    Spinner spServers;
+
+    @BindView(R.id.imageLogo)
+    ImageView imageLogo;
 
     private Realm realm;
+    /**
+     * ATTENTION: This was auto-generated to implement the App Indexing API.
+     * See https://g.co/AppIndexing/AndroidStudio for more information.
+     */
+    private GoogleApiClient client;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -72,6 +89,11 @@ public class LoginActivity extends AppCompatActivity {
         setContentView(R.layout.activity_login);
 
         ButterKnife.bind(this);
+
+        if (getResources().getConfiguration().orientation
+                == Configuration.ORIENTATION_LANDSCAPE) {
+            imageLogo.setVisibility(View.GONE);
+        }
 
         this.realm = Realm.getDefaultInstance();
 
@@ -99,7 +121,7 @@ public class LoginActivity extends AppCompatActivity {
         spServers.setAdapter(arrayAdapter);
 
         int x = Storage.getPreferenceAsInt(getApplicationContext(), Storage.KEY_SERVER_ID, 0);
-        spServers.setText(Utility.getServerName(x));
+        Utility.setSpinnerAsString(spServers, Utility.getServerName(x));
 
         //  Declare a new thread to do a preference check
         Thread t = new Thread(new Runnable() {
@@ -138,6 +160,9 @@ public class LoginActivity extends AppCompatActivity {
         } catch (Exception e) {
             e.printStackTrace();
         }
+        // ATTENTION: This was auto-generated to implement the App Indexing API.
+        // See https://g.co/AppIndexing/AndroidStudio for more information.
+        client = new GoogleApiClient.Builder(this).addApi(AppIndex.API).build();
     }
 
     @Override
@@ -168,10 +193,10 @@ public class LoginActivity extends AppCompatActivity {
      * If there are form errors (invalid email, missing fields, etc.), the
      * errors are presented and no actual login attempt is made.
      */
-    private void attemptLogin() throws Exception{
+    private void attemptLogin() throws Exception {
 
         Date sysDate = new Date();
-        if (sysDate.after(Utility.convertStringToDate(Utility.DATE_EXPIRED_YYYYMMDD, "yyyyMMdd"))){
+        if (sysDate.after(Utility.convertStringToDate(Utility.DATE_EXPIRED_YYYYMMDD, "yyyyMMdd"))) {
             Utility.showDialog(this, "Expired App", "This application version is expired. Please update from the latest");
             return;
         }
@@ -209,7 +234,7 @@ public class LoginActivity extends AppCompatActivity {
             return;
         }
 
-        Storage.savePreferenceAsInt(getApplicationContext(), Storage.KEY_SERVER_ID, Utility.getServerID(spServers.getText().toString()));
+        Storage.savePreferenceAsInt(getApplicationContext(), Storage.KEY_SERVER_ID, Utility.getServerID(spServers.getSelectedItem().toString()));
 
         //check db local apakah usernya ada ?
         long countUser = this.realm.where(MstSecUser.class).equalTo("userName", username).count();
@@ -225,21 +250,16 @@ public class LoginActivity extends AppCompatActivity {
         } else {
 
             // enable this code on production
-            Date lastMorning = (Date)Storage.getObjPreference(getApplicationContext(), Storage.KEY_USER_LAST_MORNING, Date.class);
+            Date lastMorning = (Date) Storage.getObjPreference(getApplicationContext(), Storage.KEY_USER_LAST_MORNING, Date.class);
             if (lastMorning == null) {
                 loginOffline(username, password);
-            }else if (Utility.isSameDay(lastMorning, new Date())) {
+            } else if (Utility.isSameDay(lastMorning, new Date())) {
                 loginOffline(username, password);
-            }else
+            } else
                 // reset data first ?
                 loginOnline(username, password);
         }
 
-    }
-
-    private boolean isEmailValid(String email) {
-        //TODO: Replace this with your own logic
-        return email.contains("@");
     }
 
     private boolean isPasswordValid(String password) {
@@ -247,7 +267,7 @@ public class LoginActivity extends AppCompatActivity {
         return password.length() > 4;
     }
 
-    private void retrieveServerInfo() throws Exception{
+    private void retrieveServerInfo(final OnPostRetrieveServerInfo listener) throws Exception {
         ApiInterface fastService =
                 ServiceGenerator.createService(ApiInterface.class, Utility.buildUrl(Storage.getPreferenceAsInt(getApplicationContext(), Storage.KEY_SERVER_ID, 0)));
 
@@ -263,6 +283,10 @@ public class LoginActivity extends AppCompatActivity {
                             @Override
                             public void execute(Realm realm) {
                                 realm.copyToRealm(responseServerInfo.getData());
+
+                                if (listener != null) {
+                                    listener.onSuccess(responseServerInfo.getData());
+                                }
                             }
                         });
 
@@ -273,13 +297,18 @@ public class LoginActivity extends AppCompatActivity {
 
             @Override
             public void onFailure(Call<ResponseServerInfo> call, Throwable t) {
-                throw new RuntimeException("Failure retrieve server information");
+                if (listener != null) {
+                    listener.onFailure(t);
+                }
+
+                Utility.showDialog(LoginActivity.this, "Error", t.getMessage());
+//                throw new RuntimeException("Failure retrieve server information");
             }
         });
 
     }
 
-    private void loginOnline(String username, String password){
+    private void loginOnline(final String username, final String password) {
         Utility.disableScreen(this, true);
 
         final ProgressDialog mProgressDialog = new ProgressDialog(this);
@@ -289,106 +318,116 @@ public class LoginActivity extends AppCompatActivity {
         mProgressDialog.show();
 
         try {
-            retrieveServerInfo();
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
+            retrieveServerInfo(new OnPostRetrieveServerInfo() {
+                @Override
+                public void onSuccess(ServerInfo serverInfo) {
+                    ApiInterface loginService =
+                            ServiceGenerator.createService(ApiInterface.class, Utility.buildUrl(Utility.getServerID(spServers.getSelectedItem().toString())));
 
-        ApiInterface loginService =
-                ServiceGenerator.createService(ApiInterface.class, Utility.buildUrl(Utility.getServerID(spServers.getText().toString())));
+                    RequestLogin request = new RequestLogin();
+                    request.setId(username);
+                    request.setPwd(password);
 
-        RequestLogin request = new RequestLogin();
-        request.setId(username);
-        request.setPwd(password);
+                    Call<ResponseLogin> call = loginService.login(request);
+                    call.enqueue(new Callback<ResponseLogin>() {
+                        @Override
+                        public void onResponse(Call<ResponseLogin> call, Response<ResponseLogin> response) {
+                            Utility.disableScreen(LoginActivity.this, false);
 
-        Call<ResponseLogin> call = loginService.login(request);
-        call.enqueue(new Callback<ResponseLogin>() {
-            @Override
-            public void onResponse(Call<ResponseLogin> call, Response<ResponseLogin> response) {
-                Utility.disableScreen(LoginActivity.this, false);
+                            if (response.isSuccessful()) {
 
-                if (response.isSuccessful()) {
+                                final ResponseLogin respLogin = response.body();
+                                Log.e("eric.onResponse", respLogin.toString());
 
-                    final ResponseLogin respLogin = response.body();
-                    Log.e("eric.onResponse", respLogin.toString());
+                                if (respLogin.getError() != null) {
+                                    Utility.showDialog(LoginActivity.this, "Error (" + respLogin.getError().getErrorCode() + ")", respLogin.getError().getErrorDesc());
+                                    if (mProgressDialog.isShowing())
+                                        mProgressDialog.dismiss();
 
-                    if (respLogin.getError() != null) {
-                        Utility.showDialog(LoginActivity.this, "Error (" + respLogin.getError().getErrorCode() + ")", respLogin.getError().getErrorDesc());
-                        if (mProgressDialog.isShowing())
-                            mProgressDialog.dismiss();
+                                } else {
+                                    // dump
+                                    LoginActivity.this.realm.executeTransactionAsync(new Realm.Transaction() {
+                                        @Override
+                                        public void execute(Realm realm) {
+                                            long count = realm.where(MstUser.class).count();
+                                            if (count > 0) {
+                                                realm.delete(MstUser.class);
+                                            }
+                                            count = realm.where(MstSecUser.class).count();
+                                            if (count > 0) {
+                                                realm.delete(MstSecUser.class);
+                                            }
+                                            realm.copyToRealm(respLogin.getData().getUser());
+                                            realm.copyToRealm(respLogin.getData().getSecUser());
 
-                    } else {
-                        // dump
-                        LoginActivity.this.realm.executeTransactionAsync(new Realm.Transaction() {
-                            @Override
-                            public void execute(Realm realm) {
-                                long count = realm.where(MstUser.class).count();
-                                if (count > 0) {
-                                    realm.delete(MstUser.class);
+                                        }
+                                    }, new Realm.Transaction.OnSuccess() {
+                                        @Override
+                                        public void onSuccess() {
+                                            if (mProgressDialog.isShowing())
+                                                mProgressDialog.dismiss();
+
+                                            Storage.saveObjPreference(getApplicationContext(), "user", respLogin.getData());
+
+                                            // able to control nextday shpuld re-login to server
+                                            Storage.saveObjPreference(getApplicationContext(), "lastMorning", new Date());
+
+                                            // final check
+                                            startActivity(new Intent(getApplicationContext(), MainActivity.class));
+                                        }
+                                    }, new Realm.Transaction.OnError() {
+                                        @Override
+                                        public void onError(Throwable error) {
+                                            if (mProgressDialog.isShowing())
+                                                mProgressDialog.dismiss();
+
+                                            Utility.showDialog(LoginActivity.this, "Database Problem", getString(R.string.error_contact_admin));
+                                        }
+                                    });
                                 }
-                                count = realm.where(MstSecUser.class).count();
-                                if (count > 0) {
-                                    realm.delete(MstSecUser.class);
-                                }
-                                realm.copyToRealm(respLogin.getData().getUser());
-                                realm.copyToRealm(respLogin.getData().getSecUser());
-                                realm.copyToRealm(respLogin.getData().getActiveContracts());
-
-                            }
-                        }, new Realm.Transaction.OnSuccess() {
-                            @Override
-                            public void onSuccess() {
+                            } else {
                                 if (mProgressDialog.isShowing())
                                     mProgressDialog.dismiss();
 
-                                Storage.saveObjPreference(getApplicationContext(), "user", respLogin.getData());
+                                int statusCode = response.code();
 
-                                // able to control nextday shpuld re-login to server
-                                Storage.saveObjPreference(getApplicationContext(), "lastMorning", new Date());
+                                // handle request errors yourself
+                                ResponseBody errorBody = response.errorBody();
 
-                                // final check
-                                startActivity(new Intent(getApplicationContext(), MainActivity.class));
+                                try {
+                                    Utility.showDialog(LoginActivity.this, "Server Problem (" + statusCode + ")", errorBody.string());
+                                } catch (IOException e) {
+                                    e.printStackTrace();
+                                }
                             }
-                        }, new Realm.Transaction.OnError() {
-                            @Override
-                            public void onError(Throwable error) {
-                                if (mProgressDialog.isShowing())
-                                    mProgressDialog.dismiss();
 
-                                Utility.showDialog(LoginActivity.this, "Database Problem", getString(R.string.error_contact_admin));
-                            }
-                        });
-                    }
-                } else {
+                        }
+
+                        @Override
+                        public void onFailure(Call<ResponseLogin> call, Throwable t) {
+                            Utility.disableScreen(LoginActivity.this, false);
+
+                            Log.e("fast", t.getMessage(), t);
+
+                            if (mProgressDialog.isShowing())
+                                mProgressDialog.dismiss();
+
+                            Utility.showDialog(LoginActivity.this, "Server Problem", t.getMessage());
+                        }
+                    });
+
+                }
+
+                @Override
+                public void onFailure(Throwable throwable) {
                     if (mProgressDialog.isShowing())
                         mProgressDialog.dismiss();
 
-                    int statusCode = response.code();
-
-                    // handle request errors yourself
-                    ResponseBody errorBody = response.errorBody();
-
-                    try {
-                        Utility.showDialog(LoginActivity.this, "Server Problem (" + statusCode + ")", errorBody.string());
-                    } catch (IOException e) {
-                        e.printStackTrace();
-                    }
                 }
-
-            }
-
-            @Override
-            public void onFailure(Call<ResponseLogin> call, Throwable t) {
-                Utility.disableScreen(LoginActivity.this, false);
-
-                Log.e("fast", t.getMessage(), t);
-
-                if (mProgressDialog.isShowing())
-                    mProgressDialog.dismiss();
-
-                Utility.showDialog(LoginActivity.this, "Server Problem", t.getMessage());
-            }
-        });
+            });
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
 
     }
 
@@ -402,7 +441,9 @@ public class LoginActivity extends AppCompatActivity {
 
         final MstSecUser usr = this.realm.where(MstSecUser.class).contains("userName", username).findFirst();
 
-        if (usr == null || !usr.getUserPwd().equals(password)) {
+        String pwd = usr.getUserPwd() == null ? "" : usr.getUserPwd();
+
+        if (usr == null || !pwd.equals(password)) {
             Utility.showDialog(this, "Invalid Login", getString(R.string.error_invalid_login));
         } else {
             startActivity(new Intent(getApplicationContext(), MainActivity.class));
@@ -413,9 +454,45 @@ public class LoginActivity extends AppCompatActivity {
     }
 
     @OnClick(R.id.btnTestGPS)
-    public void onClickTestGPS(){
+    public void onClickTestGPS() {
 
 
+    }
+
+    /**
+     * ATTENTION: This was auto-generated to implement the App Indexing API.
+     * See https://g.co/AppIndexing/AndroidStudio for more information.
+     */
+    public Action getIndexApiAction() {
+        Thing object = new Thing.Builder()
+                .setName("Login Page") // TODO: Define a title for the content shown.
+                // TODO: Make sure this auto-generated URL is correct.
+                .setUrl(Uri.parse("http://[ENTER-YOUR-URL-HERE]"))
+                .build();
+        return new Action.Builder(Action.TYPE_VIEW)
+                .setObject(object)
+                .setActionStatus(Action.STATUS_TYPE_COMPLETED)
+                .build();
+    }
+
+    @Override
+    public void onStart() {
+        super.onStart();
+
+        // ATTENTION: This was auto-generated to implement the App Indexing API.
+        // See https://g.co/AppIndexing/AndroidStudio for more information.
+        client.connect();
+        AppIndex.AppIndexApi.start(client, getIndexApiAction());
+    }
+
+    @Override
+    public void onStop() {
+        super.onStop();
+
+        // ATTENTION: This was auto-generated to implement the App Indexing API.
+        // See https://g.co/AppIndexing/AndroidStudio for more information.
+        AppIndex.AppIndexApi.end(client, getIndexApiAction());
+        client.disconnect();
     }
 
     public class ServerAdapter extends ArrayAdapter<String> {
@@ -444,11 +521,11 @@ public class LoginActivity extends AppCompatActivity {
         public View getView(int position, View convertView, ViewGroup parent) {
             TextView tv = new TextView(this.ctx);
 //            TextView tv = (TextView) convertView.findViewById(R.id.nama);
-            tv.setPadding(10,20,10,20);
+            tv.setPadding(10, 20, 10, 20);
             tv.setTextColor(Color.BLACK);
 //            tv.setText(list.get(position).getRvbNo());
             tv.setText(list.get(position));
-            tv.setTextSize(TypedValue.COMPLEX_UNIT_DIP, 20);
+            tv.setTextSize(TypedValue.COMPLEX_UNIT_DIP, 16);
 
             return tv;
         }
@@ -456,8 +533,9 @@ public class LoginActivity extends AppCompatActivity {
         @Override
         public View getDropDownView(int position, View convertView, ViewGroup parent) {
             TextView label = new TextView(this.ctx);
-            label.setTextColor(Color.BLACK);
+            label.setPadding(10, 20, 10, 20);
             label.setText(list.get(position));
+            label.setTextSize(TypedValue.COMPLEX_UNIT_DIP, 16);
 
             return label;
         }

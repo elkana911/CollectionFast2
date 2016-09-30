@@ -9,12 +9,12 @@ import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.content.res.Configuration;
 import android.provider.Settings;
-import android.provider.Settings.Secure;
 import android.telephony.TelephonyManager;
 import android.view.ContextThemeWrapper;
 import android.view.View;
 import android.view.ViewGroup;
 import android.view.WindowManager;
+import android.widget.Spinner;
 
 import java.text.DecimalFormat;
 import java.text.DecimalFormatSymbols;
@@ -28,12 +28,12 @@ import okhttp3.HttpUrl;
 
 public class Utility {
 
-    public final static String DATE_EXPIRED_YYYYMMDD = "20161001";
+    public final static String DATE_EXPIRED_YYYYMMDD = "20161008";
 
     public final static String DATE_DISPLAY_PATTERN = "dd MMM yyyy";
     public final static String DATE_DATA_PATTERN = "yyyyMMdd";
 
-    public final static String[][] servers = {{"local-server", "192.168.1.108", "8090"}
+    public final static String[][] servers = {{"local-server", "192.168.0.24", "8090"}
                                             ,{"fast-mobile", "cmobile.radanafinance.co.id", "7001"}
     };
 
@@ -169,17 +169,6 @@ public class Utility {
         return userData;
     }
 */
-    public static String getAndroidID(Context ctx){
-        String _id = Secure.getString(ctx.getContentResolver(), Secure.ANDROID_ID);
-        return _id;
-    }
-
-    public static String getDeviceID(Context ctx){
-        TelephonyManager tManager = (TelephonyManager) ctx.getSystemService(Context.TELEPHONY_SERVICE);
-        String _id = tManager.getDeviceId();
-        return _id;
-    }
-
     /**
      * Check that all given permissions have been granted by verifying that each entry in the
      * given array is of the value {@link PackageManager#PERMISSION_GRANTED}.
@@ -299,4 +288,40 @@ public class Utility {
     {
         return str.matches("-?\\d+(\\.\\d+)?");  //match a number with optional '-' and decimal.
     }
+
+    public static void setSpinnerAsString(Spinner spinner, String value) {
+        for(int i = 0; i < spinner.getAdapter().getCount(); i++) {
+            if(value.equals(spinner.getItemAtPosition(i).toString())){
+                spinner.setSelection(i);
+                break;
+            }
+        }
+    }
+
+    public static String generateUUID(){
+        return java.util.UUID.randomUUID().toString();
+    }
+
+    //http://stackoverflow.com/questions/16078269/android-unique-serial-number/16929647#16929647
+    public static String getDeviceId(Context context) {
+        final String deviceId = ((TelephonyManager) context.getSystemService(Context.TELEPHONY_SERVICE)).getDeviceId();
+        if (deviceId != null) {
+            return deviceId;
+        } else {
+            return android.os.Build.SERIAL;
+        }
+    }
+/*
+    public static String getAndroidID(Context ctx){
+        String _id = Secure.getString(ctx.getContentResolver(), Secure.ANDROID_ID);
+        return _id;
+    }
+
+    public static String getDeviceID(Context ctx){
+        TelephonyManager tManager = (TelephonyManager) ctx.getSystemService(Context.TELEPHONY_SERVICE);
+        String _id = tManager.getDeviceId();
+        return _id;
+    }
+*/
+
 }

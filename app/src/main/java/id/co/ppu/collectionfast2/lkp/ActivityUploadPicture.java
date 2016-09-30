@@ -11,8 +11,11 @@ import android.support.graphics.drawable.VectorDrawableCompat;
 import android.support.v7.app.AlertDialog;
 import android.text.TextUtils;
 import android.widget.ImageView;
+import android.widget.Toast;
 
 import com.squareup.picasso.Picasso;
+
+import java.io.File;
 
 import butterknife.BindView;
 import butterknife.ButterKnife;
@@ -21,10 +24,22 @@ import id.co.ppu.collectionfast2.R;
 import id.co.ppu.collectionfast2.component.BasicActivity;
 import id.co.ppu.collectionfast2.pojo.TrnLDVDetails;
 import id.co.ppu.collectionfast2.pojo.UploadPicture;
+import id.co.ppu.collectionfast2.rest.ApiInterface;
+import id.co.ppu.collectionfast2.rest.ServiceGenerator;
+import id.co.ppu.collectionfast2.util.Storage;
+import id.co.ppu.collectionfast2.util.Utility;
 import io.realm.Realm;
+import okhttp3.MediaType;
+import okhttp3.MultipartBody;
+import okhttp3.RequestBody;
+import okhttp3.ResponseBody;
+import retrofit2.Call;
+import retrofit2.Callback;
+import retrofit2.Response;
 
 public class ActivityUploadPicture extends BasicActivity {
     public static final String PARAM_CONTRACT_NO = "customer.contractNo";
+    private static final String TAG = "upload" ;
 
     private String contractNo = null;
 
@@ -206,8 +221,78 @@ public class ActivityUploadPicture extends BasicActivity {
 
         if (TextUtils.isEmpty(this.contractNo))
             return;
+        ApiInterface fastService =
+                ServiceGenerator.createService(ApiInterface.class, Utility.buildUrl(Storage.getPreferenceAsInt(getApplicationContext(), Storage.KEY_SERVER_ID, 0)));
+/*
+        RequestBody photo = RequestBody.create(MediaType.parse("application/image"), file);
+        RequestBody body = new MultipartBuilder()
+                .type(MultipartBuilder.FORM)
+                .addFormDataPart("photo", file.getName(), photo)
+                .build();
 
+        MultipartBody.Part filePart;
+        Call<ResponseUploadPhoto> call = fastService.uploadPhoto(filePart);
+*/
 
+/*
+        MediaType MEDIA_TYPE_PNG = MediaType.parse("image/jpeg");
+        byte [] data = BitmapUtility.getBitmapToBytes(((BitmapDrawable) ivProfilePhoto.getDrawable()).getBitmap());
+        Log.d(TAG, String.format("Profile detals => user_id: %d, size of data: %d", 5, data.length));
+
+        RequestBody requestBody1 = RequestBody.create(MEDIA_TYPE_PNG, data);
+        Log.d(TAG, "requestBody: " + requestBody1.toString());
+
+        RequestBody requestBody2 = new MultipartBody.Builder()
+                .setType(MultipartBody.FORM)
+                .addFormDataPart("photo", "t.jpg", requestBody1)
+                .build();
+
+        Log.d(TAG, "requestBody: " + requestBody2.toString());
+//  ProfileDetails profileDetails = new DBHelper(this).fetchProfileDetails();
+*/
+        String s = ivUpload4.getTag().toString();
+        Uri uri = Uri.parse(s);
+        File file = new File(uri.getPath());
+
+        // create RequestBody instance from file
+        RequestBody requestFile =
+                RequestBody.create(MediaType.parse("multipart/form-data"), file);
+
+        MultipartBody.Part body =
+                MultipartBody.Part.createFormData("picture", file.getName(), requestFile);
+
+        String descriptionString = "hello, this is description speaking";
+        RequestBody description =
+                RequestBody.create(
+                        MediaType.parse("multipart/form-data"), descriptionString);
+
+        Call<ResponseBody> call = fastService.uploadPhoto(description, body);
+        call.enqueue(new Callback<ResponseBody>() {
+            @Override
+            public void onResponse(Call<ResponseBody> call, Response<ResponseBody> response) {
+                Toast.makeText(ActivityUploadPicture.this, "onResponse", Toast.LENGTH_SHORT).show();
+
+            }
+
+            @Override
+            public void onFailure(Call<ResponseBody> call, Throwable t) {
+                Toast.makeText(ActivityUploadPicture.this, "onFailure", Toast.LENGTH_SHORT).show();
+
+            }
+        });
+
+        /*
+        call.enqueue(new Callback<Response>() {
+            @Override
+            public void onResponse(Call<Response> call, Response<Response> response) {
+                Toast.makeText(ActivityUploadPicture.this, "onResponse", Toast.LENGTH_SHORT).show();
+            }
+
+            @Override
+            public void onFailure(Call<Response> call, Throwable t) {
+                Toast.makeText(ActivityUploadPicture.this, "onFailure", Toast.LENGTH_SHORT).show();
+            }
+        });*/
     }
 
     @Override
@@ -258,4 +343,7 @@ public class ActivityUploadPicture extends BasicActivity {
                 break;
         }
     }
+
+
+
 }

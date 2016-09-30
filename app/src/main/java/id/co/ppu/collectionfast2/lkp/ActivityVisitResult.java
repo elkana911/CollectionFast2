@@ -5,6 +5,7 @@ import android.content.Context;
 import android.content.Intent;
 import android.graphics.Color;
 import android.os.Bundle;
+import android.support.design.widget.Snackbar;
 import android.text.TextUtils;
 import android.util.TypedValue;
 import android.view.View;
@@ -29,9 +30,13 @@ import id.co.ppu.collectionfast2.component.BasicActivity;
 import id.co.ppu.collectionfast2.pojo.MstDelqReasons;
 import id.co.ppu.collectionfast2.pojo.MstLDVClassifications;
 import id.co.ppu.collectionfast2.pojo.MstLDVParameters;
+import id.co.ppu.collectionfast2.pojo.ServerInfo;
 import id.co.ppu.collectionfast2.pojo.TrnLDVComments;
 import id.co.ppu.collectionfast2.pojo.TrnLDVCommentsPK;
 import id.co.ppu.collectionfast2.pojo.TrnLDVDetails;
+import id.co.ppu.collectionfast2.pojo.UserData;
+import id.co.ppu.collectionfast2.sync.pojo.SyncTrnLDVComments;
+import id.co.ppu.collectionfast2.util.Storage;
 import id.co.ppu.collectionfast2.util.Utility;
 import io.realm.Realm;
 import io.realm.RealmResults;
@@ -45,6 +50,9 @@ public class ActivityVisitResult extends BasicActivity {
 
     private String contractNo = null;
     private String ldvNo = null;
+
+    @BindView(R.id.activity_visit_result)
+    View activityVisitResult;
 
     @BindView(R.id.etContractNo)
     EditText etContractNo;
@@ -122,11 +130,11 @@ public class ActivityVisitResult extends BasicActivity {
 
         RealmResults<MstLDVParameters> rrLkpParameters = this.realm.where(MstLDVParameters.class).findAll();
         List<MstLDVParameters> ss = this.realm.copyFromRealm(rrLkpParameters);
-        LKPParameterAdapter ssAdapter = new LKPParameterAdapter(this, android.R.layout.simple_spinner_item, ss);
+        LKPParameterAdapter adapterLKPFlag = new LKPParameterAdapter(this, android.R.layout.simple_spinner_item, ss);
         MstLDVParameters hint = new MstLDVParameters();
-        hint.setDescription("<Please select>");
-        ssAdapter.insert(hint, 0);
-        spLKPFlags.setAdapter(ssAdapter);
+        hint.setDescription(getString(R.string.spinner_please_select));
+        adapterLKPFlag.insert(hint, 0);
+        spLKPFlags.setAdapter(adapterLKPFlag);
         spLKPFlags.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
             @Override
             public void onItemSelected(AdapterView<?> adapterView, View view, int i, long l) {
@@ -142,19 +150,19 @@ public class ActivityVisitResult extends BasicActivity {
 
         RealmResults<MstLDVClassifications> rrLkpKlasifikasi = this.realm.where(MstLDVClassifications.class).findAll();
         List<MstLDVClassifications> lkpKlasifikasi = this.realm.copyFromRealm(rrLkpKlasifikasi);
-        KlasifikasiAdapter klasifikasiAdapter = new KlasifikasiAdapter(this, android.R.layout.simple_spinner_item, lkpKlasifikasi);
+        KlasifikasiAdapter adapterKlasifikasi = new KlasifikasiAdapter(this, android.R.layout.simple_spinner_item, lkpKlasifikasi);
         MstLDVClassifications hintKlasifikasi = new MstLDVClassifications();
-        hintKlasifikasi.setDescription("<Please select>");
-        klasifikasiAdapter.insert(hintKlasifikasi, 0);
-        spKlasifikasi.setAdapter(klasifikasiAdapter);
+        hintKlasifikasi.setDescription(getString(R.string.spinner_please_select));
+        adapterKlasifikasi.insert(hintKlasifikasi, 0);
+        spKlasifikasi.setAdapter(adapterKlasifikasi);
 
         RealmResults<MstDelqReasons> rrAlasan = this.realm.where(MstDelqReasons.class).findAll();
         List<MstDelqReasons> lkpAlasan = this.realm.copyFromRealm(rrAlasan);
-        AlasanAdapter alasanAdapter = new AlasanAdapter(this, android.R.layout.simple_spinner_item, lkpAlasan);
+        AlasanAdapter adapterAlasan = new AlasanAdapter(this, android.R.layout.simple_spinner_item, lkpAlasan);
         MstDelqReasons hintAlasan = new MstDelqReasons();
-        hintAlasan.setDescription("<Please select>");
-        alasanAdapter.insert(hintAlasan, 0);
-        spAlasan.setAdapter(alasanAdapter);
+        hintAlasan.setDescription(getString(R.string.spinner_please_select));
+        adapterAlasan.insert(hintAlasan, 0);
+        spAlasan.setAdapter(adapterAlasan);
 
         listenerDateTglJanjiBayar = new DatePickerDialog.OnDateSetListener() {
             @Override
@@ -172,8 +180,8 @@ public class ActivityVisitResult extends BasicActivity {
 
         if (trnLDVComments != null) {
             String lkpFlag = dtl.getLdvFlag();
-            for(int i = 0; i < ssAdapter.getCount(); i++) {
-                if(lkpFlag.equals(ssAdapter.getItem(i).getLkpFlag())){
+            for(int i = 0; i < adapterLKPFlag.getCount(); i++) {
+                if(lkpFlag.equals(adapterLKPFlag.getItem(i).getLkpFlag())){
                     spLKPFlags.setSelection(i);
                     break;
                 }
@@ -182,16 +190,16 @@ public class ActivityVisitResult extends BasicActivity {
 
             String classCode = trnLDVComments.getClassCode();
 
-            for(int i = 0; i < klasifikasiAdapter.getCount(); i++) {
-                if(classCode.equals(klasifikasiAdapter.getItem(i).getClassCode())){
+            for(int i = 0; i < adapterKlasifikasi.getCount(); i++) {
+                if(classCode.equals(adapterKlasifikasi.getItem(i).getClassCode())){
                     spKlasifikasi.setSelection(i);
                     break;
                 }
             }
 
             String delqCode = trnLDVComments.getDelqCode();
-            for(int i = 0; i < alasanAdapter.getCount(); i++) {
-                if(delqCode.equals(alasanAdapter.getItem(i).getDelqCode())){
+            for(int i = 0; i < adapterAlasan.getCount(); i++) {
+                if(delqCode.equals(adapterAlasan.getItem(i).getDelqCode())){
                     spAlasan.setSelection(i);
                     break;
                 }
@@ -242,12 +250,12 @@ public class ActivityVisitResult extends BasicActivity {
         final String contractNo = etContractNo.getText().toString();
         final String potensi = etPotensi.getText().toString();
 
-        String a1 = spLKPFlags.getSelectedItem().toString();
-        MstLDVParameters ldvParameters = realm.where(MstLDVParameters.class).equalTo("description", spLKPFlags.getSelectedItem().toString()).findFirst();
-        String a2 = spAlasan.getSelectedItem().toString();
-        MstDelqReasons delqReasons = realm.where(MstDelqReasons.class).equalTo("description", spAlasan.getSelectedItem().toString()).findFirst();
-        String a3 = spKlasifikasi.getSelectedItem().toString();
-        MstLDVClassifications ldvClassifications = realm.where(MstLDVClassifications.class).equalTo("description", spKlasifikasi.getSelectedItem().toString()).findFirst();
+        String sLKPFlags = spLKPFlags.getSelectedItem().toString();
+        MstLDVParameters ldvParameters = realm.where(MstLDVParameters.class).equalTo("description", sLKPFlags).findFirst();
+        String sAlasan = spAlasan.getSelectedItem().toString();
+        MstDelqReasons delqReasons = realm.where(MstDelqReasons.class).equalTo("description", sAlasan).findFirst();
+        String sKlasifikasi = spKlasifikasi.getSelectedItem().toString();
+        MstLDVClassifications ldvClassifications = realm.where(MstLDVClassifications.class).equalTo("description", sKlasifikasi).findFirst();
 
         final String lkpFlag = ldvParameters == null ? "" : ldvParameters.getLkpFlag();
         final String delqCode = delqReasons == null ? "" : delqReasons.getDelqCode();
@@ -279,6 +287,15 @@ public class ActivityVisitResult extends BasicActivity {
             cancel = true;
         }
 
+        if (!TextUtils.isEmpty(potensi)) {
+            int potensiValue = Integer.parseInt(potensi);
+            if (potensiValue < 0 || potensiValue > 100) {
+                etPotensi.setError(getString(R.string.error_amount_invalid));
+                focusView = etPotensi;
+                cancel = true;
+            }
+        }
+
         if (TextUtils.isEmpty(contractNo)) {
             etContractNo.setError(getString(R.string.error_field_required));
             focusView = etContractNo;
@@ -293,6 +310,25 @@ public class ActivityVisitResult extends BasicActivity {
         this.realm.executeTransactionAsync(new Realm.Transaction() {
             @Override
             public void execute(Realm realm) {
+                Date serverDate = realm.where(ServerInfo.class).findFirst().getServerDate();
+                UserData userData = (UserData) Storage.getObjPreference(getApplicationContext(), Storage.KEY_USER, UserData.class);
+
+                String createdBy = "JOB" + Utility.convertDateToString(serverDate, Utility.DATE_DATA_PATTERN);
+
+
+                SyncTrnLDVComments trnSync = realm.where(SyncTrnLDVComments.class)
+                        .equalTo("ldvNo", ldvNo)
+                        .equalTo("seqNo", 1L)
+                        .equalTo("contractNo", contractNo)
+                        .equalTo("createdBy", createdBy)
+                        .isNotNull("syncedDate")
+                        .findFirst();
+
+                if (trnSync != null) {
+                    Snackbar.make(activityVisitResult, "Data already synced", Snackbar.LENGTH_SHORT).show();
+                    return;
+                }
+
                 TrnLDVDetails trnLDVDetails = realm.where(TrnLDVDetails.class)
                         .equalTo("contractNo", contractNo)
                         .findFirst();

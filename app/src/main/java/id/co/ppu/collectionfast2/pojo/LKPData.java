@@ -16,6 +16,10 @@ public class LKPData{
     private List<TrnVehicleInfo> vehicleInfo;
     private List<HistInstallments> historyInstallments;
 
+    private List<TrnRVColl> rvColl;
+    private List<TrnRepo> repo;
+    private List<TrnLDVComments> ldvComments;
+
     public TrnLDVHeader getHeader() {
         return header;
     }
@@ -78,5 +82,29 @@ public class LKPData{
 
     public void setHistoryInstallments(List<HistInstallments> historyInstallments) {
         this.historyInstallments = historyInstallments;
+    }
+
+    public List<TrnRVColl> getRvColl() {
+        return rvColl;
+    }
+
+    public void setRvColl(List<TrnRVColl> rvColl) {
+        this.rvColl = rvColl;
+    }
+
+    public List<TrnRepo> getRepo() {
+        return repo;
+    }
+
+    public void setRepo(List<TrnRepo> repo) {
+        this.repo = repo;
+    }
+
+    public List<TrnLDVComments> getLdvComments() {
+        return ldvComments;
+    }
+
+    public void setLdvComments(List<TrnLDVComments> ldvComments) {
+        this.ldvComments = ldvComments;
     }
 }

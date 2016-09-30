@@ -7,7 +7,6 @@ android {
     buildToolsVersion "24.0.2"
 
     dexOptions {
-        incremental true
         javaMaxHeapSize "4g"
     }
 
@@ -17,7 +16,6 @@ android {
         targetSdkVersion 24
         versionCode 1
         versionName "1.0"
-        multiDexEnabled true
         vectorDrawables.useSupportLibrary = true
     }
     buildTypes {
@@ -30,15 +28,10 @@ android {
 
 dependencies {
     compile fileTree(dir: 'libs', include: ['*.jar'])
-    testCompile 'junit:junit:4.12'
 
-    apt 'com.jakewharton:butterknife-compiler:8.2.1'
     compile 'com.android.support:appcompat-v7:24.2.0'
     compile 'com.android.support:design:24.2.0'
     compile 'com.android.support:support-v4:24.2.0'
-    compile 'com.android.support:multidex:1.0.1'
-    compile 'com.google.android.gms:play-services-maps:9.4.0'
-    compile 'com.google.android.gms:play-services-location:9.4.0'
     compile 'com.github.thorbenprimke:realm-searchview:0.9.6'
     compile 'com.jakewharton:butterknife:8.2.1'
     compile 'com.squareup.retrofit2:retrofit:2.1.0'
@@ -46,4 +39,7 @@ dependencies {
     compile 'com.squareup.picasso:picasso:2.5.2'
     compile 'com.github.paolorotolo:appintro:4.0.0'
     compile 'com.github.douglasjunior.BetterSpinner:library-material:bugfix-1.1.0-2'
+    testCompile 'junit:junit:4.12'
+    apt 'com.jakewharton:butterknife-compiler:8.2.1'
+    compile 'com.google.android.gms:play-services-appindexing:8.4.0'
 }

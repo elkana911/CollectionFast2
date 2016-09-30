@@ -1,7 +1,6 @@
 package id.co.ppu.collectionfast2.payment;
 
 
-import android.content.Context;
 import android.graphics.Color;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
@@ -10,7 +9,6 @@ import android.support.v4.app.DialogFragment;
 import android.support.v4.app.Fragment;
 import android.support.v7.app.AppCompatActivity;
 import android.text.TextUtils;
-import android.util.TypedValue;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -19,10 +17,10 @@ import android.widget.AutoCompleteTextView;
 import android.widget.EditText;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
+import android.widget.Spinner;
+import android.widget.TableLayout;
 import android.widget.TextView;
 import android.widget.Toast;
-
-import com.weiwangcn.betterspinner.library.material.MaterialBetterSpinner;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -30,10 +28,11 @@ import java.util.Date;
 import java.util.List;
 
 import butterknife.BindView;
-import butterknife.BindViews;
 import butterknife.ButterKnife;
 import butterknife.OnClick;
 import id.co.ppu.collectionfast2.R;
+import id.co.ppu.collectionfast2.component.RVBAdapter;
+import id.co.ppu.collectionfast2.payment.entry.FragmentActiveContractsList;
 import id.co.ppu.collectionfast2.pojo.ServerInfo;
 import id.co.ppu.collectionfast2.pojo.TrnContractBuckets;
 import id.co.ppu.collectionfast2.pojo.TrnLDVDetails;
@@ -56,11 +55,16 @@ public class FragmentPayment extends Fragment{
     public static final String PARAM_COLL_CODE = "collector.code";
     public static final String PARAM_CONTRACT_NO = "contractNo";
     public static final String PARAM_LDV_NO = "ldvNo";
+    public static final String PARAM_LKP_DATE = "lkpDate";
 
     private Realm realm;
 
+    private String contractNo = null;
     private String collectorCode = null;
     private String ldvNo = null;
+    private Date lkpDate = null;
+
+    private RVBAdapter adapterRVB;
 
     @BindView(R.id.etContractNo)
     AutoCompleteTextView etContractNo;
@@ -89,13 +93,14 @@ public class FragmentPayment extends Fragment{
     @BindView(R.id.etCatatan)
     EditText etCatatan;
 
-    @BindView(R.id.spNoRV)
-    MaterialBetterSpinner spNoRV;
+    @BindView(R.id.tblNoRVB)
+    TableLayout tblNoRVB;
 
-    @BindViews({R.id.etContractNo, R.id.etCustName, R.id.etAngsuranKe,
-            R.id.etAngsuran, R.id.etDenda,R.id.etBiayaTagih,R.id.etPenerimaan
-            ,R.id.spNoRV,R.id.etCatatan})
-    List<EditText> entries;
+    @BindView(R.id.spNoRVB)
+    Spinner spNoRVB;
+
+    @BindView(R.id.etNoRVB)
+    EditText etNoRVB;
 
     static final ButterKnife.Action<View> CLEAR_TEXT = new ButterKnife.Action<View>() {
         @Override
@@ -113,22 +118,34 @@ public class FragmentPayment extends Fragment{
         super.onStart();
         this.realm = Realm.getDefaultInstance();
 
-        RealmResults<TrnRVB> all = this.realm.where(TrnRVB.class).equalTo("rvbStatus", "OP").findAll();
-
-        SpinnerAdapter adapter = new SpinnerAdapter(getContext(), android.R.layout.simple_spinner_item, all);
-        spNoRV.setAdapter(adapter);
-
-        String contractNo = null;
         if (getArguments() != null) {
-            contractNo = getArguments().getString(PARAM_CONTRACT_NO);
-            ldvNo = getArguments().getString(PARAM_LDV_NO);
+            this.contractNo = getArguments().getString(PARAM_CONTRACT_NO);
+            this.ldvNo = getArguments().getString(PARAM_LDV_NO);
+
+            long lkpdate = getArguments().getLong(PARAM_LKP_DATE);
+            this.lkpDate = new Date(lkpdate);
+
+            this.collectorCode = getArguments().getString(PARAM_COLL_CODE);
         }
 
-        if (contractNo == null) {
+        RealmResults<TrnRVB> openRVBList = realm.where(TrnRVB.class).equalTo("rvbStatus", "OP").findAll();
 
+        if (adapterRVB == null) {
+            List<TrnRVB> listRVB = realm.copyFromRealm(openRVBList);
+            adapterRVB = new RVBAdapter(getContext(), android.R.layout.simple_spinner_item, listRVB);
+        }
+
+        TrnRVB hint = new TrnRVB();
+        hint.setRvbNo(getString(R.string.spinner_please_select));
+        adapterRVB.insert(hint, 0);
+        spNoRVB.setAdapter(adapterRVB);
+
+        if (contractNo == null) {
+            // as payment entry
             Thread t = new Thread(new Runnable() {
                 @Override
                 public void run() {
+
                     RealmResults<TrnContractBuckets> buckets = FragmentPayment.this.realm.where(TrnContractBuckets.class).equalTo("collectorId", collectorCode).findAll();
 
                     List<String> list = new ArrayList<>();
@@ -157,6 +174,7 @@ public class FragmentPayment extends Fragment{
             getActivity().runOnUiThread(t);
 
         } else {
+
             ivDropDown.setVisibility(View.GONE);
             etContractNo.setFocusable(false);
             etContractNo.setFocusableInTouchMode(false); // user touches widget on phone with touch screen
@@ -182,10 +200,13 @@ public class FragmentPayment extends Fragment{
         super.onCreate(savedInstanceState);
 
         if (getArguments() != null) {
-//            String serverDate = getArguments().getString(PARAM_SERVER_DATE);
-//            ((AppCompatActivity)getActivity()).getSupportActionBar().setSubtitle(serverDate);
-
-            this.collectorCode = getArguments().getString(PARAM_COLL_CODE);
+//            this.contractNo = getArguments().getString(PARAM_CONTRACT_NO);
+//            this.ldvNo = getArguments().getString(PARAM_LDV_NO);
+//
+//            long lkpdate = getArguments().getLong(PARAM_LKP_DATE);
+//            this.lkpDate = new Date(lkpdate);
+//
+//            this.collectorCode = getArguments().getString(PARAM_COLL_CODE);
         }
 //        showDialogPicker();
 
@@ -222,14 +243,20 @@ public class FragmentPayment extends Fragment{
     }
 
     public void loadContract(String contractNo) {
-        TrnContractBuckets contractBuckets = this.realm.where(TrnContractBuckets.class).equalTo("pk.contractNo", contractNo).findFirst();
+
+        String createdBy = "JOB" + Utility.convertDateToString(lkpDate, "yyyyMMdd");
+
+        TrnContractBuckets contractBuckets = this.realm.where(TrnContractBuckets.class)
+                                                .equalTo("pk.contractNo", contractNo)
+                                                .equalTo("createdBy", createdBy)
+                                                .findFirst();
 
         if (contractBuckets == null) {
             Utility.showDialog(getContext(), "Error", "Contract " + contractNo + " not found !");
             return;
         }
 
-        ((AppCompatActivity)getActivity()).getSupportActionBar().setTitle(contractBuckets.getCustName());
+        ((AppCompatActivity)getActivity()).getSupportActionBar().setSubtitle(contractBuckets.getCustName());
 
         etContractNo.setText(contractNo);
         etAngsuranKe.setText(String.valueOf(contractBuckets.getOvdInstNo()));
@@ -245,7 +272,6 @@ public class FragmentPayment extends Fragment{
         etAngsuran.setText(Utility.convertLongToRupiah(angsuran));
 
         // load last save
-//        this.realm.where(RV)
         TrnRVColl trnRVColl = this.realm.where(TrnRVColl.class)
                 .equalTo("contractNo", contractNo)
                 .equalTo("lastupdateBy", Utility.LAST_UPDATE_BY)
@@ -254,7 +280,21 @@ public class FragmentPayment extends Fragment{
         if (trnRVColl != null) {
             etPenerimaan.setText(String.valueOf(trnRVColl.getReceivedAmount()));
             etCatatan.setText(trnRVColl.getNotes());
-            spNoRV.setText(trnRVColl.getPk().getRbvNo());
+
+            String sRVBNo = trnRVColl.getPk().getRbvNo();
+            /*
+            for (int i = 0; i < adapterRVB.getCount(); i++) {
+                if (sRVBNo.equals(adapterRVB.getItem(i).getRvbNo())) {
+                    spNoRVB.setSelection(i);
+                    break;
+                }
+            }
+            */
+            etNoRVB.setText(sRVBNo);
+            tblNoRVB.setVisibility(View.GONE);
+            etNoRVB.setVisibility(View.VISIBLE);
+
+            // avoid user change no rvb
         }
 
         etPenerimaan.requestFocus();
@@ -269,14 +309,28 @@ public class FragmentPayment extends Fragment{
     public void onClickSave() {
         // reset errors
         etContractNo.setError(null);
-        spNoRV.setError(null);
         etPenerimaan.setError(null);
 
         // attempt save
         boolean cancel = false;
         View focusView = null;
+
+
         final String contractNo = etContractNo.getText().toString();
-        final String rvbNo = spNoRV.getText().toString();
+
+        // kalo nongol brarti edit mode
+        String rvbNo = null;
+        if (etNoRVB.isShown()) {
+            rvbNo = etNoRVB.getText().toString();
+        } else {
+
+            String sRVBNo = spNoRVB.getSelectedItem().toString();
+            TrnRVB trnRVB = realm.where(TrnRVB.class).equalTo("rvbNo", sRVBNo).findFirst();
+
+            rvbNo = trnRVB == null ? "" : trnRVB.getRvbNo();
+        }
+
+
         final String penerimaan = etPenerimaan.getText().toString();
         final String denda = etDenda.getText().toString();
         final String biayaTagih = etBiayaTagih.getText().toString();
@@ -298,9 +352,19 @@ public class FragmentPayment extends Fragment{
         }
 
         if (TextUtils.isEmpty(rvbNo)) {
-            spNoRV.setError(getString(R.string.error_select_rvb));
-            focusView = spNoRV;
+            Toast.makeText(getContext(), "Please select No RV !", Toast.LENGTH_SHORT).show();
+            focusView = spNoRVB;
             cancel = true;
+        } else {
+            // cek dulu apakah TrnRVBnya udah CL atau masih OP ?
+
+            TrnRVB rvbNo1 = realm.where(TrnRVB.class).equalTo("rvbNo", rvbNo).findFirst();
+            if (rvbNo1.getRvbStatus().equals("CL")) {
+                Toast.makeText(getContext(), "The selected No RV is already used.\nPlease select No RV !", Toast.LENGTH_SHORT).show();
+                focusView = spNoRVB;
+                cancel = true;
+            }
+
         }
 
         if (TextUtils.isEmpty(penerimaan)) {
@@ -332,29 +396,40 @@ public class FragmentPayment extends Fragment{
             return;
         }
 
+
+        final String finalRvbNo = rvbNo;
         this.realm.executeTransactionAsync(new Realm.Transaction() {
             @Override
             public void execute(Realm realm) {
                 boolean isLKP = getActivity().getTitle().toString().trim().equalsIgnoreCase("payment receive");
 
-                TrnLDVDetails dtl = realm.where(TrnLDVDetails.class).equalTo("contractNo", contractNo).findFirst();
-                final String createdBy = dtl.getCreatedBy();
+                Date serverDate = realm.where(ServerInfo.class).findFirst().getServerDate();
+
+                String createdBy;
+                if (isLKP) {
+                    createdBy = "JOB" + Utility.convertDateToString(serverDate, "yyyyMMdd");
+                } else {
+                    createdBy = "JOB" + Utility.convertDateToString(lkpDate, "yyyyMMdd");
+                }
+
+                TrnLDVDetails dtl = realm.where(TrnLDVDetails.class)
+                                        .equalTo("contractNo", contractNo)
+                                        .equalTo("createdBy", createdBy)
+                        .findFirst();
 
                 TrnContractBuckets trnContractBuckets = realm.where(TrnContractBuckets.class).equalTo("pk.contractNo", contractNo)
                         .equalTo("createdBy", createdBy)
                         .findFirst();
 
-                Date serverDate = realm.where(ServerInfo.class).findFirst().getServerDate();
 
                 trnContractBuckets.setPaidDate(serverDate);
-                trnContractBuckets.setRvNo(rvbNo);
+                trnContractBuckets.setRvNo(finalRvbNo);
                 trnContractBuckets.setLkpStatus("W");
                 trnContractBuckets.setLastupdateBy(Utility.LAST_UPDATE_BY);
                 trnContractBuckets.setLastupdateTimestamp(new Date());
-//                realm.copyToRealmOrUpdate(trnContractBuckets); // ga bisa update krn ga ada primary key
                 realm.copyToRealm(trnContractBuckets); // ga bisa update krn ga ada primary key
 
-                TrnRVB trnRVB = realm.where(TrnRVB.class).equalTo("rvbNo", rvbNo).findFirst();
+                TrnRVB trnRVB = realm.where(TrnRVB.class).equalTo("rvbNo", finalRvbNo).findFirst();
                 trnRVB.setRvbStatus("CL");
                 trnRVB.setLastupdateBy(Utility.LAST_UPDATE_BY);
                 trnRVB.setLastupdateTimestamp(new Date());
@@ -383,9 +458,11 @@ public class FragmentPayment extends Fragment{
                             .append(Utility.leftPad(runningNumber, 3));
 
                     trnRVCollPK.setRvCollNo(sb.toString());
-                    trnRVCollPK.setRbvNo(rvbNo);
+                    trnRVCollPK.setRbvNo(finalRvbNo);
 
                     trnRVColl.setPk(trnRVCollPK);
+                    trnRVColl.setCreatedBy(Utility.LAST_UPDATE_BY);
+                    trnRVColl.setCreatedTimestamp(new Date());
                 }
                 trnRVColl.setStatusFlag("NW");
 
@@ -394,7 +471,6 @@ public class FragmentPayment extends Fragment{
                 } else {
                     trnRVColl.setPaymentFlag(2L);
                 }
-// TODO: rest of the fields
 
                 UserData userData = (UserData) Storage.getObjPreference(getContext(), Storage.KEY_USER, UserData.class);
 
@@ -449,55 +525,6 @@ public class FragmentPayment extends Fragment{
             }
         });
 
-    }
-
-    public class SpinnerAdapter extends ArrayAdapter<TrnRVB> {
-        private Context ctx;
-        private List<TrnRVB> list;
-
-
-        public SpinnerAdapter(Context context, int resource, List<TrnRVB> objects) {
-            super(context, resource, objects);
-            this.ctx = context;
-            this.list = objects;
-
-        }
-
-        @Override
-        public int getCount() {
-            return list.size();
-        }
-
-        @Override
-        public TrnRVB getItem(int position) {
-            return list.get(position);
-        }
-
-        @Override
-        public View getView(int position, View convertView, ViewGroup parent) {
-            TextView tv = new TextView(this.ctx);
-//            TextView tv = (TextView) convertView.findViewById(R.id.nama);
-            tv.setPadding(10, 20, 10, 20);
-            tv.setTextColor(Color.BLACK);
-            tv.setText(list.get(position).getRvbNo());
-            tv.setTextSize(TypedValue.COMPLEX_UNIT_DIP, 20);
-
-            return tv;
-        }
-
-        @Override
-        public View getDropDownView(int position, View convertView, ViewGroup parent) {
-            TextView label = new TextView(this.ctx);
-            label.setTextColor(Color.BLACK);
-            label.setText(list.get(position).getRvbNo());
-
-            return label;
-        }
-
-        @Override
-        public long getItemId(int position) {
-            return position;
-        }
     }
 
 

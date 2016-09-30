@@ -4,9 +4,12 @@ import android.os.Bundle;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentTransaction;
 
+import java.util.Date;
+
 import butterknife.ButterKnife;
 import id.co.ppu.collectionfast2.R;
 import id.co.ppu.collectionfast2.component.BasicActivity;
+import id.co.ppu.collectionfast2.payment.entry.FragmentActiveContractsList;
 import id.co.ppu.collectionfast2.pojo.UserData;
 import id.co.ppu.collectionfast2.util.Storage;
 
@@ -15,9 +18,11 @@ public class ActivityPaymentEntry extends BasicActivity implements FragmentActiv
     public static final String PARAM_CONTRACT_NO = "contractNo";
     public static final String PARAM_TITLE = "title";
     public static final String PARAM_LDV_NO = "ldvNo";
+    public static final String PARAM_LKP_DATE = "lkpDate";
 
     String ldvNo = null;
     String contractNo = null;
+    Date lkpDate = null;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -35,6 +40,7 @@ public class ActivityPaymentEntry extends BasicActivity implements FragmentActiv
 
             this.ldvNo = extras.getString(PARAM_LDV_NO);
             this.contractNo = extras.getString(PARAM_CONTRACT_NO);
+            this.lkpDate = new Date(extras.getLong(PARAM_LKP_DATE));
         }
 
 
@@ -51,6 +57,7 @@ public class ActivityPaymentEntry extends BasicActivity implements FragmentActiv
 
         bundle.putString(FragmentPayment.PARAM_LDV_NO, this.ldvNo);
         bundle.putString(FragmentPayment.PARAM_CONTRACT_NO, this.contractNo);
+        bundle.putLong(FragmentPayment.PARAM_LKP_DATE, this.lkpDate.getTime());
         fragmentPayment.setArguments(bundle);
 
         FragmentTransaction ft = getSupportFragmentManager().beginTransaction();

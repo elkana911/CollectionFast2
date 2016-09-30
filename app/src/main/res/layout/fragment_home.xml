@@ -100,12 +100,10 @@
             android:layout_height="wrap_content"
             android:paddingLeft="@dimen/activity_horizontal_margin"
             android:paddingRight="@dimen/activity_horizontal_margin"
-            android:visibility="gone"
             android:text="Address"
             android:textAppearance="?android:attr/textAppearanceSmall" />
 
         <EditText
-            android:visibility="gone"
             android:id="@+id/etAddress"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"

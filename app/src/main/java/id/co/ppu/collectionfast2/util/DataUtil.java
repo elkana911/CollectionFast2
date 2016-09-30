@@ -5,6 +5,7 @@ import android.util.Log;
 
 import java.io.IOException;
 
+import id.co.ppu.collectionfast2.listener.OnPostRetrieveServerInfo;
 import id.co.ppu.collectionfast2.pojo.MstDelqReasons;
 import id.co.ppu.collectionfast2.pojo.MstLDVClassifications;
 import id.co.ppu.collectionfast2.pojo.MstLDVParameters;
@@ -29,6 +30,17 @@ import retrofit2.Response;
 
 public class DataUtil {
 
+    /*
+    public static boolean isSynced(Realm realm, String tableName, String key1, String contractNo, String createdBy) {
+        return realm.where(TrnSync.class)
+                .equalTo("tblName", tableName)
+                .equalTo("key1", key1)
+                .equalTo("contractNo", contractNo)
+                .equalTo("createdBy", createdBy)
+                .isNotNull("syncedDate")
+                .findFirst() != null;
+    }
+    */
     public static void retrieveMasterFromServerBackground(Realm realm, Context ctx) throws Exception{
 
         long count = realm.where(MstDelqReasons.class).count();
@@ -182,7 +194,7 @@ public class DataUtil {
 
     }
 
-    public static void retrieveServerInfo(final Realm realm, Context ctx) throws Exception{
+    public static void retrieveServerInfo(final Realm realm, Context ctx, final OnPostRetrieveServerInfo listener) throws Exception{
         ApiInterface fastService =
                 ServiceGenerator.createService(ApiInterface.class, Utility.buildUrl(Storage.getPreferenceAsInt(ctx, Storage.KEY_SERVER_ID, 0)));
 
@@ -198,6 +210,9 @@ public class DataUtil {
                             @Override
                             public void execute(Realm realm) {
                                 realm.copyToRealm(responseServerInfo.getData());
+
+                                if (listener != null)
+                                    listener.onSuccess(responseServerInfo.getData());
                             }
                         });
 
@@ -208,7 +223,10 @@ public class DataUtil {
 
             @Override
             public void onFailure(Call<ResponseServerInfo> call, Throwable t) {
-                throw new RuntimeException("Failure retrieve server information");
+                if (listener != null)
+                    listener.onFailure(t);
+
+//                throw new RuntimeException("Failure retrieve server information");
             }
         });
 
