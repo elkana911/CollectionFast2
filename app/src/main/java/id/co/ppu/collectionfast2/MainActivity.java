@@ -846,12 +846,14 @@ public class MainActivity extends SyncActivity
                                         if (_obj.getFlagDone() != null && _obj.getFlagDone().equalsIgnoreCase("Y")) {
                                             SyncTrnRepo sync = bgRealm.where(SyncTrnRepo.class)
                                                     .equalTo("repoNo", _obj.getRepoNo())
+                                                    .equalTo("contractNo", _obj.getContractNo())
                                                     .findFirst();
 
                                             if (sync == null) {
                                                 sync = new SyncTrnRepo();
                                             }
                                             sync.setRepoNo(_obj.getRepoNo());
+                                            sync.setContractNo(_obj.getContractNo());
                                             sync.setLastUpdateBy(_obj.getLastupdateBy());
                                             sync.setCreatedBy(_obj.getCreatedBy());
                                             sync.setSyncedDate(_obj.getDateDone());

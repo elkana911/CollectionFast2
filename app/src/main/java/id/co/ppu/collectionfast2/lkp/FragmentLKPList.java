@@ -40,7 +40,9 @@ import id.co.ppu.collectionfast2.pojo.DisplayTrnLDVDetails;
 import id.co.ppu.collectionfast2.pojo.ServerInfo;
 import id.co.ppu.collectionfast2.pojo.TrnLDVDetails;
 import id.co.ppu.collectionfast2.pojo.TrnLDVHeader;
+import id.co.ppu.collectionfast2.sync.pojo.SyncTrnLDVComments;
 import id.co.ppu.collectionfast2.sync.pojo.SyncTrnRVColl;
+import id.co.ppu.collectionfast2.sync.pojo.SyncTrnRepo;
 import id.co.ppu.collectionfast2.util.Utility;
 import io.realm.Realm;
 import io.realm.RealmResults;
@@ -287,6 +289,7 @@ public class FragmentLKPList extends Fragment {
                     displayTrnLDVDetails.setCustNo(obj.getCustNo());
                     displayTrnLDVDetails.setCreatedBy(obj.getCreatedBy());
                     displayTrnLDVDetails.setWorkStatus(obj.getWorkStatus());
+                    displayTrnLDVDetails.setFlagDone(obj.getFlagDone());
 
                     displayTrnLDVDetails.setAddress(obj.getAddress());
 
@@ -400,7 +403,21 @@ public class FragmentLKPList extends Fragment {
                     .isNotNull("syncedDate")
                     .findAll();
 
-            if (trnSync.size() > 0) {
+            RealmResults<SyncTrnLDVComments> trnSyncLDVComments = realm.where(SyncTrnLDVComments.class)
+                    .equalTo("ldvNo", detail.getLdvNo())
+                    .equalTo("contractNo", detail.getContractNo())
+                    .equalTo("createdBy", Utility.LAST_UPDATE_BY)
+                    .isNotNull("syncedDate")
+                    .findAll();
+
+            RealmResults<SyncTrnRepo> trnSyncRepo = realm.where(SyncTrnRepo.class)
+//                    .equalTo("repoNo", detail.getLdvNo())
+                    .equalTo("contractNo", detail.getLdvNo())
+                    .equalTo("createdBy", Utility.LAST_UPDATE_BY)
+                    .isNotNull("syncedDate")
+                    .findAll();
+
+            if (trnSync.size() > 0 || trnSyncLDVComments.size() > 0 || trnSyncRepo.size() > 0) {
                 dataViewHolder.llRowLKP.setBackgroundColor(Color.GREEN);
             }
 

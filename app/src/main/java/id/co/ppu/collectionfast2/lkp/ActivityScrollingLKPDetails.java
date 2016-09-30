@@ -38,6 +38,10 @@ public class ActivityScrollingLKPDetails extends BasicActivity {
     public static final String PARAM_LKP_DATE = "lkpDate";
     public static final String PARAM_WORKSTATUS = "customer.workStatus";
 
+    private static final int REQUESTCODE_PAYMENT = 10000;
+    private static final int REQUESTCODE_VISITRESULT = 10001;
+    private static final int REQUESTCODE_REPO = 10002;
+
     private String contractNo = null;
     private String ldvNo = null;
     private String collectorId = null;
@@ -127,6 +131,10 @@ public class ActivityScrollingLKPDetails extends BasicActivity {
             finish();
         }
 
+        updateButtonsVisibility();
+    }
+
+    private void updateButtonsVisibility() {
         Button btnPaymentReceive = ButterKnife.findById(this, R.id.btnPaymentReceive);
         Button btnVisitResultEntry = ButterKnife.findById(this, R.id.btnVisitResultEntry);
         Button btnRepoEntry = ButterKnife.findById(this, R.id.btnRepoEntry);
@@ -161,6 +169,42 @@ public class ActivityScrollingLKPDetails extends BasicActivity {
                 btnRepoEntry.setVisibility(View.GONE);
             }
         }
+
+        RealmResults<TrnLDVComments> trnLDVCommentses = this.realm.where(TrnLDVComments.class)
+                .equalTo("pk.ldvNo", ldvNo)
+                .equalTo("contractNo", contractNo)
+                .equalTo("createdBy", Utility.LAST_UPDATE_BY)
+                .findAll();
+
+        if (trnLDVCommentses.size() > 0) {
+            btnPaymentReceive.setVisibility(View.GONE);
+            btnRepoEntry.setVisibility(View.GONE);
+            return;
+        }
+
+        RealmResults<TrnRVColl> trnRVColls = this.realm.where(TrnRVColl.class)
+                .equalTo("contractNo", contractNo)
+                .equalTo("createdBy", Utility.LAST_UPDATE_BY)
+                .findAll();
+
+        if (trnRVColls.size() > 0) {
+            btnRepoEntry.setVisibility(View.GONE);
+            btnVisitResultEntry.setVisibility(View.GONE);
+            return;
+        }
+
+        RealmResults<TrnRepo> trnRepos = this.realm.where(TrnRepo.class)
+                .equalTo("contractNo", contractNo)
+                .equalTo("createdBy", Utility.LAST_UPDATE_BY)
+                .findAll();
+
+        if (trnRepos.size() > 0) {
+            btnPaymentReceive.setVisibility(View.GONE);
+            btnVisitResultEntry.setVisibility(View.GONE);
+            return;
+        }
+
+
     }
 
     public void loadDetail(String contractNo) {
@@ -251,7 +295,7 @@ public class ActivityScrollingLKPDetails extends BasicActivity {
             i.putExtra(ActivityPaymentEntri.PARAM_COLLECTOR_ID, this.collectorId);
         }
 
-        startActivity(i);
+        startActivityForResult(i, REQUESTCODE_PAYMENT);
 
     }
 
@@ -294,7 +338,7 @@ public class ActivityScrollingLKPDetails extends BasicActivity {
         i.putExtra(ActivityVisitResult.PARAM_CONTRACT_NO, etContractNo.getText().toString());
         i.putExtra(ActivityVisitResult.PARAM_LDV_NO, this.ldvNo);
 
-        startActivity(i);
+        startActivityForResult(i, REQUESTCODE_VISITRESULT);
     }
     @OnClick(R.id.btnRepoEntry)
     public void onClickRepoEntry() {
@@ -324,7 +368,7 @@ public class ActivityScrollingLKPDetails extends BasicActivity {
 
         Intent i = new Intent(this, ActivityRepoEntry.class);
         i.putExtra(ActivityVisitResult.PARAM_CONTRACT_NO, etContractNo.getText().toString());
-        startActivity(i);
+        startActivityForResult(i, REQUESTCODE_REPO);
     }
 
     @OnClick(R.id.btnVehicleInfo)
@@ -338,6 +382,7 @@ public class ActivityScrollingLKPDetails extends BasicActivity {
     public void onClickPaymentHistory() {
         Intent i = new Intent(this, ActivityPaymentHistory.class);
         i.putExtra(ActivityPaymentHistory.PARAM_CONTRACT_NO, etContractNo.getText().toString());
+        i.putExtra(ActivityPaymentHistory.PARAM_IS_LKP_INQUIRY, isLKPInquiry);
         startActivity(i);
     }
     @OnClick(R.id.btnChangeAddr)
@@ -352,5 +397,15 @@ public class ActivityScrollingLKPDetails extends BasicActivity {
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
 
+        switch (requestCode) {
+            case REQUESTCODE_PAYMENT:
+                break;
+            case REQUESTCODE_VISITRESULT:
+                break;
+            case REQUESTCODE_REPO:
+                break;
+        }
+
+        updateButtonsVisibility();
     }
 }

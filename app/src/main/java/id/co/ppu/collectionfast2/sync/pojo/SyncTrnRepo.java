@@ -13,6 +13,7 @@ import io.realm.annotations.PrimaryKey;
 public class SyncTrnRepo extends RealmObject implements Serializable {
     @PrimaryKey
     private String repoNo;
+    private String contractNo;
     private String createdBy;
     private String lastUpdateBy;
 
@@ -24,6 +25,14 @@ public class SyncTrnRepo extends RealmObject implements Serializable {
 
     public void setRepoNo(String repoNo) {
         this.repoNo = repoNo;
+    }
+
+    public String getContractNo() {
+        return contractNo;
+    }
+
+    public void setContractNo(String contractNo) {
+        this.contractNo = contractNo;
     }
 
     public String getCreatedBy() {

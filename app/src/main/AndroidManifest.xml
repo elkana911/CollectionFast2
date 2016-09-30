@@ -27,6 +27,7 @@
         <activity
             android:name=".login.LoginActivity"
             android:label="@string/app_name"
+            android:screenOrientation="portrait"
             android:theme="@style/AppTheme.NoActionBar">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
@@ -36,29 +37,54 @@
         </activity>
         <activity
             android:name=".settings.SettingsActivity"
-            android:label="@string/title_activity_settings" />
-        <activity android:name=".login.WelcomeActivity" />
+            android:label="@string/title_activity_settings"
+            android:screenOrientation="portrait" />
+        <activity
+            android:name=".login.WelcomeActivity"
+            android:screenOrientation="portrait" />
         <activity
             android:name=".MainActivity"
             android:label="@string/title_activity_main"
+            android:screenOrientation="portrait"
             android:theme="@style/AppTheme.NoActionBar" />
         <activity
             android:name=".lkp.ActivityScrollingLKPDetails"
             android:label="@string/title_activity_activity_scrolling_lkpdetails"
+            android:screenOrientation="portrait"
             android:theme="@style/AppTheme.NoActionBar" />
-        <activity android:name=".payment.ActivityPaymentEntry" />
-        <activity android:name=".lkp.ActivityVisitResult" />
-        <activity android:name=".lkp.ActivityChangeAddress" />
-        <activity android:name=".lkp.ActivityRepoEntry" />
-        <activity android:name=".lkp.ActivityPaymentHistory" />
+        <activity
+            android:name=".payment.ActivityPaymentEntry"
+            android:screenOrientation="portrait" />
+        <activity
+            android:name=".lkp.ActivityVisitResult"
+            android:screenOrientation="portrait" />
+        <activity
+            android:name=".lkp.ActivityChangeAddress"
+            android:screenOrientation="portrait" />
+        <activity
+            android:name=".lkp.ActivityRepoEntry"
+            android:screenOrientation="portrait" />
+        <activity
+            android:name=".lkp.ActivityPaymentHistory"
+            android:screenOrientation="portrait" />
 
         <receiver android:name=".job.SyncJob" />
 
-        <activity android:name=".lkp.ActivityVehicleInfo" />
-        <activity android:name=".lkp.ActivityUploadPicture" />
-        <activity android:name=".lkp.ActivityVisitResultRPC" />
-        <activity android:name=".payment.receive.ActivityPaymentReceive" />
-        <activity android:name=".payment.entry.ActivityPaymentEntri"></activity><!-- ATTENTION: This was auto-generated to add Google Play services to your project for
+        <activity
+            android:name=".lkp.ActivityVehicleInfo"
+            android:screenOrientation="portrait" />
+        <activity
+            android:name=".lkp.ActivityUploadPicture"
+            android:screenOrientation="portrait" />
+        <activity
+            android:name=".lkp.ActivityVisitResultRPC"
+            android:screenOrientation="portrait" />
+        <activity
+            android:name=".payment.receive.ActivityPaymentReceive"
+            android:screenOrientation="portrait" />
+        <activity
+            android:name=".payment.entry.ActivityPaymentEntri"
+            android:screenOrientation="portrait"></activity><!-- ATTENTION: This was auto-generated to add Google Play services to your project for
      App Indexing.  See https://g.co/AppIndexing/AndroidStudio for more information. -->
         <meta-data
             android:name="com.google.android.gms.version"

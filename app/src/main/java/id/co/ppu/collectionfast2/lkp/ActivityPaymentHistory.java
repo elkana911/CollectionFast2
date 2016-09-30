@@ -17,7 +17,6 @@ import butterknife.ButterKnife;
 import id.co.ppu.collectionfast2.R;
 import id.co.ppu.collectionfast2.component.BasicActivity;
 import id.co.ppu.collectionfast2.pojo.HistInstallments;
-import id.co.ppu.collectionfast2.pojo.TrnContractBuckets;
 import id.co.ppu.collectionfast2.pojo.TrnLDVDetails;
 import id.co.ppu.collectionfast2.util.Utility;
 import io.realm.RealmResults;
@@ -25,8 +24,10 @@ import io.realm.RealmResults;
 public class ActivityPaymentHistory extends BasicActivity {
 
     public static final String PARAM_CONTRACT_NO = "customer.contractNo";
+    public static final String PARAM_IS_LKP_INQUIRY = "lkpinquiry";
 
     private String contractNo = null;
+    private boolean isLKPInquiry = false;
 
     @BindView(R.id.etContractNo)
     EditText etContractNo;
@@ -51,10 +52,12 @@ public class ActivityPaymentHistory extends BasicActivity {
 
         if (extras != null) {
             contractNo = extras.getString(PARAM_CONTRACT_NO);
+            isLKPInquiry = extras.getBoolean(PARAM_IS_LKP_INQUIRY);
         }
 
         TrnLDVDetails dtl = this.realm.where(TrnLDVDetails.class).equalTo("contractNo", contractNo).findFirst();
-        TrnContractBuckets contractBuckets = this.realm.where(TrnContractBuckets.class).equalTo("pk.contractNo", contractNo).findFirst();
+        HistInstallments histInstallments = this.realm.where(HistInstallments.class).equalTo("pk.contractNo", contractNo).findFirst();
+//        TrnContractBuckets contractBuckets = this.realm.where(TrnContractBuckets.class).equalTo("pk.contractNo", contractNo).findFirst();
 
         if (getSupportActionBar() != null) {
             getSupportActionBar().setTitle(R.string.title_activity_payment_history);
@@ -64,11 +67,18 @@ public class ActivityPaymentHistory extends BasicActivity {
         }
 
         etContractNo.setText(dtl.getContractNo());
-        long angsuran = contractBuckets.getPrncAmt() + contractBuckets.getIntrAmt();
-        etAngsuran.setText(Utility.convertLongToRupiah(angsuran));
 
-        long tenor = contractBuckets.getTop();
-        etTenor.setText(String.valueOf(tenor));
+        if (histInstallments == null) {
+            etAngsuran.setText("?");
+        } else {
+            long angsuran = (histInstallments.getPrncAmtDtlCust() == null ? 0 : histInstallments.getPrncAmtDtlCust())
+                    + (histInstallments.getIntrAmtDtlAr() == null ? 0 : histInstallments.getIntrAmtDtlAr());
+            etAngsuran.setText(Utility.convertLongToRupiah(angsuran));
+        }
+
+//        TODO: ask pak yoce ambil dari mana
+//        long tenor = contractBuckets.getTop();
+//        etTenor.setText(String.valueOf(tenor));
 
         /*
         Thread t = new Thread(new Runnable() {

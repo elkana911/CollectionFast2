@@ -36,6 +36,9 @@ public class DisplayTrnLDVDetails extends RealmObject implements Serializable {
     @SerializedName("workStatus")
     private String workStatus;
 
+    @SerializedName("flagDone")
+    private String flagDone;
+
     @SerializedName("createdBy")
     private String createdBy;
 
@@ -106,6 +109,14 @@ public class DisplayTrnLDVDetails extends RealmObject implements Serializable {
         this.lkpDate = lkpDate;
     }
 
+    public String getFlagDone() {
+        return flagDone;
+    }
+
+    public void setFlagDone(String flagDone) {
+        this.flagDone = flagDone;
+    }
+
     public String getCreatedBy() {
         return createdBy;
     }
@@ -128,10 +139,12 @@ public class DisplayTrnLDVDetails extends RealmObject implements Serializable {
                 "ldvNo='" + ldvNo + '\'' +
                 ", seqNo=" + seqNo +
                 ", collId='" + collId + '\'' +
+                ", lkpDate=" + lkpDate +
                 ", contractNo='" + contractNo + '\'' +
                 ", custNo='" + custNo + '\'' +
                 ", custName='" + custName + '\'' +
                 ", workStatus='" + workStatus + '\'' +
+                ", flagDone='" + flagDone + '\'' +
                 ", createdBy='" + createdBy + '\'' +
                 ", address=" + address +
                 '}';

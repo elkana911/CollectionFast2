@@ -191,6 +191,7 @@ public class ActivityRepoEntry extends BasicActivity {
 
                 SyncTrnRepo trnSync = realm.where(SyncTrnRepo.class)
                         .equalTo("repoNo", repoNo)
+                        .equalTo("contractNo", contractNo)
                         .equalTo("createdBy", createdBy)
                         .isNotNull("syncedDate")
                         .findFirst();
