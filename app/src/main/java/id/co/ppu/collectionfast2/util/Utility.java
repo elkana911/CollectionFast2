@@ -33,7 +33,7 @@ public class Utility {
     public final static String DATE_DISPLAY_PATTERN = "dd MMM yyyy";
     public final static String DATE_DATA_PATTERN = "yyyyMMdd";
 
-    public final static String[][] servers = {{"local-server", "192.168.1.105", "8090"}
+    public final static String[][] servers = {{"local-server", "192.168.43.90", "8090"}
                                             ,{"fast-mobile", "cmobile.radanafinance.co.id", "7001"}
     };
 

@@ -259,9 +259,13 @@ public class ActivityPaymentEntri extends BasicActivity implements FragmentActiv
 //                .equalTo("createdBy", createdBy)
                 .findAll();
 
+        if (trnContractBucketses.size() < 1) {
+
+        }else
         if (trnContractBucketses.size() > 1) {
             Utility.showDialog(this, "Warning", "Duplicate contract " + contractNo + " found !");
         }
+
         TrnContractBuckets contractBuckets = trnContractBucketses.get(0);
 
         if (contractBuckets == null) {

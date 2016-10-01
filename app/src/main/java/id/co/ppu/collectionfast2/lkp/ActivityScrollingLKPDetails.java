@@ -20,6 +20,7 @@ import id.co.ppu.collectionfast2.component.BasicActivity;
 import id.co.ppu.collectionfast2.payment.entry.ActivityPaymentEntri;
 import id.co.ppu.collectionfast2.payment.receive.ActivityPaymentReceive;
 import id.co.ppu.collectionfast2.pojo.MstUser;
+import id.co.ppu.collectionfast2.pojo.TrnContractBuckets;
 import id.co.ppu.collectionfast2.pojo.TrnLDVComments;
 import id.co.ppu.collectionfast2.pojo.TrnLDVDetails;
 import id.co.ppu.collectionfast2.pojo.TrnRVColl;
@@ -288,6 +289,15 @@ public class ActivityScrollingLKPDetails extends BasicActivity {
             i.putExtra(ActivityPaymentReceive.PARAM_LKP_DATE, this.lkpDate.getTime());
             i.putExtra(ActivityPaymentReceive.PARAM_COLLECTOR_ID, this.collectorId);
         } else {
+            RealmResults<TrnContractBuckets> trnContractBucketses = this.realm.where(TrnContractBuckets.class)
+                    .equalTo("pk.contractNo", contractNo)
+//                .equalTo("createdBy", createdBy)
+                    .findAll();
+
+            if (trnContractBucketses.size() < 1) {
+                Snackbar.make(activityScrollingLkpdtl, "Sorry, this contract is not available for Payment Entri.", Snackbar.LENGTH_LONG).show();
+                return;
+            }
             i = new Intent(this, ActivityPaymentEntri.class);
             i.putExtra(ActivityPaymentEntri.PARAM_CONTRACT_NO, etContractNo.getText().toString());
             i.putExtra(ActivityPaymentEntri.PARAM_LDV_NO, this.ldvNo);

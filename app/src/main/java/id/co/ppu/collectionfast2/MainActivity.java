@@ -1220,13 +1220,13 @@ public class MainActivity extends SyncActivity
             req.setLdvHeader(syncLdvHeader.getDataToSync());
         }
 
-        req.setRvb(syncRvb.getDataToSync());
-        req.setRvColl(syncRVColl.getDataToSync());
-        req.setLdvDetails(syncLdvDetails.getDataToSync());
+//        req.setRvb(syncRvb.getDataToSync());
+//        req.setRvColl(syncRVColl.getDataToSync());
+//        req.setLdvDetails(syncLdvDetails.getDataToSync());
         req.setLdvComments(syncLdvComments.getDataToSync());
-        req.setBastbj(syncBastbj.getDataToSync());
-        req.setRepo(syncRepo.getDataToSync());
-        req.setChangeAddr(syncChangeAddr.getDataToSync());
+//        req.setBastbj(syncBastbj.getDataToSync());
+//        req.setRepo(syncRepo.getDataToSync());
+//        req.setChangeAddr(syncChangeAddr.getDataToSync());
 
         Call<ResponseSync> call = fastService.syncLKP(req);
         call.enqueue(new Callback<ResponseSync>() {
