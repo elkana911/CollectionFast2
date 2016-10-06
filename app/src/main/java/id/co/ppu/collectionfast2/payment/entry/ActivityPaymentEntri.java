@@ -4,11 +4,11 @@ import android.graphics.Color;
 import android.os.Bundle;
 import android.support.design.widget.Snackbar;
 import android.support.v4.app.DialogFragment;
-import android.text.TextUtils;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ArrayAdapter;
 import android.widget.AutoCompleteTextView;
+import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ImageView;
 import android.widget.Spinner;
@@ -28,15 +28,15 @@ import id.co.ppu.collectionfast2.R;
 import id.co.ppu.collectionfast2.component.BasicActivity;
 import id.co.ppu.collectionfast2.component.RVBAdapter;
 import id.co.ppu.collectionfast2.pojo.ServerInfo;
-import id.co.ppu.collectionfast2.pojo.TrnContractBuckets;
-import id.co.ppu.collectionfast2.pojo.TrnLDVDetails;
-import id.co.ppu.collectionfast2.pojo.TrnLDVHeader;
-import id.co.ppu.collectionfast2.pojo.TrnRVB;
-import id.co.ppu.collectionfast2.pojo.TrnRVColl;
-import id.co.ppu.collectionfast2.pojo.TrnRVCollPK;
 import id.co.ppu.collectionfast2.pojo.UserConfig;
 import id.co.ppu.collectionfast2.pojo.UserData;
-import id.co.ppu.collectionfast2.sync.pojo.SyncTrnRVColl;
+import id.co.ppu.collectionfast2.pojo.sync.SyncTrnRVColl;
+import id.co.ppu.collectionfast2.pojo.trn.TrnContractBuckets;
+import id.co.ppu.collectionfast2.pojo.trn.TrnLDVDetails;
+import id.co.ppu.collectionfast2.pojo.trn.TrnLDVHeader;
+import id.co.ppu.collectionfast2.pojo.trn.TrnRVB;
+import id.co.ppu.collectionfast2.pojo.trn.TrnRVColl;
+import id.co.ppu.collectionfast2.pojo.trn.TrnRVCollPK;
 import id.co.ppu.collectionfast2.util.Storage;
 import id.co.ppu.collectionfast2.util.Utility;
 import io.realm.Realm;
@@ -75,6 +75,9 @@ public class ActivityPaymentEntri extends BasicActivity implements FragmentActiv
     @BindView(R.id.etDenda)
     EditText etDenda;
 
+    @BindView(R.id.etDendaBerjalan)
+    EditText etDendaBerjalan;
+
     @BindView(R.id.etBiayaTagih)
     EditText etBiayaTagih;
 
@@ -104,7 +107,7 @@ public class ActivityPaymentEntri extends BasicActivity implements FragmentActiv
 
         Bundle extras = getIntent().getExtras();
         if (extras != null) {
-            this.ldvNo= extras.getString(PARAM_LDV_NO);
+            this.ldvNo = extras.getString(PARAM_LDV_NO);
             this.contractNo = extras.getString(PARAM_CONTRACT_NO);
 
             long lkpdate = extras.getLong(PARAM_LKP_DATE);
@@ -143,26 +146,61 @@ public class ActivityPaymentEntri extends BasicActivity implements FragmentActiv
             RealmResults<TrnContractBuckets> buckets = this.realm.where(TrnContractBuckets.class)
                     .equalTo("collectorId", this.collectorId).findAll();
 
+            Date serverDate = this.realm.where(ServerInfo.class).findFirst().getServerDate();
+            String createdBy = "JOB" + Utility.convertDateToString(serverDate, "yyyyMMdd");
+
+            if (this.ldvNo == null) {
+                TrnLDVHeader trnLDVHeader = realm.where(TrnLDVHeader.class)
+                        .equalTo("collCode", this.collectorId)
+                        .equalTo("createdBy", createdBy)
+                        .findFirst();
+
+                this.ldvNo = trnLDVHeader.getLdvNo();
+            }
+
+            RealmResults<TrnLDVDetails> _buffer = this.realm.where(TrnLDVDetails.class)
+                    .equalTo("pk.ldvNo", ldvNo)
+                    .equalTo("createdBy", createdBy)
+                    .findAll();
+
             List<String> list = new ArrayList<>();
             for (TrnContractBuckets b : buckets) {
-                list.add(b.getPk().getContractNo());
-            }
-            // sort
-            Collections.sort(list);
-
-            // override color of text item
-            ArrayAdapter<String> dataAdapter = new ArrayAdapter<String>(this,
-                    android.R.layout.simple_list_item_1, list) {
-                @Override
-                public View getView(int position, View convertView, ViewGroup parent) {
-                    View view = super.getView(position, convertView, parent);
-                    TextView text = (TextView) view.findViewById(android.R.id.text1);
-                    text.setTextColor(Color.BLACK);
-                    return view;
+                boolean exist = false;
+                for (TrnLDVDetails _dtl : _buffer) {
+                    if (_dtl.getContractNo().equalsIgnoreCase(b.getPk().getContractNo())) {
+                        exist = true;
+                        break;
+                    }
                 }
-            };
 
-            etContractNo.setAdapter(dataAdapter);
+                if (!exist)
+                    list.add(b.getPk().getContractNo());
+            }
+
+            if (list.size() > 0) {
+                // sort
+                Collections.sort(list);
+
+                // override color of text item
+                ArrayAdapter<String> dataAdapter = new ArrayAdapter<String>(this,
+                        android.R.layout.simple_list_item_1, list) {
+                    @Override
+                    public View getView(int position, View convertView, ViewGroup parent) {
+                        View view = super.getView(position, convertView, parent);
+                        TextView text = (TextView) view.findViewById(android.R.id.text1);
+                        text.setTextColor(Color.BLACK);
+                        return view;
+                    }
+                };
+
+                etContractNo.setAdapter(dataAdapter);
+
+            } else {
+                Button btnSave = ButterKnife.findById(this, R.id.btnSave);
+                btnSave.setVisibility(View.INVISIBLE);
+
+                Snackbar.make(activityPaymentEntri, "No contracts found !", Snackbar.LENGTH_LONG).show();
+            }
 
         }
 
@@ -199,6 +237,7 @@ public class ActivityPaymentEntri extends BasicActivity implements FragmentActiv
         DialogFragment d = new FragmentActiveContractsList();
         Bundle bundle = new Bundle();
         bundle.putString(FragmentActiveContractsList.ARG_PARAM1, this.collectorId);
+        bundle.putString(FragmentActiveContractsList.PARAM_LDV_NO, this.ldvNo);
         d.setArguments(bundle);
 
         d.show(getSupportFragmentManager(), "dialog");
@@ -209,18 +248,16 @@ public class ActivityPaymentEntri extends BasicActivity implements FragmentActiv
     public void onContractSelected(String contractNo) {
 
         // load last save
-        TrnRVColl trnRVColl = this.realm.where(TrnRVColl.class)
-                .equalTo("contractNo", contractNo)
-//                .equalTo("collId", collectorId)
-                .equalTo("createdBy", Utility.LAST_UPDATE_BY)
-                .equalTo("lastupdateBy", Utility.LAST_UPDATE_BY)
-                .findFirst();
+        TrnRVColl trnRVColl = isExists(this.realm);
 
         if (trnRVColl != null) {
             spNoRVB.setAdapter(null);
 
             etPenerimaan.setText(String.valueOf(trnRVColl.getReceivedAmount()));
             etCatatan.setText(trnRVColl.getNotes());
+            etDenda.setText(String.valueOf(trnRVColl.getPenaltyAc()));
+            etDendaBerjalan.setText(String.valueOf(trnRVColl.getDaysIntrAc()));
+            etBiayaTagih.setText(String.valueOf(trnRVColl.getCollFeeAc()));
 
             TrnRVB rvbNo = this.realm.where(TrnRVB.class)
                     .equalTo("rvbNo", trnRVColl.getPk().getRbvNo())
@@ -233,6 +270,9 @@ public class ActivityPaymentEntri extends BasicActivity implements FragmentActiv
             spNoRVB.setAdapter(adapterRVB);
         } else {
             etPenerimaan.setText(null);
+            etDenda.setText(String.valueOf(0));
+            etDendaBerjalan.setText(String.valueOf(0));
+            etBiayaTagih.setText("10000");
 
             buildRVB();
 
@@ -261,8 +301,7 @@ public class ActivityPaymentEntri extends BasicActivity implements FragmentActiv
 
         if (trnContractBucketses.size() < 1) {
 
-        }else
-        if (trnContractBucketses.size() > 1) {
+        } else if (trnContractBucketses.size() > 1) {
             Utility.showDialog(this, "Warning", "Duplicate contract " + contractNo + " found !");
         }
 
@@ -276,12 +315,8 @@ public class ActivityPaymentEntri extends BasicActivity implements FragmentActiv
         if (getSupportActionBar() != null) {
             getSupportActionBar().setSubtitle(contractBuckets.getCustName());
         }
-
+// TODO: ask pak yoce apa angsuran & angsuranke masih mengacu ke contractbuckets
         etAngsuranKe.setText(String.valueOf(contractBuckets.getOvdInstNo()));
-
-        // TODO: ask pak yoce drmana ambilnya di rvcol ?
-        etDenda.setText(String.valueOf(0));
-        etBiayaTagih.setText("10000");
 
         long angsuran = (contractBuckets.getPrncAmt() == null ? 0 : contractBuckets.getPrncAmt())
                 + (contractBuckets.getIntrAmt() == null ? 0 : contractBuckets.getIntrAmt());
@@ -306,6 +341,7 @@ public class ActivityPaymentEntri extends BasicActivity implements FragmentActiv
         // reset errors
         etPenerimaan.setError(null);
         etDenda.setError(null);
+        etDendaBerjalan.setError(null);
         etBiayaTagih.setError(null);
 
         // attempt save
@@ -314,6 +350,7 @@ public class ActivityPaymentEntri extends BasicActivity implements FragmentActiv
 
         final String penerimaan = etPenerimaan.getText().toString().trim();
         final String denda = etDenda.getText().toString().trim();
+        final String dendaBerjalan = etDendaBerjalan.getText().toString().trim();
         final String biayaTagih = etBiayaTagih.getText().toString().trim();
 
         final String rvbNo = spNoRVB.getSelectedItem().toString();
@@ -321,20 +358,22 @@ public class ActivityPaymentEntri extends BasicActivity implements FragmentActiv
                 .equalTo("rvbNo", rvbNo)
                 .findFirst();
 
-        if (!TextUtils.isEmpty(denda)) {
-            if (Long.parseLong(denda) < 0) {
-                etDenda.setError(getString(R.string.error_amount_invalid));
-                focusView = etDenda;
-                cancel = true;
-            }
+        if (!Utility.isValidMoney(denda)) {
+            etDenda.setError(getString(R.string.error_amount_invalid));
+            focusView = etDenda;
+            cancel = true;
         }
 
-        if (!TextUtils.isEmpty(biayaTagih)) {
-            if (Long.parseLong(biayaTagih) < 0) {
-                etDenda.setError(getString(R.string.error_amount_invalid));
-                focusView = etBiayaTagih;
-                cancel = true;
-            }
+        if (!Utility.isValidMoney(dendaBerjalan)) {
+            etDendaBerjalan.setError(getString(R.string.error_amount_invalid));
+            focusView = etDendaBerjalan;
+            cancel = true;
+        }
+
+        if (!Utility.isValidMoney(biayaTagih)) {
+            etBiayaTagih.setError(getString(R.string.error_amount_invalid));
+            focusView = etBiayaTagih;
+            cancel = true;
         }
 
         if (selectedRVB == null) {
@@ -351,36 +390,22 @@ public class ActivityPaymentEntri extends BasicActivity implements FragmentActiv
 
         }
 
-        if (TextUtils.isEmpty(penerimaan)) {
-            etPenerimaan.setError(getString(R.string.error_field_required));
+        if (!Utility.isValidMoney(penerimaan)) {
+            etPenerimaan.setError(getString(R.string.error_amount_invalid));
             focusView = etPenerimaan;
             cancel = true;
         } else {
-            if (penerimaan.length() < 4) {
+            long penerimaanValue = Long.parseLong(penerimaan);
+
+            if (penerimaanValue > 99999999) {
+                etPenerimaan.setError(getString(R.string.error_amount_too_large));
+                focusView = etPenerimaan;
+                cancel = true;
+            } else if (penerimaanValue < 10000) {
                 etPenerimaan.setError(getString(R.string.error_amount_too_small));
                 focusView = etPenerimaan;
                 cancel = true;
-            } else {
-
-                if (penerimaan.startsWith("0")) {
-                    etPenerimaan.setError(getString(R.string.error_amount_invalid));
-                    focusView = etPenerimaan;
-                    cancel = true;
-                } else {
-                    long penerimaanValue = Long.parseLong(penerimaan);
-                    if (penerimaanValue > 99999999) {
-                        etPenerimaan.setError(getString(R.string.error_amount_too_large));
-                        focusView = etPenerimaan;
-                        cancel = true;
-                    }else if (penerimaanValue < 10000) {
-                        etPenerimaan.setError(getString(R.string.error_amount_too_small));
-                        focusView = etPenerimaan;
-                        cancel = true;
-                    }
-
-                }
             }
-
         }
 
         if (cancel) {
@@ -442,6 +467,7 @@ public class ActivityPaymentEntri extends BasicActivity implements FragmentActiv
 
                 trnLDVDetails.setLdvFlag("COL");
                 trnLDVDetails.setWorkStatus("V");
+                trnLDVDetails.setFlagToEmrafin("N");
                 trnLDVDetails.setLastupdateBy(Utility.LAST_UPDATE_BY);
                 trnLDVDetails.setLastupdateTimestamp(new Date());
                 realm.copyToRealm(trnLDVDetails);
@@ -472,16 +498,29 @@ public class ActivityPaymentEntri extends BasicActivity implements FragmentActiv
 
                 if (trnRVColl == null) {
 
+                    // kata pak yoce, running number rvbno sehari cukup satu saja ga perlu generate terus, besoknya di reset.
+
                     // generate runningnumber
                     UserConfig userConfig = realm.where(UserConfig.class).findFirst();
+
                     if (userConfig.getKodeRVCollRunningNumber() == null)
                         userConfig.setKodeRVCollRunningNumber(0L);
-                    long runningNumber = userConfig.getKodeRVCollRunningNumber() + 1;
-                    userConfig.setKodeRVCollRunningNumber(runningNumber);
-                    realm.copyToRealmOrUpdate(userConfig);
+
+
+                    // TODO: coba cek dulu jgn sampe generated lagi di hari yg sama
+                    long runningNumber = userConfig.getKodeRVCollRunningNumber();
+                    if (userConfig.getKodeRVCollLastGenerated() == null
+                            || !Utility.isSameDay(userConfig.getKodeRVCollLastGenerated(), new Date())
+                            ) {
+
+                        runningNumber = userConfig.getKodeRVCollRunningNumber() + 1;
+                        userConfig.setKodeRVCollRunningNumber(runningNumber);
+                        userConfig.setKodeRVCollLastGenerated(new Date());
+                        realm.copyToRealmOrUpdate(userConfig);
+
+                    }
 
                     //yyyyMMdd-runnningnumber2digit
-
                     StringBuilder sb = new StringBuilder();
                     sb.append(Utility.convertDateToString(serverDate, "yyyy"))
                             .append(Utility.convertDateToString(serverDate, "MM"))
@@ -498,6 +537,7 @@ public class ActivityPaymentEntri extends BasicActivity implements FragmentActiv
                     trnRVColl.setCreatedTimestamp(new Date());
                 }
                 trnRVColl.setStatusFlag("NW");
+                trnRVColl.setFlagToEmrafin("N");
 
                 trnRVColl.setPaymentFlag(2L);
 
@@ -509,6 +549,10 @@ public class ActivityPaymentEntri extends BasicActivity implements FragmentActiv
                 trnRVColl.setProcessDate(serverDate);
 
                 trnRVColl.setLdvNo(trnLDVDetails.getPk().getLdvNo());
+
+                trnRVColl.setPenaltyAc(Long.valueOf(denda));
+                trnRVColl.setDaysIntrAc(Long.valueOf(dendaBerjalan));
+                trnRVColl.setCollFeeAc(Long.valueOf(biayaTagih));
 
                 trnRVColl.setContractNo(contractNo);
                 trnRVColl.setNotes(etCatatan.getText().toString());

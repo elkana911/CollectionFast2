@@ -2,8 +2,8 @@ package id.co.ppu.collectionfast2.sync;
 
 import java.util.Date;
 
-import id.co.ppu.collectionfast2.pojo.TrnRepo;
-import id.co.ppu.collectionfast2.sync.pojo.SyncTrnRepo;
+import id.co.ppu.collectionfast2.pojo.sync.SyncTrnRepo;
+import id.co.ppu.collectionfast2.pojo.trn.TrnRepo;
 import id.co.ppu.collectionfast2.util.Utility;
 import io.realm.Realm;
 import io.realm.RealmResults;

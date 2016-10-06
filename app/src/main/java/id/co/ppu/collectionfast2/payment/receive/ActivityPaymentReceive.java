@@ -20,13 +20,14 @@ import id.co.ppu.collectionfast2.R;
 import id.co.ppu.collectionfast2.component.BasicActivity;
 import id.co.ppu.collectionfast2.component.RVBAdapter;
 import id.co.ppu.collectionfast2.pojo.ServerInfo;
-import id.co.ppu.collectionfast2.pojo.TrnLDVDetails;
-import id.co.ppu.collectionfast2.pojo.TrnRVB;
-import id.co.ppu.collectionfast2.pojo.TrnRVColl;
-import id.co.ppu.collectionfast2.pojo.TrnRVCollPK;
 import id.co.ppu.collectionfast2.pojo.UserConfig;
 import id.co.ppu.collectionfast2.pojo.UserData;
-import id.co.ppu.collectionfast2.sync.pojo.SyncTrnRVColl;
+import id.co.ppu.collectionfast2.pojo.master.MstParam;
+import id.co.ppu.collectionfast2.pojo.sync.SyncTrnRVColl;
+import id.co.ppu.collectionfast2.pojo.trn.TrnLDVDetails;
+import id.co.ppu.collectionfast2.pojo.trn.TrnRVB;
+import id.co.ppu.collectionfast2.pojo.trn.TrnRVColl;
+import id.co.ppu.collectionfast2.pojo.trn.TrnRVCollPK;
 import id.co.ppu.collectionfast2.util.Storage;
 import id.co.ppu.collectionfast2.util.Utility;
 import io.realm.Realm;
@@ -61,6 +62,9 @@ public class ActivityPaymentReceive extends BasicActivity {
     @BindView(R.id.etDenda)
     EditText etDenda;
 
+    @BindView(R.id.etDendaBerjalan)
+    EditText etDendaBerjalan;
+
     @BindView(R.id.etBiayaTagih)
     EditText etBiayaTagih;
 
@@ -92,8 +96,15 @@ public class ActivityPaymentReceive extends BasicActivity {
 
         }
 
+        if (this.lkpDate == null) {
+            this.lkpDate = this.realm.where(ServerInfo.class).findFirst().getServerDate();
+        }
+
+        String createdBy = "JOB" + Utility.convertDateToString(this.lkpDate, "yyyyMMdd");
+
         TrnLDVDetails dtl = this.realm.where(TrnLDVDetails.class)
                 .equalTo("contractNo", contractNo)
+                .equalTo("createdBy", createdBy)
                 .findFirst();
 
         if (getSupportActionBar() != null) {
@@ -106,16 +117,9 @@ public class ActivityPaymentReceive extends BasicActivity {
         etContractNo.setText(contractNo);
         etAngsuran.setText(Utility.convertLongToRupiah(dtl.getMonthInst()));
         etAngsuranKe.setText(String.valueOf(dtl.getInstNo() + 1));
-        etDenda.setText(String.valueOf(dtl.getPenaltyAMBC()));
-
-        // TODO: dtl.getCollectionFee
-        etBiayaTagih.setText("10000");
 
         // load last save
-        TrnRVColl trnRVColl = this.realm.where(TrnRVColl.class)
-                .equalTo("contractNo", this.contractNo)
-                .equalTo("lastupdateBy", Utility.LAST_UPDATE_BY)
-                .findFirst();
+        TrnRVColl trnRVColl = isExists(this.realm);
 
         if (trnRVColl != null) {
 
@@ -131,6 +135,10 @@ public class ActivityPaymentReceive extends BasicActivity {
             etPenerimaan.setText(String.valueOf(trnRVColl.getReceivedAmount()));
             etCatatan.setText(trnRVColl.getNotes());
 
+            etDenda.setText(String.valueOf(trnRVColl.getPenaltyAc()));
+            etDendaBerjalan.setText(String.valueOf(trnRVColl.getDaysIntrAc()));
+            etBiayaTagih.setText(String.valueOf(trnRVColl.getCollFeeAc()));
+
         } else {
             RealmResults<TrnRVB> trnRVBs = this.realm.where(TrnRVB.class)
                     .equalTo("rvbStatus", "OP")
@@ -142,6 +150,10 @@ public class ActivityPaymentReceive extends BasicActivity {
             TrnRVB hint = new TrnRVB();
             hint.setRvbNo(getString(R.string.spinner_please_select));
             adapterRVB.insert(hint, 0);
+
+            etDenda.setText(String.valueOf(dtl.getPenaltyAMBC()));
+            etDendaBerjalan.setText(String.valueOf(dtl.getDaysIntrAmbc()));
+            etBiayaTagih.setText(dtl.getCollectionFee() == null ? "0" : String.valueOf(dtl.getCollectionFee()));
 
         }
         spNoRVB.setAdapter(adapterRVB);
@@ -164,6 +176,7 @@ public class ActivityPaymentReceive extends BasicActivity {
         // reset errors
         etPenerimaan.setError(null);
         etDenda.setError(null);
+        etDendaBerjalan.setError(null);
         etBiayaTagih.setError(null);
 
         // attempt save
@@ -172,6 +185,7 @@ public class ActivityPaymentReceive extends BasicActivity {
 
         final String penerimaan = etPenerimaan.getText().toString().trim();
         final String denda = etDenda.getText().toString().trim();
+        final String dendaBerjalan = etDendaBerjalan.getText().toString().trim();
         final String biayaTagih = etBiayaTagih.getText().toString().trim();
 
         final String rvbNo = spNoRVB.getSelectedItem().toString();
@@ -179,17 +193,67 @@ public class ActivityPaymentReceive extends BasicActivity {
                 .equalTo("rvbNo", rvbNo)
                 .findFirst();
 
-        if (!TextUtils.isEmpty(denda)) {
-            if (Long.parseLong(denda) < 0) {
-                etDenda.setError(getString(R.string.error_amount_invalid));
+        final String createdBy = "JOB" + Utility.convertDateToString(lkpDate, Utility.DATE_DATA_PATTERN);
+
+        TrnLDVDetails dtl = this.realm.where(TrnLDVDetails.class)
+                .equalTo("contractNo", contractNo)
+                .equalTo("createdBy", createdBy)
+                .findFirst();
+
+
+        if (!Utility.isValidMoney(denda)) {
+            etDenda.setError(getString(R.string.error_amount_invalid));
+            focusView = etDenda;
+            cancel = true;
+        } else {
+
+            long dendaValue = Long.parseLong(denda);
+
+            if (dendaValue < dtl.getPenaltyAMBC().longValue()) {
+                etDenda.setError("Should not under " + String.valueOf(dtl.getPenaltyAMBC()));
                 focusView = etDenda;
+                cancel = true;
+            } else {
+                long minDendaValue = 0;
+                MstParam keyMinPenalty = this.realm.where(MstParam.class)
+                        .equalTo("key", "MIN_PENALTY_RV")
+                        .findFirst();
+                if (keyMinPenalty != null) {
+                    minDendaValue = Long.parseLong(keyMinPenalty.getValue());
+                }
+
+                if (dendaValue < minDendaValue) {
+                    etDenda.setError("Should not under " + minDendaValue);
+                    focusView = etDenda;
+                    cancel = true;
+                }
+            }
+
+        }
+
+        if (TextUtils.isEmpty(etDendaBerjalan.getText())
+                || !Utility.isNumeric(etDendaBerjalan.getText().toString())
+                ) {
+            etDendaBerjalan.setError(getString(R.string.error_amount_invalid));
+            focusView = etDendaBerjalan;
+            cancel = true;
+        } else {
+            long dendaBerjalanValue = Long.parseLong(dendaBerjalan);
+            if (dendaBerjalanValue < dtl.getDaysIntrAmbc().longValue()) {
+                etDendaBerjalan.setError("Should not under " + String.valueOf(dtl.getDaysIntrAmbc()));
+                focusView = etDendaBerjalan;
                 cancel = true;
             }
         }
 
-        if (!TextUtils.isEmpty(biayaTagih)) {
-            if (Long.parseLong(biayaTagih) < 0) {
-                etDenda.setError(getString(R.string.error_amount_invalid));
+        if (!Utility.isValidMoney(biayaTagih)) {
+            etBiayaTagih.setError(getString(R.string.error_amount_invalid));
+            focusView = etBiayaTagih;
+            cancel = true;
+        } else {
+            long biayaTagihValue = Long.parseLong(biayaTagih);
+            if (biayaTagihValue < dtl.getCollectionFee().longValue()) {
+                etBiayaTagih.setText("Should not under " + String.valueOf(dtl.getCollectionFee()));
                 focusView = etBiayaTagih;
                 cancel = true;
             }
@@ -206,21 +270,20 @@ public class ActivityPaymentReceive extends BasicActivity {
                 focusView = spNoRVB;
                 cancel = true;
             }
-
         }
 
-        if (TextUtils.isEmpty(penerimaan)) {
-            etPenerimaan.setError(getString(R.string.error_field_required));
+        if (!Utility.isValidMoney(penerimaan)) {
+            etPenerimaan.setError(getString(R.string.error_amount_invalid));
             focusView = etPenerimaan;
             cancel = true;
         } else {
-            if (penerimaan.length() < 4) {
-                etPenerimaan.setError(getString(R.string.error_amount_too_small));
+            long penerimaanValue = Long.parseLong(penerimaan);
+
+            if (penerimaanValue > 99999999) {
+                etPenerimaan.setError(getString(R.string.error_amount_too_large));
                 focusView = etPenerimaan;
                 cancel = true;
-            }
-            long penerimaanValue = Long.parseLong(penerimaan);
-            if (penerimaanValue > 99999999) {
+            } else if (penerimaanValue < 10000) {
                 etPenerimaan.setError(getString(R.string.error_amount_too_small));
                 focusView = etPenerimaan;
                 cancel = true;
@@ -236,10 +299,7 @@ public class ActivityPaymentReceive extends BasicActivity {
         this.realm.executeTransactionAsync(new Realm.Transaction() {
             @Override
             public void execute(Realm realm) {
-                Date serverDate = realm.where(ServerInfo.class).findFirst().getServerDate();
                 UserData userData = (UserData) Storage.getObjPreference(getApplicationContext(), Storage.KEY_USER, UserData.class);
-
-                String createdBy = "JOB" + Utility.convertDateToString(lkpDate, Utility.DATE_DATA_PATTERN);
 
                 SyncTrnRVColl trnSync = realm.where(SyncTrnRVColl.class)
                         .equalTo("ldvNo", ldvNo)
@@ -310,6 +370,8 @@ public class ActivityPaymentReceive extends BasicActivity {
                 trnRVB.setLastupdateTimestamp(new Date());
                 realm.copyToRealmOrUpdate(trnRVB);
 
+                Date serverDate = realm.where(ServerInfo.class).findFirst().getServerDate();
+
                 // just in case re-entry need to query
                 TrnRVColl trnRVColl = isExists(realm);
 
@@ -317,11 +379,21 @@ public class ActivityPaymentReceive extends BasicActivity {
 
                     // generate runningnumber
                     UserConfig userConfig = realm.where(UserConfig.class).findFirst();
+
                     if (userConfig.getKodeRVCollRunningNumber() == null)
                         userConfig.setKodeRVCollRunningNumber(0L);
-                    long runningNumber = userConfig.getKodeRVCollRunningNumber() + 1;
-                    userConfig.setKodeRVCollRunningNumber(runningNumber);
-                    realm.copyToRealmOrUpdate(userConfig);
+
+                    long runningNumber = userConfig.getKodeRVCollRunningNumber();
+                    if (userConfig.getKodeRVCollLastGenerated() == null
+                            || !Utility.isSameDay(userConfig.getKodeRVCollLastGenerated(), new Date())
+                            ) {
+
+                        runningNumber = userConfig.getKodeRVCollRunningNumber() + 1;
+                        userConfig.setKodeRVCollRunningNumber(runningNumber);
+                        userConfig.setKodeRVCollLastGenerated(new Date());
+                        realm.copyToRealmOrUpdate(userConfig);
+
+                    }
 
                     //yyyyMMdd-runnningnumber2digit
                     StringBuilder sb = new StringBuilder();

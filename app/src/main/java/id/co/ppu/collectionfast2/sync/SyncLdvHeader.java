@@ -2,8 +2,8 @@ package id.co.ppu.collectionfast2.sync;
 
 import java.util.Date;
 
-import id.co.ppu.collectionfast2.pojo.TrnLDVHeader;
-import id.co.ppu.collectionfast2.sync.pojo.SyncTrnLDVHeader;
+import id.co.ppu.collectionfast2.pojo.sync.SyncTrnLDVHeader;
+import id.co.ppu.collectionfast2.pojo.trn.TrnLDVHeader;
 import id.co.ppu.collectionfast2.util.Utility;
 import io.realm.Realm;
 import io.realm.RealmResults;

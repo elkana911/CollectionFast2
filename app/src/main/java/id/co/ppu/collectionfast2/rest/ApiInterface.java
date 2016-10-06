@@ -22,9 +22,11 @@ import okhttp3.RequestBody;
 import okhttp3.ResponseBody;
 import retrofit2.Call;
 import retrofit2.http.Body;
+import retrofit2.http.GET;
 import retrofit2.http.Multipart;
 import retrofit2.http.POST;
 import retrofit2.http.Part;
+import retrofit2.http.Query;
 
 /**
  * Created by Eric on 19-Aug-16.
@@ -63,9 +65,19 @@ public interface ApiInterface {
     @POST("fast/sync_lkp")
     Call<ResponseSync> syncLKP(@Body RequestSyncLKP req);
 
+    @GET("fast/close_batch_yesterday")
+    Call<ResponseBody> closeBatchYesterday(@Query("collector_code") String collectorCode);
+
     @Multipart
     @POST("/fast/upload_photo")
-    Call<ResponseBody> uploadPhoto(@Part("description") RequestBody description, @Part MultipartBody.Part file);
+    Call<ResponseBody> uploadPhoto(@Part("office_code") RequestBody officeCode
+            , @Part("collector_id") RequestBody collectorId
+            , @Part("contract_no") RequestBody contractNo
+            , @Part("photo_id") RequestBody photoId
+            , @Part("latitude") RequestBody latitude
+            , @Part("longitude") RequestBody longitude
+            , @Part MultipartBody.Part file);
+//    Call<ResponseBody> uploadPhoto(@Part("contract_no") String contractNo, @Part("photo_id") String photoId, @Part MultipartBody.Part file);
 
 
 }

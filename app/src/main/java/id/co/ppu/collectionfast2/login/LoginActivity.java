@@ -40,9 +40,9 @@ import butterknife.OnClick;
 import id.co.ppu.collectionfast2.MainActivity;
 import id.co.ppu.collectionfast2.R;
 import id.co.ppu.collectionfast2.listener.OnPostRetrieveServerInfo;
-import id.co.ppu.collectionfast2.pojo.MstSecUser;
-import id.co.ppu.collectionfast2.pojo.MstUser;
 import id.co.ppu.collectionfast2.pojo.ServerInfo;
+import id.co.ppu.collectionfast2.pojo.master.MstSecUser;
+import id.co.ppu.collectionfast2.pojo.master.MstUser;
 import id.co.ppu.collectionfast2.rest.ApiInterface;
 import id.co.ppu.collectionfast2.rest.ServiceGenerator;
 import id.co.ppu.collectionfast2.rest.request.RequestLogin;
@@ -155,11 +155,8 @@ public class LoginActivity extends AppCompatActivity {
         // Start the thread
         t.start();
 
-        try {
-            DataUtil.retrieveMasterFromServerBackground(this.realm, getApplicationContext());
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
+        boolean b = DataUtil.isMasterDataDownloaded(this, this.realm);
+
         // ATTENTION: This was auto-generated to implement the App Indexing API.
         // See https://g.co/AppIndexing/AndroidStudio for more information.
         client = new GoogleApiClient.Builder(this).addApi(AppIndex.API).build();
@@ -249,14 +246,13 @@ public class LoginActivity extends AppCompatActivity {
             }
         } else {
 
-            // enable this code on production
+            // TODO: enable this code on production
             Date lastMorning = (Date) Storage.getObjPreference(getApplicationContext(), Storage.KEY_USER_LAST_MORNING, Date.class);
             if (lastMorning == null) {
                 loginOffline(username, password);
             } else if (Utility.isSameDay(lastMorning, new Date())) {
                 loginOffline(username, password);
             } else
-                // reset data first ?
                 loginOnline(username, password);
         }
 
@@ -367,10 +363,10 @@ public class LoginActivity extends AppCompatActivity {
                                             if (mProgressDialog.isShowing())
                                                 mProgressDialog.dismiss();
 
-                                            Storage.saveObjPreference(getApplicationContext(), "user", respLogin.getData());
+                                            Storage.saveObjPreference(getApplicationContext(), Storage.KEY_USER, respLogin.getData());
 
                                             // able to control nextday shpuld re-login to server
-                                            Storage.saveObjPreference(getApplicationContext(), "lastMorning", new Date());
+                                            Storage.saveObjPreference(getApplicationContext(), Storage.KEY_USER_LAST_MORNING, new Date());
 
                                             // final check
                                             startActivity(new Intent(getApplicationContext(), MainActivity.class));

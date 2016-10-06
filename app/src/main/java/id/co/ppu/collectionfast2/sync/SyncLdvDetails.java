@@ -2,8 +2,8 @@ package id.co.ppu.collectionfast2.sync;
 
 import java.util.Date;
 
-import id.co.ppu.collectionfast2.pojo.TrnLDVDetails;
-import id.co.ppu.collectionfast2.sync.pojo.SyncTrnLDVDetails;
+import id.co.ppu.collectionfast2.pojo.sync.SyncTrnLDVDetails;
+import id.co.ppu.collectionfast2.pojo.trn.TrnLDVDetails;
 import id.co.ppu.collectionfast2.util.Utility;
 import io.realm.Realm;
 import io.realm.RealmResults;

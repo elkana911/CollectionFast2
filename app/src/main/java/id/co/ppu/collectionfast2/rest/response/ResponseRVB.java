@@ -5,7 +5,7 @@ import com.google.gson.annotations.SerializedName;
 import java.io.Serializable;
 import java.util.List;
 
-import id.co.ppu.collectionfast2.pojo.TrnRVB;
+import id.co.ppu.collectionfast2.pojo.trn.TrnRVB;
 
 /**
  * Created by Eric on 26-Sep-16.

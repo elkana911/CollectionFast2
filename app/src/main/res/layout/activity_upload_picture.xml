@@ -18,53 +18,113 @@
             android:layout_height="160dp"
             android:orientation="horizontal">
 
-            <ImageView
-                android:id="@+id/ivUpload1"
+            <RelativeLayout
                 android:layout_width="0dp"
                 android:layout_height="match_parent"
                 android:layout_margin="4dp"
                 android:layout_weight="0.5"
-                android:background="@drawable/rounded_shape"
-                android:scaleType="fitCenter"
-                app:srcCompat="@drawable/ic_add_a_photo_black_24dp" />
+                android:background="@drawable/rounded_shape">
 
-            <ImageView
-                android:id="@+id/ivUpload2"
+                <ImageView
+                    android:id="@+id/ivUpload1"
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    android:scaleType="fitCenter"
+                    app:srcCompat="@drawable/ic_add_a_photo_black_24dp" />
+
+                <ImageView
+                    android:id="@+id/ivUploadCheck1"
+                    android:layout_width="20dp"
+                    android:layout_height="20dp"
+                    android:layout_alignParentRight="true"
+                    android:visibility="invisible"
+                    android:scaleType="fitCenter"
+                    android:tint="#00FF00"
+                    app:srcCompat="@drawable/ic_done_black_24dp" />
+            </RelativeLayout>
+
+            <RelativeLayout
                 android:layout_width="0dp"
                 android:layout_height="match_parent"
                 android:layout_margin="4dp"
                 android:layout_weight="0.5"
-                android:background="@drawable/rounded_shape"
-                android:scaleType="fitCenter"
-                app:srcCompat="@drawable/ic_add_a_photo_black_24dp" />
+                android:background="@drawable/rounded_shape">
+
+                <ImageView
+                    android:id="@+id/ivUpload2"
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    android:scaleType="fitCenter"
+                    app:srcCompat="@drawable/ic_add_a_photo_black_24dp" />
+
+                <ImageView
+                    android:id="@+id/ivUploadCheck2"
+                    android:layout_width="20dp"
+                    android:layout_height="20dp"
+                    android:layout_alignParentRight="true"
+                    android:visibility="invisible"
+                    android:scaleType="fitCenter"
+                    android:tint="#00FF00"
+                    app:srcCompat="@drawable/ic_done_black_24dp" />
+            </RelativeLayout>
 
         </LinearLayout>
+
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="160dp"
             android:orientation="horizontal">
 
-            <ImageView
-                android:id="@+id/ivUpload3"
+            <RelativeLayout
                 android:layout_width="0dp"
                 android:layout_height="match_parent"
                 android:layout_margin="4dp"
                 android:layout_weight="0.5"
-                android:background="@drawable/rounded_shape"
-                android:scaleType="fitCenter"
-                app:srcCompat="@drawable/ic_add_a_photo_black_24dp" />
+                android:background="@drawable/rounded_shape">
 
-            <ImageView
-                android:id="@+id/ivUpload4"
+                <ImageView
+                    android:id="@+id/ivUpload3"
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    android:scaleType="fitCenter"
+                    app:srcCompat="@drawable/ic_add_a_photo_black_24dp" />
+                <ImageView
+                    android:id="@+id/ivUploadCheck3"
+                    android:layout_width="20dp"
+                    android:layout_height="20dp"
+                    android:layout_alignParentRight="true"
+                    android:visibility="invisible"
+                    android:scaleType="fitCenter"
+                    android:tint="#00FF00"
+                    app:srcCompat="@drawable/ic_done_black_24dp" />
+            </RelativeLayout>
+
+            <RelativeLayout
                 android:layout_width="0dp"
                 android:layout_height="match_parent"
                 android:layout_margin="4dp"
                 android:layout_weight="0.5"
-                android:background="@drawable/rounded_shape"
-                android:scaleType="fitCenter"
-                app:srcCompat="@drawable/ic_add_a_photo_black_24dp" />
+                android:background="@drawable/rounded_shape">
+
+                <ImageView
+                    android:id="@+id/ivUpload4"
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    android:scaleType="fitCenter"
+                    app:srcCompat="@drawable/ic_add_a_photo_black_24dp" />
+                <ImageView
+                    android:id="@+id/ivUploadCheck4"
+                    android:layout_width="20dp"
+                    android:layout_height="20dp"
+                    android:layout_alignParentRight="true"
+                    android:visibility="invisible"
+                    android:scaleType="fitCenter"
+                    android:tint="#00FF00"
+                    app:srcCompat="@drawable/ic_done_black_24dp" />
+            </RelativeLayout>
 
         </LinearLayout>
+
         <Button
             android:id="@+id/btnUpload"
             android:layout_width="match_parent"

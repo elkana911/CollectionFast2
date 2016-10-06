@@ -22,13 +22,13 @@ import java.util.List;
 import butterknife.BindView;
 import butterknife.ButterKnife;
 import id.co.ppu.collectionfast2.R;
-import id.co.ppu.collectionfast2.pojo.MstLDVStatus;
-import id.co.ppu.collectionfast2.pojo.MstSecUser;
-import id.co.ppu.collectionfast2.pojo.MstUser;
-import id.co.ppu.collectionfast2.pojo.TrnLDVDetails;
-import id.co.ppu.collectionfast2.pojo.TrnLDVHeader;
-import id.co.ppu.collectionfast2.pojo.TrnRVColl;
 import id.co.ppu.collectionfast2.pojo.UserData;
+import id.co.ppu.collectionfast2.pojo.master.MstLDVStatus;
+import id.co.ppu.collectionfast2.pojo.master.MstSecUser;
+import id.co.ppu.collectionfast2.pojo.master.MstUser;
+import id.co.ppu.collectionfast2.pojo.trn.TrnLDVDetails;
+import id.co.ppu.collectionfast2.pojo.trn.TrnLDVHeader;
+import id.co.ppu.collectionfast2.pojo.trn.TrnRVColl;
 import id.co.ppu.collectionfast2.util.Storage;
 import id.co.ppu.collectionfast2.util.Utility;
 import io.realm.Realm;
@@ -101,9 +101,14 @@ public class FragmentSummaryLKP extends Fragment {
 
         Number receivedAmount = this.realm.where(TrnRVColl.class).isNull("ldvNo").sum("receivedAmount");
 
-        long unitNonLKP = this.realm.where(TrnRVColl.class).count();
+        // TODO: ask pak yoce maksudnya count(mc_trn_rvcoll.ldv_no) yg ldv_no nya null ??
+        long unitNonLKP = this.realm.where(TrnRVColl.class)
+                            .isNull("ldvNo")
+                            .count();
 
-        long totalTertagih = header.getPrncAC() + header.getIntrAC() + receivedAmount.longValue();
+        long totalTertagih = this.realm.where(TrnRVColl.class).sum("receivedAmount").longValue();
+
+//        long totalTertagih = header.getPrncAC() + header.getIntrAC() + receivedAmount.longValue();
 
         loadSummary(header, userData.getUser().get(0), userData.getSecUser().get(0), unitTarget, receivedAmount.longValue(), unitNonLKP, totalTertagih);
 
@@ -115,6 +120,7 @@ public class FragmentSummaryLKP extends Fragment {
 
     private void loadSummary(TrnLDVHeader header, MstUser mstUser, MstSecUser mstSecUser, long unitTarget, long receivedAmount, long unitNonLKP, long totalTertagih) {
         etNoLKP.setText(header.getLdvNo());
+
         etTglLKP.setText(DateUtils.formatDateTime(getContext(), header.getLdvDate().getTime(), DateUtils.FORMAT_SHOW_DATE | DateUtils.FORMAT_SHOW_YEAR | DateUtils.FORMAT_SHOW_WEEKDAY));
 
         if (mstUser != null) {
@@ -128,12 +134,16 @@ public class FragmentSummaryLKP extends Fragment {
         long targetPenerimaan = header.getPrncAMBC() + header.getIntrAMBC();
         etTargetPenerimaan.setText(Utility.convertLongToRupiah(targetPenerimaan));
 
-        long tertagihPenerimaan = header.getPrncAC() + header.getIntrAC();
+        String ldvNo = header.getLdvNo();
+
+        Number sumReceivedAmount = this.realm.where(TrnRVColl.class).equalTo("ldvNo", ldvNo).sum("receivedAmount");
+        long tertagihPenerimaan = sumReceivedAmount.longValue(); //header.getPrncAC() + header.getIntrAC();
         etTertagihPenerimaan.setText(Utility.convertLongToRupiah(tertagihPenerimaan));
 
         etTargetUnit.setText(String.valueOf(unitTarget));
 
-        long tertagihUnit = header.getUnitTotal();
+        long tertagihUnit = this.realm.where(TrnRVColl.class).equalTo("ldvNo", ldvNo).count();
+//        long tertagihUnit = header.getUnitTotal();
         etTertagihUnit.setText(String.valueOf(tertagihUnit));
 
         etNonLKPPenerimaan.setText(Utility.convertLongToRupiah(receivedAmount));

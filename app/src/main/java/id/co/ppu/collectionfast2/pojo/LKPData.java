@@ -2,6 +2,18 @@ package id.co.ppu.collectionfast2.pojo;
 
 import java.util.List;
 
+import id.co.ppu.collectionfast2.pojo.trn.HistInstallments;
+import id.co.ppu.collectionfast2.pojo.trn.TrnBastbj;
+import id.co.ppu.collectionfast2.pojo.trn.TrnCollectAddr;
+import id.co.ppu.collectionfast2.pojo.trn.TrnContractBuckets;
+import id.co.ppu.collectionfast2.pojo.trn.TrnLDVComments;
+import id.co.ppu.collectionfast2.pojo.trn.TrnLDVDetails;
+import id.co.ppu.collectionfast2.pojo.trn.TrnLDVHeader;
+import id.co.ppu.collectionfast2.pojo.trn.TrnRVB;
+import id.co.ppu.collectionfast2.pojo.trn.TrnRVColl;
+import id.co.ppu.collectionfast2.pojo.trn.TrnRepo;
+import id.co.ppu.collectionfast2.pojo.trn.TrnVehicleInfo;
+
 /**
  * Created by Eric on 29-Aug-16.
  */

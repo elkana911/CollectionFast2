@@ -26,12 +26,12 @@ import butterknife.OnClick;
 import id.co.ppu.collectionfast2.R;
 import id.co.ppu.collectionfast2.component.BasicActivity;
 import id.co.ppu.collectionfast2.pojo.ServerInfo;
-import id.co.ppu.collectionfast2.pojo.TrnBastbj;
-import id.co.ppu.collectionfast2.pojo.TrnLDVDetails;
-import id.co.ppu.collectionfast2.pojo.TrnLDVHeader;
-import id.co.ppu.collectionfast2.pojo.TrnRepo;
 import id.co.ppu.collectionfast2.pojo.UserConfig;
-import id.co.ppu.collectionfast2.sync.pojo.SyncTrnRepo;
+import id.co.ppu.collectionfast2.pojo.sync.SyncTrnRepo;
+import id.co.ppu.collectionfast2.pojo.trn.TrnBastbj;
+import id.co.ppu.collectionfast2.pojo.trn.TrnLDVDetails;
+import id.co.ppu.collectionfast2.pojo.trn.TrnLDVHeader;
+import id.co.ppu.collectionfast2.pojo.trn.TrnRepo;
 import id.co.ppu.collectionfast2.util.Utility;
 import io.realm.Realm;
 import io.realm.RealmResults;
@@ -39,7 +39,9 @@ import io.realm.RealmResults;
 public class ActivityRepoEntry extends BasicActivity {
 
     public static final String PARAM_CONTRACT_NO = "customer.contractNo";
+    public static final String PARAM_COLLECTOR_ID = "collector.id";
     private String contractNo = null;
+    private String collectorId = null;
     private Date serverDate;
 
     @BindView(R.id.activity_repo_entri)
@@ -79,6 +81,11 @@ public class ActivityRepoEntry extends BasicActivity {
         Bundle extras = getIntent().getExtras();
         if (extras != null) {
             contractNo = extras.getString(PARAM_CONTRACT_NO);
+            collectorId = extras.getString(PARAM_COLLECTOR_ID);
+        }
+
+        if (this.collectorId == null || this.contractNo == null) {
+            throw new RuntimeException("collectorId cannot null");
         }
 
         TrnLDVDetails dtl = this.realm.where(TrnLDVDetails.class).equalTo("contractNo", contractNo).findFirst();
@@ -212,6 +219,7 @@ public class ActivityRepoEntry extends BasicActivity {
                 if (trnLDVDetails != null) {
                     trnLDVDetails.setLdvFlag("PCU");
                     trnLDVDetails.setWorkStatus("V");
+                    trnLDVDetails.setFlagToEmrafin("N");
                     trnLDVDetails.setLastupdateBy(Utility.LAST_UPDATE_BY);
                     trnLDVDetails.setLastupdateTimestamp(new Date());
                     realm.copyToRealmOrUpdate(trnLDVDetails);
@@ -236,6 +244,7 @@ public class ActivityRepoEntry extends BasicActivity {
                 trnRepo.setContractNo(contractNo);
                 trnRepo.setRepoNo(repoNo);
                 trnRepo.setBastbjNo(trnBastbj.getBastbjNo());
+                trnRepo.setFlagToEmrafin("N");
                 trnRepo.setRepoComments(etKomentar.getText().toString());
                 trnRepo.setLastupdateBy(Utility.LAST_UPDATE_BY);
                 trnRepo.setLastupdateTimestamp(new Date());
@@ -260,6 +269,8 @@ public class ActivityRepoEntry extends BasicActivity {
     public void onClickUploadPicture() {
         Intent i = new Intent(this, ActivityUploadPicture.class);
         i.putExtra(ActivityUploadPicture.PARAM_CONTRACT_NO, etContractNo.getText().toString());
+        i.putExtra(ActivityUploadPicture.PARAM_COLLECTOR_ID, this.collectorId);
+
         startActivity(i);
 
     }
@@ -268,6 +279,7 @@ public class ActivityRepoEntry extends BasicActivity {
     public void onClickPaymentHist() {
         Intent i = new Intent(this, ActivityPaymentHistory.class);
         i.putExtra(ActivityPaymentHistory.PARAM_CONTRACT_NO, etContractNo.getText().toString());
+
         startActivity(i);
     }
 

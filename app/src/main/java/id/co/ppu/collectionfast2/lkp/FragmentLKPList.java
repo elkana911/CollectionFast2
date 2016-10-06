@@ -38,11 +38,11 @@ import id.co.ppu.collectionfast2.component.RealmSearchView;
 import id.co.ppu.collectionfast2.listener.OnLKPListListener;
 import id.co.ppu.collectionfast2.pojo.DisplayTrnLDVDetails;
 import id.co.ppu.collectionfast2.pojo.ServerInfo;
-import id.co.ppu.collectionfast2.pojo.TrnLDVDetails;
-import id.co.ppu.collectionfast2.pojo.TrnLDVHeader;
-import id.co.ppu.collectionfast2.sync.pojo.SyncTrnLDVComments;
-import id.co.ppu.collectionfast2.sync.pojo.SyncTrnRVColl;
-import id.co.ppu.collectionfast2.sync.pojo.SyncTrnRepo;
+import id.co.ppu.collectionfast2.pojo.sync.SyncTrnLDVComments;
+import id.co.ppu.collectionfast2.pojo.sync.SyncTrnRVColl;
+import id.co.ppu.collectionfast2.pojo.sync.SyncTrnRepo;
+import id.co.ppu.collectionfast2.pojo.trn.TrnLDVDetails;
+import id.co.ppu.collectionfast2.pojo.trn.TrnLDVHeader;
 import id.co.ppu.collectionfast2.util.Utility;
 import io.realm.Realm;
 import io.realm.RealmResults;
@@ -330,7 +330,10 @@ public class FragmentLKPList extends Fragment {
 
     public void clearTodayList() {
 
-//        if (!tvSeparator.getText().toString().startsWith("Today"))
+        if (tvSeparator.getText().toString().toLowerCase().startsWith("today"))
+            tvSeparator.setText("TODAY CONTRACTS: 0 ");
+
+        etNoLKP.setText(null);
 //            return;
 
         search_view.setVisibility(View.INVISIBLE);

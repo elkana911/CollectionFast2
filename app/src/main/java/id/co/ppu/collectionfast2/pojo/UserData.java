@@ -4,6 +4,9 @@ import android.support.annotation.NonNull;
 
 import java.util.List;
 
+import id.co.ppu.collectionfast2.pojo.master.MstSecUser;
+import id.co.ppu.collectionfast2.pojo.master.MstUser;
+
 /**
  * Created by Eric on 01-Sep-16.
  */

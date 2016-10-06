@@ -1,5 +1,6 @@
 package id.co.ppu.collectionfast2.lkp;
 
+import android.app.ProgressDialog;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.graphics.drawable.Drawable;
@@ -9,29 +10,30 @@ import android.os.Bundle;
 import android.provider.MediaStore;
 import android.support.graphics.drawable.VectorDrawableCompat;
 import android.support.v7.app.AlertDialog;
-import android.text.TextUtils;
+import android.util.Log;
+import android.view.View;
 import android.widget.ImageView;
 import android.widget.Toast;
 
 import com.squareup.picasso.Picasso;
 
-import java.io.File;
+import java.io.IOException;
+import java.util.Date;
 
 import butterknife.BindView;
 import butterknife.ButterKnife;
 import butterknife.OnClick;
 import id.co.ppu.collectionfast2.R;
 import id.co.ppu.collectionfast2.component.BasicActivity;
-import id.co.ppu.collectionfast2.pojo.TrnLDVDetails;
+import id.co.ppu.collectionfast2.listener.OnSuccessError;
 import id.co.ppu.collectionfast2.pojo.UploadPicture;
-import id.co.ppu.collectionfast2.rest.ApiInterface;
-import id.co.ppu.collectionfast2.rest.ServiceGenerator;
+import id.co.ppu.collectionfast2.pojo.UserData;
+import id.co.ppu.collectionfast2.pojo.sync.SyncFileUpload;
+import id.co.ppu.collectionfast2.pojo.trn.TrnLDVDetails;
+import id.co.ppu.collectionfast2.util.NetUtil;
 import id.co.ppu.collectionfast2.util.Storage;
 import id.co.ppu.collectionfast2.util.Utility;
 import io.realm.Realm;
-import okhttp3.MediaType;
-import okhttp3.MultipartBody;
-import okhttp3.RequestBody;
 import okhttp3.ResponseBody;
 import retrofit2.Call;
 import retrofit2.Callback;
@@ -39,9 +41,14 @@ import retrofit2.Response;
 
 public class ActivityUploadPicture extends BasicActivity {
     public static final String PARAM_CONTRACT_NO = "customer.contractNo";
-    private static final String TAG = "upload" ;
+    public static final String PARAM_COLLECTOR_ID = "collector.id";
+
+    private static final String TAG = "upload";
 
     private String contractNo = null;
+    private String collectorId = null;
+
+    private ProgressDialog mProgressDialog = null;
 
     private final CharSequence[] menuItems = {
             "From Camera", "From Gallery", "Delete Photo"
@@ -50,14 +57,26 @@ public class ActivityUploadPicture extends BasicActivity {
     @BindView(R.id.ivUpload1)
     ImageView ivUpload1;
 
+    @BindView(R.id.ivUploadCheck1)
+    ImageView ivUploadCheck1;
+
     @BindView(R.id.ivUpload2)
     ImageView ivUpload2;
+
+    @BindView(R.id.ivUploadCheck2)
+    ImageView ivUploadCheck2;
 
     @BindView(R.id.ivUpload3)
     ImageView ivUpload3;
 
+    @BindView(R.id.ivUploadCheck3)
+    ImageView ivUploadCheck3;
+
     @BindView(R.id.ivUpload4)
     ImageView ivUpload4;
+
+    @BindView(R.id.ivUploadCheck4)
+    ImageView ivUploadCheck4;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -68,7 +87,12 @@ public class ActivityUploadPicture extends BasicActivity {
 
         Bundle extras = getIntent().getExtras();
         if (extras != null) {
-            contractNo = extras.getString(PARAM_CONTRACT_NO);
+            this.contractNo = extras.getString(PARAM_CONTRACT_NO);
+            this.collectorId = extras.getString(PARAM_COLLECTOR_ID);
+        }
+
+        if (this.collectorId == null || this.contractNo == null) {
+            throw new RuntimeException("collectorId / contractNo cannot null");
         }
 
         TrnLDVDetails dtl = this.realm.where(TrnLDVDetails.class).equalTo("contractNo", contractNo).findFirst();
@@ -81,31 +105,142 @@ public class ActivityUploadPicture extends BasicActivity {
         }
 
         long count = this.realm.where(UploadPicture.class).count();
-        UploadPicture uploadPicture = this.realm.where(UploadPicture.class).equalTo("contractNo", this.contractNo).findFirst();
 
-        if (uploadPicture != null && uploadPicture.getPicture4() != null) {
+        UploadPicture uploadPicture = this.realm.where(UploadPicture.class)
+                .equalTo("contractNo", this.contractNo)
+                .findFirst();
+
+        if (uploadPicture == null)
+            return;
+
+        if (uploadPicture.getPicture1() != null) {
+            Uri uri = Uri.parse(uploadPicture.getPicture1());
+            Picasso.with(this)
+                    .load(uri)
+                    .into(ivUpload1);
+            ivUpload1.setTag(uri);
+        }
+        if (uploadPicture.getPicture2() != null) {
+            Uri uri = Uri.parse(uploadPicture.getPicture2());
+            Picasso.with(this)
+                    .load(uri)
+                    .into(ivUpload2);
+            ivUpload2.setTag(uri);
+        }
+        if (uploadPicture.getPicture3() != null) {
+            Uri uri = Uri.parse(uploadPicture.getPicture3());
+            Picasso.with(this)
+                    .load(uri)
+                    .into(ivUpload3);
+            ivUpload3.setTag(uri);
+        }
+        if (uploadPicture.getPicture4() != null) {
             Uri uri = Uri.parse(uploadPicture.getPicture4());
             Picasso.with(this)
                     .load(uri)
                     .into(ivUpload4);
             ivUpload4.setTag(uri);
         }
+
+        SyncFileUpload first = this.realm.where(SyncFileUpload.class)
+                .equalTo("contractNo", this.contractNo)
+                .equalTo("collectorId", this.collectorId)
+                .equalTo("fileId", "picture1")
+                .isNotNull("syncedDate")
+                .findFirst();
+        if (first != null) {
+            ivUploadCheck1.setVisibility(View.VISIBLE);
+            ivUpload1.setClickable(false);
+            ivUpload1.setFocusable(false);
+            ivUpload1.setFocusableInTouchMode(false);
+        }
+        SyncFileUpload second = this.realm.where(SyncFileUpload.class)
+                .equalTo("contractNo", this.contractNo)
+                .equalTo("collectorId", this.collectorId)
+                .equalTo("fileId", "picture2")
+                .isNotNull("syncedDate")
+                .findFirst();
+        if (second != null) {
+            ivUploadCheck2.setVisibility(View.VISIBLE);
+            ivUpload2.setClickable(false);
+            ivUpload2.setFocusable(false);
+            ivUpload2.setFocusableInTouchMode(false);
+        }
+        SyncFileUpload third = this.realm.where(SyncFileUpload.class)
+                .equalTo("contractNo", this.contractNo)
+                .equalTo("collectorId", this.collectorId)
+                .equalTo("fileId", "picture3")
+                .isNotNull("syncedDate")
+                .findFirst();
+        if (third != null) {
+            ivUploadCheck3.setVisibility(View.VISIBLE);
+            ivUpload3.setClickable(false);
+            ivUpload3.setFocusable(false);
+            ivUpload3.setFocusableInTouchMode(false);
+        }
+        SyncFileUpload fourth = this.realm.where(SyncFileUpload.class)
+                .equalTo("contractNo", this.contractNo)
+                .equalTo("collectorId", this.collectorId)
+                .equalTo("fileId", "picture4")
+                .isNotNull("syncedDate")
+                .findFirst();
+        if (fourth != null) {
+            ivUploadCheck4.setVisibility(View.VISIBLE);
+            ivUpload4.setClickable(false);
+            ivUpload4.setFocusable(false);
+            ivUpload4.setFocusableInTouchMode(false);
+        }
+
     }
 
-    @OnClick(R.id.ivUpload1)
-    public void onClickUpload1() {
+    private void showDialog(final ImageView targetImage, final int returnCodeFromCamera, final int returnCodeFromGallery) {
         AlertDialog.Builder builder = new AlertDialog.Builder(this);
         builder.setItems(menuItems, new DialogInterface.OnClickListener() {
             public void onClick(DialogInterface dialog, int item) {
                 if (item == 0) {
-            // from camera
+                    // from camera
+                    Intent takePicture = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
+                    startActivityForResult(takePicture, returnCodeFromCamera);//zero can be replaced with any action code
+                } else if (item == 1) {
+                    // from gallery
+                    Intent pickPhoto = new Intent(Intent.ACTION_PICK,
+                            android.provider.MediaStore.Images.Media.EXTERNAL_CONTENT_URI);
+                    startActivityForResult(pickPhoto, returnCodeFromGallery);//one can be replaced with any action code
+                } else if (item == 2) {
+                    // delete
+                    Drawable icon;
+                    if (android.os.Build.VERSION.SDK_INT < Build.VERSION_CODES.M) {
+                        icon = VectorDrawableCompat.create(getResources(), R.drawable.ic_add_a_photo_black_24dp, getTheme());
+                    } else {
+                        icon = getResources().getDrawable(R.drawable.ic_add_a_photo_black_24dp, getTheme());
+                    }
+
+                    targetImage.setImageURI(null);
+                    targetImage.setImageDrawable(icon);
+                }
+            }
+        });
+        AlertDialog alert = builder.create();
+        alert.show();
+
+    }
+
+    @OnClick(R.id.ivUpload1)
+    public void onClickUpload1() {
+        showDialog(ivUpload1, 0, 1);
+        /*
+        AlertDialog.Builder builder = new AlertDialog.Builder(this);
+        builder.setItems(menuItems, new DialogInterface.OnClickListener() {
+            public void onClick(DialogInterface dialog, int item) {
+                if (item == 0) {
+                    // from camera
                     Intent takePicture = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
                     startActivityForResult(takePicture, 0);//zero can be replaced with any action code
                 } else if (item == 1) {
                     // from gallery
                     Intent pickPhoto = new Intent(Intent.ACTION_PICK,
                             android.provider.MediaStore.Images.Media.EXTERNAL_CONTENT_URI);
-                    startActivityForResult(pickPhoto , 1);//one can be replaced with any action code
+                    startActivityForResult(pickPhoto, 1);//one can be replaced with any action code
                 } else if (item == 2) {
                     // delete
                     Drawable icon;
@@ -121,229 +256,311 @@ public class ActivityUploadPicture extends BasicActivity {
         });
         AlertDialog alert = builder.create();
         alert.show();
+        */
     }
 
     @OnClick(R.id.ivUpload2)
     public void onClickUpload2() {
-        AlertDialog.Builder builder = new AlertDialog.Builder(this);
-        builder.setItems(menuItems, new DialogInterface.OnClickListener() {
-            public void onClick(DialogInterface dialog, int item) {
-                if (item == 0) {
-                    // from camera
-                    Intent takePicture = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
-                    startActivityForResult(takePicture, 2);//zero can be replaced with any action code
-                } else if (item == 1) {
-                    // from gallery
-                    Intent pickPhoto = new Intent(Intent.ACTION_PICK,
-                            android.provider.MediaStore.Images.Media.EXTERNAL_CONTENT_URI);
-                    startActivityForResult(pickPhoto , 3);//one can be replaced with any action code
-                } else if (item == 2) {
-                    // delete
-                    Drawable icon;
-                    if (android.os.Build.VERSION.SDK_INT < Build.VERSION_CODES.M) {
-                        icon = VectorDrawableCompat.create(getResources(), R.drawable.ic_add_a_photo_black_24dp, getTheme());
-                    } else {
-                        icon = getResources().getDrawable(R.drawable.ic_add_a_photo_black_24dp, getTheme());
-                    }
-                    ivUpload2.setImageURI(null);
-                    ivUpload2.setImageDrawable(icon);
-                }
-            }
-        });
-        AlertDialog alert = builder.create();
-        alert.show();
+        showDialog(ivUpload2, 2, 3);
     }
 
     @OnClick(R.id.ivUpload3)
     public void onClickUpload3() {
-        AlertDialog.Builder builder = new AlertDialog.Builder(this);
-        builder.setItems(menuItems, new DialogInterface.OnClickListener() {
-            public void onClick(DialogInterface dialog, int item) {
-                if (item == 0) {
-                    // from camera
-                    Intent takePicture = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
-                    startActivityForResult(takePicture, 4);//zero can be replaced with any action code
-                } else if (item == 1) {
-                    // from gallery
-                    Intent pickPhoto = new Intent(Intent.ACTION_PICK,
-                            android.provider.MediaStore.Images.Media.EXTERNAL_CONTENT_URI);
-                    startActivityForResult(pickPhoto , 5);//one can be replaced with any action code
-                } else if (item == 2) {
-                    // delete
-                    Drawable icon;
-                    if (android.os.Build.VERSION.SDK_INT < Build.VERSION_CODES.M) {
-                        icon = VectorDrawableCompat.create(getResources(), R.drawable.ic_add_a_photo_black_24dp, getTheme());
-                    } else {
-                        icon = getResources().getDrawable(R.drawable.ic_add_a_photo_black_24dp, getTheme());
-                    }
-                    ivUpload3.setImageURI(null);
-                    ivUpload3.setImageDrawable(icon);
-                }
-            }
-        });
-        AlertDialog alert = builder.create();
-        alert.show();
+        showDialog(ivUpload2, 4, 5);
     }
 
     @OnClick(R.id.ivUpload4)
     public void onClickUpload4() {
-        AlertDialog.Builder builder = new AlertDialog.Builder(this);
-        builder.setItems(menuItems, new DialogInterface.OnClickListener() {
-            public void onClick(DialogInterface dialog, int item) {
-                if (item == 0) {
-                    // from camera
-                    Intent takePicture = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
-                    startActivityForResult(takePicture, 6);//zero can be replaced with any action code
-                } else if (item == 1) {
-                    // from gallery
-                    Intent pickPhoto = new Intent(Intent.ACTION_PICK,
-                            android.provider.MediaStore.Images.Media.EXTERNAL_CONTENT_URI);
-                    startActivityForResult(pickPhoto , 7);//one can be replaced with any action code
-                } else if (item == 2) {
-                    // delete
-                    Drawable icon;
-                    if (android.os.Build.VERSION.SDK_INT < Build.VERSION_CODES.M) {
-                        icon = VectorDrawableCompat.create(getResources(), R.drawable.ic_add_a_photo_black_24dp, getTheme());
-                    } else {
-                        icon = getResources().getDrawable(R.drawable.ic_add_a_photo_black_24dp, getTheme());
+        showDialog(ivUpload2, 6, 7);
+    }
+
+    private void uploadPicture(final String picId, ImageView targetImage, boolean skip, final OnSuccessError listener) {
+        Object tag = targetImage.getTag();
+        if (skip || tag == null) {
+            Toast.makeText(this, picId + " skipped", Toast.LENGTH_SHORT).show();
+            if (listener != null) {
+                listener.onSkip();
+                return;
+            }
+        }
+
+        UserData userData = (UserData) Storage.getObjPreference(getApplicationContext(), Storage.KEY_USER, UserData.class);
+
+        String officeCode = userData.getUser().get(0).getBranchId();
+
+        UploadPicture uploadPicture = this.realm.where(UploadPicture.class)
+                .equalTo("contractNo", contractNo)
+                .equalTo("collectorId", collectorId)
+                .findFirst();
+
+        String latitude = "";
+        String longitude = "";
+
+        if (targetImage == ivUpload1) {
+            latitude = uploadPicture.getLat1();
+            longitude = uploadPicture.getLong1();
+        } else if (targetImage == ivUpload2) {
+            latitude = uploadPicture.getLat2();
+            longitude = uploadPicture.getLong2();
+
+        } else if (targetImage == ivUpload3) {
+            latitude = uploadPicture.getLat3();
+            longitude = uploadPicture.getLong3();
+
+        } else if (targetImage == ivUpload4) {
+            latitude = uploadPicture.getLat4();
+            longitude = uploadPicture.getLong4();
+        }
+
+        Uri uri = Uri.parse(tag.toString());
+        NetUtil.uploadPicture(this, officeCode, this.collectorId, this.contractNo, picId, latitude, longitude, uri, new Callback<ResponseBody>() {
+            @Override
+            public void onResponse(Call<ResponseBody> call, Response<ResponseBody> response) {
+                if (response.isSuccessful()) {
+                    realm.executeTransactionAsync(new Realm.Transaction() {
+                        @Override
+                        public void execute(Realm realm) {
+
+                            SyncFileUpload sync = realm.where(SyncFileUpload.class)
+                                    .equalTo("contractNo", contractNo)
+                                    .equalTo("collectorId", collectorId)
+                                    .equalTo("fileId", picId)
+                                    .findFirst();
+                            if (sync == null) {
+                                sync = new SyncFileUpload();
+                                sync.setContractNo(contractNo);
+                                sync.setCollectorId(collectorId);
+                                sync.setFileId(picId);
+                            }
+
+                            sync.setSyncedDate(new Date());
+
+                            realm.copyToRealmOrUpdate(sync);
+                        }
+                    }, new Realm.Transaction.OnSuccess() {
+                        @Override
+                        public void onSuccess() {
+                            if (listener != null)
+                                listener.onSuccess(null);
+                        }
+                    });
+
+                    ResponseBody body1 = response.body();
+
+                    try {
+                        String s = body1.string();
+
+                        Log.d(TAG, s);
+                    } catch (IOException e) {
+                        e.printStackTrace();
                     }
-                    ivUpload4.setImageURI(null);
-                    ivUpload4.setImageDrawable(icon);
+
+                } else {
+                    Toast.makeText(ActivityUploadPicture.this, "upload " + picId + " failed", Toast.LENGTH_SHORT).show();
                 }
             }
+
+            @Override
+            public void onFailure(Call<ResponseBody> call, Throwable t) {
+                Toast.makeText(ActivityUploadPicture.this, t.getMessage(), Toast.LENGTH_SHORT).show();
+                t.printStackTrace();
+
+            }
         });
-        AlertDialog alert = builder.create();
-        alert.show();
+
+    }
+
+    private void uploadPicture1() {
+        uploadPicture("picture1", ivUpload1, ivUploadCheck1.isShown(), new OnSuccessError() {
+            @Override
+            public void onSuccess(String msg) {
+                ivUploadCheck1.setVisibility(View.VISIBLE);
+                ivUpload1.setClickable(false);
+                ivUpload1.setFocusable(false);
+                ivUpload1.setFocusableInTouchMode(false);
+                uploadPicture2();
+            }
+
+            @Override
+            public void onFailure(Throwable throwable) {
+                uploadPicture2();
+            }
+
+            @Override
+            public void onSkip() {
+                uploadPicture2();
+            }
+        });
+    }
+
+    private void uploadPicture2() {
+        uploadPicture("picture2", ivUpload2, ivUploadCheck2.isShown(), new OnSuccessError() {
+            @Override
+            public void onSuccess(String msg) {
+                ivUploadCheck2.setVisibility(View.VISIBLE);
+                ivUpload2.setClickable(false);
+                ivUpload2.setFocusable(false);
+                ivUpload2.setFocusableInTouchMode(false);
+                uploadPicture3();
+            }
+
+            @Override
+            public void onFailure(Throwable throwable) {
+                uploadPicture3();
+            }
+
+            @Override
+            public void onSkip() {
+                uploadPicture3();
+            }
+        });
+    }
+
+    private void uploadPicture3() {
+        uploadPicture("picture3", ivUpload3, ivUploadCheck3.isShown(), new OnSuccessError() {
+            @Override
+            public void onSuccess(String msg) {
+                ivUploadCheck3.setVisibility(View.VISIBLE);
+                ivUpload3.setClickable(false);
+                ivUpload3.setFocusable(false);
+                ivUpload3.setFocusableInTouchMode(false);
+                uploadPicture4();
+            }
+
+            @Override
+            public void onFailure(Throwable throwable) {
+                uploadPicture4();
+            }
+
+            @Override
+            public void onSkip() {
+                uploadPicture4();
+            }
+        });
+    }
+
+    private void uploadPicture4() {
+        uploadPicture("picture4", ivUpload4, ivUploadCheck4.isShown(), new OnSuccessError() {
+            @Override
+            public void onSuccess(String msg) {
+                ivUploadCheck4.setVisibility(View.VISIBLE);
+                ivUpload4.setClickable(false);
+                ivUpload4.setFocusable(false);
+                ivUpload4.setFocusableInTouchMode(false);
+
+                if (mProgressDialog.isShowing())
+                    mProgressDialog.dismiss();
+            }
+
+            @Override
+            public void onFailure(Throwable throwable) {
+                if (mProgressDialog.isShowing())
+                    mProgressDialog.dismiss();
+            }
+
+            @Override
+            public void onSkip() {
+                if (mProgressDialog.isShowing())
+                    mProgressDialog.dismiss();
+            }
+        });
     }
 
     @OnClick(R.id.btnUpload)
     public void onClickUpload() {
 
-        if (TextUtils.isEmpty(this.contractNo))
+        if (!NetUtil.isConnected(this)) {
+            Utility.showDialog(this, getString(R.string.title_no_connection), getString(R.string.error_online_required));
             return;
-        ApiInterface fastService =
-                ServiceGenerator.createService(ApiInterface.class, Utility.buildUrl(Storage.getPreferenceAsInt(getApplicationContext(), Storage.KEY_SERVER_ID, 0)));
-/*
-        RequestBody photo = RequestBody.create(MediaType.parse("application/image"), file);
-        RequestBody body = new MultipartBuilder()
-                .type(MultipartBuilder.FORM)
-                .addFormDataPart("photo", file.getName(), photo)
-                .build();
+        }
+        if (mProgressDialog == null) {
+            mProgressDialog = new ProgressDialog(this);
+        }
+        mProgressDialog.setIndeterminate(true);
+        mProgressDialog.setCancelable(false);
+        mProgressDialog.setMessage("Please wait...");
+        mProgressDialog.show();
 
-        MultipartBody.Part filePart;
-        Call<ResponseUploadPhoto> call = fastService.uploadPhoto(filePart);
-*/
+        uploadPicture1();
 
-/*
-        MediaType MEDIA_TYPE_PNG = MediaType.parse("image/jpeg");
-        byte [] data = BitmapUtility.getBitmapToBytes(((BitmapDrawable) ivProfilePhoto.getDrawable()).getBitmap());
-        Log.d(TAG, String.format("Profile detals => user_id: %d, size of data: %d", 5, data.length));
-
-        RequestBody requestBody1 = RequestBody.create(MEDIA_TYPE_PNG, data);
-        Log.d(TAG, "requestBody: " + requestBody1.toString());
-
-        RequestBody requestBody2 = new MultipartBody.Builder()
-                .setType(MultipartBody.FORM)
-                .addFormDataPart("photo", "t.jpg", requestBody1)
-                .build();
-
-        Log.d(TAG, "requestBody: " + requestBody2.toString());
-//  ProfileDetails profileDetails = new DBHelper(this).fetchProfileDetails();
-*/
-        String s = ivUpload4.getTag().toString();
-        Uri uri = Uri.parse(s);
-        File file = new File(uri.getPath());
-
-        // create RequestBody instance from file
-        RequestBody requestFile =
-                RequestBody.create(MediaType.parse("multipart/form-data"), file);
-
-        MultipartBody.Part body =
-                MultipartBody.Part.createFormData("picture", file.getName(), requestFile);
-
-        String descriptionString = "hello, this is description speaking";
-        RequestBody description =
-                RequestBody.create(
-                        MediaType.parse("multipart/form-data"), descriptionString);
-
-        Call<ResponseBody> call = fastService.uploadPhoto(description, body);
-        call.enqueue(new Callback<ResponseBody>() {
-            @Override
-            public void onResponse(Call<ResponseBody> call, Response<ResponseBody> response) {
-                Toast.makeText(ActivityUploadPicture.this, "onResponse", Toast.LENGTH_SHORT).show();
-
-            }
-
-            @Override
-            public void onFailure(Call<ResponseBody> call, Throwable t) {
-                Toast.makeText(ActivityUploadPicture.this, "onFailure", Toast.LENGTH_SHORT).show();
-
-            }
-        });
-
-        /*
-        call.enqueue(new Callback<Response>() {
-            @Override
-            public void onResponse(Call<Response> call, Response<Response> response) {
-                Toast.makeText(ActivityUploadPicture.this, "onResponse", Toast.LENGTH_SHORT).show();
-            }
-
-            @Override
-            public void onFailure(Call<Response> call, Throwable t) {
-                Toast.makeText(ActivityUploadPicture.this, "onFailure", Toast.LENGTH_SHORT).show();
-            }
-        });*/
     }
 
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent imageReturnedIntent) {
         super.onActivityResult(requestCode, resultCode, imageReturnedIntent);
-        switch(requestCode) {
+
+
+        if (resultCode != RESULT_OK) {
+            return;
+        }
+
+        Uri selectedImage = imageReturnedIntent.getData();
+
+        ImageView targetImage = null;
+        switch (requestCode) {
             case 0:
             case 1:
-                if(resultCode == RESULT_OK){
-                    Uri selectedImage = imageReturnedIntent.getData();
-                    ivUpload1.setImageURI(selectedImage);
-                }
+                targetImage = ivUpload1;
                 break;
             case 2:
             case 3:
-                if(resultCode == RESULT_OK){
-                    Uri selectedImage = imageReturnedIntent.getData();
-                    ivUpload2.setImageURI(selectedImage);
-                }
+                targetImage = ivUpload2;
                 break;
             case 4:
             case 5:
-                if(resultCode == RESULT_OK){
-                    Uri selectedImage = imageReturnedIntent.getData();
-                    ivUpload3.setImageURI(selectedImage);
-                }
+                targetImage = ivUpload3;
                 break;
             case 6:
             case 7:
-                if(resultCode == RESULT_OK){
-                    Uri selectedImage = imageReturnedIntent.getData();
-//                    ivUpload4.setImageURI(selectedImage);
-                    Picasso.with(this)
-                            .load(selectedImage)
-                            .into(ivUpload4);
-                    ivUpload4.setTag(selectedImage);
-
-                    this.realm.executeTransaction(new Realm.Transaction() {
-                        @Override
-                        public void execute(Realm realm) {
-                            UploadPicture uploadPic4 = new UploadPicture();
-                            uploadPic4.setContractNo(contractNo);
-                            uploadPic4.setPicture4(ivUpload4.getTag().toString());
-                            realm.copyToRealmOrUpdate(uploadPic4);
-                        }
-                    });
-                }
+                targetImage = ivUpload4;
                 break;
         }
-    }
 
+        if (targetImage == null)
+            return;
+
+        Picasso.with(this)
+                .load(selectedImage)
+                .into(targetImage);
+        targetImage.setTag(selectedImage);
+
+        final ImageView finalTargetImage = targetImage;
+
+        this.realm.executeTransaction(new Realm.Transaction() {
+            @Override
+            public void execute(Realm realm) {
+                UploadPicture uploadPicture = realm.where(UploadPicture.class)
+                        .equalTo("contractNo", contractNo)
+                        .equalTo("collectorId", collectorId)
+                        .findFirst();
+                if (uploadPicture == null) {
+                    uploadPicture = new UploadPicture();
+                    uploadPicture.setContractNo(contractNo);
+                    uploadPicture.setCollectorId(collectorId);
+                }
+
+                if (finalTargetImage == ivUpload1) {
+                    uploadPicture.setPicture1(finalTargetImage.getTag().toString());
+                    uploadPicture.setLat1("0");
+                    uploadPicture.setLong1("0");
+                } else if (finalTargetImage == ivUpload2) {
+                    uploadPicture.setPicture2(finalTargetImage.getTag().toString());
+                    uploadPicture.setLat2("0");
+                    uploadPicture.setLong2("0");
+                } else if (finalTargetImage == ivUpload3) {
+                    uploadPicture.setPicture3(finalTargetImage.getTag().toString());
+                    uploadPicture.setLat3("0");
+                    uploadPicture.setLong3("0");
+                } else if (finalTargetImage == ivUpload4) {
+                    uploadPicture.setPicture4(finalTargetImage.getTag().toString());
+                    uploadPicture.setLat4("0");
+                    uploadPicture.setLong4("0");
+                }
+
+                realm.copyToRealmOrUpdate(uploadPicture);
+            }
+        });
+    }
 
 
 }

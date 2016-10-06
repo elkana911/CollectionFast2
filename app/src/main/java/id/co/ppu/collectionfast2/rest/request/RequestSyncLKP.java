@@ -2,14 +2,14 @@ package id.co.ppu.collectionfast2.rest.request;
 
 import java.util.List;
 
-import id.co.ppu.collectionfast2.pojo.TrnBastbj;
-import id.co.ppu.collectionfast2.pojo.TrnChangeAddr;
-import id.co.ppu.collectionfast2.pojo.TrnLDVComments;
-import id.co.ppu.collectionfast2.pojo.TrnLDVDetails;
-import id.co.ppu.collectionfast2.pojo.TrnLDVHeader;
-import id.co.ppu.collectionfast2.pojo.TrnRVB;
-import id.co.ppu.collectionfast2.pojo.TrnRVColl;
-import id.co.ppu.collectionfast2.pojo.TrnRepo;
+import id.co.ppu.collectionfast2.pojo.trn.TrnBastbj;
+import id.co.ppu.collectionfast2.pojo.trn.TrnChangeAddr;
+import id.co.ppu.collectionfast2.pojo.trn.TrnLDVComments;
+import id.co.ppu.collectionfast2.pojo.trn.TrnLDVDetails;
+import id.co.ppu.collectionfast2.pojo.trn.TrnLDVHeader;
+import id.co.ppu.collectionfast2.pojo.trn.TrnRVB;
+import id.co.ppu.collectionfast2.pojo.trn.TrnRVColl;
+import id.co.ppu.collectionfast2.pojo.trn.TrnRepo;
 
 /**
  * Created by Eric on 25-Sep-16.

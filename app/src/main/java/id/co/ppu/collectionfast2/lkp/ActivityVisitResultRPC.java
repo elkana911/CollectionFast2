@@ -12,16 +12,18 @@ import butterknife.ButterKnife;
 import butterknife.OnClick;
 import id.co.ppu.collectionfast2.R;
 import id.co.ppu.collectionfast2.component.BasicActivity;
-import id.co.ppu.collectionfast2.pojo.TrnLDVComments;
-import id.co.ppu.collectionfast2.pojo.TrnLDVDetails;
+import id.co.ppu.collectionfast2.pojo.trn.TrnLDVComments;
+import id.co.ppu.collectionfast2.pojo.trn.TrnLDVDetails;
 import id.co.ppu.collectionfast2.util.Utility;
 import io.realm.Realm;
 
 public class ActivityVisitResultRPC extends BasicActivity {
 
     public static final String PARAM_CONTRACT_NO = "customer.contractNo";
+    public static final String PARAM_COLLECTOR_ID = "collector.id";
 
     private String contractNo = null;
+    private String collectorId = null;
 
     @BindView(R.id.etContractNo)
     EditText etContractNo;
@@ -41,7 +43,8 @@ public class ActivityVisitResultRPC extends BasicActivity {
 
         Bundle extras = getIntent().getExtras();
         if (extras != null) {
-            contractNo = extras.getString(PARAM_CONTRACT_NO);
+            this.contractNo = extras.getString(PARAM_CONTRACT_NO);
+            this.collectorId = extras.getString(PARAM_COLLECTOR_ID);
         }
 
         TrnLDVDetails dtl = this.realm.where(TrnLDVDetails.class).equalTo("contractNo", contractNo).findFirst();
@@ -132,6 +135,7 @@ public class ActivityVisitResultRPC extends BasicActivity {
     public void onClickUploadPicture(){
         Intent i = new Intent(this, ActivityUploadPicture.class);
         i.putExtra(ActivityUploadPicture.PARAM_CONTRACT_NO, etContractNo.getText().toString());
+        i.putExtra(ActivityUploadPicture.PARAM_COLLECTOR_ID, this.collectorId);
         startActivity(i);
 
     }

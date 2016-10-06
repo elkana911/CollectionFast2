@@ -34,14 +34,14 @@ import id.co.ppu.collectionfast2.R;
 import id.co.ppu.collectionfast2.component.RVBAdapter;
 import id.co.ppu.collectionfast2.payment.entry.FragmentActiveContractsList;
 import id.co.ppu.collectionfast2.pojo.ServerInfo;
-import id.co.ppu.collectionfast2.pojo.TrnContractBuckets;
-import id.co.ppu.collectionfast2.pojo.TrnLDVDetails;
-import id.co.ppu.collectionfast2.pojo.TrnLDVHeader;
-import id.co.ppu.collectionfast2.pojo.TrnRVB;
-import id.co.ppu.collectionfast2.pojo.TrnRVColl;
-import id.co.ppu.collectionfast2.pojo.TrnRVCollPK;
 import id.co.ppu.collectionfast2.pojo.UserConfig;
 import id.co.ppu.collectionfast2.pojo.UserData;
+import id.co.ppu.collectionfast2.pojo.trn.TrnContractBuckets;
+import id.co.ppu.collectionfast2.pojo.trn.TrnLDVDetails;
+import id.co.ppu.collectionfast2.pojo.trn.TrnLDVHeader;
+import id.co.ppu.collectionfast2.pojo.trn.TrnRVB;
+import id.co.ppu.collectionfast2.pojo.trn.TrnRVColl;
+import id.co.ppu.collectionfast2.pojo.trn.TrnRVCollPK;
 import id.co.ppu.collectionfast2.util.Storage;
 import id.co.ppu.collectionfast2.util.Utility;
 import io.realm.Realm;
@@ -431,6 +431,7 @@ public class FragmentPayment extends Fragment{
 
                 TrnRVB trnRVB = realm.where(TrnRVB.class).equalTo("rvbNo", finalRvbNo).findFirst();
                 trnRVB.setRvbStatus("CL");
+                trnRVB.setFlagToEmrafin("N");
                 trnRVB.setLastupdateBy(Utility.LAST_UPDATE_BY);
                 trnRVB.setLastupdateTimestamp(new Date());
                 realm.copyToRealmOrUpdate(trnRVB);
@@ -482,11 +483,13 @@ public class FragmentPayment extends Fragment{
 
                 if (isLKP)
                     trnRVColl.setLdvNo(ldvNo);
+
                 /*
                 trnRVColl.setDateDone();
                 trnRVColl.setDateToEmrafin();
-                trnRVColl.setFlagToEmrafin();
                 */
+                trnRVColl.setFlagToEmrafin("N");    // permintaan felipe
+
 //                trnRVColl.setProcessDate(serverDate);
                 trnRVColl.setContractNo(contractNo);
                 trnRVColl.setNotes(etCatatan.getText().toString());
@@ -507,6 +510,7 @@ public class FragmentPayment extends Fragment{
                             .findFirst();
                     trnLDVDetails.setLdvFlag("COL");
                     trnLDVDetails.setWorkStatus("V");
+                    trnLDVDetails.setFlagToEmrafin("N");
                     trnLDVDetails.setLastupdateBy(Utility.LAST_UPDATE_BY);
                     trnLDVDetails.setLastupdateTimestamp(new Date());
 

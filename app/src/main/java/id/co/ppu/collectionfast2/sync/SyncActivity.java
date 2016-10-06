@@ -1,22 +1,27 @@
 package id.co.ppu.collectionfast2.sync;
 
 import id.co.ppu.collectionfast2.component.BasicActivity;
-import id.co.ppu.collectionfast2.pojo.HistInstallments;
-import id.co.ppu.collectionfast2.pojo.TrnBastbj;
-import id.co.ppu.collectionfast2.pojo.TrnCollectAddr;
-import id.co.ppu.collectionfast2.pojo.TrnContractBuckets;
-import id.co.ppu.collectionfast2.pojo.TrnLDVDetails;
-import id.co.ppu.collectionfast2.pojo.TrnLDVHeader;
-import id.co.ppu.collectionfast2.pojo.TrnRVB;
-import id.co.ppu.collectionfast2.pojo.TrnVehicleInfo;
-import id.co.ppu.collectionfast2.sync.pojo.SyncTrnBastbj;
-import id.co.ppu.collectionfast2.sync.pojo.SyncTrnChangeAddr;
-import id.co.ppu.collectionfast2.sync.pojo.SyncTrnLDVComments;
-import id.co.ppu.collectionfast2.sync.pojo.SyncTrnLDVDetails;
-import id.co.ppu.collectionfast2.sync.pojo.SyncTrnLDVHeader;
-import id.co.ppu.collectionfast2.sync.pojo.SyncTrnRVB;
-import id.co.ppu.collectionfast2.sync.pojo.SyncTrnRVColl;
-import id.co.ppu.collectionfast2.sync.pojo.SyncTrnRepo;
+import id.co.ppu.collectionfast2.pojo.sync.SyncFileUpload;
+import id.co.ppu.collectionfast2.pojo.sync.SyncTrnBastbj;
+import id.co.ppu.collectionfast2.pojo.sync.SyncTrnChangeAddr;
+import id.co.ppu.collectionfast2.pojo.sync.SyncTrnLDVComments;
+import id.co.ppu.collectionfast2.pojo.sync.SyncTrnLDVDetails;
+import id.co.ppu.collectionfast2.pojo.sync.SyncTrnLDVHeader;
+import id.co.ppu.collectionfast2.pojo.sync.SyncTrnRVB;
+import id.co.ppu.collectionfast2.pojo.sync.SyncTrnRVColl;
+import id.co.ppu.collectionfast2.pojo.sync.SyncTrnRepo;
+import id.co.ppu.collectionfast2.pojo.trn.HistInstallments;
+import id.co.ppu.collectionfast2.pojo.trn.TrnBastbj;
+import id.co.ppu.collectionfast2.pojo.trn.TrnChangeAddr;
+import id.co.ppu.collectionfast2.pojo.trn.TrnCollectAddr;
+import id.co.ppu.collectionfast2.pojo.trn.TrnContractBuckets;
+import id.co.ppu.collectionfast2.pojo.trn.TrnLDVComments;
+import id.co.ppu.collectionfast2.pojo.trn.TrnLDVDetails;
+import id.co.ppu.collectionfast2.pojo.trn.TrnLDVHeader;
+import id.co.ppu.collectionfast2.pojo.trn.TrnRVB;
+import id.co.ppu.collectionfast2.pojo.trn.TrnRVColl;
+import id.co.ppu.collectionfast2.pojo.trn.TrnRepo;
+import id.co.ppu.collectionfast2.pojo.trn.TrnVehicleInfo;
 import io.realm.Realm;
 
 /**
@@ -95,17 +100,22 @@ public class SyncActivity extends BasicActivity {
     }
 
     protected void clearLKPTables() {
+        // TODO: please always check here each time there are database changes
         realm.executeTransactionAsync(new Realm.Transaction() {
             @Override
             public void execute(Realm realm) {
                 realm.where(TrnLDVHeader.class).findAll().deleteAllFromRealm();
+                realm.where(TrnLDVDetails.class).findAll().deleteAllFromRealm();
+                realm.where(TrnLDVComments.class).findAll().deleteAllFromRealm();
+                realm.where(TrnBastbj.class).findAll().deleteAllFromRealm();
+                realm.where(TrnChangeAddr.class).findAll().deleteAllFromRealm();
                 realm.where(TrnCollectAddr.class).findAll().deleteAllFromRealm();
                 realm.where(TrnContractBuckets.class).findAll().deleteAllFromRealm();
+                realm.where(TrnRepo.class).findAll().deleteAllFromRealm();
                 realm.where(TrnRVB.class).findAll().deleteAllFromRealm();
-                realm.where(TrnBastbj.class).findAll().deleteAllFromRealm();
+                realm.where(TrnRVColl.class).findAll().deleteAllFromRealm();
                 realm.where(TrnVehicleInfo.class).findAll().deleteAllFromRealm();
                 realm.where(HistInstallments.class).findAll().deleteAllFromRealm();
-                realm.where(TrnLDVDetails.class).findAll().deleteAllFromRealm();
 
 
             }
@@ -270,12 +280,13 @@ public class SyncActivity extends BasicActivity {
             public void execute(Realm realm) {
                 realm.where(SyncTrnLDVHeader.class).findAll().deleteAllFromRealm();
                 realm.where(SyncTrnLDVDetails.class).findAll().deleteAllFromRealm();
+                realm.where(SyncTrnLDVComments.class).findAll().deleteAllFromRealm();
                 realm.where(SyncTrnBastbj.class).findAll().deleteAllFromRealm();
                 realm.where(SyncTrnChangeAddr.class).findAll().deleteAllFromRealm();
-                realm.where(SyncTrnLDVComments.class).findAll().deleteAllFromRealm();
                 realm.where(SyncTrnRepo.class).findAll().deleteAllFromRealm();
                 realm.where(SyncTrnRVB.class).findAll().deleteAllFromRealm();
                 realm.where(SyncTrnRVColl.class).findAll().deleteAllFromRealm();
+                realm.where(SyncFileUpload.class).findAll().deleteAllFromRealm();
 
             }
         });

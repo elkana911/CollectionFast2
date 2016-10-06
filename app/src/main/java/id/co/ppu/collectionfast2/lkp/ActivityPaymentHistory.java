@@ -10,14 +10,17 @@ import android.widget.TableLayout;
 import android.widget.TableRow;
 import android.widget.TextView;
 
+import java.util.Date;
+import java.util.List;
 import java.util.concurrent.TimeUnit;
 
 import butterknife.BindView;
 import butterknife.ButterKnife;
 import id.co.ppu.collectionfast2.R;
 import id.co.ppu.collectionfast2.component.BasicActivity;
-import id.co.ppu.collectionfast2.pojo.HistInstallments;
-import id.co.ppu.collectionfast2.pojo.TrnLDVDetails;
+import id.co.ppu.collectionfast2.pojo.ServerInfo;
+import id.co.ppu.collectionfast2.pojo.trn.HistInstallments;
+import id.co.ppu.collectionfast2.pojo.trn.TrnLDVDetails;
 import id.co.ppu.collectionfast2.util.Utility;
 import io.realm.RealmResults;
 
@@ -25,9 +28,11 @@ public class ActivityPaymentHistory extends BasicActivity {
 
     public static final String PARAM_CONTRACT_NO = "customer.contractNo";
     public static final String PARAM_IS_LKP_INQUIRY = "lkpinquiry";
+    public static final String PARAM_LKP_DATE = "lkpDate";
 
     private String contractNo = null;
     private boolean isLKPInquiry = false;
+    private Date lkpDate = null;
 
     @BindView(R.id.etContractNo)
     EditText etContractNo;
@@ -53,10 +58,11 @@ public class ActivityPaymentHistory extends BasicActivity {
         if (extras != null) {
             contractNo = extras.getString(PARAM_CONTRACT_NO);
             isLKPInquiry = extras.getBoolean(PARAM_IS_LKP_INQUIRY);
+            long lkpdate = extras.getLong(PARAM_LKP_DATE);
+            this.lkpDate = new Date(lkpdate);
         }
 
         TrnLDVDetails dtl = this.realm.where(TrnLDVDetails.class).equalTo("contractNo", contractNo).findFirst();
-        HistInstallments histInstallments = this.realm.where(HistInstallments.class).equalTo("pk.contractNo", contractNo).findFirst();
 //        TrnContractBuckets contractBuckets = this.realm.where(TrnContractBuckets.class).equalTo("pk.contractNo", contractNo).findFirst();
 
         if (getSupportActionBar() != null) {
@@ -68,17 +74,63 @@ public class ActivityPaymentHistory extends BasicActivity {
 
         etContractNo.setText(dtl.getContractNo());
 
-        if (histInstallments == null) {
-            etAngsuran.setText("?");
-        } else {
-            long angsuran = (histInstallments.getPrncAmtDtlCust() == null ? 0 : histInstallments.getPrncAmtDtlCust())
-                    + (histInstallments.getIntrAmtDtlAr() == null ? 0 : histInstallments.getIntrAmtDtlAr());
-            etAngsuran.setText(Utility.convertLongToRupiah(angsuran));
+        if (this.lkpDate == null) {
+            this.lkpDate = this.realm.where(ServerInfo.class).findFirst().getServerDate();
         }
 
-//        TODO: ask pak yoce ambil dari mana
-//        long tenor = contractBuckets.getTop();
-//        etTenor.setText(String.valueOf(tenor));
+//        String createdBy = "JOB" + Utility.convertDateToString(this.lkpDate, "yyyyMMdd");
+
+        RealmResults<HistInstallments> listInstallments = this.realm.where(HistInstallments.class)
+                .equalTo("pk.contractNo", this.contractNo)
+//                .equalTo("createdBy", createdBy)  ga perlu kata felipe
+                .findAll();
+
+        if (listInstallments.size() < 1) {
+            return;
+        }
+/*
+        List<HistInstallments> listInstallments = this.realm.copyFromRealm(list);
+
+        // sort by no installments
+        Collections.sort(listInstallments, new Comparator<HistInstallments>() {
+            @Override
+            public int compare(HistInstallments t1, HistInstallments t2) {
+                if (t1.getPk().getInstNo() > t2.getPk().getInstNo())
+                    return 1;
+                else if (t1.getPk().getInstNo() < t2.getPk().getInstNo()) {
+                    return -1;
+                }else
+                    return 0;
+            }
+        });
+
+        */
+        // after sort you can get max
+        etTenor.setText(String.valueOf(listInstallments.get(listInstallments.size() -1).getPk().getInstNo()));
+
+        /*
+        boolean isLunas = true;
+        long angsuranTertagih = 0;
+        for (HistInstallments obj : listInstallments) {
+            if (obj.getPaidDate() == null) {
+                isLunas = false;
+
+                angsuranTertagih = (obj.getPrncAmtDtlCust() == null ? 0 : obj.getPrncAmtDtlCust())
+                        + (obj.getIntrAmtDtlAr() == null ? 0 : obj.getIntrAmtDtlAr());
+
+                break;
+            }
+        }
+        */
+
+//        HistInstallments histInstallments = this.realm.where(HistInstallments.class).equalTo("pk.contractNo", contractNo).findFirst();
+        /*if (isLunas) {
+            etAngsuran.setText("LUNAS");
+        } else {
+            etAngsuran.setText(Utility.convertLongToRupiah(angsuranTertagih));
+        }*/
+
+        etAngsuran.setText(Utility.convertLongToRupiah(dtl.getMonthInst()));
 
         /*
         Thread t = new Thread(new Runnable() {
@@ -91,7 +143,8 @@ public class ActivityPaymentHistory extends BasicActivity {
         runOnUiThread(t);
         */
 
-        loadTable();
+//        loadTable();
+        loadTable(listInstallments);
     }
 
     private void setTableHeader(TextView textView, String text) {
@@ -121,7 +174,9 @@ public class ActivityPaymentHistory extends BasicActivity {
         tableLayout.addView(row_header);
         // add rows
 //        RealmResults<HistInstallments> list = this.realm.where(HistInstallments.class).equalTo("pk.contractNo", this.contractNo).findAllSorted(new String[]{"pk.contractNo", "pk.instNo"}, new Sort[]{Sort.ASCENDING, Sort.ASCENDING});
-        RealmResults<HistInstallments> list = this.realm.where(HistInstallments.class).equalTo("pk.contractNo", this.contractNo).findAll();
+        RealmResults<HistInstallments> list = this.realm.where(HistInstallments.class)
+                .equalTo("pk.contractNo", this.contractNo)
+                .findAll();
 
         for (int i = 0; i < list.size(); i++) {
 
@@ -158,6 +213,113 @@ public class ActivityPaymentHistory extends BasicActivity {
             }
 
 
+
+            tableLayout.addView(row);
+        }
+    }
+
+    private void loadTable(List<HistInstallments> list) {
+
+        // clear table
+        tableLayout.removeAllViews();
+        // create header
+        TableRow row_header = (TableRow) LayoutInflater.from(this).inflate(R.layout.row_payment_history, null);
+
+        setTableHeader((TextView) ButterKnife.findById(row_header, R.id.attrib_no), "No.");
+        setTableHeader((TextView) ButterKnife.findById(row_header, R.id.attrib_due_date), "Due date");
+        setTableHeader((TextView) ButterKnife.findById(row_header, R.id.attrib_paid_date), "Paid date");
+        setTableHeader((TextView) ButterKnife.findById(row_header, R.id.attrib_ovd_days), "OVD days");
+
+        tableLayout.addView(row_header);
+        // add rows
+
+        for (int i = 0; i < list.size(); i++) {
+
+            HistInstallments obj = list.get(i);
+
+            TableRow row = (TableRow) LayoutInflater.from(this).inflate(R.layout.row_payment_history, null);
+            ((TextView) row.findViewById(R.id.attrib_no)).setText(String.valueOf(i + 1));
+//            ((TextView) row.findViewById(R.id.attrib_due_date)).setText(Utility.convertDateToString(new Date(), "dd/MM/yyyy"));
+            ((TextView) row.findViewById(R.id.attrib_due_date)).setText( Utility.convertDateToString(obj.getDueDate(), "dd/MM/yyyy"));
+
+            TextView tvPaidDate = ButterKnife.findById(row, R.id.attrib_paid_date);
+            if (obj.getPaidDate() != null) {
+                tvPaidDate.setText(Utility.convertDateToString(obj.getPaidDate(), "dd/MM/yyyy"));
+            }else
+                tvPaidDate.setText(null);
+
+//            if (i > 9) {
+//                paidDate.setTextColor(Color.RED);
+//            }
+
+            TextView tvOvdDays = ButterKnife.findById(row, R.id.attrib_ovd_days);
+
+            if (obj.getPaidDate() != null) {
+                long ovdDays = Utility.getDateDiff(obj.getDueDate(), obj.getPaidDate(), TimeUnit.DAYS);
+                tvOvdDays.setText(ovdDays < 1 ? "0" : String.valueOf(ovdDays));
+
+                if (ovdDays > 0) {
+                    tvOvdDays.setTextColor(Color.RED);
+                    tvPaidDate.setTextColor(Color.RED);
+                }
+
+            } else {
+
+            }
+
+            tableLayout.addView(row);
+        }
+    }
+
+    private void loadTable(RealmResults<HistInstallments> list) {
+
+        // clear table
+        tableLayout.removeAllViews();
+        // create header
+        TableRow row_header = (TableRow) LayoutInflater.from(this).inflate(R.layout.row_payment_history, null);
+
+        setTableHeader((TextView) ButterKnife.findById(row_header, R.id.attrib_no), "No.");
+        setTableHeader((TextView) ButterKnife.findById(row_header, R.id.attrib_due_date), "Due date");
+        setTableHeader((TextView) ButterKnife.findById(row_header, R.id.attrib_paid_date), "Paid date");
+        setTableHeader((TextView) ButterKnife.findById(row_header, R.id.attrib_ovd_days), "OVD days");
+
+        tableLayout.addView(row_header);
+        // add rows
+
+        for (int i = 0; i < list.size(); i++) {
+
+            HistInstallments obj = list.get(i);
+//            HistInstallments obj = this.realm.copyFromRealm(list.get(i));
+
+            TableRow row = (TableRow) LayoutInflater.from(this).inflate(R.layout.row_payment_history, null);
+            ((TextView) row.findViewById(R.id.attrib_no)).setText(String.valueOf(i + 1));
+//            ((TextView) row.findViewById(R.id.attrib_due_date)).setText(Utility.convertDateToString(new Date(), "dd/MM/yyyy"));
+            ((TextView) row.findViewById(R.id.attrib_due_date)).setText( Utility.convertDateToString(obj.getDueDate(), "dd/MM/yyyy"));
+
+            TextView tvPaidDate = ButterKnife.findById(row, R.id.attrib_paid_date);
+            if (obj.getPaidDate() != null) {
+                tvPaidDate.setText(Utility.convertDateToString(obj.getPaidDate(), "dd/MM/yyyy"));
+            }else
+                tvPaidDate.setText(null);
+
+//            if (i > 9) {
+//                paidDate.setTextColor(Color.RED);
+//            }
+
+            TextView tvOvdDays = ButterKnife.findById(row, R.id.attrib_ovd_days);
+
+            if (obj.getPaidDate() != null) {
+                long ovdDays = Utility.getDateDiff(obj.getDueDate(), obj.getPaidDate(), TimeUnit.DAYS);
+                tvOvdDays.setText(ovdDays < 1 ? "0" : String.valueOf(ovdDays));
+
+                if (ovdDays > 0) {
+                    tvOvdDays.setTextColor(Color.RED);
+                    tvPaidDate.setTextColor(Color.RED);
+                }
+
+            } else {
+
+            }
 
             tableLayout.addView(row);
         }

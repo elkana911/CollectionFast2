@@ -4,7 +4,7 @@ import com.google.gson.annotations.SerializedName;
 
 import java.io.Serializable;
 
-import id.co.ppu.collectionfast2.pojo.MasterData;
+import id.co.ppu.collectionfast2.pojo.master.MasterData;
 
 /**
  * Created by Eric on 08-Sep-16.

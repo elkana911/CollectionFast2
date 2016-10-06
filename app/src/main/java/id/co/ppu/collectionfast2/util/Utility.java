@@ -10,6 +10,7 @@ import android.content.pm.PackageManager;
 import android.content.res.Configuration;
 import android.provider.Settings;
 import android.telephony.TelephonyManager;
+import android.text.TextUtils;
 import android.view.ContextThemeWrapper;
 import android.view.View;
 import android.view.ViewGroup;
@@ -33,7 +34,7 @@ public class Utility {
     public final static String DATE_DISPLAY_PATTERN = "dd MMM yyyy";
     public final static String DATE_DATA_PATTERN = "yyyyMMdd";
 
-    public final static String[][] servers = {{"local-server", "192.168.43.90", "8090"}
+    public final static String[][] servers = {{"local-server", "192.168.1.106", "8090"}
                                             ,{"fast-mobile", "cmobile.radanafinance.co.id", "7001"}
     };
 
@@ -286,7 +287,24 @@ public class Utility {
 
     public static boolean isNumeric(String str)
     {
+        if (str == null)
+            return false;
+
         return str.matches("-?\\d+(\\.\\d+)?");  //match a number with optional '-' and decimal.
+    }
+
+    public static boolean isValidMoney(String value) {
+        if (TextUtils.isEmpty(value))
+            return false;
+
+        if (value.startsWith("0"))
+            return false;
+
+        if (!isNumeric(value))
+            return false;
+
+        return Long.parseLong(value) >= 0;
+
     }
 
     public static void setSpinnerAsString(Spinner spinner, String value) {

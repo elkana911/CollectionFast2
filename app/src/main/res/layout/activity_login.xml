@@ -42,7 +42,7 @@
                     android:layout_height="wrap_content"
                     android:hint="@string/prompt_username"
                     android:maxLines="1"
-                    android:text="21140444" />
+                    android:text="21150553" />
 
             </android.support.design.widget.TextInputLayout>
 
@@ -61,7 +61,7 @@
                     android:imeOptions="actionUnspecified"
                     android:inputType="textPassword"
                     android:maxLines="1"
-                    android:text="10041985" />
+                    android:text="07041980" />
 
             </android.support.design.widget.TextInputLayout>
 

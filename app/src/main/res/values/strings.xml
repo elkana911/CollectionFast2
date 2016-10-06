@@ -208,6 +208,7 @@
     <string name="title_activity_scrolling_vehicle_info">Vehicle Information</string>
     <string name="title_activity_activity_scrolling_vehicle_info">Vehicle Information</string>
     <string name="title_activity_payment_history">Payment History</string>
+    <string name="title_no_connection">No Connection</string>
     <string name="error_online_required">This task require internet connection\nMake sure Flight mode is off.</string>
     <string name="title_activity_vehicle_info">Vehicle Information</string>
     <string name="error_select_rvb">Please select a voucher</string>

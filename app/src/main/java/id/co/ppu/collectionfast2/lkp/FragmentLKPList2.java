@@ -34,8 +34,8 @@ import id.co.ppu.collectionfast2.R;
 import id.co.ppu.collectionfast2.component.DividerItemDecoration;
 import id.co.ppu.collectionfast2.component.RealmSearchView;
 import id.co.ppu.collectionfast2.pojo.ServerInfo;
-import id.co.ppu.collectionfast2.pojo.TrnLDVDetails;
-import id.co.ppu.collectionfast2.pojo.TrnLDVHeader;
+import id.co.ppu.collectionfast2.pojo.trn.TrnLDVDetails;
+import id.co.ppu.collectionfast2.pojo.trn.TrnLDVHeader;
 import id.co.ppu.collectionfast2.util.Utility;
 import io.realm.Realm;
 

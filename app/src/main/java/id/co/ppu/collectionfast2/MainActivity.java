@@ -47,27 +47,33 @@ import id.co.ppu.collectionfast2.job.SyncJob;
 import id.co.ppu.collectionfast2.listener.OnLKPListListener;
 import id.co.ppu.collectionfast2.listener.OnPostRetrieveLKP;
 import id.co.ppu.collectionfast2.listener.OnPostRetrieveServerInfo;
-import id.co.ppu.collectionfast2.listener.OnPostSynchronizeData;
+import id.co.ppu.collectionfast2.listener.OnSuccessError;
 import id.co.ppu.collectionfast2.lkp.ActivityScrollingLKPDetails;
 import id.co.ppu.collectionfast2.lkp.FragmentLKPList;
 import id.co.ppu.collectionfast2.lkp.FragmentSummaryLKP;
 import id.co.ppu.collectionfast2.login.LoginActivity;
 import id.co.ppu.collectionfast2.payment.entry.ActivityPaymentEntri;
 import id.co.ppu.collectionfast2.pojo.DisplayTrnLDVDetails;
-import id.co.ppu.collectionfast2.pojo.HistInstallments;
 import id.co.ppu.collectionfast2.pojo.ServerInfo;
-import id.co.ppu.collectionfast2.pojo.TrnBastbj;
-import id.co.ppu.collectionfast2.pojo.TrnCollectAddr;
-import id.co.ppu.collectionfast2.pojo.TrnContractBuckets;
-import id.co.ppu.collectionfast2.pojo.TrnLDVComments;
-import id.co.ppu.collectionfast2.pojo.TrnLDVDetails;
-import id.co.ppu.collectionfast2.pojo.TrnLDVHeader;
-import id.co.ppu.collectionfast2.pojo.TrnRVB;
-import id.co.ppu.collectionfast2.pojo.TrnRVColl;
-import id.co.ppu.collectionfast2.pojo.TrnRepo;
-import id.co.ppu.collectionfast2.pojo.TrnVehicleInfo;
 import id.co.ppu.collectionfast2.pojo.UserConfig;
 import id.co.ppu.collectionfast2.pojo.UserData;
+import id.co.ppu.collectionfast2.pojo.sync.SyncTrnBastbj;
+import id.co.ppu.collectionfast2.pojo.sync.SyncTrnLDVComments;
+import id.co.ppu.collectionfast2.pojo.sync.SyncTrnLDVDetails;
+import id.co.ppu.collectionfast2.pojo.sync.SyncTrnLDVHeader;
+import id.co.ppu.collectionfast2.pojo.sync.SyncTrnRVColl;
+import id.co.ppu.collectionfast2.pojo.sync.SyncTrnRepo;
+import id.co.ppu.collectionfast2.pojo.trn.HistInstallments;
+import id.co.ppu.collectionfast2.pojo.trn.TrnBastbj;
+import id.co.ppu.collectionfast2.pojo.trn.TrnCollectAddr;
+import id.co.ppu.collectionfast2.pojo.trn.TrnContractBuckets;
+import id.co.ppu.collectionfast2.pojo.trn.TrnLDVComments;
+import id.co.ppu.collectionfast2.pojo.trn.TrnLDVDetails;
+import id.co.ppu.collectionfast2.pojo.trn.TrnLDVHeader;
+import id.co.ppu.collectionfast2.pojo.trn.TrnRVB;
+import id.co.ppu.collectionfast2.pojo.trn.TrnRVColl;
+import id.co.ppu.collectionfast2.pojo.trn.TrnRepo;
+import id.co.ppu.collectionfast2.pojo.trn.TrnVehicleInfo;
 import id.co.ppu.collectionfast2.rest.ApiInterface;
 import id.co.ppu.collectionfast2.rest.ServiceGenerator;
 import id.co.ppu.collectionfast2.rest.request.RequestLKPByDate;
@@ -84,16 +90,11 @@ import id.co.ppu.collectionfast2.sync.SyncLdvHeader;
 import id.co.ppu.collectionfast2.sync.SyncRVColl;
 import id.co.ppu.collectionfast2.sync.SyncRepo;
 import id.co.ppu.collectionfast2.sync.SyncRvb;
-import id.co.ppu.collectionfast2.sync.pojo.SyncTrnBastbj;
-import id.co.ppu.collectionfast2.sync.pojo.SyncTrnLDVComments;
-import id.co.ppu.collectionfast2.sync.pojo.SyncTrnLDVDetails;
-import id.co.ppu.collectionfast2.sync.pojo.SyncTrnLDVHeader;
-import id.co.ppu.collectionfast2.sync.pojo.SyncTrnRVColl;
-import id.co.ppu.collectionfast2.sync.pojo.SyncTrnRepo;
 import id.co.ppu.collectionfast2.util.DataUtil;
 import id.co.ppu.collectionfast2.util.Storage;
 import id.co.ppu.collectionfast2.util.Utility;
 import io.realm.Realm;
+import io.realm.RealmAsyncTask;
 import io.realm.RealmObject;
 import okhttp3.ResponseBody;
 import retrofit2.Call;
@@ -209,6 +210,8 @@ public class MainActivity extends SyncActivity
             mSelectedNavMenuIndex = savedInstanceState.getInt(SELECTED_NAV_MENU_KEY);
             displayView(mSelectedNavMenuIndex);
         }
+
+        boolean b = DataUtil.isMasterDataDownloaded(this, this.realm);
 
         // re-get
         ServerInfo si = this.realm.where(ServerInfo.class).findFirst();
@@ -433,15 +436,21 @@ public class MainActivity extends SyncActivity
             return false;
         } else if (id == R.id.nav_manualSync) {
 
-            syncTransaction(false, new OnPostSynchronizeData() {
+            syncTransaction(false, new OnSuccessError() {
                 @Override
-                public void onSuccess() {
+                public void onSuccess(String msg) {
                     Date serverDate = realm.where(ServerInfo.class).findFirst().getServerDate();
                     retrieveLKPFromServer(currentUser.getUser().get(0).getUserId(), serverDate, true, null);
+
                 }
 
                 @Override
-                public void onFailure() {
+                public void onFailure(Throwable throwable) {
+
+                }
+
+                @Override
+                public void onSkip() {
 
                 }
             });
@@ -543,6 +552,7 @@ public class MainActivity extends SyncActivity
             @Override
             public void onClick(DialogInterface dialog, int which) {
                 // TODO: clear cookie
+                resetData();
 
                 while (getSupportFragmentManager().getBackStackEntryCount() > 0) {
                     getSupportFragmentManager().popBackStackImmediate();
@@ -626,49 +636,9 @@ public class MainActivity extends SyncActivity
     }
 
 
-    public void retrieveLKPFromServer(final String collectorCode, Date lkpDate, boolean useCache, final OnPostRetrieveLKP listener) {
-        if (currentUser == null || currentUser.getUser().size() != currentUser.getSecUser().size()) {
-            return;
-        }
-
-        Date serverDate = this.realm.where(ServerInfo.class).findFirst().getServerDate();
-
-        final String createdBy = "JOB" + Utility.convertDateToString(lkpDate, "yyyyMMdd");
-        // load cache
-        long count = this.realm.where(TrnLDVHeader.class).equalTo("collCode", collectorCode)
-                .equalTo("createdBy", createdBy)
-                .count();
-
-        if (useCache) {
-            if (count > 0 && lkpDate.before(serverDate)) {
-                if (listener != null)
-                    listener.onLoadFromLocal();
-                return;
-            }
-        }
-
-        // should check apakah ada data lkp yg masih kecantol di hari kemarin
-
+    private void getLKP(final ProgressDialog mProgressDialog, final String collectorCode, Date lkpDate, final String createdBy, final OnPostRetrieveLKP listener) {
         ApiInterface fastService =
                 ServiceGenerator.createService(ApiInterface.class, Utility.buildUrl(Storage.getPreferenceAsInt(getApplicationContext(), Storage.KEY_SERVER_ID, 0)));
-
-        final ProgressDialog mProgressDialog = new ProgressDialog(this);
-        mProgressDialog.setIndeterminate(true);
-        mProgressDialog.setCancelable(false);
-        mProgressDialog.setMessage("Getting your LKP from server.\nPlease wait...");
-        mProgressDialog.show();
-
-        syncTransaction(false, new OnPostSynchronizeData() {
-            @Override
-            public void onSuccess() {
-
-            }
-
-            @Override
-            public void onFailure() {
-
-            }
-        });
 
         // tarik LKP
         RequestLKPByDate requestLKP = new RequestLKPByDate();
@@ -699,7 +669,7 @@ public class MainActivity extends SyncActivity
 
                         } else {
                             // save db here
-                            realm.executeTransactionAsync(new Realm.Transaction() {
+                            RealmAsyncTask realmAsyncTask = realm.executeTransactionAsync(new Realm.Transaction() {
                                 @Override
                                 public void execute(Realm bgRealm) {
                                     // insert header
@@ -790,7 +760,7 @@ public class MainActivity extends SyncActivity
                                     bgRealm.copyToRealmOrUpdate(respGetLKP.getData().getVehicleInfo());
 
                                     // insert history installments
-                                    d = bgRealm.where(HistInstallments.class).equalTo(Utility.COLUMN_CREATED_BY, createdBy).findAll().deleteAllFromRealm();
+                                    d = bgRealm.where(HistInstallments.class)./*equalTo(Utility.COLUMN_CREATED_BY, createdBy).*/findAll().deleteAllFromRealm();
                                     bgRealm.copyToRealmOrUpdate(respGetLKP.getData().getHistoryInstallments());
 
                                     // insert details
@@ -974,6 +944,58 @@ public class MainActivity extends SyncActivity
             }
         });
 
+
+    }
+
+    public void retrieveLKPFromServer(final String collectorCode, final Date lkpDate, boolean useCache, final OnPostRetrieveLKP listener) {
+        if (currentUser == null || currentUser.getUser().size() != currentUser.getSecUser().size()) {
+            return;
+        }
+
+        Date serverDate = this.realm.where(ServerInfo.class).findFirst().getServerDate();
+
+        final String createdBy = "JOB" + Utility.convertDateToString(lkpDate, "yyyyMMdd");
+        // load cache
+        long count = this.realm.where(TrnLDVHeader.class).equalTo("collCode", collectorCode)
+                .equalTo("createdBy", createdBy)
+                .count();
+
+        if (useCache) {
+            if (count > 0 && lkpDate.before(serverDate)) {
+                if (listener != null)
+                    listener.onLoadFromLocal();
+                return;
+            }
+        }
+
+        // should check apakah ada data lkp yg masih kecantol di hari kemarin
+
+        final ProgressDialog mProgressDialog = new ProgressDialog(this);
+        mProgressDialog.setIndeterminate(true);
+        mProgressDialog.setCancelable(false);
+        mProgressDialog.setMessage("Getting your LKP from server.\nPlease wait...");
+        mProgressDialog.show();
+
+        // must sync first
+        syncTransaction(false, new OnSuccessError(){
+            @Override
+            public void onSuccess(String msg) {
+                getLKP(mProgressDialog, collectorCode, lkpDate, createdBy, listener);
+            }
+
+            @Override
+            public void onFailure(Throwable throwable) {
+                if (mProgressDialog.isShowing())
+                    mProgressDialog.dismiss();
+            }
+
+            @Override
+            public void onSkip() {
+                getLKP(mProgressDialog, collectorCode, lkpDate, createdBy, listener);
+            }
+
+        });
+
     }
 
     @Override
@@ -1126,9 +1148,11 @@ public class MainActivity extends SyncActivity
             @Override
             public void onClick(DialogInterface dialog, int which) {
                 // TODO: clear cookie
-                syncTransaction(true, new OnPostSynchronizeData() {
+                syncTransaction(true, new OnSuccessError() {
                     @Override
-                    public void onSuccess() {
+                    public void onSuccess(String msg) {
+                        Utility.showDialog(MainActivity.this, "Close Batch", "Close Batch successful");
+
                         clearLKPTables();
                         clearSyncTables();
 
@@ -1141,7 +1165,12 @@ public class MainActivity extends SyncActivity
                     }
 
                     @Override
-                    public void onFailure() {
+                    public void onFailure(Throwable throwable) {
+
+                    }
+
+                    @Override
+                    public void onSkip() {
 
                     }
                 });
@@ -1160,20 +1189,55 @@ public class MainActivity extends SyncActivity
         alertDialogBuilder.show();
     }
 
-    protected void syncTransaction(final boolean closeBatch, final OnPostSynchronizeData listener) {
+    protected void syncTransaction(final boolean closeBatch, final OnSuccessError listener) {
+
+        ApiInterface fastService =
+                ServiceGenerator.createService(ApiInterface.class, Utility.buildUrl(Storage.getPreferenceAsInt(getApplicationContext(), Storage.KEY_SERVER_ID, 0)));
 
         if (closeBatch) {
 
             if (TextUtils.isEmpty(currentLDVNo)) {
-                Utility.showDialog(this, "Error Close Batch", "LKP not loaded");
+                // coba close LKP yg kmrn
+
+                Call<ResponseBody> cb = fastService.closeBatchYesterday(currentUser.getUser().get(0).getUserId());
+                cb.enqueue(new Callback<ResponseBody>() {
+                    @Override
+                    public void onResponse(Call<ResponseBody> call, Response<ResponseBody> response) {
+                        if (response.isSuccessful()) {
+
+                            try {
+                                Utility.showDialog(MainActivity.this, "Close Batch", response.body().string());
+                            } catch (IOException e) {
+                                e.printStackTrace();
+                            }
+                        } else {
+
+                            try {
+                                Utility.showDialog(MainActivity.this, "Close Batch", response.errorBody().string());
+                            } catch (IOException e) {
+                                e.printStackTrace();
+                            }
+                        }
+                    }
+
+                    @Override
+                    public void onFailure(Call<ResponseBody> call, Throwable t) {
+                        Toast.makeText(MainActivity.this, t.getMessage(), Toast.LENGTH_SHORT).show();
+                    }
+                });
+
+
+//                Utility.showDialog(this, "Error Close Batch", "LKP not loaded");
                 return;
             }
 
             this.realm.executeTransaction(new Realm.Transaction() {
                 @Override
                 public void execute(Realm realm) {
+
                     TrnLDVHeader trnLDVHeader = realm.where(TrnLDVHeader.class)
                             .equalTo("ldvNo", currentLDVNo)
+                            .equalTo("collCode", currentUser.getUser().get(0).getUserId())
 //                    .equalTo("createdBy", createdBy)
                             .findFirst();
 
@@ -1198,7 +1262,7 @@ public class MainActivity extends SyncActivity
 
         boolean anyDataToSync =
                 (closeBatch && syncLdvHeader.anyDataToSync())
-                || syncLdvDetails.anyDataToSync()
+                        || syncLdvDetails.anyDataToSync()
                         || syncLdvComments.anyDataToSync()
                         || syncRvb.anyDataToSync()
                         || syncRVColl.anyDataToSync()
@@ -1207,12 +1271,14 @@ public class MainActivity extends SyncActivity
                         || syncChangeAddr.anyDataToSync();
 
         if (!anyDataToSync) {
+
+            if (listener != null)
+                listener.onSkip();
+
             Toast.makeText(this, "No Data to sync", Toast.LENGTH_SHORT).show();
             return;
+        } else {
         }
-
-        ApiInterface fastService =
-                ServiceGenerator.createService(ApiInterface.class, Utility.buildUrl(Storage.getPreferenceAsInt(getApplicationContext(), Storage.KEY_SERVER_ID, 0)));
 
         final RequestSyncLKP req = new RequestSyncLKP();
 
@@ -1220,13 +1286,14 @@ public class MainActivity extends SyncActivity
             req.setLdvHeader(syncLdvHeader.getDataToSync());
         }
 
-//        req.setRvb(syncRvb.getDataToSync());
-//        req.setRvColl(syncRVColl.getDataToSync());
-//        req.setLdvDetails(syncLdvDetails.getDataToSync());
+        // TODO: you may test each of modules which data to sync. But dont forget to enable all on production
+        req.setRvb(syncRvb.getDataToSync());
+        req.setRvColl(syncRVColl.getDataToSync());
+        req.setLdvDetails(syncLdvDetails.getDataToSync());
         req.setLdvComments(syncLdvComments.getDataToSync());
-//        req.setBastbj(syncBastbj.getDataToSync());
-//        req.setRepo(syncRepo.getDataToSync());
-//        req.setChangeAddr(syncChangeAddr.getDataToSync());
+        req.setBastbj(syncBastbj.getDataToSync());
+        req.setRepo(syncRepo.getDataToSync());
+        req.setChangeAddr(syncChangeAddr.getDataToSync());
 
         Call<ResponseSync> call = fastService.syncLKP(req);
         call.enqueue(new Callback<ResponseSync>() {
@@ -1235,13 +1302,20 @@ public class MainActivity extends SyncActivity
                 final ResponseSync respSync = response.body();
 
                 if (respSync.getError() != null) {
+                    if (listener != null)
+                        listener.onSkip();
+
                     Toast.makeText(MainActivity.this, "Data Error (" + respSync.getError() + ")\n" + respSync.getError().getErrorDesc(), Toast.LENGTH_SHORT).show();
                     return;
                 }
 
                 // TODO: tackle successful sync result here
-                if (respSync.getData() != 1)
+                if (respSync.getData() != 1) {
+                    if (listener != null)
+                        listener.onSkip();
+
                     return;
+                }
 
                 if (closeBatch) {
                     if (req.getLdvHeader() != null && req.getLdvHeader().size() > 0) {
@@ -1271,7 +1345,7 @@ public class MainActivity extends SyncActivity
                     syncBastbj.syncData();
 
                 if (listener != null)
-                    listener.onSuccess();
+                    listener.onSuccess(null);
             }
 
             @Override
@@ -1281,7 +1355,7 @@ public class MainActivity extends SyncActivity
                 Toast.makeText(MainActivity.this, "Sync Failed\n" + t.getMessage(), Toast.LENGTH_LONG).show();
 
                 if (listener != null)
-                    listener.onFailure();
+                    listener.onFailure(t);
             }
         });
     }

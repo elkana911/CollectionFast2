@@ -1,17 +1,24 @@
 package id.co.ppu.collectionfast2.util;
 
 import android.content.Context;
+import android.database.Cursor;
+import android.net.Uri;
+import android.provider.MediaStore;
 import android.util.Log;
 
 import java.io.IOException;
+import java.util.Date;
 
 import id.co.ppu.collectionfast2.listener.OnPostRetrieveServerInfo;
-import id.co.ppu.collectionfast2.pojo.MstDelqReasons;
-import id.co.ppu.collectionfast2.pojo.MstLDVClassifications;
-import id.co.ppu.collectionfast2.pojo.MstLDVParameters;
-import id.co.ppu.collectionfast2.pojo.MstLDVStatus;
-import id.co.ppu.collectionfast2.pojo.MstOffices;
-import id.co.ppu.collectionfast2.pojo.MstZip;
+import id.co.ppu.collectionfast2.pojo.ServerInfo;
+import id.co.ppu.collectionfast2.pojo.UserConfig;
+import id.co.ppu.collectionfast2.pojo.master.MstDelqReasons;
+import id.co.ppu.collectionfast2.pojo.master.MstLDVClassifications;
+import id.co.ppu.collectionfast2.pojo.master.MstLDVParameters;
+import id.co.ppu.collectionfast2.pojo.master.MstLDVStatus;
+import id.co.ppu.collectionfast2.pojo.master.MstOffices;
+import id.co.ppu.collectionfast2.pojo.master.MstParam;
+import id.co.ppu.collectionfast2.pojo.master.MstZip;
 import id.co.ppu.collectionfast2.rest.ApiInterface;
 import id.co.ppu.collectionfast2.rest.ServiceGenerator;
 import id.co.ppu.collectionfast2.rest.request.RequestZipCode;
@@ -41,14 +48,42 @@ public class DataUtil {
                 .findFirst() != null;
     }
     */
-    public static void retrieveMasterFromServerBackground(Realm realm, Context ctx) throws Exception{
+
+    public static boolean isMasterDataDownloaded(Context ctx, Realm realm) {
+
+        ServerInfo serverInfo = realm.where(ServerInfo.class).findFirst();
+        UserConfig userConfig = realm.where(UserConfig.class).findFirst();
 
         long count = realm.where(MstDelqReasons.class).count();
 
+        if (serverInfo != null) {
+            if (count > 0 && Utility.isSameDay(new Date(), serverInfo.getServerDate())) {
+                return true;
+            }
+        }
+
+        // is master data complete  ?
+
         // skip master data
         if (count > 0) {
-            return;
+            return true;
         }
+
+        if (!NetUtil.isConnected(ctx))
+            return false;
+
+        try {
+            retrieveMasterFromServerBackground(realm, ctx);
+
+            return true;
+        } catch (Exception e) {
+            e.printStackTrace();
+
+            return false;
+        }
+    }
+
+    public static void retrieveMasterFromServerBackground(Realm realm, Context ctx) throws Exception {
 
         ApiInterface fastService =
                 ServiceGenerator.createService(ApiInterface.class, Utility.buildUrl(Storage.getPreferenceAsInt(ctx, Storage.KEY_SERVER_ID, 0)));
@@ -68,7 +103,7 @@ public class DataUtil {
                         // save db here, tp krn async disarankan buat instance baru
                         Realm _realm = Realm.getDefaultInstance();
                         // save db here
-                        try{
+                        try {
                             _realm.executeTransaction(new Realm.Transaction() {
                                 @Override
                                 public void execute(Realm bgRealm) {
@@ -78,6 +113,13 @@ public class DataUtil {
                                         bgRealm.delete(MstLDVClassifications.class);
                                     }
                                     bgRealm.copyToRealmOrUpdate(respGetMasterData.getData().getLdpClassifications());
+
+                                    // insert param
+                                    count = bgRealm.where(MstParam.class).count();
+                                    if (count > 0) {
+                                        bgRealm.delete(MstParam.class);
+                                    }
+                                    bgRealm.copyToRealmOrUpdate(respGetMasterData.getData().getParam());
 
                                     // insert ldp status
                                     count = bgRealm.where(MstLDVStatus.class).count();
@@ -110,7 +152,7 @@ public class DataUtil {
                                 }
                             });
 
-                        }finally {
+                        } finally {
                             if (_realm != null) {
                                 _realm.close();
                             }
@@ -135,7 +177,7 @@ public class DataUtil {
 
     }
 
-    public static void retrieveZipCodeFromServerBackground(Realm realm, Context ctx) throws Exception{
+    public static void retrieveZipCodeFromServerBackground(Realm realm, Context ctx) throws Exception {
 
         ApiInterface fastService =
                 ServiceGenerator.createService(ApiInterface.class, Utility.buildUrl(Storage.getPreferenceAsInt(ctx, Storage.KEY_SERVER_ID, 0)));
@@ -157,7 +199,7 @@ public class DataUtil {
                         // save db here, tp krn async disarankan buat instance baru
                         Realm _realm = Realm.getDefaultInstance();
 
-                        try{
+                        try {
                             _realm.executeTransaction(new Realm.Transaction() {
                                 @Override
                                 public void execute(Realm bgRealm) {
@@ -169,7 +211,7 @@ public class DataUtil {
                                     bgRealm.copyToRealmOrUpdate(respGetZipCode.getData());
                                 }
                             });
-                        }finally {
+                        } finally {
                             if (_realm != null) {
                                 _realm.close();
                             }
@@ -194,7 +236,7 @@ public class DataUtil {
 
     }
 
-    public static void retrieveServerInfo(final Realm realm, Context ctx, final OnPostRetrieveServerInfo listener) throws Exception{
+    public static void retrieveServerInfo(final Realm realm, Context ctx, final OnPostRetrieveServerInfo listener) throws Exception {
         ApiInterface fastService =
                 ServiceGenerator.createService(ApiInterface.class, Utility.buildUrl(Storage.getPreferenceAsInt(ctx, Storage.KEY_SERVER_ID, 0)));
 
@@ -232,5 +274,19 @@ public class DataUtil {
 
     }
 
+    public static String getRealPathFromUri(Context context, Uri contentUri) {
+        Cursor cursor = null;
+        try {
+            String[] proj = { MediaStore.Images.Media.DATA };
+            cursor = context.getContentResolver().query(contentUri, proj, null, null, null);
+            int column_index = cursor.getColumnIndexOrThrow(MediaStore.Images.Media.DATA);
+            cursor.moveToFirst();
+            return cursor.getString(column_index);
+        } finally {
+            if (cursor != null) {
+                cursor.close();
+            }
+        }
+    }
 
 }

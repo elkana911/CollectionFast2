@@ -10,7 +10,7 @@ import android.widget.TextView;
 
 import java.util.List;
 
-import id.co.ppu.collectionfast2.pojo.TrnRVB;
+import id.co.ppu.collectionfast2.pojo.trn.TrnRVB;
 
 /**
  * Created by Eric on 27-Sep-16.

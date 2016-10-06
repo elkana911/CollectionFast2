@@ -81,6 +81,9 @@
                             android:layout_width="match_parent"
                             android:layout_height="wrap_content"
                             android:hint="Angsuran Ke"
+                            android:clickable="false"
+                            android:focusable="false"
+                            android:focusableInTouchMode="false"
                             android:maxLines="1" />
                     </android.support.design.widget.TextInputLayout>
 
@@ -95,6 +98,9 @@
                             android:layout_height="wrap_content"
                             android:gravity="end"
                             android:hint="Angsuran"
+                            android:clickable="false"
+                            android:focusable="false"
+                            android:focusableInTouchMode="false"
                             android:maxLines="1" />
                     </android.support.design.widget.TextInputLayout>
 
@@ -127,11 +133,11 @@
                         android:layout_height="wrap_content">
 
                         <EditText
-                            android:id="@+id/etBiayaTagih"
+                            android:id="@+id/etDendaBerjalan"
                             android:layout_width="match_parent"
                             android:layout_height="wrap_content"
                             android:gravity="end"
-                            android:hint="Biaya Tagih"
+                            android:hint="Denda Berjalan"
                             android:maxLines="1"
                             android:inputType="number"
                             android:text="0" />
@@ -143,9 +149,25 @@
                     android:layout_height="wrap_content">
 
                     <EditText
+                        android:id="@+id/etBiayaTagih"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:gravity="end"
+                        android:hint="Biaya Tagih"
+                        android:maxLines="1"
+                        android:inputType="number"
+                        android:text="0" />
+                </android.support.design.widget.TextInputLayout>
+
+                <android.support.design.widget.TextInputLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content">
+
+                    <EditText
                         android:id="@+id/etPenerimaan"
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
+                        android:gravity="end"
                         android:hint="Penerimaan"
                         android:inputType="number"
                         android:maxLines="1" />

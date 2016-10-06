@@ -5,7 +5,7 @@ import com.google.gson.annotations.SerializedName;
 import java.io.Serializable;
 import java.util.List;
 
-import id.co.ppu.collectionfast2.pojo.MstZip;
+import id.co.ppu.collectionfast2.pojo.master.MstZip;
 
 /**
  * Created by Eric on 08-Sep-16.

@@ -19,13 +19,14 @@ import id.co.ppu.collectionfast2.R;
 import id.co.ppu.collectionfast2.component.BasicActivity;
 import id.co.ppu.collectionfast2.payment.entry.ActivityPaymentEntri;
 import id.co.ppu.collectionfast2.payment.receive.ActivityPaymentReceive;
-import id.co.ppu.collectionfast2.pojo.MstUser;
-import id.co.ppu.collectionfast2.pojo.TrnContractBuckets;
-import id.co.ppu.collectionfast2.pojo.TrnLDVComments;
-import id.co.ppu.collectionfast2.pojo.TrnLDVDetails;
-import id.co.ppu.collectionfast2.pojo.TrnRVColl;
-import id.co.ppu.collectionfast2.pojo.TrnRepo;
 import id.co.ppu.collectionfast2.pojo.UserData;
+import id.co.ppu.collectionfast2.pojo.master.MstUser;
+import id.co.ppu.collectionfast2.pojo.trn.TrnContractBuckets;
+import id.co.ppu.collectionfast2.pojo.trn.TrnLDVComments;
+import id.co.ppu.collectionfast2.pojo.trn.TrnLDVDetails;
+import id.co.ppu.collectionfast2.pojo.trn.TrnRVColl;
+import id.co.ppu.collectionfast2.pojo.trn.TrnRepo;
+import id.co.ppu.collectionfast2.util.DataUtil;
 import id.co.ppu.collectionfast2.util.Storage;
 import id.co.ppu.collectionfast2.util.Utility;
 import io.realm.RealmResults;
@@ -118,12 +119,16 @@ public class ActivityScrollingLKPDetails extends BasicActivity {
             return;
         }
 
-        contractNo = extras.getString(PARAM_CONTRACT_NO);
-        ldvNo = extras.getString(PARAM_LDV_NO);
-        collectorId = extras.getString(PARAM_COLLECTOR_ID);
-        workStatus = extras.getString(PARAM_WORKSTATUS);
-        isLKPInquiry = extras.getBoolean(PARAM_IS_LKP_INQUIRY);
-        lkpDate = new Date(extras.getLong(PARAM_LKP_DATE));
+        this.contractNo = extras.getString(PARAM_CONTRACT_NO);
+        this.ldvNo = extras.getString(PARAM_LDV_NO);
+        this.collectorId = extras.getString(PARAM_COLLECTOR_ID);
+        this.workStatus = extras.getString(PARAM_WORKSTATUS);
+        this.isLKPInquiry = extras.getBoolean(PARAM_IS_LKP_INQUIRY);
+        this.lkpDate = new Date(extras.getLong(PARAM_LKP_DATE));
+
+        if (this.collectorId == null || this.contractNo == null) {
+            throw new RuntimeException("collectorId cannot null");
+        }
 
         try {
             loadDetail(contractNo);
@@ -132,7 +137,9 @@ public class ActivityScrollingLKPDetails extends BasicActivity {
             finish();
         }
 
+        boolean b = DataUtil.isMasterDataDownloaded(this, this.realm);
         updateButtonsVisibility();
+
     }
 
     private void updateButtonsVisibility() {
@@ -346,6 +353,7 @@ public class ActivityScrollingLKPDetails extends BasicActivity {
         }
 
         i.putExtra(ActivityVisitResult.PARAM_CONTRACT_NO, etContractNo.getText().toString());
+        i.putExtra(ActivityVisitResult.PARAM_COLLECTOR_ID, this.collectorId);
         i.putExtra(ActivityVisitResult.PARAM_LDV_NO, this.ldvNo);
 
         startActivityForResult(i, REQUESTCODE_VISITRESULT);
@@ -377,7 +385,8 @@ public class ActivityScrollingLKPDetails extends BasicActivity {
         }
 
         Intent i = new Intent(this, ActivityRepoEntry.class);
-        i.putExtra(ActivityVisitResult.PARAM_CONTRACT_NO, etContractNo.getText().toString());
+        i.putExtra(ActivityRepoEntry.PARAM_CONTRACT_NO, etContractNo.getText().toString());
+        i.putExtra(ActivityRepoEntry.PARAM_COLLECTOR_ID, this.collectorId);
         startActivityForResult(i, REQUESTCODE_REPO);
     }
 
@@ -393,6 +402,7 @@ public class ActivityScrollingLKPDetails extends BasicActivity {
         Intent i = new Intent(this, ActivityPaymentHistory.class);
         i.putExtra(ActivityPaymentHistory.PARAM_CONTRACT_NO, etContractNo.getText().toString());
         i.putExtra(ActivityPaymentHistory.PARAM_IS_LKP_INQUIRY, isLKPInquiry);
+        i.putExtra(ActivityPaymentHistory.PARAM_LKP_DATE, this.lkpDate.getTime());
         startActivity(i);
     }
     @OnClick(R.id.btnChangeAddr)

@@ -2,6 +2,12 @@ package id.co.ppu.collectionfast2.pojo;
 
 import java.util.List;
 
+import id.co.ppu.collectionfast2.pojo.master.MstCities;
+import id.co.ppu.collectionfast2.pojo.master.MstKecamatan;
+import id.co.ppu.collectionfast2.pojo.master.MstKelurahan;
+import id.co.ppu.collectionfast2.pojo.master.MstProvinsi;
+import id.co.ppu.collectionfast2.pojo.master.MstZip;
+
 /**
  * Created by Eric on 25-Sep-16.
  */

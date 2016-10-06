@@ -28,7 +28,8 @@ import id.co.ppu.collectionfast2.component.DividerItemDecoration;
 import id.co.ppu.collectionfast2.component.RealmSearchView;
 import id.co.ppu.collectionfast2.pojo.DisplayTrnContractBuckets;
 import id.co.ppu.collectionfast2.pojo.ServerInfo;
-import id.co.ppu.collectionfast2.pojo.TrnContractBuckets;
+import id.co.ppu.collectionfast2.pojo.trn.TrnContractBuckets;
+import id.co.ppu.collectionfast2.pojo.trn.TrnLDVDetails;
 import id.co.ppu.collectionfast2.util.Utility;
 import io.realm.Realm;
 import io.realm.RealmResults;
@@ -51,10 +52,12 @@ import io.realm.RealmResults;
 public class FragmentActiveContractsList extends DialogFragment {
 
     public static final String ARG_PARAM1 = "collector.code";
+    public static final String PARAM_LDV_NO = "ldvNo";
 
     private OnActiveContractSelectedListener mListener;
 
-    private String collectorCode;
+    private String collectorCode = null;
+    private String ldvNo = null;
 
     private Realm realm;
     private ActiveContractListAdapter mAdapter;
@@ -74,6 +77,7 @@ public class FragmentActiveContractsList extends DialogFragment {
         super.onCreate(savedInstanceState);
         if (getArguments() != null) {
             this.collectorCode = getArguments().getString(ARG_PARAM1);
+            this.ldvNo = getArguments().getString(PARAM_LDV_NO);
         }
     }
 
@@ -118,7 +122,24 @@ public class FragmentActiveContractsList extends DialogFragment {
             public void execute(Realm realm) {
                 realm.delete(DisplayTrnContractBuckets.class);
 
+                RealmResults<TrnLDVDetails> _bufferLKP = realm.where(TrnLDVDetails.class)
+                        .equalTo("pk.ldvNo", ldvNo)
+                        .equalTo("createdBy", createdBy)
+                        .findAll();
+
                 for (TrnContractBuckets obj : _buffer) {
+
+                    boolean exist = false;
+                    for (TrnLDVDetails _dtl : _bufferLKP) {
+                        if (_dtl.getContractNo().equalsIgnoreCase(obj.getPk().getContractNo())) {
+                            exist = true;
+                            break;
+                        }
+                    }
+
+                    if (exist)
+                        continue;
+
                     DisplayTrnContractBuckets displayTrnContractBuckets = realm.createObject(DisplayTrnContractBuckets.class);
 
                     displayTrnContractBuckets.setContractNo(obj.getPk().getContractNo());

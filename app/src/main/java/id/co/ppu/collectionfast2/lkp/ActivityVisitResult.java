@@ -27,15 +27,15 @@ import butterknife.ButterKnife;
 import butterknife.OnClick;
 import id.co.ppu.collectionfast2.R;
 import id.co.ppu.collectionfast2.component.BasicActivity;
-import id.co.ppu.collectionfast2.pojo.MstDelqReasons;
-import id.co.ppu.collectionfast2.pojo.MstLDVClassifications;
-import id.co.ppu.collectionfast2.pojo.MstLDVParameters;
 import id.co.ppu.collectionfast2.pojo.ServerInfo;
-import id.co.ppu.collectionfast2.pojo.TrnLDVComments;
-import id.co.ppu.collectionfast2.pojo.TrnLDVCommentsPK;
-import id.co.ppu.collectionfast2.pojo.TrnLDVDetails;
 import id.co.ppu.collectionfast2.pojo.UserData;
-import id.co.ppu.collectionfast2.sync.pojo.SyncTrnLDVComments;
+import id.co.ppu.collectionfast2.pojo.master.MstDelqReasons;
+import id.co.ppu.collectionfast2.pojo.master.MstLDVClassifications;
+import id.co.ppu.collectionfast2.pojo.master.MstLDVParameters;
+import id.co.ppu.collectionfast2.pojo.sync.SyncTrnLDVComments;
+import id.co.ppu.collectionfast2.pojo.trn.TrnLDVComments;
+import id.co.ppu.collectionfast2.pojo.trn.TrnLDVCommentsPK;
+import id.co.ppu.collectionfast2.pojo.trn.TrnLDVDetails;
 import id.co.ppu.collectionfast2.util.Storage;
 import id.co.ppu.collectionfast2.util.Utility;
 import io.realm.Realm;
@@ -46,9 +46,11 @@ public class ActivityVisitResult extends BasicActivity {
     private DatePickerDialog.OnDateSetListener listenerDateTglJanjiBayar;
 
     public static final String PARAM_CONTRACT_NO = "customer.contractNo";
+    public static final String PARAM_COLLECTOR_ID = "collector.id";
     public static final String PARAM_LDV_NO = "ldvNo";
 
     private String contractNo = null;
+    private String collectorId = null;
     private String ldvNo = null;
 
     @BindView(R.id.activity_visit_result)
@@ -111,8 +113,13 @@ public class ActivityVisitResult extends BasicActivity {
 
         Bundle extras = getIntent().getExtras();
         if (extras != null) {
-            contractNo = extras.getString(PARAM_CONTRACT_NO);
-            ldvNo = extras.getString(PARAM_LDV_NO);
+            this.contractNo = extras.getString(PARAM_CONTRACT_NO);
+            this.collectorId = extras.getString(PARAM_COLLECTOR_ID);
+            this.ldvNo = extras.getString(PARAM_LDV_NO);
+        }
+
+        if (this.collectorId == null || this.contractNo == null) {
+            throw new RuntimeException("collectorId cannot null");
         }
 
         TrnLDVDetails dtl = this.realm.where(TrnLDVDetails.class).equalTo("contractNo", contractNo).findFirst();
@@ -242,7 +249,11 @@ public class ActivityVisitResult extends BasicActivity {
     public void onClickSave() {
 
         // reset errors
+        etPotensi.setError(null);
+        etTindakSelanjutnya.setError(null);
         etContractNo.setError(null);
+        etBertemuDengan.setError(null);
+        etKomentar.setError(null);
 
         // attempt save
         boolean cancel = false;
@@ -334,6 +345,7 @@ public class ActivityVisitResult extends BasicActivity {
                         .findFirst();
                 trnLDVDetails.setLdvFlag(lkpFlag);
                 trnLDVDetails.setWorkStatus("V");
+                trnLDVDetails.setFlagToEmrafin("N");
                 trnLDVDetails.setLastupdateBy(Utility.LAST_UPDATE_BY);
                 trnLDVDetails.setLastupdateTimestamp(new Date());
                 realm.copyToRealm(trnLDVDetails);
@@ -359,6 +371,7 @@ public class ActivityVisitResult extends BasicActivity {
                 trnLDVComments.setLkpComments(etKomentar.getText().toString());
                 trnLDVComments.setActionPlan(etTindakSelanjutnya.getText().toString());
                 trnLDVComments.setClassCode(classCode);
+                trnLDVComments.setFlagToEmrafin("N");
 
                 if (Utility.isNumeric(etJanjiBayar.getText().toString()))
                     trnLDVComments.setPlanPayAmount(Long.parseLong(etJanjiBayar.getText().toString()));
@@ -399,6 +412,7 @@ public class ActivityVisitResult extends BasicActivity {
     public void onClickUploadPic() {
         Intent i = new Intent(this, ActivityUploadPicture.class);
         i.putExtra(ActivityUploadPicture.PARAM_CONTRACT_NO, etContractNo.getText().toString());
+        i.putExtra(ActivityUploadPicture.PARAM_COLLECTOR_ID, this.collectorId);
         startActivity(i);
 
     }

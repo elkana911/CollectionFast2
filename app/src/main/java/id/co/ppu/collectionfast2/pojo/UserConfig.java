@@ -38,6 +38,9 @@ public class UserConfig extends RealmObject implements Serializable{
     @SerializedName("kodeRVCollRunningNumber")
     private Long kodeRVCollRunningNumber;
 
+    @SerializedName("kodeRVCollLastGenerated")
+    private Date kodeRVCollLastGenerated;
+
     @SerializedName("photoProfileUri")
     private String photoProfileUri;
 
@@ -113,6 +116,14 @@ public class UserConfig extends RealmObject implements Serializable{
         this.photoProfileUri = photoProfileUri;
     }
 
+    public Date getKodeRVCollLastGenerated() {
+        return kodeRVCollLastGenerated;
+    }
+
+    public void setKodeRVCollLastGenerated(Date kodeRVCollLastGenerated) {
+        this.kodeRVCollLastGenerated = kodeRVCollLastGenerated;
+    }
+
     @Override
     public String toString() {
         return "UserConfig{" +
@@ -124,6 +135,7 @@ public class UserConfig extends RealmObject implements Serializable{
                 ", lastLogin=" + lastLogin +
                 ", kodeTarikRunningNumber=" + kodeTarikRunningNumber +
                 ", kodeRVCollRunningNumber=" + kodeRVCollRunningNumber +
+                ", kodeRVCollLastGenerated=" + kodeRVCollLastGenerated +
                 ", photoProfileUri='" + photoProfileUri + '\'' +
                 '}';
     }

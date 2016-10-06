@@ -5,6 +5,7 @@ import com.google.gson.annotations.SerializedName;
 import java.io.Serializable;
 import java.util.Date;
 
+import id.co.ppu.collectionfast2.pojo.trn.TrnCollectAddr;
 import io.realm.RealmObject;
 
 /**
