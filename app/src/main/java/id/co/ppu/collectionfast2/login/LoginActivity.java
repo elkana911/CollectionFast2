@@ -293,6 +293,8 @@ public class LoginActivity extends AppCompatActivity {
 
             @Override
             public void onFailure(Call<ResponseServerInfo> call, Throwable t) {
+                Utility.disableScreen(LoginActivity.this, false);
+
                 if (listener != null) {
                     listener.onFailure(t);
                 }
@@ -416,6 +418,8 @@ public class LoginActivity extends AppCompatActivity {
 
                 @Override
                 public void onFailure(Throwable throwable) {
+                    Utility.disableScreen(LoginActivity.this, false);
+
                     if (mProgressDialog.isShowing())
                         mProgressDialog.dismiss();
 

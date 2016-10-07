@@ -20,6 +20,7 @@ import android.widget.CompoundButton;
 import android.widget.DatePicker;
 import android.widget.EditText;
 import android.widget.FrameLayout;
+import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.TextView;
 
@@ -111,6 +112,7 @@ public class FragmentLKPList extends Fragment {
             }
         }
     };
+    private LKPListAdapter mAdapter;
 
 
     public FragmentLKPList() {
@@ -125,9 +127,7 @@ public class FragmentLKPList extends Fragment {
         if (serverDate == null)
             serverDate = this.realm.where(ServerInfo.class).findFirst().getServerDate();
 
-        Date dateLKP = TextUtils.isEmpty(etTglLKP.getText().toString()) ? serverDate : Utility.convertStringToDate(etTglLKP.getText().toString(), Utility.DATE_DISPLAY_PATTERN);
-
-        loadLKP(collectorCode, dateLKP);
+        loadCurrentLKP();
 
     }
 
@@ -237,12 +237,44 @@ public class FragmentLKPList extends Fragment {
         search_view.getSearchBar().setText(query);
     }
 
+    public boolean isLKPSynced(TrnLDVDetails dtl) {
+        RealmResults<SyncTrnRVColl> trnSync = realm.where(SyncTrnRVColl.class)
+                .equalTo("ldvNo", dtl.getPk().getLdvNo())
+                .equalTo("contractNo", dtl.getContractNo())
+                .equalTo("createdBy", Utility.LAST_UPDATE_BY)
+                .isNotNull("syncedDate")
+                .findAll();
+
+        RealmResults<SyncTrnLDVComments> trnSyncLDVComments = realm.where(SyncTrnLDVComments.class)
+                .equalTo("ldvNo", dtl.getPk().getLdvNo())
+                .equalTo("contractNo", dtl.getContractNo())
+                .equalTo("createdBy", Utility.LAST_UPDATE_BY)
+                .isNotNull("syncedDate")
+                .findAll();
+
+        RealmResults<SyncTrnRepo> trnSyncRepo = realm.where(SyncTrnRepo.class)
+                .equalTo("contractNo", dtl.getPk().getLdvNo())
+                .equalTo("createdBy", Utility.LAST_UPDATE_BY)
+                .isNotNull("syncedDate")
+                .findAll();
+
+        return trnSync.size() > 0 || trnSyncLDVComments.size() > 0 || trnSyncRepo.size() > 0;
+
+    }
+
+    public String loadCurrentLKP() {
+        Date dateLKP = TextUtils.isEmpty(etTglLKP.getText().toString()) ? serverDate : Utility.convertStringToDate(etTglLKP.getText().toString(), Utility.DATE_DISPLAY_PATTERN);
+
+        return loadLKP(collectorCode, dateLKP);
+    }
     /**
      *
      * @param collectorCode sementara ignore, karena gadget hanya dipakai 1 orang/collector saja
      *                      @return ldvNo
      */
     public String loadLKP(final String collectorCode, Date dateLKP) {
+
+        search_view.setAdapter(null);
 
         final String createdBy = "JOB" + Utility.convertDateToString(dateLKP, "yyyyMMdd");
 
@@ -288,10 +320,15 @@ public class FragmentLKPList extends Fragment {
                     displayTrnLDVDetails.setCustName(obj.getCustName());
                     displayTrnLDVDetails.setCustNo(obj.getCustNo());
                     displayTrnLDVDetails.setCreatedBy(obj.getCreatedBy());
-                    displayTrnLDVDetails.setWorkStatus(obj.getWorkStatus());
                     displayTrnLDVDetails.setFlagDone(obj.getFlagDone());
-
                     displayTrnLDVDetails.setAddress(obj.getAddress());
+
+                    if (isLKPSynced(obj)) {
+                        displayTrnLDVDetails.setWorkStatus("SYNC");
+                    }else{
+                        displayTrnLDVDetails.setWorkStatus(obj.getWorkStatus());
+                    }
+
 
                     realm.copyToRealm(displayTrnLDVDetails);
                 }
@@ -316,11 +353,18 @@ public class FragmentLKPList extends Fragment {
 //            fab.hide();
         }
 
-        LKPListAdapter mAdapter = new LKPListAdapter(
+        mAdapter = new LKPListAdapter(
                 getContext(),
                 this.realm,
                 "custName"
         );
+//        LKPListAdapter mAdapter = new LKPListAdapter(
+//                getContext(),
+//                this.realm,
+//                "custName"
+//        );
+
+//        mAdapter.notifyDataSetChanged();
 
         search_view.setAdapter(mAdapter);
         search_view.getRealmRecyclerView().invalidate();
@@ -337,6 +381,12 @@ public class FragmentLKPList extends Fragment {
 //            return;
 
         search_view.setVisibility(View.INVISIBLE);
+    }
+
+    public void refresh() {
+        mAdapter.notifyDataSetChanged();
+//        search_view.getRealmRecyclerView().invalidate();
+//        search_view.invalidate();
     }
 
     public String getCurrentLKP() {
@@ -379,26 +429,35 @@ public class FragmentLKPList extends Fragment {
                 }
             });
 
+            dataViewHolder.ivCancelSync.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View view) {
+                    if (getContext() instanceof OnLKPListListener) {
+                        ((OnLKPListListener)getContext()).onLKPCancelSync(detail);
+                    }
+
+                }
+            });
+
+
             TextView v = dataViewHolder.tvNoLKP;
             v.setText("Contract No: " + detail.getContractNo());
 
             dataViewHolder.llRowLKP.setBackgroundColor(Color.WHITE);    // must
+            dataViewHolder.ivCancelSync.setVisibility(View.GONE);
 
             if (detail.getWorkStatus().equalsIgnoreCase("V")) {
                 dataViewHolder.llRowLKP.setBackgroundColor(Color.YELLOW);
+                dataViewHolder.ivCancelSync.setVisibility(View.VISIBLE);
+
             } else if (detail.getWorkStatus().equalsIgnoreCase("W")) {
                 dataViewHolder.llRowLKP.setBackgroundColor(Color.BLUE);
+            } else if (detail.getWorkStatus().equalsIgnoreCase("SYNC")) {
+                dataViewHolder.llRowLKP.setBackgroundColor(Color.GREEN);
+                dataViewHolder.ivCancelSync.setVisibility(View.GONE);
             }
 
             /*
-            RealmResults<TrnSync> trnSync = realm.where(TrnSync.class)
-                                            .equalTo("tblName", TrnLDVDetails.class.getSimpleName())
-                                            .equalTo("key1", detail.getLdvNo())
-                                            .equalTo("key2", detail.getContractNo())
-                                            .equalTo("createdBy", detail.getCreatedBy())
-                                            .isNotNull("syncedDate")
-                                            .findAll();
-                                            */
             RealmResults<SyncTrnRVColl> trnSync = realm.where(SyncTrnRVColl.class)
                     .equalTo("ldvNo", detail.getLdvNo())
                     .equalTo("contractNo", detail.getContractNo())
@@ -414,7 +473,6 @@ public class FragmentLKPList extends Fragment {
                     .findAll();
 
             RealmResults<SyncTrnRepo> trnSyncRepo = realm.where(SyncTrnRepo.class)
-//                    .equalTo("repoNo", detail.getLdvNo())
                     .equalTo("contractNo", detail.getLdvNo())
                     .equalTo("createdBy", Utility.LAST_UPDATE_BY)
                     .isNotNull("syncedDate")
@@ -422,7 +480,11 @@ public class FragmentLKPList extends Fragment {
 
             if (trnSync.size() > 0 || trnSyncLDVComments.size() > 0 || trnSyncRepo.size() > 0) {
                 dataViewHolder.llRowLKP.setBackgroundColor(Color.GREEN);
+                dataViewHolder.ivCancelSync.setVisibility(View.GONE);
             }
+
+
+            */
 
             TextView custName = dataViewHolder.tvCustName;
             if (Build.VERSION.SDK_INT >= 24) {
@@ -444,6 +506,9 @@ public class FragmentLKPList extends Fragment {
 
             @BindView(R.id.llRowLKP)
             LinearLayout llRowLKP;
+
+            @BindView(R.id.ivCancelSync)
+            ImageView ivCancelSync;
 
             @BindView(R.id.tvCustName)
             TextView tvCustName;

@@ -1,38 +1,54 @@
 <?xml version="1.0" encoding="utf-8"?>
 <FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
-    android:layout_height="wrap_content">
+    android:layout_height="wrap_content"
+    xmlns:app="http://schemas.android.com/apk/res-auto">
 
     <LinearLayout
-        android:id="@+id/llRowLKP"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:orientation="vertical"
-        android:paddingBottom="16dp"
-        android:paddingLeft="12dp"
-        android:paddingTop="8dp">
-
-        <TextView
-            android:id="@+id/tvCustName"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
+        android:orientation="horizontal">
+        <ImageView
+            android:id="@+id/ivCancelSync"
+            android:layout_width="50dp"
+            android:layout_height="match_parent"
+            android:visibility="visible"
             android:layout_gravity="center_vertical"
-            android:textAppearance="@android:style/TextAppearance.DeviceDefault.Medium"
-            android:text="ELKANA" />
+            android:scaleType="fitCenter"
+            app:srcCompat="@drawable/ic_sync_disabled_black_24dp" />
 
-        <TextView
-            android:id="@+id/tvNoLKP"
-            android:layout_width="wrap_content"
+        <LinearLayout
+            android:id="@+id/llRowLKP"
+            android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_gravity="center_vertical"
-            android:textAppearance="@android:style/TextAppearance.DeviceDefault.Small"
-            android:text="ELKANA" />
+            android:orientation="vertical"
+            android:paddingBottom="16dp"
+            android:paddingLeft="12dp"
+            android:paddingTop="8dp">
 
-        <TextView
-            android:id="@+id/tvKelKec"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_gravity="center_vertical"
-            android:text="ELKANA" />
+            <TextView
+                android:id="@+id/tvCustName"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center_vertical"
+                android:textAppearance="@android:style/TextAppearance.DeviceDefault.Medium"
+                android:text="ELKANA" />
+
+            <TextView
+                android:id="@+id/tvNoLKP"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center_vertical"
+                android:textAppearance="@android:style/TextAppearance.DeviceDefault.Small"
+                android:text="ELKANA" />
+
+            <TextView
+                android:id="@+id/tvKelKec"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center_vertical"
+                android:text="ELKANA" />
+        </LinearLayout>
+
     </LinearLayout>
 </FrameLayout>

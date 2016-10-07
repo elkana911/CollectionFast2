@@ -91,11 +91,13 @@ import id.co.ppu.collectionfast2.sync.SyncRVColl;
 import id.co.ppu.collectionfast2.sync.SyncRepo;
 import id.co.ppu.collectionfast2.sync.SyncRvb;
 import id.co.ppu.collectionfast2.util.DataUtil;
+import id.co.ppu.collectionfast2.util.NetUtil;
 import id.co.ppu.collectionfast2.util.Storage;
 import id.co.ppu.collectionfast2.util.Utility;
 import io.realm.Realm;
 import io.realm.RealmAsyncTask;
 import io.realm.RealmObject;
+import io.realm.RealmResults;
 import okhttp3.ResponseBody;
 import retrofit2.Call;
 import retrofit2.Callback;
@@ -140,7 +142,7 @@ public class MainActivity extends SyncActivity
         Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
 //        toolbar.setBackgroundColor(); bar.setBackgroundDrawable(new ColorDrawable(Color.parseColor("#0000ff")));
 //        toolbar.setBackgroundColor(Color.parseColor("#28166f"));
-        toolbar.setBackgroundColor(ContextCompat.getColor(this, R.color.colorPrimaryDark));
+        toolbar.setBackgroundColor(ContextCompat.getColor(this, R.color.colorRadanaBlue));
         setSupportActionBar(toolbar);
 
         ActionBarDrawerToggle toggle = new ActionBarDrawerToggle(
@@ -431,16 +433,20 @@ public class MainActivity extends SyncActivity
 
             return false;
         } else if (id == R.id.nav_closeBatch) {
+            drawer.closeDrawers();
+
             closeBatch();
 
             return false;
         } else if (id == R.id.nav_manualSync) {
 
+            drawer.closeDrawers();
+
             syncTransaction(false, new OnSuccessError() {
                 @Override
                 public void onSuccess(String msg) {
                     Date serverDate = realm.where(ServerInfo.class).findFirst().getServerDate();
-                    retrieveLKPFromServer(currentUser.getUser().get(0).getUserId(), serverDate, true, null);
+//                    retrieveLKPFromServer(currentUser.getUser().get(0).getUserId(), serverDate, true, null);
 
                 }
 
@@ -552,7 +558,6 @@ public class MainActivity extends SyncActivity
             @Override
             public void onClick(DialogInterface dialog, int which) {
                 // TODO: clear cookie
-                resetData();
 
                 while (getSupportFragmentManager().getBackStackEntryCount() > 0) {
                     getSupportFragmentManager().popBackStackImmediate();
@@ -977,7 +982,7 @@ public class MainActivity extends SyncActivity
         mProgressDialog.show();
 
         // must sync first
-        syncTransaction(false, new OnSuccessError(){
+        syncTransaction(false, new OnSuccessError() {
             @Override
             public void onSuccess(String msg) {
                 getLKP(mProgressDialog, collectorCode, lkpDate, createdBy, listener);
@@ -1021,6 +1026,107 @@ public class MainActivity extends SyncActivity
             startActivity(i);
         }
 //        Toast.makeText(MainActivity.this, "You select " + detail.getCustName(), Toast.LENGTH_SHORT).show();
+    }
+
+    @Override
+    public void onLKPCancelSync(DisplayTrnLDVDetails detail) {
+        if (detail instanceof RealmObject) {
+            final DisplayTrnLDVDetails dtl = this.realm.copyFromRealm(detail);
+
+            new AlertDialog.Builder(this)
+                    .setIcon(android.R.drawable.ic_dialog_alert)
+                    .setTitle("Cancel Sync")
+                    .setMessage("Are you sure to cancel " + dtl.getCustName() + " ?\n[" + dtl.getAddress().getCollKel() + "/" + dtl.getAddress().getCollKec() + "]")
+                    .setPositiveButton("Yes", new DialogInterface.OnClickListener() {
+                        @Override
+                        public void onClick(DialogInterface dialog, int which) {
+                            cancelSync(dtl.getLdvNo(), dtl.getContractNo());
+                        }
+
+                    })
+                    .setNegativeButton("No", null)
+                    .show();
+        }
+    }
+
+    private void cancelSync(final String ldvNo, final String contractNo) {
+
+        this.realm.executeTransactionAsync(new Realm.Transaction() {
+            @Override
+            public void execute(Realm realm) {
+                boolean b = realm.where(TrnLDVComments.class)
+                        .equalTo("pk.ldvNo", ldvNo)
+                        .equalTo("contractNo", contractNo)
+                        .equalTo("createdBy", Utility.LAST_UPDATE_BY)
+                        .findAll().deleteAllFromRealm();
+
+                // sebelum hapus rvcoll, restore dulu rvb
+                TrnRVColl trnRVColl = realm.where(TrnRVColl.class)
+                        .equalTo("contractNo", contractNo)
+                        .equalTo("createdBy", Utility.LAST_UPDATE_BY)
+                        .findFirst();
+                if (trnRVColl != null) {
+                    String lastRvbNo = trnRVColl.getPk().getRbvNo();
+
+                    // reopen voucher
+                    TrnRVB trnRVB = realm.where(TrnRVB.class)
+                            .equalTo("rvbNo", lastRvbNo)
+                            .findFirst();
+                    trnRVB.setRvbStatus("OP");
+                    trnRVB.setLastupdateBy(Utility.LAST_UPDATE_BY);
+                    trnRVB.setLastupdateTimestamp(new Date());
+                    realm.copyToRealmOrUpdate(trnRVB);
+
+                    trnRVColl.deleteFromRealm();
+                }
+
+                b = realm.where(TrnRepo.class)
+                        .equalTo("contractNo", contractNo)
+                        .equalTo("createdBy", Utility.LAST_UPDATE_BY)
+                        .findAll().deleteAllFromRealm();
+
+                RealmResults<TrnLDVDetails> trnLDVDetailses = realm.where(TrnLDVDetails.class)
+                        .equalTo("pk.ldvNo", ldvNo)
+                        .equalTo("contractNo", contractNo)
+                        .equalTo("lastupdateBy", Utility.LAST_UPDATE_BY)
+//                        .equalTo("createdBy", createdBy)
+                        .findAll();
+
+                if (trnLDVDetailses.size() > 1) {
+                    throw new RuntimeException("Duplicate data LDVDetail found");
+                }
+                TrnLDVDetails trnLDVDetails = realm.copyFromRealm(trnLDVDetailses.get(0));
+                b = trnLDVDetailses.deleteAllFromRealm();
+
+                // TODO: confirm pak yoce mengenai NEW
+                trnLDVDetails.setLdvFlag("NEW");
+                trnLDVDetails.setWorkStatus("A");
+                trnLDVDetails.setFlagToEmrafin("N");
+                trnLDVDetails.setLastupdateBy(Utility.LAST_UPDATE_BY);
+                trnLDVDetails.setLastupdateTimestamp(new Date());
+                realm.copyToRealm(trnLDVDetails);
+
+                // update the display
+                DisplayTrnLDVDetails displayTrnLDVDetails = realm.where(DisplayTrnLDVDetails.class)
+                        .equalTo("ldvNo", ldvNo)
+                        .equalTo("contractNo", contractNo)
+                        .findFirst();
+                displayTrnLDVDetails.setWorkStatus("A");
+                realm.copyToRealm(displayTrnLDVDetails);
+
+            }
+        }, new Realm.Transaction.OnSuccess() {
+            @Override
+            public void onSuccess() {
+                final FragmentLKPList frag = (FragmentLKPList)
+                        getSupportFragmentManager().findFragmentById(R.id.content_frame);
+
+                if (frag != null) {
+                    frag.refresh();
+                }
+
+            }
+        });
     }
 
     @Override
@@ -1136,12 +1242,17 @@ public class MainActivity extends SyncActivity
 
     protected void closeBatch() {
 
+        if (!NetUtil.isConnected(this)) {
+            Snackbar.make(coordinatorLayout, getString(R.string.error_online_required), Snackbar.LENGTH_LONG).show();
+            return;
+        }
+
         AlertDialog.Builder alertDialogBuilder = new AlertDialog.Builder(this);
         alertDialogBuilder.setTitle("Close Batch");
 
 //        Date serverDate = (Date) Storage.getObjPreference(getApplicationContext(), Storage.KEY_SERVER_DATE, Date.class);
 
-        alertDialogBuilder.setMessage("This action will close All today's transactions. \nAre you sure?");
+        alertDialogBuilder.setMessage("Are you sure?");
         //null should be your on click listener
         alertDialogBuilder.setPositiveButton("Yes", new DialogInterface.OnClickListener() {
 
@@ -1190,6 +1301,11 @@ public class MainActivity extends SyncActivity
     }
 
     protected void syncTransaction(final boolean closeBatch, final OnSuccessError listener) {
+
+        if (!NetUtil.isConnected(this)) {
+            Snackbar.make(coordinatorLayout, getString(R.string.error_online_required), Snackbar.LENGTH_LONG).show();
+            return;
+        }
 
         ApiInterface fastService =
                 ServiceGenerator.createService(ApiInterface.class, Utility.buildUrl(Storage.getPreferenceAsInt(getApplicationContext(), Storage.KEY_SERVER_ID, 0)));
@@ -1295,6 +1411,8 @@ public class MainActivity extends SyncActivity
         req.setRepo(syncRepo.getDataToSync());
         req.setChangeAddr(syncChangeAddr.getDataToSync());
 
+        Snackbar.make(coordinatorLayout, "Sync started", Snackbar.LENGTH_SHORT).show();
+
         Call<ResponseSync> call = fastService.syncLKP(req);
         call.enqueue(new Callback<ResponseSync>() {
             @Override
@@ -1344,18 +1462,29 @@ public class MainActivity extends SyncActivity
                 if (req.getBastbj() != null && req.getBastbj().size() > 0)
                     syncBastbj.syncData();
 
+                final FragmentLKPList frag = (FragmentLKPList)
+                        getSupportFragmentManager().findFragmentById(R.id.content_frame);
+
+                if (frag != null) {
+                    frag.loadCurrentLKP();
+//                    frag.refresh();
+                }
+
                 if (listener != null)
                     listener.onSuccess(null);
+
+                Snackbar.make(coordinatorLayout, "Sync success", Snackbar.LENGTH_SHORT).show();
             }
 
             @Override
             public void onFailure(Call<ResponseSync> call, Throwable t) {
                 Log.e("eric.onFailure", t.getMessage(), t);
 
-                Toast.makeText(MainActivity.this, "Sync Failed\n" + t.getMessage(), Toast.LENGTH_LONG).show();
+//                Toast.makeText(MainActivity.this, "Sync Failed\n" + t.getMessage(), Toast.LENGTH_LONG).show();
 
                 if (listener != null)
                     listener.onFailure(t);
+                Snackbar.make(coordinatorLayout, "Sync Failed\n" + t.getMessage(), Snackbar.LENGTH_LONG).show();
             }
         });
     }

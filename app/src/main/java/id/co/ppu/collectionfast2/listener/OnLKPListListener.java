@@ -10,6 +10,7 @@ import id.co.ppu.collectionfast2.pojo.DisplayTrnLDVDetails;
 
 public interface OnLKPListListener {
     void onLKPSelected(DisplayTrnLDVDetails detail);
+    void onLKPCancelSync(DisplayTrnLDVDetails detail);
 
     void onLKPInquiry(String collectorCode, Date lkpDate);
 }

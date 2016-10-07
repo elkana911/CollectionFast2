@@ -29,14 +29,13 @@ import okhttp3.HttpUrl;
 
 public class Utility {
 
-    public final static String DATE_EXPIRED_YYYYMMDD = "20161008";
+    public final static String DATE_EXPIRED_YYYYMMDD = "20161014";
+    public final static String[][] servers = {{"local-server", "192.168.43.90", "8090"}
+            ,{"fast-mobile", "cmobile.radanafinance.co.id", "7001"}
+    };
 
     public final static String DATE_DISPLAY_PATTERN = "dd MMM yyyy";
     public final static String DATE_DATA_PATTERN = "yyyyMMdd";
-
-    public final static String[][] servers = {{"local-server", "192.168.1.106", "8090"}
-                                            ,{"fast-mobile", "cmobile.radanafinance.co.id", "7001"}
-    };
 
     public final static String COLUMN_CREATED_BY = "createdBy";
 
@@ -297,7 +296,7 @@ public class Utility {
         if (TextUtils.isEmpty(value))
             return false;
 
-        if (value.startsWith("0"))
+        if (value.length() > 1 && value.startsWith("0"))
             return false;
 
         if (!isNumeric(value))

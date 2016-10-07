@@ -252,8 +252,10 @@ public class ActivityPaymentReceive extends BasicActivity {
             cancel = true;
         } else {
             long biayaTagihValue = Long.parseLong(biayaTagih);
-            if (biayaTagihValue < dtl.getCollectionFee().longValue()) {
-                etBiayaTagih.setText("Should not under " + String.valueOf(dtl.getCollectionFee()));
+
+            long collFee = dtl.getCollectionFee() == null ? 0 : dtl.getCollectionFee().longValue();
+            if (biayaTagihValue < collFee) {
+                etBiayaTagih.setText("Should not under " + String.valueOf(collFee));
                 focusView = etBiayaTagih;
                 cancel = true;
             }
@@ -421,6 +423,10 @@ public class ActivityPaymentReceive extends BasicActivity {
                 trnRVColl.setFlagDone("Y");
                 trnRVColl.setTransDate(serverDate);
                 trnRVColl.setProcessDate(serverDate);
+
+                trnRVColl.setPenaltyAc(Long.parseLong(denda));
+                trnRVColl.setDaysIntrAc(Long.parseLong(dendaBerjalan));
+                trnRVColl.setCollFeeAc(Long.parseLong(biayaTagih));
 
                 trnRVColl.setLdvNo(trnLDVDetails.getPk().getLdvNo());
 

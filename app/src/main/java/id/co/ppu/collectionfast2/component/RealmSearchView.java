@@ -99,7 +99,9 @@ public class RealmSearchView extends LinearLayout {
     public void setAdapter(RealmSearchAdapter adapter) {
         this.adapter = adapter;
         this.realmRecyclerView.setAdapter(adapter);
-        this.adapter.filter("");
+        if (adapter != null){
+            this.adapter.filter("");
+        }
     }
 
     public String getSearchBarText() {
