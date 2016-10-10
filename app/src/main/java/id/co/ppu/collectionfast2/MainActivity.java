@@ -57,6 +57,7 @@ import id.co.ppu.collectionfast2.pojo.DisplayTrnLDVDetails;
 import id.co.ppu.collectionfast2.pojo.ServerInfo;
 import id.co.ppu.collectionfast2.pojo.UserConfig;
 import id.co.ppu.collectionfast2.pojo.UserData;
+import id.co.ppu.collectionfast2.pojo.sync.SyncFileUpload;
 import id.co.ppu.collectionfast2.pojo.sync.SyncTrnBastbj;
 import id.co.ppu.collectionfast2.pojo.sync.SyncTrnLDVComments;
 import id.co.ppu.collectionfast2.pojo.sync.SyncTrnLDVDetails;
@@ -70,6 +71,7 @@ import id.co.ppu.collectionfast2.pojo.trn.TrnContractBuckets;
 import id.co.ppu.collectionfast2.pojo.trn.TrnLDVComments;
 import id.co.ppu.collectionfast2.pojo.trn.TrnLDVDetails;
 import id.co.ppu.collectionfast2.pojo.trn.TrnLDVHeader;
+import id.co.ppu.collectionfast2.pojo.trn.TrnPhoto;
 import id.co.ppu.collectionfast2.pojo.trn.TrnRVB;
 import id.co.ppu.collectionfast2.pojo.trn.TrnRVColl;
 import id.co.ppu.collectionfast2.pojo.trn.TrnRepo;
@@ -469,6 +471,13 @@ public class MainActivity extends SyncActivity
             syncTransaction(false, new OnSuccessError() {
                 @Override
                 public void onSuccess(String msg) {
+                    final FragmentLKPList frag = (FragmentLKPList)
+                            getSupportFragmentManager().findFragmentById(R.id.content_frame);
+
+                    if (frag != null) {
+                        frag.refresh();
+                    }
+
                     Date serverDate = realm.where(ServerInfo.class).findFirst().getServerDate();
 //                    retrieveLKPFromServer(currentUser.getUser().get(0).getUserId(), serverDate, true, null);
 
@@ -889,6 +898,39 @@ public class MainActivity extends SyncActivity
                                             bgRealm.copyToRealm(sync);
                                         }
                                     }
+
+                                    // photo
+                                    d = bgRealm.where(TrnPhoto.class).findAll().deleteAllFromRealm();
+                                    bgRealm.copyToRealmOrUpdate(respGetLKP.getData().getPhoto());
+
+                                    for (TrnPhoto _obj : respGetLKP.getData().getPhoto()) {
+                                        if (_obj == null)
+                                            continue;
+
+                                        if (_obj.getCreatedTimestamp() != null) {
+                                            SyncFileUpload  sync = bgRealm.where(SyncFileUpload.class)
+//                                                    .equalTo("ldvNo", _obj.getLdvNo())
+                                                    .equalTo("contractNo", _obj.getContractNo())
+                                                    .equalTo("collectorId", _obj.getCollCode())
+                                                    .equalTo("pictureId", "picture1")
+
+                                                    .findFirst();
+
+                                            if (sync == null) {
+                                                sync = new SyncFileUpload();
+                                            }
+//                                            sync.setLdvNo(_obj.getLdvNo());
+                                            sync.setContractNo(_obj.getContractNo());
+                                            sync.setCollectorId(_obj.getLastupdateBy());
+                                            sync.setPictureId(_obj.getLastupdateBy());
+                                            sync.setSyncedDate(_obj.getCreatedTimestamp());
+
+
+                                            bgRealm.copyToRealm(sync);
+                                        }
+                                    }
+
+
                                 }
                             }, new Realm.Transaction.OnSuccess() {
                                 @Override

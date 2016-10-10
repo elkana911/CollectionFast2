@@ -19,6 +19,7 @@ import android.view.ViewGroup;
 import android.view.inputmethod.EditorInfo;
 import android.widget.ArrayAdapter;
 import android.widget.AutoCompleteTextView;
+import android.widget.CheckBox;
 import android.widget.EditText;
 import android.widget.ImageView;
 import android.widget.Spinner;
@@ -66,6 +67,9 @@ public class LoginActivity extends AppCompatActivity {
     // UI references.
     @BindView(R.id.username)
     AutoCompleteTextView mUserNameView;
+
+    @BindView(R.id.cbRememberPwd)
+    CheckBox cbRememberPwd;
 
     @BindView(R.id.password)
     EditText mPasswordView;
@@ -157,6 +161,25 @@ public class LoginActivity extends AppCompatActivity {
 
         boolean b = DataUtil.isMasterDataDownloaded(this, this.realm);
 
+
+        String lastUsername = Storage.getPreference(getApplicationContext(), "lastUser");
+        mUserNameView.setText(lastUsername);
+
+        String password_rem = Storage.getPreference(getApplicationContext(), "password_rem");
+        if (!TextUtils.isEmpty(password_rem)) {
+            if (password_rem.equalsIgnoreCase("true")) {
+                cbRememberPwd.setChecked(true);
+
+                // load user & password
+                String lastPwd = Storage.getPreference(getApplicationContext(), "lastPwd");
+
+                if (mUserNameView.getText().toString().equalsIgnoreCase(lastUsername)) {
+                    mPasswordView.setText(lastPwd);
+                }else
+                    mPasswordView.setText(null);
+            }
+        }
+
         // ATTENTION: This was auto-generated to implement the App Indexing API.
         // See https://g.co/AppIndexing/AndroidStudio for more information.
         client = new GoogleApiClient.Builder(this).addApi(AppIndex.API).build();
@@ -171,6 +194,7 @@ public class LoginActivity extends AppCompatActivity {
 
     @OnClick(R.id.sign_in_button)
     public void onSignInClick() {
+
         try {
             attemptLogin();
         } catch (Exception e) {
@@ -371,7 +395,7 @@ public class LoginActivity extends AppCompatActivity {
                                             Storage.saveObjPreference(getApplicationContext(), Storage.KEY_USER_LAST_MORNING, new Date());
 
                                             // final check
-                                            startActivity(new Intent(getApplicationContext(), MainActivity.class));
+                                            startMainActivity();
                                         }
                                     }, new Realm.Transaction.OnError() {
                                         @Override
@@ -431,6 +455,19 @@ public class LoginActivity extends AppCompatActivity {
 
     }
 
+    private void startMainActivity(){
+        final String username = mUserNameView.getText().toString();
+        Storage.savePreference(getApplicationContext(), "lastUser",  username);
+        if (cbRememberPwd.isChecked()) {
+            final String password = mPasswordView.getText().toString();
+
+            String cbRememberPwds = String.valueOf(cbRememberPwd.isChecked());
+            Storage.savePreference(getApplicationContext(), "password_rem", cbRememberPwds);
+            Storage.savePreference(getApplicationContext(), "lastPwd", password);
+
+        }
+        startActivity(new Intent(getApplicationContext(), MainActivity.class));
+    }
     private void loginOffline(String username, String password) {
 
         final ProgressDialog mProgressDialog = new ProgressDialog(this);
@@ -446,7 +483,9 @@ public class LoginActivity extends AppCompatActivity {
         if (usr == null || !pwd.equals(password)) {
             Utility.showDialog(this, "Invalid Login", getString(R.string.error_invalid_login));
         } else {
-            startActivity(new Intent(getApplicationContext(), MainActivity.class));
+
+            startMainActivity();
+
         }
 
         if (mProgressDialog.isShowing())

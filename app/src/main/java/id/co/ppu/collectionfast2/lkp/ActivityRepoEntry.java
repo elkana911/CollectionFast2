@@ -130,6 +130,10 @@ public class ActivityRepoEntry extends BasicActivity {
             etKomentar.setText(trnRepo.getRepoComments());
             etKodeTarik.setText(trnRepo.getRepoNo());
             spBASTK.setText(trnRepo.getBastbjNo());
+
+            radioSTNK.setChecked(trnRepo.getStnkStatus() != null && trnRepo.getStnkStatus().equals("Y"));
+            radioNoSTNK.setChecked(trnRepo.getStnkStatus() == null || !trnRepo.getStnkStatus().equals("Y"));
+
         } else {
 
             // generate running number
@@ -152,8 +156,8 @@ public class ActivityRepoEntry extends BasicActivity {
         StringBuffer sb = new StringBuffer();
 
         sb.append(officeCode).append(Utility.convertDateToString(serverDate, "MM"))
-        .append(Utility.convertDateToString(serverDate, "dd"))
-        .append(Utility.leftPad(runningNumber, 3));
+                .append(Utility.convertDateToString(serverDate, "dd"))
+                .append(Utility.leftPad(runningNumber, 3));
 
         return sb.toString();
     }
@@ -169,6 +173,9 @@ public class ActivityRepoEntry extends BasicActivity {
         final String contractNo = etContractNo.getText().toString();
         final String bastbjNo = spBASTK.getText().toString();
         final String repoNo = etKodeTarik.getText().toString();
+        final String komentar = etKomentar.getText().toString();
+
+        final boolean useStnk = radioSTNK.isChecked();
 
         if (TextUtils.isEmpty(contractNo)) {
             etContractNo.setError(getString(R.string.error_field_required));
@@ -179,6 +186,12 @@ public class ActivityRepoEntry extends BasicActivity {
         if (TextUtils.isEmpty(repoNo)) {
             etKodeTarik.setError(getString(R.string.error_field_required));
             focusView = etKodeTarik;
+            cancel = true;
+        }
+
+        if (TextUtils.isEmpty(komentar)) {
+            etKomentar.setError(getString(R.string.error_field_required));
+            focusView = etKomentar;
             cancel = true;
         }
 
@@ -220,15 +233,23 @@ public class ActivityRepoEntry extends BasicActivity {
                     realm.copyToRealmOrUpdate(trnBastbj);
                 }
 
-                TrnLDVDetails trnLDVDetails = realm.where(TrnLDVDetails.class).equalTo("contractNo", contractNo).findFirst();
-                if (trnLDVDetails != null) {
-                    trnLDVDetails.setLdvFlag("PCU");
-                    trnLDVDetails.setWorkStatus("V");
-                    trnLDVDetails.setFlagToEmrafin("N");
-                    trnLDVDetails.setLastupdateBy(Utility.LAST_UPDATE_BY);
-                    trnLDVDetails.setLastupdateTimestamp(new Date());
-                    realm.copyToRealmOrUpdate(trnLDVDetails);
+                RealmResults<TrnLDVDetails> trnLDVDetailses = realm.where(TrnLDVDetails.class)
+                        .equalTo("pk.ldvNo", ldvNo)
+                        .equalTo("contractNo", contractNo)
+                        .equalTo("createdBy", createdBy)
+                        .findAll();
+                if (trnLDVDetailses.size() > 1) {
+                    throw new RuntimeException("Duplicate data LDVDetail found");
                 }
+                TrnLDVDetails trnLDVDetails = realm.copyFromRealm(trnLDVDetailses.get(0));
+                boolean b = trnLDVDetailses.deleteAllFromRealm();
+
+                trnLDVDetails.setLdvFlag("PCU");
+                trnLDVDetails.setWorkStatus("V");
+                trnLDVDetails.setFlagToEmrafin("N");
+                trnLDVDetails.setLastupdateBy(Utility.LAST_UPDATE_BY);
+                trnLDVDetails.setLastupdateTimestamp(new Date());
+                realm.copyToRealm(trnLDVDetails);
 
                 // just in case re-entry need to query
                 TrnRepo trnRepo = realm.where(TrnRepo.class)
@@ -244,12 +265,16 @@ public class ActivityRepoEntry extends BasicActivity {
                     userConfig.setKodeTarikRunningNumber(runningNumber);
                     realm.copyToRealmOrUpdate(userConfig);
 
+                    trnRepo.setCreatedBy(Utility.LAST_UPDATE_BY);
+                    trnRepo.setCreatedTimestamp(new Date());
+
                 }
 
                 trnRepo.setContractNo(contractNo);
                 trnRepo.setRepoNo(repoNo);
                 trnRepo.setBastbjNo(trnBastbj.getBastbjNo());
                 trnRepo.setFlagToEmrafin("N");
+                trnRepo.setStnkStatus(useStnk ? "Y" : "N");
                 trnRepo.setRepoComments(etKomentar.getText().toString());
                 trnRepo.setLastupdateBy(Utility.LAST_UPDATE_BY);
                 trnRepo.setLastupdateTimestamp(new Date());
@@ -315,7 +340,7 @@ public class ActivityRepoEntry extends BasicActivity {
         public View getView(int position, View convertView, ViewGroup parent) {
             TextView tv = new TextView(this.ctx);
 //            TextView tv = (TextView) convertView.findViewById(R.id.nama);
-            tv.setPadding(10,10,10,10);
+            tv.setPadding(10, 10, 10, 10);
             tv.setTextColor(Color.BLACK);
             tv.setText(list.get(position).getBastbjNo());
             tv.setTextSize(TypedValue.COMPLEX_UNIT_DIP, 16);
@@ -326,7 +351,7 @@ public class ActivityRepoEntry extends BasicActivity {
         @Override
         public View getDropDownView(int position, View convertView, ViewGroup parent) {
             TextView label = new TextView(this.ctx);
-            label.setPadding(10,10,10,10);
+            label.setPadding(10, 10, 10, 10);
             label.setText(list.get(position).getBastbjNo());
             label.setTextSize(TypedValue.COMPLEX_UNIT_DIP, 16);
 

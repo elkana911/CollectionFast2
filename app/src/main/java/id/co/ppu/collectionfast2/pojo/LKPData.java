@@ -9,6 +9,7 @@ import id.co.ppu.collectionfast2.pojo.trn.TrnContractBuckets;
 import id.co.ppu.collectionfast2.pojo.trn.TrnLDVComments;
 import id.co.ppu.collectionfast2.pojo.trn.TrnLDVDetails;
 import id.co.ppu.collectionfast2.pojo.trn.TrnLDVHeader;
+import id.co.ppu.collectionfast2.pojo.trn.TrnPhoto;
 import id.co.ppu.collectionfast2.pojo.trn.TrnRVB;
 import id.co.ppu.collectionfast2.pojo.trn.TrnRVColl;
 import id.co.ppu.collectionfast2.pojo.trn.TrnRepo;
@@ -26,6 +27,7 @@ public class LKPData{
     private List<TrnRVB> rvb;
     private List<TrnBastbj> bastbj;
     private List<TrnVehicleInfo> vehicleInfo;
+    private List<TrnPhoto> photo;
     private List<HistInstallments> historyInstallments;
 
     private List<TrnRVColl> rvColl;
@@ -118,5 +120,13 @@ public class LKPData{
 
     public void setLdvComments(List<TrnLDVComments> ldvComments) {
         this.ldvComments = ldvComments;
+    }
+
+    public List<TrnPhoto> getPhoto() {
+        return photo;
+    }
+
+    public void setPhoto(List<TrnPhoto> photo) {
+        this.photo = photo;
     }
 }

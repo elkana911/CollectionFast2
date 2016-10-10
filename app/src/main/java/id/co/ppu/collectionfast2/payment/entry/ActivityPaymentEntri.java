@@ -323,7 +323,8 @@ public class ActivityPaymentEntri extends BasicActivity implements FragmentActiv
         }
 
         etPlatform.setText(contractBuckets.getPlatform());
-        etDanaSosial.setText(Utility.convertLongToRupiah(contractBuckets.getDanaSosial()));
+        long danaSosial = contractBuckets.getDanaSosial() == null ? 0 : contractBuckets.getDanaSosial().longValue();
+        etDanaSosial.setText(Utility.convertLongToRupiah(danaSosial));
 
         etAngsuranKe.setText(String.valueOf(contractBuckets.getOvdInstNo()));
 

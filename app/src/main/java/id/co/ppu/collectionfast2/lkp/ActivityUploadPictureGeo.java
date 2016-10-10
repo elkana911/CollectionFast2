@@ -277,9 +277,9 @@ public class ActivityUploadPictureGeo extends BasicActivity {
             fixUrl += '/';
         }
 
-        String link = fixUrl;
+        String link = fixUrl + "fast/photo/" + this.collectorId + "/" + this.officeCode + "/" + this.ldvNo + "/" + this.contractNo + "/" + pictureId;
 
-        return link + "/fast/photo/" + this.collectorId + "/" + this.officeCode + "/" + this.ldvNo + "/" + this.contractNo + "/" + pictureId;
+        return link;
 
 //        return "https://www.google.com/images/branding/googlelogo/2x/googlelogo_color_272x92dp.png";
     }
@@ -677,6 +677,8 @@ public class ActivityUploadPictureGeo extends BasicActivity {
                     trnPhoto1.setLatitude("0");
                     trnPhoto1.setLongitude("0");
                     trnPhoto1.setPhotoId("picture1");
+                    trnPhoto1.setLastupdateBy(Utility.LAST_UPDATE_BY);
+                    trnPhoto1.setLastupdateTimestamp(new Date());
                     realm.copyToRealmOrUpdate(trnPhoto1);
 
                 } else if (finalTargetImage == ivUpload2) {
@@ -700,6 +702,8 @@ public class ActivityUploadPictureGeo extends BasicActivity {
                     trnPhoto2.setLatitude("0");
                     trnPhoto2.setLongitude("0");
                     trnPhoto2.setPhotoId("picture2");
+                    trnPhoto2.setLastupdateBy(Utility.LAST_UPDATE_BY);
+                    trnPhoto2.setLastupdateTimestamp(new Date());
                     realm.copyToRealmOrUpdate(trnPhoto2);
 
                 } else if (finalTargetImage == ivUpload3) {
@@ -723,6 +727,8 @@ public class ActivityUploadPictureGeo extends BasicActivity {
                     trnPhoto3.setLatitude("0");
                     trnPhoto3.setLongitude("0");
                     trnPhoto3.setPhotoId("picture3");
+                    trnPhoto3.setLastupdateBy(Utility.LAST_UPDATE_BY);
+                    trnPhoto3.setLastupdateTimestamp(new Date());
                     realm.copyToRealmOrUpdate(trnPhoto3);
 
                 } else if (finalTargetImage == ivUpload4) {
@@ -746,6 +752,8 @@ public class ActivityUploadPictureGeo extends BasicActivity {
                     trnPhoto4.setLatitude("0");
                     trnPhoto4.setLongitude("0");
                     trnPhoto4.setPhotoId("picture4");
+                    trnPhoto4.setLastupdateBy(Utility.LAST_UPDATE_BY);
+                    trnPhoto4.setLastupdateTimestamp(new Date());
                     realm.copyToRealmOrUpdate(trnPhoto4);
 
                 }

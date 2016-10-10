@@ -29,11 +29,16 @@ import okhttp3.HttpUrl;
 
 public class Utility {
 
-    public final static String DATE_EXPIRED_YYYYMMDD = "20161014";
-    public final static String[][] servers = {{"local-server", "10.100.100.77", "8090"}
-            ,{"fast-mobile", "cmobile.radanafinance.co.id", "7001"}
+    public final static String DATE_EXPIRED_YYYYMMDD = "20161012";
+    public final static String[][] servers = {
+            {"local-server", "10.100.100.77", "8090"},
+            {"fast-mobile", "cmobile.radanafinance.co.id", "7001"}
     };
 
+//    public final static String[][] servers = {{"local-server", "10.100.100.77", "8090"}
+//            ,{"fast-mobile", "cmobile.radanafinance.co.id", "7001"}
+//    };
+//
     public final static String DATE_DISPLAY_PATTERN = "dd MMM yyyy";
     public final static String DATE_DATA_PATTERN = "yyyyMMdd";
 

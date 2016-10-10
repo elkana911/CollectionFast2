@@ -285,6 +285,21 @@ public class ActivityVisitResult extends BasicActivity {
                     etTglJanjiBayar.setError(getString(R.string.error_field_required));
                     focusView = etTglJanjiBayar;
                     cancel = true;
+                } else {
+                    // ga boleh backdate
+                    Date datePTP = Utility.convertStringToDate(etTglJanjiBayar.getText().toString(), "d / M / yyyy");
+
+                    if (datePTP == null) {
+                        etTglJanjiBayar.setError(getString(R.string.error_invalid_date));
+                        focusView = etTglJanjiBayar;
+                        cancel = true;
+                    } else {
+                        if (datePTP.before(new Date())) {
+                            etTglJanjiBayar.setError(getString(R.string.error_ptp_date));
+                            focusView = etTglJanjiBayar;
+                            cancel = true;
+                        }
+                    }
                 }
         }
 

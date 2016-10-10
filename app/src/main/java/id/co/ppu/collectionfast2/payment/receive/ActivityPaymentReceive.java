@@ -163,7 +163,8 @@ public class ActivityPaymentReceive extends BasicActivity {
             etDendaBerjalan.setText(String.valueOf(dtl.getDaysIntrAmbc()));
             etBiayaTagih.setText(dtl.getCollectionFee() == null ? "0" : String.valueOf(dtl.getCollectionFee()));
             etPlatform.setText(dtl.getPlatform());
-            etDanaSosial.setText(Utility.convertLongToRupiah(dtl.getDanaSosial()));
+            long danaSosial = dtl.getDanaSosial() == null ? 0 : dtl.getDanaSosial().longValue();
+            etDanaSosial.setText(Utility.convertLongToRupiah(danaSosial));
 
         }
         spNoRVB.setAdapter(adapterRVB);
@@ -361,6 +362,7 @@ public class ActivityPaymentReceive extends BasicActivity {
 
                 trnLDVDetails.setLdvFlag("COL");
                 trnLDVDetails.setWorkStatus("V");
+                trnLDVDetails.setFlagToEmrafin("N");
                 trnLDVDetails.setLastupdateBy(Utility.LAST_UPDATE_BY);
                 trnLDVDetails.setLastupdateTimestamp(new Date());
                 realm.copyToRealm(trnLDVDetails);

@@ -187,6 +187,7 @@ public class ActivityScrollingLKPDetails extends BasicActivity {
         if (trnLDVCommentses.size() > 0) {
             btnPaymentReceive.setVisibility(View.GONE);
             btnRepoEntry.setVisibility(View.GONE);
+            btnVisitResultEntry.setVisibility(View.VISIBLE);
             return;
         }
 
@@ -198,6 +199,7 @@ public class ActivityScrollingLKPDetails extends BasicActivity {
         if (trnRVColls.size() > 0) {
             btnRepoEntry.setVisibility(View.GONE);
             btnVisitResultEntry.setVisibility(View.GONE);
+            btnPaymentReceive.setVisibility(View.VISIBLE);
             return;
         }
 
@@ -209,6 +211,7 @@ public class ActivityScrollingLKPDetails extends BasicActivity {
         if (trnRepos.size() > 0) {
             btnPaymentReceive.setVisibility(View.GONE);
             btnVisitResultEntry.setVisibility(View.GONE);
+            btnRepoEntry.setVisibility(View.VISIBLE);
             return;
         }
 
