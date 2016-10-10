@@ -78,6 +78,9 @@
             android:name=".lkp.ActivityUploadPicture"
             android:screenOrientation="portrait" />
         <activity
+            android:name=".lkp.ActivityUploadPictureGeo"
+            android:screenOrientation="portrait" />
+        <activity
             android:name=".lkp.ActivityVisitResultRPC"
             android:screenOrientation="portrait" />
         <activity

@@ -425,7 +425,31 @@ public class MainActivity extends SyncActivity
 
             return false;
         } else if (id == R.id.nav_reset) {
-            resetData();
+            AlertDialog.Builder alertDialogBuilder = new AlertDialog.Builder(this);
+            alertDialogBuilder.setTitle("Reset Data");
+            alertDialogBuilder.setMessage("This will Logout Application.\nAre you sure?");
+            //null should be your on click listener
+            alertDialogBuilder.setPositiveButton("Yes", new DialogInterface.OnClickListener() {
+
+                @Override
+                public void onClick(DialogInterface dialog, int which) {
+
+                    resetData();
+                    backToLoginScreen();
+
+                }
+            });
+
+            alertDialogBuilder.setNegativeButton("No", new DialogInterface.OnClickListener() {
+
+                @Override
+                public void onClick(DialogInterface dialog, int which) {
+                    dialog.dismiss();
+                }
+            });
+
+            alertDialogBuilder.show();
+
 
             return false;
         } else if (id == R.id.nav_logout) {
@@ -547,6 +571,24 @@ public class MainActivity extends SyncActivity
 
     }
 
+    private void backToLoginScreen() {
+        while (getSupportFragmentManager().getBackStackEntryCount() > 0) {
+            getSupportFragmentManager().popBackStackImmediate();
+        }
+
+        Intent intent = new Intent(MainActivity.this, LoginActivity.class);
+        intent.putExtra("finish", true); // if you are checking for this in your other Activities
+        if (Build.VERSION.SDK_INT >= 11) {
+            intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_CLEAR_TASK);
+        } else {
+            intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TOP);
+        }
+        startActivity(intent);
+//                moveTaskToBack(true);
+        finish();
+
+    }
+
     private void logout() {
 
         AlertDialog.Builder alertDialogBuilder = new AlertDialog.Builder(this);
@@ -558,21 +600,7 @@ public class MainActivity extends SyncActivity
             @Override
             public void onClick(DialogInterface dialog, int which) {
                 // TODO: clear cookie
-
-                while (getSupportFragmentManager().getBackStackEntryCount() > 0) {
-                    getSupportFragmentManager().popBackStackImmediate();
-                }
-
-                Intent intent = new Intent(MainActivity.this, LoginActivity.class);
-                intent.putExtra("finish", true); // if you are checking for this in your other Activities
-                if (Build.VERSION.SDK_INT >= 11) {
-                    intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_CLEAR_TASK);
-                } else {
-                    intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TOP);
-                }
-                startActivity(intent);
-//                moveTaskToBack(true);
-                finish();
+                backToLoginScreen();
             }
         });
 
@@ -588,51 +616,16 @@ public class MainActivity extends SyncActivity
     }
 
     private void resetData() {
-
-        AlertDialog.Builder alertDialogBuilder = new AlertDialog.Builder(this);
-        alertDialogBuilder.setTitle("Reset Data");
-        alertDialogBuilder.setMessage("This will Logout Application.\nAre you sure?");
-        //null should be your on click listener
-        alertDialogBuilder.setPositiveButton("Yes", new DialogInterface.OnClickListener() {
-
-            @Override
-            public void onClick(DialogInterface dialog, int which) {
-                // TODO: clear cookie
-                if (realm != null) {
-                    realm.executeTransaction(new Realm.Transaction() {
-                        @Override
-                        public void execute(Realm realm) {
-                            realm.deleteAll();
-                        }
-                    });
+        // TODO: clear cookie
+        if (realm != null) {
+            realm.executeTransaction(new Realm.Transaction() {
+                @Override
+                public void execute(Realm realm) {
+                    realm.deleteAll();
                 }
+            });
+        }
 
-                while (getSupportFragmentManager().getBackStackEntryCount() > 0) {
-                    getSupportFragmentManager().popBackStackImmediate();
-                }
-
-                Intent intent = new Intent(MainActivity.this, LoginActivity.class);
-                intent.putExtra("finish", true); // if you are checking for this in your other Activities
-                if (Build.VERSION.SDK_INT >= 11) {
-                    intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_CLEAR_TASK);
-                } else {
-                    intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TOP);
-                }
-                startActivity(intent);
-//                moveTaskToBack(true);
-                finish();
-            }
-        });
-
-        alertDialogBuilder.setNegativeButton("No", new DialogInterface.OnClickListener() {
-
-            @Override
-            public void onClick(DialogInterface dialog, int which) {
-                dialog.dismiss();
-            }
-        });
-
-        alertDialogBuilder.show();
     }
 
     @OnClick(R.id.fab)
@@ -1131,6 +1124,7 @@ public class MainActivity extends SyncActivity
 
     @Override
     public void onLKPInquiry(final String collectorCode, final Date lkpDate) {
+
         final FragmentLKPList frag = (FragmentLKPList)
                 getSupportFragmentManager().findFragmentById(R.id.content_frame);
 
@@ -1313,19 +1307,40 @@ public class MainActivity extends SyncActivity
         if (closeBatch) {
 
             if (TextUtils.isEmpty(currentLDVNo)) {
-                // coba close LKP yg kmrn
 
-                Call<ResponseBody> cb = fastService.closeBatchYesterday(currentUser.getUser().get(0).getUserId());
+                // coba close LKP yg kmrn
+                final ProgressDialog mProgressDialog = new ProgressDialog(this);
+                mProgressDialog.setIndeterminate(true);
+                mProgressDialog.setCancelable(false);
+                mProgressDialog.setMessage("Please wait...");
+                mProgressDialog.show();
+
+                Call<ResponseBody> cb = fastService.closeBatchYesterday(currentUser.getUserId());
                 cb.enqueue(new Callback<ResponseBody>() {
                     @Override
                     public void onResponse(Call<ResponseBody> call, Response<ResponseBody> response) {
+
+                        if (mProgressDialog.isShowing()) {
+                            mProgressDialog.dismiss();
+                        }
                         if (response.isSuccessful()) {
 
-                            try {
-                                Utility.showDialog(MainActivity.this, "Close Batch", response.body().string());
-                            } catch (IOException e) {
-                                e.printStackTrace();
-                            }
+                            resetData();
+
+
+                            AlertDialog.Builder alertDialogBuilder = new AlertDialog.Builder(MainActivity.this);
+                            alertDialogBuilder.setTitle("");
+                            alertDialogBuilder.setMessage("Close Batch success. Please relogin.");
+                            alertDialogBuilder.setPositiveButton("Ok", new DialogInterface.OnClickListener() {
+
+                                @Override
+                                public void onClick(DialogInterface dialog, int which) {
+
+                                }
+                            });
+
+                            alertDialogBuilder.show();
+
                         } else {
 
                             try {
@@ -1338,6 +1353,9 @@ public class MainActivity extends SyncActivity
 
                     @Override
                     public void onFailure(Call<ResponseBody> call, Throwable t) {
+                        if (mProgressDialog.isShowing()) {
+                            mProgressDialog.dismiss();
+                        }
                         Toast.makeText(MainActivity.this, t.getMessage(), Toast.LENGTH_SHORT).show();
                     }
                 });

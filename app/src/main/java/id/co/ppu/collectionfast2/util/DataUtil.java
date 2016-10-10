@@ -19,6 +19,10 @@ import id.co.ppu.collectionfast2.pojo.master.MstLDVStatus;
 import id.co.ppu.collectionfast2.pojo.master.MstOffices;
 import id.co.ppu.collectionfast2.pojo.master.MstParam;
 import id.co.ppu.collectionfast2.pojo.master.MstZip;
+import id.co.ppu.collectionfast2.pojo.sync.SyncTrnLDVComments;
+import id.co.ppu.collectionfast2.pojo.sync.SyncTrnRVColl;
+import id.co.ppu.collectionfast2.pojo.sync.SyncTrnRepo;
+import id.co.ppu.collectionfast2.pojo.trn.TrnLDVDetails;
 import id.co.ppu.collectionfast2.rest.ApiInterface;
 import id.co.ppu.collectionfast2.rest.ServiceGenerator;
 import id.co.ppu.collectionfast2.rest.request.RequestZipCode;
@@ -26,6 +30,7 @@ import id.co.ppu.collectionfast2.rest.response.ResponseGetMasterData;
 import id.co.ppu.collectionfast2.rest.response.ResponseGetZipCode;
 import id.co.ppu.collectionfast2.rest.response.ResponseServerInfo;
 import io.realm.Realm;
+import io.realm.RealmResults;
 import okhttp3.ResponseBody;
 import retrofit2.Call;
 import retrofit2.Callback;
@@ -287,6 +292,31 @@ public class DataUtil {
                 cursor.close();
             }
         }
+    }
+
+    public static boolean isLKPSynced(Realm realm, TrnLDVDetails dtl) {
+        RealmResults<SyncTrnRVColl> trnSync = realm.where(SyncTrnRVColl.class)
+                .equalTo("ldvNo", dtl.getPk().getLdvNo())
+                .equalTo("contractNo", dtl.getContractNo())
+                .equalTo("createdBy", Utility.LAST_UPDATE_BY)
+                .isNotNull("syncedDate")
+                .findAll();
+
+        RealmResults<SyncTrnLDVComments> trnSyncLDVComments = realm.where(SyncTrnLDVComments.class)
+                .equalTo("ldvNo", dtl.getPk().getLdvNo())
+                .equalTo("contractNo", dtl.getContractNo())
+                .equalTo("createdBy", Utility.LAST_UPDATE_BY)
+                .isNotNull("syncedDate")
+                .findAll();
+
+        RealmResults<SyncTrnRepo> trnSyncRepo = realm.where(SyncTrnRepo.class)
+                .equalTo("contractNo", dtl.getPk().getLdvNo())
+                .equalTo("createdBy", Utility.LAST_UPDATE_BY)
+                .isNotNull("syncedDate")
+                .findAll();
+
+        return trnSync.size() > 0 || trnSyncLDVComments.size() > 0 || trnSyncRepo.size() > 0;
+
     }
 
 }

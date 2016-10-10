@@ -15,7 +15,7 @@ public class SyncFileUpload extends RealmObject implements Serializable {
     @PrimaryKey
     private String contractNo;
     private String collectorId;
-    private String fileId;
+    private String pictureId;
 
     private Date syncedDate;
 
@@ -35,12 +35,12 @@ public class SyncFileUpload extends RealmObject implements Serializable {
         this.collectorId = collectorId;
     }
 
-    public String getFileId() {
-        return fileId;
+    public String getPictureId() {
+        return pictureId;
     }
 
-    public void setFileId(String fileId) {
-        this.fileId = fileId;
+    public void setPictureId(String pictureId) {
+        this.pictureId = pictureId;
     }
 
     public Date getSyncedDate() {

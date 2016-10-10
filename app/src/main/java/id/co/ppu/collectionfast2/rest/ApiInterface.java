@@ -72,12 +72,18 @@ public interface ApiInterface {
     @POST("/fast/upload_photo")
     Call<ResponseBody> uploadPhoto(@Part("office_code") RequestBody officeCode
             , @Part("collector_id") RequestBody collectorId
+            , @Part("ldv_no") RequestBody ldvNo
             , @Part("contract_no") RequestBody contractNo
             , @Part("photo_id") RequestBody photoId
             , @Part("latitude") RequestBody latitude
             , @Part("longitude") RequestBody longitude
             , @Part MultipartBody.Part file);
+
 //    Call<ResponseBody> uploadPhoto(@Part("contract_no") String contractNo, @Part("photo_id") String photoId, @Part MultipartBody.Part file);
+    @Multipart
+    @POST("/fast/upload_photo")
+    Call<ResponseBody> upload_Photo(@Part("trn_photo") RequestBody trnPhoto
+            , @Part MultipartBody.Part file);
 
 
 }

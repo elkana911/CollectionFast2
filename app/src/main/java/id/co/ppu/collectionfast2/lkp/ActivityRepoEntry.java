@@ -40,8 +40,12 @@ public class ActivityRepoEntry extends BasicActivity {
 
     public static final String PARAM_CONTRACT_NO = "customer.contractNo";
     public static final String PARAM_COLLECTOR_ID = "collector.id";
+    public static final String PARAM_LDV_NO = "ldvNo";
+
     private String contractNo = null;
     private String collectorId = null;
+    private String ldvNo = null;
+
     private Date serverDate;
 
     @BindView(R.id.activity_repo_entri)
@@ -82,10 +86,11 @@ public class ActivityRepoEntry extends BasicActivity {
         if (extras != null) {
             contractNo = extras.getString(PARAM_CONTRACT_NO);
             collectorId = extras.getString(PARAM_COLLECTOR_ID);
+            this.ldvNo = extras.getString(PARAM_LDV_NO);
         }
 
-        if (this.collectorId == null || this.contractNo == null) {
-            throw new RuntimeException("collectorId cannot null");
+        if (this.collectorId == null || this.contractNo == null || this.ldvNo == null) {
+            throw new RuntimeException("collectorId / ldvNo / contractNo cannot null");
         }
 
         TrnLDVDetails dtl = this.realm.where(TrnLDVDetails.class).equalTo("contractNo", contractNo).findFirst();
@@ -270,6 +275,7 @@ public class ActivityRepoEntry extends BasicActivity {
         Intent i = new Intent(this, ActivityUploadPicture.class);
         i.putExtra(ActivityUploadPicture.PARAM_CONTRACT_NO, etContractNo.getText().toString());
         i.putExtra(ActivityUploadPicture.PARAM_COLLECTOR_ID, this.collectorId);
+        i.putExtra(ActivityUploadPicture.PARAM_LDV_NO, this.ldvNo);
 
         startActivity(i);
 

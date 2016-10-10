@@ -10,15 +10,19 @@ import android.os.Bundle;
 import android.provider.MediaStore;
 import android.support.graphics.drawable.VectorDrawableCompat;
 import android.support.v7.app.AlertDialog;
+import android.util.Base64;
 import android.util.Log;
 import android.view.View;
 import android.widget.ImageView;
 import android.widget.Toast;
 
+import com.jakewharton.picasso.OkHttp3Downloader;
 import com.squareup.picasso.Picasso;
 
 import java.io.IOException;
 import java.util.Date;
+import java.util.UUID;
+import java.util.concurrent.TimeUnit;
 
 import butterknife.BindView;
 import butterknife.ButterKnife;
@@ -26,14 +30,19 @@ import butterknife.OnClick;
 import id.co.ppu.collectionfast2.R;
 import id.co.ppu.collectionfast2.component.BasicActivity;
 import id.co.ppu.collectionfast2.listener.OnSuccessError;
-import id.co.ppu.collectionfast2.pojo.UploadPicture;
 import id.co.ppu.collectionfast2.pojo.UserData;
 import id.co.ppu.collectionfast2.pojo.sync.SyncFileUpload;
 import id.co.ppu.collectionfast2.pojo.trn.TrnLDVDetails;
+import id.co.ppu.collectionfast2.pojo.trn.TrnPhoto;
+import id.co.ppu.collectionfast2.rest.ServiceGenerator;
 import id.co.ppu.collectionfast2.util.NetUtil;
 import id.co.ppu.collectionfast2.util.Storage;
 import id.co.ppu.collectionfast2.util.Utility;
 import io.realm.Realm;
+import okhttp3.HttpUrl;
+import okhttp3.Interceptor;
+import okhttp3.OkHttpClient;
+import okhttp3.Request;
 import okhttp3.ResponseBody;
 import retrofit2.Call;
 import retrofit2.Callback;
@@ -42,17 +51,22 @@ import retrofit2.Response;
 public class ActivityUploadPictureGeo extends BasicActivity {
     public static final String PARAM_CONTRACT_NO = "customer.contractNo";
     public static final String PARAM_COLLECTOR_ID = "collector.id";
+    public static final String PARAM_LDV_NO = "ldvNo";
 
     private static final String TAG = "upload";
 
     private String contractNo = null;
     private String collectorId = null;
+    private String ldvNo = null;
+    private String officeCode = null;
 
     private ProgressDialog mProgressDialog = null;
 
     private final CharSequence[] menuItems = {
             "From Camera", "From Gallery", "Delete Photo"
     };
+
+    private static OkHttpClient.Builder httpClient = new OkHttpClient.Builder();
 
     @BindView(R.id.ivUpload1)
     ImageView ivUpload1;
@@ -78,6 +92,32 @@ public class ActivityUploadPictureGeo extends BasicActivity {
     @BindView(R.id.ivUploadCheck4)
     ImageView ivUploadCheck4;
 
+    private void setupHttpClient() {
+        String username = ServiceGenerator.SERVER_USERNAME;
+        String password = ServiceGenerator.SERVER_PWD;
+        String credentials = username + ":" + password;
+        final String basic =
+                "Basic " + Base64.encodeToString(credentials.getBytes(), Base64.NO_WRAP);
+
+        httpClient.addInterceptor(new Interceptor() {
+            @Override
+            public okhttp3.Response intercept(Chain chain) throws IOException {
+                Request original = chain.request();
+
+                Request.Builder requestBuilder = original.newBuilder()
+                        .header("Authorization", basic)
+//                        .header("Accept", "application/json")
+                        .method(original.method(), original.body());
+
+                Request request = requestBuilder.build();
+                okhttp3.Response resp = chain.proceed(request);
+
+                return resp;
+            }
+        });
+
+    }
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -89,13 +129,20 @@ public class ActivityUploadPictureGeo extends BasicActivity {
         if (extras != null) {
             this.contractNo = extras.getString(PARAM_CONTRACT_NO);
             this.collectorId = extras.getString(PARAM_COLLECTOR_ID);
+            this.ldvNo = extras.getString(PARAM_LDV_NO);
         }
 
-        if (this.collectorId == null || this.contractNo == null) {
-            throw new RuntimeException("collectorId / contractNo cannot null");
+        if (this.collectorId == null || this.contractNo == null || this.ldvNo == null) {
+            throw new RuntimeException("collectorId / ldvNo / contractNo cannot null");
         }
 
-        TrnLDVDetails dtl = this.realm.where(TrnLDVDetails.class).equalTo("contractNo", contractNo).findFirst();
+        UserData userData = (UserData) Storage.getObjPreference(getApplicationContext(), Storage.KEY_USER, UserData.class);
+
+        this.officeCode = userData.getBranchId();
+
+        TrnLDVDetails dtl = this.realm.where(TrnLDVDetails.class)
+                .equalTo("contractNo", contractNo)
+                .findFirst();
 
         if (getSupportActionBar() != null) {
             getSupportActionBar().setTitle(R.string.title_activity_upload_picture);
@@ -104,48 +151,78 @@ public class ActivityUploadPictureGeo extends BasicActivity {
             getSupportActionBar().setHomeButtonEnabled(true);
         }
 
-        long count = this.realm.where(UploadPicture.class).count();
+        setupHttpClient();
 
-        UploadPicture uploadPicture = this.realm.where(UploadPicture.class)
+        OkHttpClient client = httpClient.connectTimeout(4, TimeUnit.MINUTES)
+                .readTimeout(4, TimeUnit.MINUTES)
+                .build();
+
+        long count = this.realm.where(TrnPhoto.class).count();
+
+        TrnPhoto trnPhoto1 = this.realm.where(TrnPhoto.class)
+                .equalTo("ldvNo", this.ldvNo)
                 .equalTo("contractNo", this.contractNo)
+                .equalTo("collCode", this.collectorId)
+                .equalTo("photoId", "picture1")
                 .findFirst();
 
-        if (uploadPicture == null)
-            return;
-
-        if (uploadPicture.getPicture1() != null) {
-            Uri uri = Uri.parse(uploadPicture.getPicture1());
+        if (trnPhoto1 != null) {
+            // read as html
             Picasso.with(this)
-                    .load(uri)
+                    .load(convertPictureIDToUrl(trnPhoto1.getPhotoId()))
                     .into(ivUpload1);
-            ivUpload1.setTag(uri);
         }
-        if (uploadPicture.getPicture2() != null) {
-            Uri uri = Uri.parse(uploadPicture.getPicture2());
-            Picasso.with(this)
-                    .load(uri)
+
+        TrnPhoto trnPhoto2 = this.realm.where(TrnPhoto.class)
+                .equalTo("ldvNo", this.ldvNo)
+                .equalTo("contractNo", this.contractNo)
+                .equalTo("collCode", this.collectorId)
+                .equalTo("photoId", "picture2")
+                .findFirst();
+
+        if (trnPhoto2 != null) {
+
+            Picasso pic = new Picasso.Builder(this)
+                    .downloader(new OkHttp3Downloader(client))
+                    .build();
+            pic.setIndicatorsEnabled(true);
+            pic.load(convertPictureIDToUrl(trnPhoto2.getPhotoId()))
                     .into(ivUpload2);
-            ivUpload2.setTag(uri);
         }
-        if (uploadPicture.getPicture3() != null) {
-            Uri uri = Uri.parse(uploadPicture.getPicture3());
+
+        TrnPhoto trnPhoto3 = this.realm.where(TrnPhoto.class)
+                .equalTo("ldvNo", this.ldvNo)
+                .equalTo("contractNo", this.contractNo)
+                .equalTo("collCode", this.collectorId)
+                .equalTo("photoId", "picture3")
+                .findFirst();
+
+        if (trnPhoto3 != null) {
+            // read as html
             Picasso.with(this)
-                    .load(uri)
+                    .load(convertPictureIDToUrl(trnPhoto3.getPhotoId()))
                     .into(ivUpload3);
-            ivUpload3.setTag(uri);
         }
-        if (uploadPicture.getPicture4() != null) {
-            Uri uri = Uri.parse(uploadPicture.getPicture4());
+
+        TrnPhoto trnPhoto4 = this.realm.where(TrnPhoto.class)
+                .equalTo("ldvNo", this.ldvNo)
+                .equalTo("contractNo", this.contractNo)
+                .equalTo("collCode", this.collectorId)
+                .equalTo("photoId", "picture4")
+                .findFirst();
+
+        if (trnPhoto4 != null) {
+            // read as html
             Picasso.with(this)
-                    .load(uri)
+                    .load(convertPictureIDToUrl(trnPhoto4.getPhotoId()))
                     .into(ivUpload4);
-            ivUpload4.setTag(uri);
         }
+
 
         SyncFileUpload first = this.realm.where(SyncFileUpload.class)
                 .equalTo("contractNo", this.contractNo)
                 .equalTo("collectorId", this.collectorId)
-                .equalTo("fileId", "picture1")
+                .equalTo("pictureId", "picture1")
                 .isNotNull("syncedDate")
                 .findFirst();
         if (first != null) {
@@ -157,7 +234,7 @@ public class ActivityUploadPictureGeo extends BasicActivity {
         SyncFileUpload second = this.realm.where(SyncFileUpload.class)
                 .equalTo("contractNo", this.contractNo)
                 .equalTo("collectorId", this.collectorId)
-                .equalTo("fileId", "picture2")
+                .equalTo("pictureId", "picture2")
                 .isNotNull("syncedDate")
                 .findFirst();
         if (second != null) {
@@ -169,7 +246,7 @@ public class ActivityUploadPictureGeo extends BasicActivity {
         SyncFileUpload third = this.realm.where(SyncFileUpload.class)
                 .equalTo("contractNo", this.contractNo)
                 .equalTo("collectorId", this.collectorId)
-                .equalTo("fileId", "picture3")
+                .equalTo("pictureId", "picture3")
                 .isNotNull("syncedDate")
                 .findFirst();
         if (third != null) {
@@ -181,7 +258,7 @@ public class ActivityUploadPictureGeo extends BasicActivity {
         SyncFileUpload fourth = this.realm.where(SyncFileUpload.class)
                 .equalTo("contractNo", this.contractNo)
                 .equalTo("collectorId", this.collectorId)
-                .equalTo("fileId", "picture4")
+                .equalTo("pictureId", "picture4")
                 .isNotNull("syncedDate")
                 .findFirst();
         if (fourth != null) {
@@ -190,7 +267,21 @@ public class ActivityUploadPictureGeo extends BasicActivity {
             ivUpload4.setFocusable(false);
             ivUpload4.setFocusableInTouchMode(false);
         }
+    }
 
+    private String convertPictureIDToUrl(String pictureId) {
+        HttpUrl httpUrl = Utility.buildUrl(Storage.getPreferenceAsInt(this, Storage.KEY_SERVER_ID, 0));
+        String fixUrl = httpUrl.toString();
+
+        if(fixUrl.charAt(fixUrl.length()-1)!= '/'){
+            fixUrl += '/';
+        }
+
+        String link = fixUrl;
+
+        return link + "/fast/photo/" + this.collectorId + "/" + this.officeCode + "/" + this.ldvNo + "/" + this.contractNo + "/" + pictureId;
+
+//        return "https://www.google.com/images/branding/googlelogo/2x/googlelogo_color_272x92dp.png";
     }
 
     private void showDialog(final ImageView targetImage, final int returnCodeFromCamera, final int returnCodeFromGallery) {
@@ -284,36 +375,68 @@ public class ActivityUploadPictureGeo extends BasicActivity {
             }
         }
 
-        UserData userData = (UserData) Storage.getObjPreference(getApplicationContext(), Storage.KEY_USER, UserData.class);
-
-        String officeCode = userData.getUser().get(0).getBranchId();
-
-        UploadPicture uploadPicture = this.realm.where(UploadPicture.class)
-                .equalTo("contractNo", contractNo)
-                .equalTo("collectorId", collectorId)
-                .findFirst();
-
         String latitude = "";
         String longitude = "";
 
+        TrnPhoto trnPhoto = null;
+
         if (targetImage == ivUpload1) {
-            latitude = uploadPicture.getLat1();
-            longitude = uploadPicture.getLong1();
+            trnPhoto = this.realm.where(TrnPhoto.class)
+                    .equalTo("ldvNo", ldvNo)
+                    .equalTo("contractNo", contractNo)
+                    .equalTo("collCode", collectorId)
+                    .equalTo("photoId", "picture1")
+                    .findFirst()
+                    ;
+
+            latitude = trnPhoto.getLatitude();
+            longitude = trnPhoto.getLongitude();
         } else if (targetImage == ivUpload2) {
-            latitude = uploadPicture.getLat2();
-            longitude = uploadPicture.getLong2();
+            trnPhoto = this.realm.where(TrnPhoto.class)
+                    .equalTo("ldvNo", ldvNo)
+                    .equalTo("contractNo", contractNo)
+                    .equalTo("collCode", collectorId)
+                    .equalTo("photoId", "picture2")
+                    .findFirst()
+                    ;
+
+            latitude = trnPhoto.getLatitude();
+            longitude = trnPhoto.getLongitude();
 
         } else if (targetImage == ivUpload3) {
-            latitude = uploadPicture.getLat3();
-            longitude = uploadPicture.getLong3();
+            trnPhoto = this.realm.where(TrnPhoto.class)
+                    .equalTo("ldvNo", ldvNo)
+                    .equalTo("contractNo", contractNo)
+                    .equalTo("collCode", collectorId)
+                    .equalTo("photoId", "picture3")
+                    .findFirst()
+                    ;
+
+            latitude = trnPhoto.getLatitude();
+            longitude = trnPhoto.getLongitude();
 
         } else if (targetImage == ivUpload4) {
-            latitude = uploadPicture.getLat4();
-            longitude = uploadPicture.getLong4();
+            trnPhoto = this.realm.where(TrnPhoto.class)
+                    .equalTo("ldvNo", ldvNo)
+                    .equalTo("contractNo", contractNo)
+                    .equalTo("collCode", collectorId)
+                    .equalTo("photoId", "picture4")
+                    .findFirst()
+                    ;
+
+            latitude = trnPhoto.getLatitude();
+            longitude = trnPhoto.getLongitude();
+        }
+
+        if (trnPhoto == null){
+            if (listener != null) {
+                listener.onSkip();
+                return;
+            }
         }
 
         Uri uri = Uri.parse(tag.toString());
-        NetUtil.uploadPicture(this, officeCode, this.collectorId, this.contractNo, picId, latitude, longitude, uri, new Callback<ResponseBody>() {
+        NetUtil.uploadPhoto(this, this.realm.copyFromRealm(trnPhoto), uri, new Callback<ResponseBody>() {
             @Override
             public void onResponse(Call<ResponseBody> call, Response<ResponseBody> response) {
                 if (response.isSuccessful()) {
@@ -324,13 +447,13 @@ public class ActivityUploadPictureGeo extends BasicActivity {
                             SyncFileUpload sync = realm.where(SyncFileUpload.class)
                                     .equalTo("contractNo", contractNo)
                                     .equalTo("collectorId", collectorId)
-                                    .equalTo("fileId", picId)
+                                    .equalTo("pictureId", picId)
                                     .findFirst();
                             if (sync == null) {
                                 sync = new SyncFileUpload();
                                 sync.setContractNo(contractNo);
                                 sync.setCollectorId(collectorId);
-                                sync.setFileId(picId);
+                                sync.setPictureId(picId);
                             }
 
                             sync.setSyncedDate(new Date());
@@ -364,7 +487,8 @@ public class ActivityUploadPictureGeo extends BasicActivity {
             public void onFailure(Call<ResponseBody> call, Throwable t) {
                 Toast.makeText(ActivityUploadPictureGeo.this, t.getMessage(), Toast.LENGTH_SHORT).show();
                 t.printStackTrace();
-
+                if (listener != null)
+                    listener.onFailure(t);
             }
         });
 
@@ -473,6 +597,7 @@ public class ActivityUploadPictureGeo extends BasicActivity {
             Utility.showDialog(this, getString(R.string.title_no_connection), getString(R.string.error_online_required));
             return;
         }
+
         if (mProgressDialog == null) {
             mProgressDialog = new ProgressDialog(this);
         }
@@ -522,6 +647,7 @@ public class ActivityUploadPictureGeo extends BasicActivity {
         Picasso.with(this)
                 .load(selectedImage)
                 .into(targetImage);
+
         targetImage.setTag(selectedImage);
 
         final ImageView finalTargetImage = targetImage;
@@ -529,35 +655,101 @@ public class ActivityUploadPictureGeo extends BasicActivity {
         this.realm.executeTransaction(new Realm.Transaction() {
             @Override
             public void execute(Realm realm) {
-                UploadPicture uploadPicture = realm.where(UploadPicture.class)
-                        .equalTo("contractNo", contractNo)
-                        .equalTo("collectorId", collectorId)
-                        .findFirst();
-                if (uploadPicture == null) {
-                    uploadPicture = new UploadPicture();
-                    uploadPicture.setContractNo(contractNo);
-                    uploadPicture.setCollectorId(collectorId);
-                }
 
                 if (finalTargetImage == ivUpload1) {
-                    uploadPicture.setPicture1(finalTargetImage.getTag().toString());
-                    uploadPicture.setLat1("0");
-                    uploadPicture.setLong1("0");
+                    TrnPhoto trnPhoto1 = realm.where(TrnPhoto.class)
+                            .equalTo("ldvNo", ldvNo)
+                            .equalTo("contractNo", contractNo)
+                            .equalTo("collCode", collectorId)
+                            .equalTo("photoId", "picture1")
+                            .findFirst();
+                    if (trnPhoto1 == null) {
+                        trnPhoto1 = new TrnPhoto();
+                        trnPhoto1.setUid(UUID.randomUUID().toString());
+                        trnPhoto1.setFilename(finalTargetImage.getTag().toString());
+                        trnPhoto1.setCreatedBy(Utility.LAST_UPDATE_BY);
+                        trnPhoto1.setCreatedTimestamp(new Date());
+                    }
+                    trnPhoto1.setOfficeCode(officeCode);
+                    trnPhoto1.setContractNo(contractNo);
+                    trnPhoto1.setCollCode(collectorId);
+                    trnPhoto1.setLdvNo(ldvNo);
+                    trnPhoto1.setLatitude("0");
+                    trnPhoto1.setLongitude("0");
+                    trnPhoto1.setPhotoId("picture1");
+                    realm.copyToRealmOrUpdate(trnPhoto1);
+
                 } else if (finalTargetImage == ivUpload2) {
-                    uploadPicture.setPicture2(finalTargetImage.getTag().toString());
-                    uploadPicture.setLat2("0");
-                    uploadPicture.setLong2("0");
+                    TrnPhoto trnPhoto2 = realm.where(TrnPhoto.class)
+                            .equalTo("ldvNo", ldvNo)
+                            .equalTo("contractNo", contractNo)
+                            .equalTo("collCode", collectorId)
+                            .equalTo("photoId", "picture2")
+                            .findFirst();
+                    if (trnPhoto2 == null) {
+                        trnPhoto2 = new TrnPhoto();
+                        trnPhoto2.setUid(UUID.randomUUID().toString());
+                        trnPhoto2.setFilename(finalTargetImage.getTag().toString());
+                        trnPhoto2.setCreatedBy(Utility.LAST_UPDATE_BY);
+                        trnPhoto2.setCreatedTimestamp(new Date());
+                    }
+                    trnPhoto2.setOfficeCode(officeCode);
+                    trnPhoto2.setContractNo(contractNo);
+                    trnPhoto2.setCollCode(collectorId);
+                    trnPhoto2.setLdvNo(ldvNo);
+                    trnPhoto2.setLatitude("0");
+                    trnPhoto2.setLongitude("0");
+                    trnPhoto2.setPhotoId("picture2");
+                    realm.copyToRealmOrUpdate(trnPhoto2);
+
                 } else if (finalTargetImage == ivUpload3) {
-                    uploadPicture.setPicture3(finalTargetImage.getTag().toString());
-                    uploadPicture.setLat3("0");
-                    uploadPicture.setLong3("0");
+                    TrnPhoto trnPhoto3 = realm.where(TrnPhoto.class)
+                            .equalTo("ldvNo", ldvNo)
+                            .equalTo("contractNo", contractNo)
+                            .equalTo("collCode", collectorId)
+                            .equalTo("photoId", "picture3")
+                            .findFirst();
+                    if (trnPhoto3 == null) {
+                        trnPhoto3 = new TrnPhoto();
+                        trnPhoto3.setUid(UUID.randomUUID().toString());
+                        trnPhoto3.setFilename(finalTargetImage.getTag().toString());
+                        trnPhoto3.setCreatedBy(Utility.LAST_UPDATE_BY);
+                        trnPhoto3.setCreatedTimestamp(new Date());
+                    }
+                    trnPhoto3.setOfficeCode(officeCode);
+                    trnPhoto3.setContractNo(contractNo);
+                    trnPhoto3.setCollCode(collectorId);
+                    trnPhoto3.setLdvNo(ldvNo);
+                    trnPhoto3.setLatitude("0");
+                    trnPhoto3.setLongitude("0");
+                    trnPhoto3.setPhotoId("picture3");
+                    realm.copyToRealmOrUpdate(trnPhoto3);
+
                 } else if (finalTargetImage == ivUpload4) {
-                    uploadPicture.setPicture4(finalTargetImage.getTag().toString());
-                    uploadPicture.setLat4("0");
-                    uploadPicture.setLong4("0");
+                    TrnPhoto trnPhoto4 = realm.where(TrnPhoto.class)
+                            .equalTo("ldvNo", ldvNo)
+                            .equalTo("contractNo", contractNo)
+                            .equalTo("collCode", collectorId)
+                            .equalTo("photoId", "picture4")
+                            .findFirst();
+                    if (trnPhoto4 == null) {
+                        trnPhoto4 = new TrnPhoto();
+                        trnPhoto4.setUid(UUID.randomUUID().toString());
+                        trnPhoto4.setFilename(finalTargetImage.getTag().toString());
+                        trnPhoto4.setCreatedBy(Utility.LAST_UPDATE_BY);
+                        trnPhoto4.setCreatedTimestamp(new Date());
+                    }
+                    trnPhoto4.setOfficeCode(officeCode);
+                    trnPhoto4.setContractNo(contractNo);
+                    trnPhoto4.setCollCode(collectorId);
+                    trnPhoto4.setLdvNo(ldvNo);
+                    trnPhoto4.setLatitude("0");
+                    trnPhoto4.setLongitude("0");
+                    trnPhoto4.setPhotoId("picture4");
+                    realm.copyToRealmOrUpdate(trnPhoto4);
+
                 }
 
-                realm.copyToRealmOrUpdate(uploadPicture);
             }
         });
     }

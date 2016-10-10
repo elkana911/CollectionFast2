@@ -131,18 +131,18 @@ public class ActivityScrollingLKPDetails extends BasicActivity {
         }
 
         try {
-            loadDetail(contractNo);
+            TrnLDVDetails dtl = loadDetail(contractNo);
+            boolean b = DataUtil.isMasterDataDownloaded(this, this.realm);
+            updateButtonsVisibility(dtl);
         } catch (Exception e) {
             e.printStackTrace();
             finish();
         }
 
-        boolean b = DataUtil.isMasterDataDownloaded(this, this.realm);
-        updateButtonsVisibility();
 
     }
 
-    private void updateButtonsVisibility() {
+    private void updateButtonsVisibility(TrnLDVDetails dtl) {
         Button btnPaymentReceive = ButterKnife.findById(this, R.id.btnPaymentReceive);
         Button btnVisitResultEntry = ButterKnife.findById(this, R.id.btnVisitResultEntry);
         Button btnRepoEntry = ButterKnife.findById(this, R.id.btnRepoEntry);
@@ -213,9 +213,16 @@ public class ActivityScrollingLKPDetails extends BasicActivity {
         }
 
 
+        if (DataUtil.isLKPSynced(this.realm, dtl)) {
+            btnChangeAddr.setVisibility(View.GONE);
+            btnPaymentReceive.setVisibility(View.GONE);
+            btnRepoEntry.setVisibility(View.GONE);
+            btnVisitResultEntry.setVisibility(View.GONE);
+        }
+
     }
 
-    public void loadDetail(String contractNo) {
+    public TrnLDVDetails loadDetail(String contractNo) {
 
         String createdBy = "JOB" + Utility.convertDateToString(this.lkpDate, "yyyyMMdd");
 
@@ -261,6 +268,8 @@ public class ActivityScrollingLKPDetails extends BasicActivity {
 
         long biayaTagih = (dtl.getCollectionFee() == null ? 0 : dtl.getCollectionFee()) ;
         etBiayaTagih.setText(Utility.convertLongToRupiah(biayaTagih));
+
+        return dtl;
     }
 
     @OnClick(R.id.btnPaymentReceive)
@@ -387,6 +396,8 @@ public class ActivityScrollingLKPDetails extends BasicActivity {
         Intent i = new Intent(this, ActivityRepoEntry.class);
         i.putExtra(ActivityRepoEntry.PARAM_CONTRACT_NO, etContractNo.getText().toString());
         i.putExtra(ActivityRepoEntry.PARAM_COLLECTOR_ID, this.collectorId);
+        i.putExtra(ActivityRepoEntry.PARAM_LDV_NO, this.ldvNo);
+
         startActivityForResult(i, REQUESTCODE_REPO);
     }
 
@@ -426,6 +437,13 @@ public class ActivityScrollingLKPDetails extends BasicActivity {
                 break;
         }
 
-        updateButtonsVisibility();
+        String createdBy = "JOB" + Utility.convertDateToString(this.lkpDate, "yyyyMMdd");
+
+        TrnLDVDetails dtl = this.realm.where(TrnLDVDetails.class)
+                .equalTo("contractNo", contractNo)
+                .equalTo("createdBy", createdBy)
+                .findFirst();
+
+        updateButtonsVisibility(dtl);
     }
 }

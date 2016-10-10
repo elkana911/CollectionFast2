@@ -53,6 +53,9 @@ public class ActivityPaymentReceive extends BasicActivity {
     @BindView(R.id.etContractNo)
     AutoCompleteTextView etContractNo;
 
+    @BindView(R.id.etPlatform)
+    EditText etPlatform;
+
     @BindView(R.id.etAngsuranKe)
     EditText etAngsuranKe;
 
@@ -67,6 +70,9 @@ public class ActivityPaymentReceive extends BasicActivity {
 
     @BindView(R.id.etBiayaTagih)
     EditText etBiayaTagih;
+
+    @BindView(R.id.etDanaSosial)
+    EditText etDanaSosial;
 
     @BindView(R.id.etPenerimaan)
     EditText etPenerimaan;
@@ -138,12 +144,14 @@ public class ActivityPaymentReceive extends BasicActivity {
             etDenda.setText(String.valueOf(trnRVColl.getPenaltyAc()));
             etDendaBerjalan.setText(String.valueOf(trnRVColl.getDaysIntrAc()));
             etBiayaTagih.setText(String.valueOf(trnRVColl.getCollFeeAc()));
+            etPlatform.setText(null);
+            etDanaSosial.setText("0");
 
         } else {
             RealmResults<TrnRVB> trnRVBs = this.realm.where(TrnRVB.class)
                     .equalTo("rvbStatus", "OP")
                     .equalTo("rvbOnHand", collectorId)
-                    .findAll();
+                    .findAllSorted("rvbNo");
 
             adapterRVB = new RVBAdapter(this, android.R.layout.simple_spinner_item, this.realm.copyFromRealm(trnRVBs));
 
@@ -154,6 +162,8 @@ public class ActivityPaymentReceive extends BasicActivity {
             etDenda.setText(String.valueOf(dtl.getPenaltyAMBC()));
             etDendaBerjalan.setText(String.valueOf(dtl.getDaysIntrAmbc()));
             etBiayaTagih.setText(dtl.getCollectionFee() == null ? "0" : String.valueOf(dtl.getCollectionFee()));
+            etPlatform.setText(dtl.getPlatform());
+            etDanaSosial.setText(Utility.convertLongToRupiah(dtl.getDanaSosial()));
 
         }
         spNoRVB.setAdapter(adapterRVB);
@@ -178,6 +188,8 @@ public class ActivityPaymentReceive extends BasicActivity {
         etDenda.setError(null);
         etDendaBerjalan.setError(null);
         etBiayaTagih.setError(null);
+        etDanaSosial.setError(null);
+        etPlatform.setError(null);
 
         // attempt save
         boolean cancel = false;
@@ -385,6 +397,7 @@ public class ActivityPaymentReceive extends BasicActivity {
                     if (userConfig.getKodeRVCollRunningNumber() == null)
                         userConfig.setKodeRVCollRunningNumber(0L);
 
+                    // TODO: coba cek dulu jgn sampe generated lagi di hari yg sama
                     long runningNumber = userConfig.getKodeRVCollRunningNumber();
                     if (userConfig.getKodeRVCollLastGenerated() == null
                             || !Utility.isSameDay(userConfig.getKodeRVCollLastGenerated(), new Date())
@@ -414,6 +427,7 @@ public class ActivityPaymentReceive extends BasicActivity {
                     trnRVColl.setCreatedTimestamp(new Date());
                 }
                 trnRVColl.setStatusFlag("NW");
+                trnRVColl.setFlagToEmrafin("N");
 
                 trnRVColl.setPaymentFlag(1L);
 

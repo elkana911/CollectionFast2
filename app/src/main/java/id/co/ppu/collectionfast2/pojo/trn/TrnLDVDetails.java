@@ -124,7 +124,14 @@ public class TrnLDVDetails extends RealmObject implements Serializable {
     @SerializedName("dpd")
     private Long dpd;
 
+    @SerializedName("platform")
+    private String platform;
+
+    @SerializedName("danaSosial")
+    private Long danaSosial;
+
     // perlu direlasi krn buat tampilan di lkp list
+    // expose to avoid sync to server
     @Expose(serialize = false)
     private  TrnCollectAddr address;
 
@@ -432,6 +439,22 @@ public class TrnLDVDetails extends RealmObject implements Serializable {
         this.dpd = dpd;
     }
 
+    public String getPlatform() {
+        return platform;
+    }
+
+    public void setPlatform(String platform) {
+        this.platform = platform;
+    }
+
+    public Long getDanaSosial() {
+        return danaSosial;
+    }
+
+    public void setDanaSosial(Long danaSosial) {
+        this.danaSosial = danaSosial;
+    }
+
     @Override
     public String toString() {
         return "TrnLDVDetails{" +
@@ -472,6 +495,8 @@ public class TrnLDVDetails extends RealmObject implements Serializable {
                 ", collectionFee=" + collectionFee +
                 ", lastPaidDate=" + lastPaidDate +
                 ", dpd=" + dpd +
+                ", platform='" + platform + '\'' +
+                ", danaSosial=" + danaSosial +
                 ", address=" + address +
                 '}';
     }

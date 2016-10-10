@@ -118,8 +118,8 @@ public class ActivityVisitResult extends BasicActivity {
             this.ldvNo = extras.getString(PARAM_LDV_NO);
         }
 
-        if (this.collectorId == null || this.contractNo == null) {
-            throw new RuntimeException("collectorId cannot null");
+        if (this.collectorId == null || this.contractNo == null || this.ldvNo == null) {
+            throw new RuntimeException("collectorId / ldvNo / contractNo cannot null");
         }
 
         TrnLDVDetails dtl = this.realm.where(TrnLDVDetails.class).equalTo("contractNo", contractNo).findFirst();
@@ -254,12 +254,14 @@ public class ActivityVisitResult extends BasicActivity {
         etContractNo.setError(null);
         etBertemuDengan.setError(null);
         etKomentar.setError(null);
+        etTglJanjiBayar.setError(null);
 
         // attempt save
         boolean cancel = false;
         View focusView = null;
         final String contractNo = etContractNo.getText().toString();
         final String potensi = etPotensi.getText().toString();
+        final String komentar = etKomentar.getText().toString();
 
         String sLKPFlags = spLKPFlags.getSelectedItem().toString();
         MstLDVParameters ldvParameters = realm.where(MstLDVParameters.class).equalTo("description", sLKPFlags).findFirst();
@@ -305,6 +307,16 @@ public class ActivityVisitResult extends BasicActivity {
                 focusView = etPotensi;
                 cancel = true;
             }
+        }else{
+            etPotensi.setError(getString(R.string.error_field_required));
+            focusView = etPotensi;
+            cancel = true;
+        }
+
+        if (TextUtils.isEmpty(komentar)) {
+            etKomentar.setError(getString(R.string.error_field_required));
+            focusView = etKomentar;
+            cancel = true;
         }
 
         if (TextUtils.isEmpty(contractNo)) {
@@ -410,9 +422,17 @@ public class ActivityVisitResult extends BasicActivity {
 
     @OnClick(R.id.btnUploadPicture)
     public void onClickUploadPic() {
+        /*
         Intent i = new Intent(this, ActivityUploadPicture.class);
         i.putExtra(ActivityUploadPicture.PARAM_CONTRACT_NO, etContractNo.getText().toString());
         i.putExtra(ActivityUploadPicture.PARAM_COLLECTOR_ID, this.collectorId);
+        i.putExtra(ActivityUploadPicture.PARAM_LDV_NO, this.ldvNo);
+        */
+        Intent i = new Intent(this, ActivityUploadPictureGeo.class);
+        i.putExtra(ActivityUploadPictureGeo.PARAM_CONTRACT_NO, etContractNo.getText().toString());
+        i.putExtra(ActivityUploadPictureGeo.PARAM_COLLECTOR_ID, this.collectorId);
+        i.putExtra(ActivityUploadPictureGeo.PARAM_LDV_NO, this.ldvNo);
+
         startActivity(i);
 
     }

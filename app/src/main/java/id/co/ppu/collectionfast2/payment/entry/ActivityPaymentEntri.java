@@ -66,6 +66,9 @@ public class ActivityPaymentEntri extends BasicActivity implements FragmentActiv
     @BindView(R.id.ivDropDown)
     ImageView ivDropDown;
 
+    @BindView(R.id.etPlatform)
+    EditText etPlatform;
+
     @BindView(R.id.etAngsuranKe)
     EditText etAngsuranKe;
 
@@ -80,6 +83,9 @@ public class ActivityPaymentEntri extends BasicActivity implements FragmentActiv
 
     @BindView(R.id.etBiayaTagih)
     EditText etBiayaTagih;
+
+    @BindView(R.id.etDanaSosial)
+    EditText etDanaSosial;
 
     @BindView(R.id.etPenerimaan)
     EditText etPenerimaan;
@@ -217,7 +223,7 @@ public class ActivityPaymentEntri extends BasicActivity implements FragmentActiv
 
         RealmResults<TrnRVB> openRVBList = realm.where(TrnRVB.class)
                 .equalTo("rvbStatus", "OP")
-                .findAll();
+                .findAllSorted("rvbNo");
 
         List<TrnRVB> listRVB = realm.copyFromRealm(openRVBList);
         RVBAdapter adapterRVB = new RVBAdapter(this, android.R.layout.simple_spinner_item, listRVB);
@@ -315,7 +321,10 @@ public class ActivityPaymentEntri extends BasicActivity implements FragmentActiv
         if (getSupportActionBar() != null) {
             getSupportActionBar().setSubtitle(contractBuckets.getCustName());
         }
-// TODO: ask pak yoce apa angsuran & angsuranke masih mengacu ke contractbuckets
+
+        etPlatform.setText(contractBuckets.getPlatform());
+        etDanaSosial.setText(Utility.convertLongToRupiah(contractBuckets.getDanaSosial()));
+
         etAngsuranKe.setText(String.valueOf(contractBuckets.getOvdInstNo()));
 
         long angsuran = (contractBuckets.getPrncAmt() == null ? 0 : contractBuckets.getPrncAmt())
@@ -343,6 +352,8 @@ public class ActivityPaymentEntri extends BasicActivity implements FragmentActiv
         etDenda.setError(null);
         etDendaBerjalan.setError(null);
         etBiayaTagih.setError(null);
+        etDanaSosial.setError(null
+        );
 
         // attempt save
         boolean cancel = false;
@@ -454,6 +465,7 @@ public class ActivityPaymentEntri extends BasicActivity implements FragmentActiv
 
                 realm.copyToRealm(trnContractBuckets);
 */
+                /* kata pak yoce ga perlu lagi ke ldv details
                 RealmResults<TrnLDVDetails> trnLDVDetailses = realm.where(TrnLDVDetails.class)
                         .equalTo("pk.ldvNo", ldvNo)
                         .equalTo("contractNo", contractNo)
@@ -471,7 +483,7 @@ public class ActivityPaymentEntri extends BasicActivity implements FragmentActiv
                 trnLDVDetails.setLastupdateBy(Utility.LAST_UPDATE_BY);
                 trnLDVDetails.setLastupdateTimestamp(new Date());
                 realm.copyToRealm(trnLDVDetails);
-
+*/
                 // dari detil dapat header utk diambil ldvNo
                 /*
                 TrnLDVHeader trnLDVHeader = realm.where(TrnLDVHeader.class)
@@ -548,7 +560,7 @@ public class ActivityPaymentEntri extends BasicActivity implements FragmentActiv
                 trnRVColl.setTransDate(serverDate);
                 trnRVColl.setProcessDate(serverDate);
 
-                trnRVColl.setLdvNo(trnLDVDetails.getPk().getLdvNo());
+                trnRVColl.setLdvNo(null);
 
                 trnRVColl.setPenaltyAc(Long.valueOf(denda));
                 trnRVColl.setDaysIntrAc(Long.valueOf(dendaBerjalan));

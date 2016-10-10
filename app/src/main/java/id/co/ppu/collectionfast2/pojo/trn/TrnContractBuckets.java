@@ -81,6 +81,15 @@ public class TrnContractBuckets extends RealmObject implements Serializable {
     @SerializedName("penaltyAC")
     private Long penaltyAC;
 
+    @SerializedName("collectionFee")
+    private Long collectionFee;
+
+    @SerializedName("platform")
+    private String platform;
+
+    @SerializedName("danaSosial")
+    private Long danaSosial;
+
     @SerializedName("startedTimestamp")
     private Date startedTimestamp;
 
@@ -320,6 +329,30 @@ public class TrnContractBuckets extends RealmObject implements Serializable {
         this.intrAMBC = intrAMBC;
     }
 
+    public Long getCollectionFee() {
+        return collectionFee;
+    }
+
+    public void setCollectionFee(Long collectionFee) {
+        this.collectionFee = collectionFee;
+    }
+
+    public String getPlatform() {
+        return platform;
+    }
+
+    public void setPlatform(String platform) {
+        this.platform = platform;
+    }
+
+    public Long getDanaSosial() {
+        return danaSosial;
+    }
+
+    public void setDanaSosial(Long danaSosial) {
+        this.danaSosial = danaSosial;
+    }
+
     @Override
     public String toString() {
         return "TrnContractBuckets{" +
@@ -346,6 +379,9 @@ public class TrnContractBuckets extends RealmObject implements Serializable {
                 ", intrAc=" + intrAc +
                 ", intrAMBC=" + intrAMBC +
                 ", penaltyAC=" + penaltyAC +
+                ", collectionFee=" + collectionFee +
+                ", platform='" + platform + '\'' +
+                ", danaSosial=" + danaSosial +
                 ", startedTimestamp=" + startedTimestamp +
                 ", createdTimestamp=" + createdTimestamp +
                 ", createdBy='" + createdBy + '\'' +

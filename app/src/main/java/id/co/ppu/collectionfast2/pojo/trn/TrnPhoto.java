@@ -21,11 +21,20 @@ public class TrnPhoto extends RealmObject implements Serializable{
     @SerializedName("officeCode")
     private String officeCode;
 
-    @SerializedName("collectorId")
-    private String collectorId;
+    @SerializedName("collCode")
+    private String collCode;
 
-    @SerializedName("pictureId")
-    private String pictureId;
+    @SerializedName("ldvNo")
+    private String ldvNo;
+
+    @SerializedName("contractNo")
+    private String contractNo;
+
+    @SerializedName("photoId")
+    private String photoId;
+
+    @SerializedName("filename")
+    private String filename;
 
     @SerializedName("latitude")
     private String latitude;
@@ -45,7 +54,6 @@ public class TrnPhoto extends RealmObject implements Serializable{
     @SerializedName("lastupdateTimestamp")
     private Date lastupdateTimestamp;
 
-
     public String getUid() {
         return uid;
     }
@@ -62,20 +70,44 @@ public class TrnPhoto extends RealmObject implements Serializable{
         this.officeCode = officeCode;
     }
 
-    public String getCollectorId() {
-        return collectorId;
+    public String getCollCode() {
+        return collCode;
     }
 
-    public void setCollectorId(String collectorId) {
-        this.collectorId = collectorId;
+    public void setCollCode(String collCode) {
+        this.collCode = collCode;
     }
 
-    public String getPictureId() {
-        return pictureId;
+    public String getLdvNo() {
+        return ldvNo;
     }
 
-    public void setPictureId(String pictureId) {
-        this.pictureId = pictureId;
+    public void setLdvNo(String ldvNo) {
+        this.ldvNo = ldvNo;
+    }
+
+    public String getContractNo() {
+        return contractNo;
+    }
+
+    public void setContractNo(String contractNo) {
+        this.contractNo = contractNo;
+    }
+
+    public String getPhotoId() {
+        return photoId;
+    }
+
+    public void setPhotoId(String photoId) {
+        this.photoId = photoId;
+    }
+
+    public String getFilename() {
+        return filename;
+    }
+
+    public void setFilename(String filename) {
+        this.filename = filename;
     }
 
     public String getLatitude() {
@@ -131,8 +163,11 @@ public class TrnPhoto extends RealmObject implements Serializable{
         return "TrnPhoto{" +
                 "uid='" + uid + '\'' +
                 ", officeCode='" + officeCode + '\'' +
-                ", collectorId='" + collectorId + '\'' +
-                ", pictureId='" + pictureId + '\'' +
+                ", collCode='" + collCode + '\'' +
+                ", ldvNo='" + ldvNo + '\'' +
+                ", contractNo='" + contractNo + '\'' +
+                ", photoId='" + photoId + '\'' +
+                ", filename='" + filename + '\'' +
                 ", latitude='" + latitude + '\'' +
                 ", longitude='" + longitude + '\'' +
                 ", createdTimestamp=" + createdTimestamp +

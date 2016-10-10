@@ -9,6 +9,7 @@ import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.design.widget.FloatingActionButton;
 import android.support.v4.app.Fragment;
+import android.support.v4.content.ContextCompat;
 import android.support.v7.widget.LinearLayoutManager;
 import android.text.Html;
 import android.text.TextUtils;
@@ -39,11 +40,10 @@ import id.co.ppu.collectionfast2.component.RealmSearchView;
 import id.co.ppu.collectionfast2.listener.OnLKPListListener;
 import id.co.ppu.collectionfast2.pojo.DisplayTrnLDVDetails;
 import id.co.ppu.collectionfast2.pojo.ServerInfo;
-import id.co.ppu.collectionfast2.pojo.sync.SyncTrnLDVComments;
-import id.co.ppu.collectionfast2.pojo.sync.SyncTrnRVColl;
-import id.co.ppu.collectionfast2.pojo.sync.SyncTrnRepo;
+import id.co.ppu.collectionfast2.pojo.UserConfig;
 import id.co.ppu.collectionfast2.pojo.trn.TrnLDVDetails;
 import id.co.ppu.collectionfast2.pojo.trn.TrnLDVHeader;
+import id.co.ppu.collectionfast2.util.DataUtil;
 import id.co.ppu.collectionfast2.util.Utility;
 import io.realm.Realm;
 import io.realm.RealmResults;
@@ -195,8 +195,16 @@ public class FragmentLKPList extends Fragment {
     public void onClickFab() {
 
         if (getContext() instanceof OnLKPListListener) {
+            Date serverDate = this.realm.where(ServerInfo.class).findFirst().getServerDate();
+            UserConfig userConfig = realm.where(UserConfig.class).findFirst();
+
+            if (!Utility.isSameDay(userConfig.getLastLogin(), serverDate)) {
+                Utility.showDialog(getContext(), "Close Batch", "Please do Close Batch first");
+                return;
+            }
 
             Date dateLKP = TextUtils.isEmpty(etTglLKP.getText().toString()) ? serverDate : Utility.convertStringToDate(etTglLKP.getText().toString(), Utility.DATE_DISPLAY_PATTERN);
+
             ((OnLKPListListener)getContext()).onLKPInquiry(this.collectorCode, dateLKP);
         }
 
@@ -235,31 +243,6 @@ public class FragmentLKPList extends Fragment {
 //        Toast.makeText(getActivity(), "You search " + query, Toast.LENGTH_SHORT).show();
 
         search_view.getSearchBar().setText(query);
-    }
-
-    public boolean isLKPSynced(TrnLDVDetails dtl) {
-        RealmResults<SyncTrnRVColl> trnSync = realm.where(SyncTrnRVColl.class)
-                .equalTo("ldvNo", dtl.getPk().getLdvNo())
-                .equalTo("contractNo", dtl.getContractNo())
-                .equalTo("createdBy", Utility.LAST_UPDATE_BY)
-                .isNotNull("syncedDate")
-                .findAll();
-
-        RealmResults<SyncTrnLDVComments> trnSyncLDVComments = realm.where(SyncTrnLDVComments.class)
-                .equalTo("ldvNo", dtl.getPk().getLdvNo())
-                .equalTo("contractNo", dtl.getContractNo())
-                .equalTo("createdBy", Utility.LAST_UPDATE_BY)
-                .isNotNull("syncedDate")
-                .findAll();
-
-        RealmResults<SyncTrnRepo> trnSyncRepo = realm.where(SyncTrnRepo.class)
-                .equalTo("contractNo", dtl.getPk().getLdvNo())
-                .equalTo("createdBy", Utility.LAST_UPDATE_BY)
-                .isNotNull("syncedDate")
-                .findAll();
-
-        return trnSync.size() > 0 || trnSyncLDVComments.size() > 0 || trnSyncRepo.size() > 0;
-
     }
 
     public String loadCurrentLKP() {
@@ -323,7 +306,7 @@ public class FragmentLKPList extends Fragment {
                     displayTrnLDVDetails.setFlagDone(obj.getFlagDone());
                     displayTrnLDVDetails.setAddress(obj.getAddress());
 
-                    if (isLKPSynced(obj)) {
+                    if (DataUtil.isLKPSynced(realm, obj)) {
                         displayTrnLDVDetails.setWorkStatus("SYNC");
                     }else{
                         displayTrnLDVDetails.setWorkStatus(obj.getWorkStatus());
@@ -447,13 +430,13 @@ public class FragmentLKPList extends Fragment {
             dataViewHolder.ivCancelSync.setVisibility(View.GONE);
 
             if (detail.getWorkStatus().equalsIgnoreCase("V")) {
-                dataViewHolder.llRowLKP.setBackgroundColor(Color.YELLOW);
+                dataViewHolder.llRowLKP.setBackgroundColor(ContextCompat.getColor(getContext(), R.color.colorLKPYellow));
                 dataViewHolder.ivCancelSync.setVisibility(View.VISIBLE);
 
             } else if (detail.getWorkStatus().equalsIgnoreCase("W")) {
-                dataViewHolder.llRowLKP.setBackgroundColor(Color.BLUE);
+                dataViewHolder.llRowLKP.setBackgroundColor(ContextCompat.getColor(getContext(), R.color.colorLKPBlue));
             } else if (detail.getWorkStatus().equalsIgnoreCase("SYNC")) {
-                dataViewHolder.llRowLKP.setBackgroundColor(Color.GREEN);
+                dataViewHolder.llRowLKP.setBackgroundColor(ContextCompat.getColor(getContext(), R.color.colorLKPGreen));
                 dataViewHolder.ivCancelSync.setVisibility(View.GONE);
             }
 

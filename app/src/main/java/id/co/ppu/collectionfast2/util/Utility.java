@@ -30,7 +30,7 @@ import okhttp3.HttpUrl;
 public class Utility {
 
     public final static String DATE_EXPIRED_YYYYMMDD = "20161014";
-    public final static String[][] servers = {{"local-server", "192.168.43.90", "8090"}
+    public final static String[][] servers = {{"local-server", "10.100.100.77", "8090"}
             ,{"fast-mobile", "cmobile.radanafinance.co.id", "7001"}
     };
 

@@ -42,11 +42,13 @@ import retrofit2.Response;
 public class ActivityUploadPicture extends BasicActivity {
     public static final String PARAM_CONTRACT_NO = "customer.contractNo";
     public static final String PARAM_COLLECTOR_ID = "collector.id";
+    public static final String PARAM_LDV_NO = "ldvNo";
 
     private static final String TAG = "upload";
 
     private String contractNo = null;
     private String collectorId = null;
+    private String ldvNo = null;
 
     private ProgressDialog mProgressDialog = null;
 
@@ -89,10 +91,11 @@ public class ActivityUploadPicture extends BasicActivity {
         if (extras != null) {
             this.contractNo = extras.getString(PARAM_CONTRACT_NO);
             this.collectorId = extras.getString(PARAM_COLLECTOR_ID);
+            this.ldvNo = extras.getString(PARAM_LDV_NO);
         }
 
-        if (this.collectorId == null || this.contractNo == null) {
-            throw new RuntimeException("collectorId / contractNo cannot null");
+        if (this.collectorId == null || this.contractNo == null || this.ldvNo == null) {
+            throw new RuntimeException("collectorId / ldvNo / contractNo cannot null");
         }
 
         TrnLDVDetails dtl = this.realm.where(TrnLDVDetails.class).equalTo("contractNo", contractNo).findFirst();
@@ -145,7 +148,7 @@ public class ActivityUploadPicture extends BasicActivity {
         SyncFileUpload first = this.realm.where(SyncFileUpload.class)
                 .equalTo("contractNo", this.contractNo)
                 .equalTo("collectorId", this.collectorId)
-                .equalTo("fileId", "picture1")
+                .equalTo("pictureId", "picture1")
                 .isNotNull("syncedDate")
                 .findFirst();
         if (first != null) {
@@ -157,7 +160,7 @@ public class ActivityUploadPicture extends BasicActivity {
         SyncFileUpload second = this.realm.where(SyncFileUpload.class)
                 .equalTo("contractNo", this.contractNo)
                 .equalTo("collectorId", this.collectorId)
-                .equalTo("fileId", "picture2")
+                .equalTo("pictureId", "picture2")
                 .isNotNull("syncedDate")
                 .findFirst();
         if (second != null) {
@@ -169,7 +172,7 @@ public class ActivityUploadPicture extends BasicActivity {
         SyncFileUpload third = this.realm.where(SyncFileUpload.class)
                 .equalTo("contractNo", this.contractNo)
                 .equalTo("collectorId", this.collectorId)
-                .equalTo("fileId", "picture3")
+                .equalTo("pictureId", "picture3")
                 .isNotNull("syncedDate")
                 .findFirst();
         if (third != null) {
@@ -181,7 +184,7 @@ public class ActivityUploadPicture extends BasicActivity {
         SyncFileUpload fourth = this.realm.where(SyncFileUpload.class)
                 .equalTo("contractNo", this.contractNo)
                 .equalTo("collectorId", this.collectorId)
-                .equalTo("fileId", "picture4")
+                .equalTo("pictureId", "picture4")
                 .isNotNull("syncedDate")
                 .findFirst();
         if (fourth != null) {
@@ -313,7 +316,7 @@ public class ActivityUploadPicture extends BasicActivity {
         }
 
         Uri uri = Uri.parse(tag.toString());
-        NetUtil.uploadPicture(this, officeCode, this.collectorId, this.contractNo, picId, latitude, longitude, uri, new Callback<ResponseBody>() {
+        NetUtil.uploadPicture(this, officeCode, this.collectorId, this.ldvNo, this.contractNo, picId, latitude, longitude, uri, new Callback<ResponseBody>() {
             @Override
             public void onResponse(Call<ResponseBody> call, Response<ResponseBody> response) {
                 if (response.isSuccessful()) {
@@ -324,13 +327,13 @@ public class ActivityUploadPicture extends BasicActivity {
                             SyncFileUpload sync = realm.where(SyncFileUpload.class)
                                     .equalTo("contractNo", contractNo)
                                     .equalTo("collectorId", collectorId)
-                                    .equalTo("fileId", picId)
+                                    .equalTo("pictureId", picId)
                                     .findFirst();
                             if (sync == null) {
                                 sync = new SyncFileUpload();
                                 sync.setContractNo(contractNo);
                                 sync.setCollectorId(collectorId);
-                                sync.setFileId(picId);
+                                sync.setPictureId(picId);
                             }
 
                             sync.setSyncedDate(new Date());
@@ -364,7 +367,8 @@ public class ActivityUploadPicture extends BasicActivity {
             public void onFailure(Call<ResponseBody> call, Throwable t) {
                 Toast.makeText(ActivityUploadPicture.this, t.getMessage(), Toast.LENGTH_SHORT).show();
                 t.printStackTrace();
-
+                if (listener != null)
+                    listener.onFailure(t);
             }
         });
 
