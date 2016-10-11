@@ -79,6 +79,7 @@ public class ActivityPaymentHistory extends BasicActivity {
         }
 
 //        String createdBy = "JOB" + Utility.convertDateToString(this.lkpDate, "yyyyMMdd");
+        long total = this.realm.where(HistInstallments.class).count();
 
         RealmResults<HistInstallments> listInstallments = this.realm.where(HistInstallments.class)
                 .equalTo("pk.contractNo", this.contractNo)

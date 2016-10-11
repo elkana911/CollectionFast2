@@ -201,6 +201,12 @@ public class ActivityRepoEntry extends BasicActivity {
             cancel = true;
         }
 
+        if (!TextUtils.isEmpty(komentar)&& etKomentar.getText().length() > 200) {
+            etKomentar.setError(getString(R.string.error_value_too_long));
+            focusView = etKomentar;
+            cancel = true;
+        }
+
         if (cancel) {
             focusView.requestFocus();
             return;
@@ -271,6 +277,7 @@ public class ActivityRepoEntry extends BasicActivity {
                 }
 
                 trnRepo.setContractNo(contractNo);
+                trnRepo.setCustNo(trnLDVDetails.getCustNo());
                 trnRepo.setRepoNo(repoNo);
                 trnRepo.setBastbjNo(trnBastbj.getBastbjNo());
                 trnRepo.setFlagToEmrafin("N");

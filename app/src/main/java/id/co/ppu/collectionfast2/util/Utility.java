@@ -31,7 +31,8 @@ public class Utility {
 
     public final static String DATE_EXPIRED_YYYYMMDD = "20161012";
     public final static String[][] servers = {
-            {"local-server", "10.100.100.77", "8090"},
+            {"local-server", "10.100.100.167", "8090"},
+//            {"local-server", "192.168.1.105", "8090"},
             {"fast-mobile", "cmobile.radanafinance.co.id", "7001"}
     };
 
@@ -49,6 +50,8 @@ public class Utility {
     public final static String WARNING = "Warning";
 
     public static final int PERMISSION_REQUEST_LOCATION = 0;
+    public static final int MAX_MONEY_DIGITS = 10;
+    public static final int MAX_MONEY_LIMIT = 99999999;
     public static String[] PERMISSION_LOCATION = {Manifest.permission.ACCESS_COARSE_LOCATION, Manifest.permission.ACCESS_FINE_LOCATION};
 
     public static final int PERMISSION_REQUEST_READPHONESTATE = 1;

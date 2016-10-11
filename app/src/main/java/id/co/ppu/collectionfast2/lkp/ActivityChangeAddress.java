@@ -3,7 +3,9 @@ package id.co.ppu.collectionfast2.lkp;
 import android.app.ProgressDialog;
 import android.graphics.Color;
 import android.os.Bundle;
+import android.support.design.widget.Snackbar;
 import android.text.TextUtils;
+import android.text.method.LinkMovementMethod;
 import android.util.Log;
 import android.util.TypedValue;
 import android.view.View;
@@ -34,6 +36,7 @@ import id.co.ppu.collectionfast2.pojo.master.MstKecamatan;
 import id.co.ppu.collectionfast2.pojo.master.MstKelurahan;
 import id.co.ppu.collectionfast2.pojo.master.MstProvinsi;
 import id.co.ppu.collectionfast2.pojo.master.MstZip;
+import id.co.ppu.collectionfast2.pojo.sync.SyncTrnChangeAddr;
 import id.co.ppu.collectionfast2.pojo.trn.TrnChangeAddr;
 import id.co.ppu.collectionfast2.pojo.trn.TrnChangeAddrPK;
 import id.co.ppu.collectionfast2.pojo.trn.TrnLDVDetails;
@@ -60,6 +63,9 @@ public class ActivityChangeAddress extends BasicActivity {
 
     private String contractNo = null;
     private String collectorId = null;
+
+    @BindView(R.id.activity_change_addr)
+    View activityChangeAddr;
 
     @BindView(R.id.btnCari)
     Button btnCari;
@@ -138,6 +144,8 @@ public class ActivityChangeAddress extends BasicActivity {
         etNamaPemilik.setText(dtl.getCustName());
         etAlamatPemilik.setText(dtl.getAddress().getCollAddr());
         etPhonePemilik.setText(dtl.getAddress().getCollMobPhone());
+
+        etPhonePemilik.setMovementMethod(LinkMovementMethod.getInstance());
 
         etKelurahan.setThreshold(1);
         etKelurahan.setOnItemClickListener(new AdapterView.OnItemClickListener() {
@@ -547,6 +555,7 @@ public class ActivityChangeAddress extends BasicActivity {
         final String email = etEmail.getText().toString();
         final String address = etAddress.getText().toString();
         final String handphone1 = etHandphone1.getText().toString();
+        final String handphone2 = etHandphone2.getText().toString();
 
         // Check for a valid email, if the user entered one.
         if (!TextUtils.isEmpty(email) && !Utility.isEmailValid(email)) {
@@ -559,12 +568,36 @@ public class ActivityChangeAddress extends BasicActivity {
             etAddress.setError(getString(R.string.error_field_required));
             focusView = etAddress;
             cancel = true;
+        } else {
+            if (address.length() > 135) {
+                etAddress.setError(getString(R.string.error_value_too_long));
+                focusView = etAddress;
+                cancel = true;
+            }
         }
 
         if (TextUtils.isEmpty(handphone1) || handphone1.length() < 5) {
             etHandphone1.setError(getString(R.string.error_field_required));
             focusView = etHandphone1;
             cancel = true;
+        } else {
+            if (handphone1.length() > 15) {
+                etHandphone1.setError(getString(R.string.error_value_too_long));
+                focusView = etHandphone1;
+                cancel = true;
+            }
+        }
+
+        if (!TextUtils.isEmpty(handphone2) && handphone2.length() < 5) {
+            etHandphone2.setError(getString(R.string.error_invalid_phone));
+            focusView = etHandphone2;
+            cancel = true;
+        } else {
+            if (handphone2.length() > 15) {
+                etHandphone2.setError(getString(R.string.error_value_too_long));
+                focusView = etHandphone2;
+                cancel = true;
+            }
         }
 
         if (cancel) {
@@ -577,6 +610,16 @@ public class ActivityChangeAddress extends BasicActivity {
         this.realm.executeTransactionAsync(new Realm.Transaction() {
             @Override
             public void execute(Realm realm) {
+                SyncTrnChangeAddr trnSync = realm.where(SyncTrnChangeAddr.class)
+                        .equalTo("contractNo", contractNo)
+                        .equalTo("seqNo", 2)
+                        .isNotNull("syncedDate")
+                        .findFirst();
+
+                if (trnSync != null) {
+                    Snackbar.make(activityChangeAddr, "Data already synced", Snackbar.LENGTH_SHORT).show();
+                    return;
+                }
 
                 // drpada repot2 parsing, cek aja mulai dari provinsi
                 MstProvinsi mstProvinsi = realm.where(MstProvinsi.class).equalTo("provinsi", etPropinsi.getText().toString()).findFirst();
@@ -682,6 +725,8 @@ public class ActivityChangeAddress extends BasicActivity {
                 trnChangeAddr.setCollAddr(etAddress.getText().toString());
                 trnChangeAddr.setCollRt(etRT.getText().toString());
                 trnChangeAddr.setCollRw(etRW.getText().toString());
+
+                trnChangeAddr.setFlagToEmrafin("N");
 
                 trnChangeAddr.setCreatedBy(Utility.LAST_UPDATE_BY);
                 trnChangeAddr.setCreatedTimestamp(new Date());

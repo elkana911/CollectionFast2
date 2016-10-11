@@ -468,7 +468,7 @@ public class MainActivity extends SyncActivity
 
             drawer.closeDrawers();
 
-            syncTransaction(false, new OnSuccessError() {
+            syncTransaction(false, true, new OnSuccessError() {
                 @Override
                 public void onSuccess(String msg) {
                     final FragmentLKPList frag = (FragmentLKPList)
@@ -1017,7 +1017,7 @@ public class MainActivity extends SyncActivity
         mProgressDialog.show();
 
         // must sync first
-        syncTransaction(false, new OnSuccessError() {
+        syncTransaction(false, false, new OnSuccessError() {
             @Override
             public void onSuccess(String msg) {
                 getLKP(mProgressDialog, collectorCode, lkpDate, createdBy, listener);
@@ -1295,7 +1295,7 @@ public class MainActivity extends SyncActivity
             @Override
             public void onClick(DialogInterface dialog, int which) {
                 // TODO: clear cookie
-                syncTransaction(true, new OnSuccessError() {
+                syncTransaction(true, true, new OnSuccessError() {
                     @Override
                     public void onSuccess(String msg) {
                         Utility.showDialog(MainActivity.this, "Close Batch", "Close Batch successful");
@@ -1336,7 +1336,7 @@ public class MainActivity extends SyncActivity
         alertDialogBuilder.show();
     }
 
-    protected void syncTransaction(final boolean closeBatch, final OnSuccessError listener) {
+    protected void syncTransaction(final boolean closeBatch, final boolean showDialog, final OnSuccessError listener) {
 
         if (!NetUtil.isConnected(this)) {
             Snackbar.make(coordinatorLayout, getString(R.string.error_online_required), Snackbar.LENGTH_LONG).show();
@@ -1377,7 +1377,7 @@ public class MainActivity extends SyncActivity
 
                                 @Override
                                 public void onClick(DialogInterface dialog, int which) {
-
+                                    backToLoginScreen();
                                 }
                             });
 
@@ -1417,11 +1417,13 @@ public class MainActivity extends SyncActivity
 //                    .equalTo("createdBy", createdBy)
                             .findFirst();
 
-                    trnLDVHeader.setWorkFlag("C");
-                    trnLDVHeader.setCloseBatch("Y");
-                    trnLDVHeader.setLastupdateBy(Utility.LAST_UPDATE_BY);
-                    trnLDVHeader.setLastupdateTimestamp(new Date());
-                    realm.copyToRealmOrUpdate(trnLDVHeader); // hanya di update waktu close batch
+                    if (trnLDVHeader != null) {
+                        trnLDVHeader.setWorkFlag("C");
+                        trnLDVHeader.setCloseBatch("Y");
+                        trnLDVHeader.setLastupdateBy(Utility.LAST_UPDATE_BY);
+                        trnLDVHeader.setLastupdateTimestamp(new Date());
+                        realm.copyToRealmOrUpdate(trnLDVHeader); // hanya di update waktu close batch
+                    }
 
                 }
             });
@@ -1473,11 +1475,27 @@ public class MainActivity extends SyncActivity
 
         Snackbar.make(coordinatorLayout, "Sync started", Snackbar.LENGTH_SHORT).show();
 
+
+        final ProgressDialog mProgressDialog = new ProgressDialog(this);
+
+        if (showDialog) {
+
+            mProgressDialog.setIndeterminate(true);
+            mProgressDialog.setCancelable(false);
+            mProgressDialog.setMessage("Please wait...");
+            mProgressDialog.show();
+
+        }
         Call<ResponseSync> call = fastService.syncLKP(req);
         call.enqueue(new Callback<ResponseSync>() {
             @Override
             public void onResponse(Call<ResponseSync> call, Response<ResponseSync> response) {
                 final ResponseSync respSync = response.body();
+
+                if (showDialog) {
+                    if (mProgressDialog.isShowing())
+                        mProgressDialog.dismiss();
+                }
 
                 if (respSync.getError() != null) {
                     if (listener != null)
@@ -1539,6 +1557,11 @@ public class MainActivity extends SyncActivity
             @Override
             public void onFailure(Call<ResponseSync> call, Throwable t) {
                 Log.e("eric.onFailure", t.getMessage(), t);
+
+                if (showDialog) {
+                    if (mProgressDialog.isShowing())
+                        mProgressDialog.dismiss();
+                }
 
 //                Toast.makeText(MainActivity.this, "Sync Failed\n" + t.getMessage(), Toast.LENGTH_LONG).show();
 

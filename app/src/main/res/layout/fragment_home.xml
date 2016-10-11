@@ -75,6 +75,7 @@
             android:layout_marginLeft="@dimen/activity_horizontal_margin"
             android:layout_marginRight="@dimen/activity_horizontal_margin"
             android:gravity="end"
+            android:textColor="@android:color/tertiary_text_dark"
             android:text="010100101" />
 
         <TextView
@@ -93,6 +94,7 @@
             android:layout_marginLeft="@dimen/activity_horizontal_margin"
             android:layout_marginRight="@dimen/activity_horizontal_margin"
             android:gravity="end"
+            android:textColor="@android:color/tertiary_text_dark"
             android:text="Cabang" />
 
         <TextView
@@ -111,6 +113,7 @@
             android:layout_marginRight="@dimen/activity_horizontal_margin"
             android:gravity="end"
             android:inputType="textPostalAddress|textMultiLine|textCapSentences"
+            android:textColor="@android:color/tertiary_text_dark"
             android:text="Komplek Rukan Artha Gading, Niaga Blok: D No. 19-20" />
 
         <TextView
@@ -129,6 +132,7 @@
             android:layout_marginRight="@dimen/activity_horizontal_margin"
             android:gravity="end"
             android:inputType="textEmailAddress"
+            android:textColor="@android:color/tertiary_text_dark"
             android:text="aaaaaaa@gmail.co" />
 
 
@@ -149,6 +153,7 @@
             android:autoLink="phone"
             android:linksClickable="true"
             android:inputType="phone"
+            android:textColor="@android:color/tertiary_text_dark"
             android:text="081578787878" />
 
     </LinearLayout>

@@ -5,6 +5,7 @@ import android.os.Bundle;
 import android.support.design.widget.CollapsingToolbarLayout;
 import android.support.design.widget.Snackbar;
 import android.support.v7.widget.Toolbar;
+import android.text.method.LinkMovementMethod;
 import android.view.View;
 import android.widget.AutoCompleteTextView;
 import android.widget.Button;
@@ -119,6 +120,8 @@ public class ActivityScrollingLKPDetails extends BasicActivity {
             return;
         }
 
+        etPhone.setMovementMethod(LinkMovementMethod.getInstance());
+
         this.contractNo = extras.getString(PARAM_CONTRACT_NO);
         this.ldvNo = extras.getString(PARAM_LDV_NO);
         this.collectorId = extras.getString(PARAM_COLLECTOR_ID);
@@ -188,7 +191,6 @@ public class ActivityScrollingLKPDetails extends BasicActivity {
             btnPaymentReceive.setVisibility(View.GONE);
             btnRepoEntry.setVisibility(View.GONE);
             btnVisitResultEntry.setVisibility(View.VISIBLE);
-            return;
         }
 
         RealmResults<TrnRVColl> trnRVColls = this.realm.where(TrnRVColl.class)
@@ -200,7 +202,6 @@ public class ActivityScrollingLKPDetails extends BasicActivity {
             btnRepoEntry.setVisibility(View.GONE);
             btnVisitResultEntry.setVisibility(View.GONE);
             btnPaymentReceive.setVisibility(View.VISIBLE);
-            return;
         }
 
         RealmResults<TrnRepo> trnRepos = this.realm.where(TrnRepo.class)
@@ -212,7 +213,6 @@ public class ActivityScrollingLKPDetails extends BasicActivity {
             btnPaymentReceive.setVisibility(View.GONE);
             btnVisitResultEntry.setVisibility(View.GONE);
             btnRepoEntry.setVisibility(View.VISIBLE);
-            return;
         }
 
 

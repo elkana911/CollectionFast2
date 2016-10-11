@@ -21,6 +21,7 @@ import android.widget.Toast;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.List;
+import java.util.concurrent.TimeUnit;
 
 import butterknife.BindView;
 import butterknife.ButterKnife;
@@ -294,7 +295,9 @@ public class ActivityVisitResult extends BasicActivity {
                         focusView = etTglJanjiBayar;
                         cancel = true;
                     } else {
-                        if (datePTP.before(new Date())) {
+                        long dateDiff = Utility.getDateDiff(new Date(), datePTP, TimeUnit.DAYS);
+                        if (dateDiff < 0) {
+                            Toast.makeText(this, getString(R.string.error_ptp_date), Toast.LENGTH_SHORT).show();
                             etTglJanjiBayar.setError(getString(R.string.error_ptp_date));
                             focusView = etTglJanjiBayar;
                             cancel = true;
@@ -312,6 +315,24 @@ public class ActivityVisitResult extends BasicActivity {
         if (TextUtils.isEmpty(classCode)) {
             Toast.makeText(this, "Please select Klasifikasi", Toast.LENGTH_SHORT).show();
             focusView = spKlasifikasi;
+            cancel = true;
+        }
+
+        if (!TextUtils.isEmpty(etBertemuDengan.getText()) && etBertemuDengan.getText().length() > 100) {
+            etBertemuDengan.setError(getString(R.string.error_value_too_long));
+            focusView = etBertemuDengan;
+            cancel = true;
+        }
+
+        if (!TextUtils.isEmpty(etTindakSelanjutnya.getText()) && etTindakSelanjutnya.getText().length() > 500) {
+            etTindakSelanjutnya.setError(getString(R.string.error_value_too_long));
+            focusView = etTindakSelanjutnya;
+            cancel = true;
+        }
+
+        if (!TextUtils.isEmpty(etKomentar.getText()) && etKomentar.getText().length() > 2000) {
+            etKomentar.setError(getString(R.string.error_value_too_long));
+            focusView = etKomentar;
             cancel = true;
         }
 

@@ -59,7 +59,7 @@ public class DataUtil {
         ServerInfo serverInfo = realm.where(ServerInfo.class).findFirst();
         UserConfig userConfig = realm.where(UserConfig.class).findFirst();
 
-        long count = realm.where(MstDelqReasons.class).count();
+        long count = realm.where(MstParam.class).count();
 
         if (serverInfo != null) {
             if (count > 0 && Utility.isSameDay(new Date(), serverInfo.getServerDate())) {
@@ -124,7 +124,7 @@ public class DataUtil {
                                     if (count > 0) {
                                         bgRealm.delete(MstParam.class);
                                     }
-                                    bgRealm.copyToRealmOrUpdate(respGetMasterData.getData().getParam());
+                                    bgRealm.copyToRealmOrUpdate(respGetMasterData.getData().getParams());
 
                                     // insert ldp status
                                     count = bgRealm.where(MstLDVStatus.class).count();

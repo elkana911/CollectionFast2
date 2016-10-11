@@ -28,6 +28,7 @@
                 android:focusable="false"
                 android:focusableInTouchMode="false"
                 android:hint="Contract No"
+                android:textColor="@android:color/tertiary_text_dark"
                 android:maxLines="1" />
         </android.support.design.widget.TextInputLayout>
 
@@ -71,6 +72,7 @@
                 android:focusable="false"
                 android:focusableInTouchMode="false"
                 android:hint="Address"
+                android:textColor="@android:color/tertiary_text_dark"
                 android:maxLines="3" />
         </android.support.design.widget.TextInputLayout>
 
@@ -93,6 +95,7 @@
                     android:focusableInTouchMode="false"
                     android:hint="Kelurahan"
                     android:maxLines="1"
+                    android:textColor="@android:color/tertiary_text_dark"
                     android:textAppearance="@android:style/TextAppearance.DeviceDefault.Small" />
             </android.support.design.widget.TextInputLayout>
 
@@ -110,6 +113,7 @@
                     android:focusableInTouchMode="false"
                     android:hint="Kecamatan"
                     android:maxLines="1"
+                    android:textColor="@android:color/tertiary_text_dark"
                     android:textAppearance="@android:style/TextAppearance.DeviceDefault.Small" />
             </android.support.design.widget.TextInputLayout>
 
@@ -149,6 +153,7 @@
                     android:focusable="false"
                     android:focusableInTouchMode="false"
                     android:hint="No Angsuran Terbayar"
+                    android:textColor="@android:color/tertiary_text_dark"
                     android:maxLines="1" />
             </android.support.design.widget.TextInputLayout>
 
@@ -167,6 +172,7 @@
                     android:gravity="right"
                     android:hint="Lama Hari"
                     android:inputType="number"
+                    android:textColor="@android:color/tertiary_text_dark"
                     android:maxLines="1" />
             </android.support.design.widget.TextInputLayout>
 
@@ -190,6 +196,7 @@
                     android:focusable="false"
                     android:focusableInTouchMode="false"
                     android:hint="Sisa Pokok"
+                    android:textColor="@android:color/tertiary_text_dark"
                     android:maxLines="1" />
             </android.support.design.widget.TextInputLayout>
 
@@ -208,6 +215,7 @@
                     android:gravity="right"
                     android:hint="Angsuran"
                     android:inputType="number"
+                    android:textColor="@android:color/tertiary_text_dark"
                     android:maxLines="1" />
             </android.support.design.widget.TextInputLayout>
         </LinearLayout>
@@ -247,6 +255,7 @@
                     android:focusable="false"
                     android:focusableInTouchMode="false"
                     android:hint="Denda"
+                    android:textColor="@android:color/tertiary_text_dark"
                     android:maxLines="1" />
             </android.support.design.widget.TextInputLayout>
 
@@ -264,6 +273,7 @@
                     android:focusableInTouchMode="false"
                     android:gravity="right"
                     android:hint="Denda Berjalan"
+                    android:textColor="@android:color/tertiary_text_dark"
                     android:maxLines="1" />
             </android.support.design.widget.TextInputLayout>
 
@@ -283,6 +293,7 @@
                 android:gravity="right"
                 android:hint="Biaya Tagih"
                 android:inputType="number"
+                android:textColor="@android:color/tertiary_text_dark"
                 android:maxLines="1" />
         </android.support.design.widget.TextInputLayout>
 

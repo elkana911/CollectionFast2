@@ -217,10 +217,13 @@
     <string name="error_select_rvb">Please select a voucher</string>
     <string name="error_amount_too_small">Amount to small</string>
     <string name="error_amount_too_large">Amount to large</string>
+    <string name="error_value_too_long">Value too long</string>
     <string name="title_activity_upload_picture">Upload Picture</string>
     <string name="lkp_inquiry">LKP Inquiry</string>
     <string name="error_amount_invalid">Invalid Amount</string>
     <string name="spinner_please_select"><![CDATA[<Please select>]]></string>
     <string name="title_activity_payment_receive">Payment Receive</string>
     <string name="title_activity_payment_entry">Payment Entry</string>
+    <string name="error_invalid_phone">Invalid phone number</string>
+    <string name="error_coll_fee_range">Only 0 or 10000 is allowed</string>
 </resources>

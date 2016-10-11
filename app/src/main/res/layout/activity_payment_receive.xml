@@ -74,6 +74,7 @@
                             android:focusable="false"
                             android:focusableInTouchMode="false"
                             android:hint="Angsuran Ke"
+                            android:textColor="@android:color/tertiary_text_dark"
                             android:maxLines="1" />
                     </android.support.design.widget.TextInputLayout>
 
@@ -91,6 +92,7 @@
                             android:focusableInTouchMode="false"
                             android:gravity="end"
                             android:hint="Angsuran"
+                            android:textColor="@android:color/tertiary_text_dark"
                             android:maxLines="1" />
                     </android.support.design.widget.TextInputLayout>
 
@@ -162,6 +164,7 @@
                         android:focusable="false"
                         android:focusableInTouchMode="false"
                         android:inputType="number"
+                        android:textColor="@android:color/tertiary_text_dark"
                         android:maxLines="1" />
                 </android.support.design.widget.TextInputLayout>
 

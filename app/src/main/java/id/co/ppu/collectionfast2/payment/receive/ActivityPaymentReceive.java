@@ -123,6 +123,7 @@ public class ActivityPaymentReceive extends BasicActivity {
         etContractNo.setText(contractNo);
         etAngsuran.setText(Utility.convertLongToRupiah(dtl.getMonthInst()));
         etAngsuranKe.setText(String.valueOf(dtl.getInstNo() + 1));
+        etPlatform.setText(dtl.getPlatform());
 
         // load last save
         TrnRVColl trnRVColl = isExists(this.realm);
@@ -144,7 +145,6 @@ public class ActivityPaymentReceive extends BasicActivity {
             etDenda.setText(String.valueOf(trnRVColl.getPenaltyAc()));
             etDendaBerjalan.setText(String.valueOf(trnRVColl.getDaysIntrAc()));
             etBiayaTagih.setText(String.valueOf(trnRVColl.getCollFeeAc()));
-            etPlatform.setText(null);
             etDanaSosial.setText("0");
 
         } else {
@@ -162,7 +162,6 @@ public class ActivityPaymentReceive extends BasicActivity {
             etDenda.setText(String.valueOf(dtl.getPenaltyAMBC()));
             etDendaBerjalan.setText(String.valueOf(dtl.getDaysIntrAmbc()));
             etBiayaTagih.setText(dtl.getCollectionFee() == null ? "0" : String.valueOf(dtl.getCollectionFee()));
-            etPlatform.setText(dtl.getPlatform());
             long danaSosial = dtl.getDanaSosial() == null ? 0 : dtl.getDanaSosial().longValue();
             etDanaSosial.setText(Utility.convertLongToRupiah(danaSosial));
 
@@ -201,6 +200,12 @@ public class ActivityPaymentReceive extends BasicActivity {
         final String dendaBerjalan = etDendaBerjalan.getText().toString().trim();
         final String biayaTagih = etBiayaTagih.getText().toString().trim();
 
+        if (etCatatan.getText().toString().length() > 300) {
+            etCatatan.setError("Should not over " + 300);
+            focusView = etCatatan;
+            cancel = true;
+        }
+
         final String rvbNo = spNoRVB.getSelectedItem().toString();
         TrnRVB selectedRVB = realm.where(TrnRVB.class)
                 .equalTo("rvbNo", rvbNo)
@@ -220,8 +225,41 @@ public class ActivityPaymentReceive extends BasicActivity {
             cancel = true;
         } else {
 
-            long dendaValue = Long.parseLong(denda);
+            if (denda.length() > Utility.MAX_MONEY_DIGITS) {
+                etDenda.setError(getString(R.string.error_amount_invalid));
+                focusView = etDenda;
+                cancel = true;
+            } else {
 
+                long dendaValue = Long.parseLong(denda);
+                long dendaBerjalanValue = Long.parseLong(dendaBerjalan);
+                long dendaTotal = dendaValue + dendaBerjalanValue;
+
+                long minDendaValue = 0;
+                MstParam keyMinPenalty = this.realm.where(MstParam.class)
+                        .equalTo("key", "MIN_PENALTY_RV")
+                        .findFirst();
+                if (keyMinPenalty != null) {
+                    minDendaValue = Long.parseLong(keyMinPenalty.getValue());
+
+                    if (dendaTotal > minDendaValue) {
+                        if (dendaValue < minDendaValue) {
+                            etDenda.setError("Should not under " + minDendaValue);
+                            focusView = etDenda;
+                            cancel = true;
+                        }
+                    } else {
+                        if (dendaValue < dendaTotal) {
+                            etDenda.setError("Should not under " + dendaValue);
+                            focusView = etDenda;
+                            cancel = true;
+                        }
+                    }
+                }
+            }
+
+
+            /*
             if (dendaValue < dtl.getPenaltyAMBC().longValue()) {
                 etDenda.setError("Should not under " + String.valueOf(dtl.getPenaltyAMBC()));
                 focusView = etDenda;
@@ -241,6 +279,7 @@ public class ActivityPaymentReceive extends BasicActivity {
                     cancel = true;
                 }
             }
+            */
 
         }
 
@@ -251,11 +290,20 @@ public class ActivityPaymentReceive extends BasicActivity {
             focusView = etDendaBerjalan;
             cancel = true;
         } else {
-            long dendaBerjalanValue = Long.parseLong(dendaBerjalan);
-            if (dendaBerjalanValue < dtl.getDaysIntrAmbc().longValue()) {
-                etDendaBerjalan.setError("Should not under " + String.valueOf(dtl.getDaysIntrAmbc()));
+
+            if (dendaBerjalan.length() > Utility.MAX_MONEY_DIGITS) {
+                etDendaBerjalan.setError(getString(R.string.error_amount_invalid));
                 focusView = etDendaBerjalan;
                 cancel = true;
+
+            } else {
+
+                long dendaBerjalanValue = Long.parseLong(dendaBerjalan);
+                if (dendaBerjalanValue < dtl.getDaysIntrAmbc().longValue()) {
+                    etDendaBerjalan.setError("Should not under " + String.valueOf(dtl.getDaysIntrAmbc()));
+                    focusView = etDendaBerjalan;
+                    cancel = true;
+                }
             }
         }
 
@@ -264,13 +312,30 @@ public class ActivityPaymentReceive extends BasicActivity {
             focusView = etBiayaTagih;
             cancel = true;
         } else {
-            long biayaTagihValue = Long.parseLong(biayaTagih);
 
-            long collFee = dtl.getCollectionFee() == null ? 0 : dtl.getCollectionFee().longValue();
-            if (biayaTagihValue < collFee) {
-                etBiayaTagih.setText("Should not under " + String.valueOf(collFee));
+            if (biayaTagih.length() > Utility.MAX_MONEY_DIGITS) {
+                etBiayaTagih.setError(getString(R.string.error_amount_invalid));
                 focusView = etBiayaTagih;
                 cancel = true;
+            } else {
+
+                long biayaTagihValue = Long.parseLong(biayaTagih);
+
+                if (biayaTagihValue == 0 || biayaTagihValue == 10000) {
+
+                } else {
+                    etBiayaTagih.setError(getString(R.string.error_coll_fee_range));
+                    focusView = etBiayaTagih;
+                    cancel = true;
+                }
+/*
+                long collFee = dtl.getCollectionFee() == null ? 0 : dtl.getCollectionFee().longValue();
+                if (biayaTagihValue < collFee) {
+                    etBiayaTagih.setText("Should not under " + String.valueOf(collFee));
+                    focusView = etBiayaTagih;
+                    cancel = true;
+                }
+                */
             }
         }
 
@@ -294,7 +359,7 @@ public class ActivityPaymentReceive extends BasicActivity {
         } else {
             long penerimaanValue = Long.parseLong(penerimaan);
 
-            if (penerimaanValue > 99999999) {
+            if (penerimaanValue > Utility.MAX_MONEY_LIMIT) {
                 etPenerimaan.setError(getString(R.string.error_amount_too_large));
                 focusView = etPenerimaan;
                 cancel = true;
@@ -414,7 +479,8 @@ public class ActivityPaymentReceive extends BasicActivity {
 
                     //yyyyMMdd-runnningnumber2digit
                     StringBuilder sb = new StringBuilder();
-                    sb.append(Utility.convertDateToString(serverDate, "yyyy"))
+                    sb.append(collectorId)
+                            .append(Utility.convertDateToString(serverDate, "yyyy"))
                             .append(Utility.convertDateToString(serverDate, "MM"))
                             .append(Utility.convertDateToString(serverDate, "dd"))
                             .append(Utility.leftPad(runningNumber, 3));

@@ -37,7 +37,8 @@
                     android:focusableInTouchMode="false"
                     android:hint="No LKP"
                     android:maxLines="1"
-                    android:singleLine="true" />
+                    android:textColor="@android:color/tertiary_text_dark"
+                    />
             </android.support.design.widget.TextInputLayout>
 
             <android.support.design.widget.TextInputLayout
@@ -53,7 +54,7 @@
                     android:focusableInTouchMode="false"
                     android:hint="Tgl LKP"
                     android:maxLines="1"
-                    android:singleLine="true" />
+                    />
             </android.support.design.widget.TextInputLayout>
 
             <android.support.design.widget.TextInputLayout
@@ -69,7 +70,7 @@
                     android:focusableInTouchMode="false"
                     android:hint="Cabang"
                     android:maxLines="1"
-                    android:singleLine="true" />
+                    />
             </android.support.design.widget.TextInputLayout>
 
             <android.support.design.widget.TextInputLayout
@@ -85,7 +86,7 @@
                     android:focusableInTouchMode="false"
                     android:hint="AR Staff"
                     android:maxLines="1"
-                    android:singleLine="true" />
+                    />
             </android.support.design.widget.TextInputLayout>
 
             <TableLayout
@@ -99,19 +100,20 @@
                 <TableRow
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:layout_margin="20dp">
+                    >
 
                     <TextView />
 
                     <TextView
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:background="@android:color/holo_red_light"
+                        android:layout_gravity="center"
                         android:text="Target" />
 
                     <TextView
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
+                        android:layout_gravity="center"
                         android:text="Tertagih" />
                 </TableRow>
 
@@ -128,7 +130,7 @@
                         android:focusableInTouchMode="false"
                         android:hint="AR Staff"
                         android:maxLines="1"
-                        android:singleLine="true" />
+                        />
 
                     <EditText
                         android:id="@+id/etTertagihPenerimaan"
@@ -139,7 +141,7 @@
                         android:focusableInTouchMode="false"
                         android:hint="AR Staff"
                         android:maxLines="1"
-                        android:singleLine="true" />
+                        />
                 </TableRow>
 
                 <TableRow>
@@ -155,7 +157,7 @@
                         android:focusableInTouchMode="false"
                         android:hint="AR Staff"
                         android:maxLines="1"
-                        android:singleLine="true" />
+                        />
 
                     <EditText
                         android:id="@+id/etTertagihUnit"
@@ -166,7 +168,7 @@
                         android:focusableInTouchMode="false"
                         android:hint="AR Staff"
                         android:maxLines="1"
-                        android:singleLine="true" />
+                        />
                 </TableRow>
 
                 <TableRow>
@@ -212,7 +214,9 @@
                     android:focusableInTouchMode="false"
                     android:hint="Penerimaan"
                     android:maxLines="1"
-                    android:singleLine="true" />
+                    android:gravity="end"
+                    android:textStyle="bold"
+                    />
             </android.support.design.widget.TextInputLayout>
 
             <android.support.design.widget.TextInputLayout
@@ -228,7 +232,8 @@
                     android:focusableInTouchMode="false"
                     android:hint="Unit"
                     android:maxLines="1"
-                    android:singleLine="true" />
+                    android:gravity="end"
+                    />
             </android.support.design.widget.TextInputLayout>
 
             <android.support.design.widget.TextInputLayout
@@ -244,7 +249,9 @@
                     android:focusableInTouchMode="false"
                     android:hint="Total Tertagih"
                     android:maxLines="1"
-                    android:singleLine="true" />
+                    android:textStyle="bold"
+                    android:gravity="end"
+                    />
             </android.support.design.widget.TextInputLayout>
 
         </LinearLayout>

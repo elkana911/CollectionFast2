@@ -6,19 +6,19 @@ import java.util.List;
  * Created by Eric on 08-Sep-16.
  */
 public class MasterData {
-    private List<MstParam> param;
+    private List<MstParam> params;
     private List<MstLDVStatus> ldpStatus;
     private List<MstLDVParameters> ldpParameters;
     private List<MstLDVClassifications> ldpClassifications;
     private List<MstDelqReasons> delqReasons;
     private List<MstOffices> offices;
 
-    public List<MstParam> getParam() {
-        return param;
+    public List<MstParam> getParams() {
+        return params;
     }
 
-    public void setParam(List<MstParam> param) {
-        this.param = param;
+    public void setParams(List<MstParam> params) {
+        this.params = params;
     }
 
     public List<MstLDVStatus> getLdpStatus() {

@@ -2,6 +2,7 @@ package id.co.ppu.collectionfast2.fragments;
 
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
+import android.text.method.LinkMovementMethod;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -106,6 +107,8 @@ public class HomeFragment extends Fragment {
             etCollectorName.setText(secUser.getFullName());
             etEmail.setText(secUser.getEmailAddr());
         }
+
+        etPhone.setMovementMethod(LinkMovementMethod.getInstance());
 
         return view;
     }
