@@ -310,7 +310,7 @@ public class DataUtil {
                 .findAll();
 
         RealmResults<SyncTrnRepo> trnSyncRepo = realm.where(SyncTrnRepo.class)
-                .equalTo("contractNo", dtl.getPk().getLdvNo())
+                .equalTo("contractNo", dtl.getContractNo())
                 .equalTo("createdBy", Utility.LAST_UPDATE_BY)
                 .isNotNull("syncedDate")
                 .findAll();

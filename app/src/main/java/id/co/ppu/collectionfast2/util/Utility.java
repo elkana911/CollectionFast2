@@ -21,6 +21,7 @@ import java.text.DecimalFormat;
 import java.text.DecimalFormatSymbols;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
+import java.util.Calendar;
 import java.util.Date;
 import java.util.concurrent.TimeUnit;
 
@@ -29,10 +30,10 @@ import okhttp3.HttpUrl;
 
 public class Utility {
 
-    public final static String DATE_EXPIRED_YYYYMMDD = "20161012";
+    public final static String DATE_EXPIRED_YYYYMMDD = "20161231";
     public final static String[][] servers = {
-            {"local-server", "10.100.100.167", "8090"},
-//            {"local-server", "192.168.1.105", "8090"},
+//            {"local-server", "10.100.100.167", "8090"},
+            {"local-server", "192.168.1.103", "8090"},
             {"fast-mobile", "cmobile.radanafinance.co.id", "7001"}
     };
 
@@ -258,6 +259,21 @@ public class Utility {
         return null;
     }
 
+    public static Date getYesterday(Date startFrom) {
+        Calendar cal = Calendar.getInstance();
+        cal.setTime(startFrom);
+        cal.add(Calendar.DAY_OF_YEAR, -1); // <--
+        return cal.getTime();
+    }
+
+    public static Date getTwoDaysAgo(Date startFrom) {
+        Calendar cal = Calendar.getInstance();
+        cal.setTime(startFrom);
+        cal.add(Calendar.DAY_OF_YEAR, -2); // <--
+        return cal.getTime();
+    }
+
+
     public static String convertLongToRupiah(long amount) {
 //        double harga = 250000000;
 
@@ -335,6 +351,13 @@ public class Utility {
         } else {
             return android.os.Build.SERIAL;
         }
+    }
+
+    public static long longValue(Long value) {
+        if (value == null)
+            return 0;
+        else
+            return value.longValue();
     }
 /*
     public static String getAndroidID(Context ctx){

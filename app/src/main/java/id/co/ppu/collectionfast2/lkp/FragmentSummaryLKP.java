@@ -17,11 +17,13 @@ import android.widget.TextView;
 
 import com.weiwangcn.betterspinner.library.material.MaterialBetterSpinner;
 
+import java.util.Date;
 import java.util.List;
 
 import butterknife.BindView;
 import butterknife.ButterKnife;
 import id.co.ppu.collectionfast2.R;
+import id.co.ppu.collectionfast2.pojo.ServerInfo;
 import id.co.ppu.collectionfast2.pojo.UserData;
 import id.co.ppu.collectionfast2.pojo.master.MstLDVStatus;
 import id.co.ppu.collectionfast2.pojo.master.MstSecUser;
@@ -99,14 +101,32 @@ public class FragmentSummaryLKP extends Fragment {
 
         long unitTarget = this.realm.where(TrnLDVDetails.class).count();
 
-        Number receivedAmount = this.realm.where(TrnRVColl.class).isNull("ldvNo").sum("receivedAmount");
+        Date serverDate = this.realm.where(ServerInfo.class).findFirst().getServerDate();
+
+        StringBuilder rvColl = new StringBuilder();
+        rvColl.append(Utility.convertDateToString(serverDate, "dd"))
+                .append(Utility.convertDateToString(serverDate, "MM"))
+                .append(Utility.convertDateToString(serverDate, "yyyy"))
+                .append(collectorCode);
+
+        Number receivedAmount = this.realm.where(TrnRVColl.class)
+                .equalTo("pk.rvCollNo", rvColl.toString())
+                .isNull("ldvNo")
+                .sum("receivedAmount");
 
         // TODO: ask pak yoce maksudnya count(mc_trn_rvcoll.ldv_no) yg ldv_no nya null ??
         long unitNonLKP = this.realm.where(TrnRVColl.class)
                             .isNull("ldvNo")
                             .count();
 
-        long totalTertagih = this.realm.where(TrnRVColl.class).sum("receivedAmount").longValue();
+        RealmResults<TrnRVColl> trnRVColls = this.realm.where(TrnRVColl.class).findAll();
+
+//        long _totalRVColl = this.realm.where(TrnRVColl.class).count();
+
+        long totalTertagih = this.realm.where(TrnRVColl.class)
+                .equalTo("pk.rvCollNo", rvColl.toString())
+                .sum("receivedAmount")
+                .longValue();
 
 //        long totalTertagih = header.getPrncAC() + header.getIntrAC() + receivedAmount.longValue();
 

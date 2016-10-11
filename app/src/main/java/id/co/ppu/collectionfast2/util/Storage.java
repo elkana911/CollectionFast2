@@ -14,7 +14,7 @@ public class Storage {
     public static final String KEY_SERVER_ID = "serverID";
 //    public static final String KEY_SERVER_DATE = "server.date";
     public static final String KEY_USER = "user";
-    public static final String KEY_USER_LAST_MORNING = "user.lastMorning";
+    public static final String KEY_USER_LAST_DAY = "user.lastMorning";
 
     /*
     public static String getPrefAsString(Context ctx, String key) {

@@ -73,8 +73,8 @@ public class ServiceGenerator {
             });
         }
 
-        OkHttpClient client = httpClient.connectTimeout(4, TimeUnit.MINUTES)
-                .readTimeout(4, TimeUnit.MINUTES)
+        OkHttpClient client = httpClient.connectTimeout(2, TimeUnit.MINUTES)
+                .readTimeout(2, TimeUnit.MINUTES)
                 .build();
 
         /*

@@ -4,7 +4,6 @@ import android.graphics.Color;
 import android.os.Bundle;
 import android.support.design.widget.Snackbar;
 import android.support.v4.app.DialogFragment;
-import android.text.TextUtils;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ArrayAdapter;
@@ -399,7 +398,7 @@ public class ActivityPaymentEntri extends BasicActivity implements FragmentActiv
                         .findFirst();
                 if (keyMinPenalty != null) {
                     minDendaValue = Long.parseLong(keyMinPenalty.getValue());
-
+/*
                     if (dendaTotal > minDendaValue) {
                         if (dendaValue < minDendaValue) {
                             etDenda.setError("Should not under " + minDendaValue);
@@ -413,10 +412,11 @@ public class ActivityPaymentEntri extends BasicActivity implements FragmentActiv
                             cancel = true;
                         }
                     }
+                    */
                 }
             }
         }
-
+/*
         if (TextUtils.isEmpty(etDendaBerjalan.getText())
                 || !Utility.isNumeric(etDendaBerjalan.getText().toString())
                 ) {
@@ -440,7 +440,7 @@ public class ActivityPaymentEntri extends BasicActivity implements FragmentActiv
 //                }
             }
         }
-
+*/
         if (!Utility.isValidMoney(biayaTagih)) {
             etBiayaTagih.setError(getString(R.string.error_amount_invalid));
             focusView = etBiayaTagih;
@@ -604,7 +604,7 @@ public class ActivityPaymentEntri extends BasicActivity implements FragmentActiv
                         userConfig.setKodeRVCollRunningNumber(0L);
 
 
-                    // TODO: coba cek dulu jgn sampe generated lagi di hari yg sama
+                    /*
                     long runningNumber = userConfig.getKodeRVCollRunningNumber();
                     if (userConfig.getKodeRVCollLastGenerated() == null
                             || !Utility.isSameDay(userConfig.getKodeRVCollLastGenerated(), new Date())
@@ -616,14 +616,14 @@ public class ActivityPaymentEntri extends BasicActivity implements FragmentActiv
                         realm.copyToRealmOrUpdate(userConfig);
 
                     }
-
-                    //yyyyMMdd-runnningnumber2digit
+*/
+                    // generate runningnumber: 1 koletor 1 nomor per hari. maka triknya yyyymmdd<collectorId>
                     StringBuilder sb = new StringBuilder();
-                    sb.append(collectorId)
-                            .append(Utility.convertDateToString(serverDate, "yyyy"))
+                    sb.append(Utility.convertDateToString(serverDate, "dd"))
                             .append(Utility.convertDateToString(serverDate, "MM"))
-                            .append(Utility.convertDateToString(serverDate, "dd"))
-                            .append(Utility.leftPad(runningNumber, 3));
+                            .append(Utility.convertDateToString(serverDate, "yyyy"))
+                            .append(collectorId);
+//                            .append(Utility.leftPad(runningNumber, 3));
 
                     TrnRVCollPK trnRVCollPK = realm.createObject(TrnRVCollPK.class);
                     trnRVCollPK.setRvCollNo(sb.toString());
@@ -649,7 +649,8 @@ public class ActivityPaymentEntri extends BasicActivity implements FragmentActiv
                 trnRVColl.setLdvNo(null);
 
                 trnRVColl.setPenaltyAc(Long.valueOf(denda));
-                trnRVColl.setDaysIntrAc(Long.valueOf(dendaBerjalan));
+                trnRVColl.setDaysIntrAc(0L);
+//                trnRVColl.setDaysIntrAc(Long.valueOf(dendaBerjalan));
                 trnRVColl.setCollFeeAc(Long.valueOf(biayaTagih));
 
                 trnRVColl.setContractNo(contractNo);

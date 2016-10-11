@@ -30,6 +30,7 @@ import butterknife.OnClick;
 import id.co.ppu.collectionfast2.R;
 import id.co.ppu.collectionfast2.component.BasicActivity;
 import id.co.ppu.collectionfast2.listener.OnSuccessError;
+import id.co.ppu.collectionfast2.location.Location;
 import id.co.ppu.collectionfast2.pojo.UserData;
 import id.co.ppu.collectionfast2.pojo.sync.SyncFileUpload;
 import id.co.ppu.collectionfast2.pojo.trn.TrnLDVDetails;
@@ -368,7 +369,7 @@ public class ActivityUploadPictureGeo extends BasicActivity {
     private void uploadPicture(final String picId, ImageView targetImage, boolean skip, final OnSuccessError listener) {
         Object tag = targetImage.getTag();
         if (skip || tag == null) {
-            Toast.makeText(this, picId + " skipped", Toast.LENGTH_SHORT).show();
+//            Toast.makeText(this, picId + " skipped", Toast.LENGTH_SHORT).show();
             if (listener != null) {
                 listener.onSkip();
                 return;
@@ -439,6 +440,8 @@ public class ActivityUploadPictureGeo extends BasicActivity {
         NetUtil.uploadPhoto(this, this.realm.copyFromRealm(trnPhoto), uri, new Callback<ResponseBody>() {
             @Override
             public void onResponse(Call<ResponseBody> call, Response<ResponseBody> response) {
+                ResponseBody body1 = response.body();
+
                 if (response.isSuccessful()) {
                     realm.executeTransactionAsync(new Realm.Transaction() {
                         @Override
@@ -468,18 +471,30 @@ public class ActivityUploadPictureGeo extends BasicActivity {
                         }
                     });
 
-                    ResponseBody body1 = response.body();
-
                     try {
-                        String s = body1.string();
+                        if (body1 != null) {
+                            String s = body1.string();
 
-                        Log.d(TAG, s);
+                            Log.d(TAG, s);
+                        }
                     } catch (IOException e) {
                         e.printStackTrace();
                     }
 
                 } else {
+                    try {
+                        if (body1 != null) {
+                            String s = body1.string();
+
+                            Log.d(TAG, s);
+                        }
+                    } catch (IOException e) {
+                        e.printStackTrace();
+                    }
+
                     Toast.makeText(ActivityUploadPictureGeo.this, "upload " + picId + " failed", Toast.LENGTH_SHORT).show();
+                    if (listener != null)
+                        listener.onSkip();
                 }
             }
 
@@ -652,6 +667,10 @@ public class ActivityUploadPictureGeo extends BasicActivity {
 
         final ImageView finalTargetImage = targetImage;
 
+        double[] gps = Location.getGPS(this);
+        final String latitude = String.valueOf(gps[0]);
+        final String longitude = String.valueOf(gps[1]);
+
         this.realm.executeTransaction(new Realm.Transaction() {
             @Override
             public void execute(Realm realm) {
@@ -674,8 +693,8 @@ public class ActivityUploadPictureGeo extends BasicActivity {
                     trnPhoto1.setContractNo(contractNo);
                     trnPhoto1.setCollCode(collectorId);
                     trnPhoto1.setLdvNo(ldvNo);
-                    trnPhoto1.setLatitude("0");
-                    trnPhoto1.setLongitude("0");
+                    trnPhoto1.setLatitude(latitude);
+                    trnPhoto1.setLongitude(longitude);
                     trnPhoto1.setPhotoId("picture1");
                     trnPhoto1.setLastupdateBy(Utility.LAST_UPDATE_BY);
                     trnPhoto1.setLastupdateTimestamp(new Date());
@@ -699,8 +718,8 @@ public class ActivityUploadPictureGeo extends BasicActivity {
                     trnPhoto2.setContractNo(contractNo);
                     trnPhoto2.setCollCode(collectorId);
                     trnPhoto2.setLdvNo(ldvNo);
-                    trnPhoto2.setLatitude("0");
-                    trnPhoto2.setLongitude("0");
+                    trnPhoto2.setLatitude(latitude);
+                    trnPhoto2.setLongitude(longitude);
                     trnPhoto2.setPhotoId("picture2");
                     trnPhoto2.setLastupdateBy(Utility.LAST_UPDATE_BY);
                     trnPhoto2.setLastupdateTimestamp(new Date());
@@ -724,8 +743,8 @@ public class ActivityUploadPictureGeo extends BasicActivity {
                     trnPhoto3.setContractNo(contractNo);
                     trnPhoto3.setCollCode(collectorId);
                     trnPhoto3.setLdvNo(ldvNo);
-                    trnPhoto3.setLatitude("0");
-                    trnPhoto3.setLongitude("0");
+                    trnPhoto3.setLatitude(latitude);
+                    trnPhoto3.setLongitude(longitude);
                     trnPhoto3.setPhotoId("picture3");
                     trnPhoto3.setLastupdateBy(Utility.LAST_UPDATE_BY);
                     trnPhoto3.setLastupdateTimestamp(new Date());
@@ -749,8 +768,8 @@ public class ActivityUploadPictureGeo extends BasicActivity {
                     trnPhoto4.setContractNo(contractNo);
                     trnPhoto4.setCollCode(collectorId);
                     trnPhoto4.setLdvNo(ldvNo);
-                    trnPhoto4.setLatitude("0");
-                    trnPhoto4.setLongitude("0");
+                    trnPhoto4.setLatitude(latitude);
+                    trnPhoto4.setLongitude(longitude);
                     trnPhoto4.setPhotoId("picture4");
                     trnPhoto4.setLastupdateBy(Utility.LAST_UPDATE_BY);
                     trnPhoto4.setLastupdateTimestamp(new Date());

@@ -2,7 +2,6 @@ package id.co.ppu.collectionfast2.payment.receive;
 
 import android.os.Bundle;
 import android.support.design.widget.Snackbar;
-import android.text.TextUtils;
 import android.view.View;
 import android.widget.AutoCompleteTextView;
 import android.widget.EditText;
@@ -34,6 +33,10 @@ import io.realm.Realm;
 import io.realm.RealmResults;
 
 public class ActivityPaymentReceive extends BasicActivity {
+
+    private final CharSequence[] collFeeList = {
+            "0", "10000"
+    };
 
     public static final String PARAM_COLLECTOR_ID = "collector.id";
     public static final String PARAM_CONTRACT_NO = "contractNo";
@@ -143,7 +146,7 @@ public class ActivityPaymentReceive extends BasicActivity {
             etCatatan.setText(trnRVColl.getNotes());
 
             etDenda.setText(String.valueOf(trnRVColl.getPenaltyAc()));
-            etDendaBerjalan.setText(String.valueOf(trnRVColl.getDaysIntrAc()));
+//            etDendaBerjalan.setText(String.valueOf(trnRVColl.getDaysIntrAc()));
             etBiayaTagih.setText(String.valueOf(trnRVColl.getCollFeeAc()));
             etDanaSosial.setText("0");
 
@@ -159,8 +162,9 @@ public class ActivityPaymentReceive extends BasicActivity {
             hint.setRvbNo(getString(R.string.spinner_please_select));
             adapterRVB.insert(hint, 0);
 
-            etDenda.setText(String.valueOf(dtl.getPenaltyAMBC()));
-            etDendaBerjalan.setText(String.valueOf(dtl.getDaysIntrAmbc()));
+            etDenda.setText(String.valueOf(Utility.longValue(dtl.getPenaltyAMBC()) + Utility.longValue(dtl.getDaysIntrAmbc())));
+//            etDenda.setText(String.valueOf(dtl.getPenaltyAMBC()));
+//            etDendaBerjalan.setText(String.valueOf(dtl.getDaysIntrAmbc()));
             etBiayaTagih.setText(dtl.getCollectionFee() == null ? "0" : String.valueOf(dtl.getCollectionFee()));
             long danaSosial = dtl.getDanaSosial() == null ? 0 : dtl.getDanaSosial().longValue();
             etDanaSosial.setText(Utility.convertLongToRupiah(danaSosial));
@@ -186,7 +190,7 @@ public class ActivityPaymentReceive extends BasicActivity {
         // reset errors
         etPenerimaan.setError(null);
         etDenda.setError(null);
-        etDendaBerjalan.setError(null);
+//        etDendaBerjalan.setError(null);
         etBiayaTagih.setError(null);
         etDanaSosial.setError(null);
         etPlatform.setError(null);
@@ -232,8 +236,8 @@ public class ActivityPaymentReceive extends BasicActivity {
             } else {
 
                 long dendaValue = Long.parseLong(denda);
-                long dendaBerjalanValue = Long.parseLong(dendaBerjalan);
-                long dendaTotal = dendaValue + dendaBerjalanValue;
+//                long dendaBerjalanValue = Long.parseLong(dendaBerjalan);
+//                long dendaTotal = dendaValue + dendaBerjalanValue;
 
                 long minDendaValue = 0;
                 MstParam keyMinPenalty = this.realm.where(MstParam.class)
@@ -242,6 +246,28 @@ public class ActivityPaymentReceive extends BasicActivity {
                 if (keyMinPenalty != null) {
                     minDendaValue = Long.parseLong(keyMinPenalty.getValue());
 
+                    long batas = Utility.longValue(dtl.getPenaltyAMBC()) + Utility.longValue(dtl.getDaysIntrAmbc());
+
+                    if (batas < minDendaValue) {
+                        if (dendaValue != batas) {
+                            etDenda.setError("Denda should be " + batas);
+                            focusView = etDenda;
+                            cancel = true;
+
+                        }
+                    } else {
+                        if (dendaValue < minDendaValue) {
+                            etDenda.setError("Should not under " + minDendaValue);
+                            focusView = etDenda;
+                            cancel = true;
+                        }
+                        if (dendaValue > batas) {
+                            etDenda.setError("Should not above " + batas);
+                            focusView = etDenda;
+                            cancel = true;
+                        }
+                    }
+                    /*
                     if (dendaTotal > minDendaValue) {
                         if (dendaValue < minDendaValue) {
                             etDenda.setError("Should not under " + minDendaValue);
@@ -255,6 +281,7 @@ public class ActivityPaymentReceive extends BasicActivity {
                             cancel = true;
                         }
                     }
+                    */
                 }
             }
 
@@ -282,7 +309,7 @@ public class ActivityPaymentReceive extends BasicActivity {
             */
 
         }
-
+/*
         if (TextUtils.isEmpty(etDendaBerjalan.getText())
                 || !Utility.isNumeric(etDendaBerjalan.getText().toString())
                 ) {
@@ -306,7 +333,7 @@ public class ActivityPaymentReceive extends BasicActivity {
                 }
             }
         }
-
+*/
         if (!Utility.isValidMoney(biayaTagih)) {
             etBiayaTagih.setError(getString(R.string.error_amount_invalid));
             focusView = etBiayaTagih;
@@ -458,9 +485,10 @@ public class ActivityPaymentReceive extends BasicActivity {
 
                 if (trnRVColl == null) {
 
-                    // generate runningnumber
+                    // generate runningnumber: 1 koletor 1 nomor per hari. maka triknya yyyymmdd<collectorId>
                     UserConfig userConfig = realm.where(UserConfig.class).findFirst();
 
+                    /*
                     if (userConfig.getKodeRVCollRunningNumber() == null)
                         userConfig.setKodeRVCollRunningNumber(0L);
 
@@ -475,15 +503,15 @@ public class ActivityPaymentReceive extends BasicActivity {
                         userConfig.setKodeRVCollLastGenerated(new Date());
                         realm.copyToRealmOrUpdate(userConfig);
 
-                    }
+                    }*/
 
                     //yyyyMMdd-runnningnumber2digit
                     StringBuilder sb = new StringBuilder();
-                    sb.append(collectorId)
-                            .append(Utility.convertDateToString(serverDate, "yyyy"))
+                    sb.append(Utility.convertDateToString(serverDate, "dd"))
                             .append(Utility.convertDateToString(serverDate, "MM"))
-                            .append(Utility.convertDateToString(serverDate, "dd"))
-                            .append(Utility.leftPad(runningNumber, 3));
+                            .append(Utility.convertDateToString(serverDate, "yyyy"))
+//                            .append(Utility.leftPad(runningNumber, 3));
+                            .append(collectorId);
 
                     TrnRVCollPK trnRVCollPK = new TrnRVCollPK();
                     trnRVCollPK.setRvCollNo(sb.toString());
@@ -507,7 +535,8 @@ public class ActivityPaymentReceive extends BasicActivity {
                 trnRVColl.setProcessDate(serverDate);
 
                 trnRVColl.setPenaltyAc(Long.parseLong(denda));
-                trnRVColl.setDaysIntrAc(Long.parseLong(dendaBerjalan));
+//                trnRVColl.setDaysIntrAc(Long.parseLong(dendaBerjalan));
+                trnRVColl.setDaysIntrAc(0L);
                 trnRVColl.setCollFeeAc(Long.parseLong(biayaTagih));
 
                 trnRVColl.setLdvNo(trnLDVDetails.getPk().getLdvNo());

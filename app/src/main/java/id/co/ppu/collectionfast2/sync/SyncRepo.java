@@ -49,14 +49,17 @@ public class SyncRepo extends ASyncDataHandler {
                     TrnRepo t = (TrnRepo) obj;
 
                     String key1 = t.getRepoNo();
+                    String key2 = t.getContractNo();
 
                     SyncTrnRepo sync = realm.where(SyncTrnRepo.class)
                             .equalTo("repoNo", key1)
+                            .equalTo("contractNo", key2)
                             .findFirst();
 
                     if (sync == null) {
                         sync = new SyncTrnRepo();
                         sync.setRepoNo(key1);
+                        sync.setContractNo(key2);
                         sync.setLastUpdateBy(t.getLastupdateBy());
                         sync.setCreatedBy(t.getCreatedBy());
 

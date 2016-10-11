@@ -271,7 +271,7 @@ public class LoginActivity extends AppCompatActivity {
         } else {
 
             // TODO: enable this code on production
-            Date lastMorning = (Date) Storage.getObjPreference(getApplicationContext(), Storage.KEY_USER_LAST_MORNING, Date.class);
+            Date lastMorning = (Date) Storage.getObjPreference(getApplicationContext(), Storage.KEY_USER_LAST_DAY, Date.class);
             if (lastMorning == null) {
                 loginOffline(username, password);
             } else if (Utility.isSameDay(lastMorning, new Date())) {
@@ -392,7 +392,7 @@ public class LoginActivity extends AppCompatActivity {
                                             Storage.saveObjPreference(getApplicationContext(), Storage.KEY_USER, respLogin.getData());
 
                                             // able to control nextday shpuld re-login to server
-                                            Storage.saveObjPreference(getApplicationContext(), Storage.KEY_USER_LAST_MORNING, new Date());
+                                            Storage.saveObjPreference(getApplicationContext(), Storage.KEY_USER_LAST_DAY, new Date());
 
                                             // final check
                                             startMainActivity();

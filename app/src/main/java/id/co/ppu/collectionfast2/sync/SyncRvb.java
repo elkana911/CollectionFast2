@@ -47,14 +47,14 @@ public class SyncRvb extends ASyncDataHandler {
 
                     TrnRVB t = (TrnRVB) obj;
 
-                    String rvbNo = t.getRvbNo();
+                    String key1 = t.getRvbNo();
 
                     SyncTrnRVB sync = realm.where(SyncTrnRVB.class)
-                            .equalTo("rvbNo", rvbNo)
+                            .equalTo("rvbNo", key1)
                             .findFirst();
                     if (sync == null) {
                         sync = new SyncTrnRVB();
-                        sync.setRvbNo(rvbNo);
+                        sync.setRvbNo(key1);
                         sync.setLastUpdateBy(t.getLastupdateBy());
                         sync.setCreatedBy(t.getCreatedBy());
 

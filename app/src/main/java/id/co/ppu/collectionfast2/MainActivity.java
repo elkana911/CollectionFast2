@@ -105,6 +105,7 @@ import retrofit2.Call;
 import retrofit2.Callback;
 import retrofit2.Response;
 
+// TODO: tombol sync multi fitur jd lbh simple, bisa utk tarik lkp ataupun sync. pembedanya bisa dr trnldvHeader
 public class MainActivity extends SyncActivity
         implements NavigationView.OnNavigationItemSelectedListener, OnLKPListListener {
 
@@ -471,11 +472,12 @@ public class MainActivity extends SyncActivity
             syncTransaction(false, true, new OnSuccessError() {
                 @Override
                 public void onSuccess(String msg) {
-                    final FragmentLKPList frag = (FragmentLKPList)
-                            getSupportFragmentManager().findFragmentById(R.id.content_frame);
 
-                    if (frag != null) {
-                        frag.refresh();
+                    Fragment frag = getSupportFragmentManager().findFragmentById(R.id.content_frame);
+
+                    if (frag != null && frag instanceof FragmentLKPList) {
+                        ((FragmentLKPList)frag).refresh();
+//                    frag.refresh();
                     }
 
                     Date serverDate = realm.where(ServerInfo.class).findFirst().getServerDate();
@@ -537,6 +539,7 @@ public class MainActivity extends SyncActivity
             fragment = new FragmentSummaryLKP();
 
             Bundle bundle = new Bundle();
+            bundle.putString(FragmentSummaryLKP.ARG_PARAM1, currentUser.getUserId());
 //            bundle.putString(FragmentLKPList.ARG_PARAM1, currentUser.getSecUser().get(0).getUserName());
             fragment.setArguments(bundle);
 
@@ -937,7 +940,7 @@ public class MainActivity extends SyncActivity
                                 public void onSuccess() {
                                     if (listener != null)
                                         listener.onSuccess();
-//                                    startJob();   should not be here
+
                                 }
                             }, new Realm.Transaction.OnError() {
                                 @Override
@@ -1001,6 +1004,7 @@ public class MainActivity extends SyncActivity
                 .count();
 
         if (useCache) {
+
             if (count > 0 && lkpDate.before(serverDate)) {
                 if (listener != null)
                     listener.onLoadFromLocal();
@@ -1153,11 +1157,10 @@ public class MainActivity extends SyncActivity
         }, new Realm.Transaction.OnSuccess() {
             @Override
             public void onSuccess() {
-                final FragmentLKPList frag = (FragmentLKPList)
-                        getSupportFragmentManager().findFragmentById(R.id.content_frame);
+                Fragment frag = getSupportFragmentManager().findFragmentById(R.id.content_frame);
 
-                if (frag != null) {
-                    frag.refresh();
+                if (frag != null && frag instanceof FragmentLKPList) {
+                    ((FragmentLKPList)frag).refresh();
                 }
 
             }
@@ -1167,20 +1170,18 @@ public class MainActivity extends SyncActivity
     @Override
     public void onLKPInquiry(final String collectorCode, final Date lkpDate) {
 
-        final FragmentLKPList frag = (FragmentLKPList)
-                getSupportFragmentManager().findFragmentById(R.id.content_frame);
+        final Fragment frag = getSupportFragmentManager().findFragmentById(R.id.content_frame);
 
-        if (frag != null) {
-
+        if (frag != null && frag instanceof FragmentLKPList) {
             retrieveLKPFromServer(collectorCode, lkpDate, false, new OnPostRetrieveLKP() {
                 @Override
                 public void onLoadFromLocal() {
-                    currentLDVNo = frag.loadLKP(collectorCode, lkpDate);
+                    currentLDVNo = ((FragmentLKPList)frag).loadLKP(collectorCode, lkpDate);
                 }
 
                 @Override
                 public void onSuccess() {
-                    frag.loadLKP(collectorCode, lkpDate);
+                    ((FragmentLKPList)frag).loadLKP(collectorCode, lkpDate);
                 }
 
                 @Override
@@ -1230,11 +1231,16 @@ public class MainActivity extends SyncActivity
         }
     }
 
-    public void startJob() {
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
 
-        if (true) {
-            return;
-        }
+    }
+
+    /**
+     * @see #stopJob()
+     */
+    public void startJob() {
 
         Intent intentAlarm = new Intent(this, SyncJob.class);
 
@@ -1254,6 +1260,9 @@ public class MainActivity extends SyncActivity
 
     }
 
+    /**
+     * @see #startJob()
+     */
     public void stopJob() {
 
         if (pendingIntent == null) {
@@ -1265,16 +1274,17 @@ public class MainActivity extends SyncActivity
         Log.i("fast.sync", "sync job stopped");
 
     }
-/*
+
+        /*
     private void startLocationTracker() {
-        // Configure the LocationTracker's broadcast receiver to run every 5 minutes.
         Intent intent = new Intent(this, LocationTracker.class);
         AlarmManager alarmManager = (AlarmManager) getSystemService(Context.ALARM_SERVICE);
         PendingIntent pendingIntent = PendingIntent.getBroadcast(this, 0, intent, 0);
         alarmManager.setRepeating(AlarmManager.RTC_WAKEUP, Calendar.getInstance().getTimeInMillis(),
                 LocationProvider.FIVE_MINUTES, pendingIntent);
+        // Configure the LocationTracker's broadcast receiver to run every 5 minutes.
     }
-*/
+        */
 
     protected void closeBatch() {
 
@@ -1303,12 +1313,12 @@ public class MainActivity extends SyncActivity
                         clearLKPTables();
                         clearSyncTables();
 
-                        final FragmentLKPList frag = (FragmentLKPList)
-                                getSupportFragmentManager().findFragmentById(R.id.content_frame);
+                        Fragment frag = getSupportFragmentManager().findFragmentById(R.id.content_frame);
 
-                        if (frag != null) {
-                            frag.clearTodayList();
+                        if (frag != null && frag instanceof FragmentLKPList) {
+                            ((FragmentLKPList)frag).clearTodayList();
                         }
+
                     }
 
                     @Override
@@ -1540,11 +1550,12 @@ public class MainActivity extends SyncActivity
                 if (req.getBastbj() != null && req.getBastbj().size() > 0)
                     syncBastbj.syncData();
 
-                final FragmentLKPList frag = (FragmentLKPList)
-                        getSupportFragmentManager().findFragmentById(R.id.content_frame);
+                Fragment frag = getSupportFragmentManager().findFragmentById(R.id.content_frame);
+//                final FragmentLKPList frag = (FragmentLKPList)
+//                        getSupportFragmentManager().findFragmentById(R.id.content_frame);
 
-                if (frag != null) {
-                    frag.loadCurrentLKP();
+                if (frag != null && frag instanceof FragmentLKPList) {
+                    ((FragmentLKPList)frag).loadCurrentLKP();
 //                    frag.refresh();
                 }
 

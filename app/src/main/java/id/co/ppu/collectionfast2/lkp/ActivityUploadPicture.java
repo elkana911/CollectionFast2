@@ -26,6 +26,7 @@ import butterknife.OnClick;
 import id.co.ppu.collectionfast2.R;
 import id.co.ppu.collectionfast2.component.BasicActivity;
 import id.co.ppu.collectionfast2.listener.OnSuccessError;
+import id.co.ppu.collectionfast2.location.Location;
 import id.co.ppu.collectionfast2.pojo.UploadPicture;
 import id.co.ppu.collectionfast2.pojo.UserData;
 import id.co.ppu.collectionfast2.pojo.sync.SyncFileUpload;
@@ -296,8 +297,9 @@ public class ActivityUploadPicture extends BasicActivity {
                 .equalTo("collectorId", collectorId)
                 .findFirst();
 
-        String latitude = "";
-        String longitude = "";
+        double[] gps = Location.getGPS(this);
+        String latitude = String.valueOf(gps[0]);
+        String longitude = String.valueOf(gps[1]);
 
         if (targetImage == ivUpload1) {
             latitude = uploadPicture.getLat1();

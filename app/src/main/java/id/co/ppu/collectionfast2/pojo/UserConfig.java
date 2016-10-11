@@ -35,6 +35,7 @@ public class UserConfig extends RealmObject implements Serializable{
     @SerializedName("kodeTarikRunningNumber")
     private Long kodeTarikRunningNumber;
 
+    @Deprecated
     @SerializedName("kodeRVCollRunningNumber")
     private Long kodeRVCollRunningNumber;
 
