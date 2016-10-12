@@ -12,8 +12,6 @@ import butterknife.BindView;
 import butterknife.ButterKnife;
 import id.co.ppu.collectionfast2.R;
 import id.co.ppu.collectionfast2.pojo.UserData;
-import id.co.ppu.collectionfast2.pojo.master.MstSecUser;
-import id.co.ppu.collectionfast2.pojo.master.MstUser;
 import id.co.ppu.collectionfast2.util.Storage;
 import id.co.ppu.collectionfast2.util.Utility;
 
@@ -91,22 +89,14 @@ public class HomeFragment extends Fragment {
 
         UserData userData = (UserData) Storage.getObjPreference(getContext(), Storage.KEY_USER, UserData.class);
 
-        if (userData.getUser() != null) {
-            MstUser user = userData.getUser().get(0);
+        etJabatan.setText(userData.getJabatan());
+        etNIKNo.setText(userData.getNik());
+        etCabang.setText(userData.getBranchName());
+        etAddress.setText(userData.getAlamat());
 
-            etJabatan.setText(user.getJabatan());
-            etNIKNo.setText(user.getNik());
-            etCabang.setText(user.getBranchName());
-            etAddress.setText(user.getAlamat());
-        }
-
-        if (userData.getSecUser() != null) {
-            MstSecUser secUser = userData.getSecUser().get(0);
-
-            etPhone.setText(secUser.getMobilePhone());
-            etCollectorName.setText(secUser.getFullName());
-            etEmail.setText(secUser.getEmailAddr());
-        }
+        etPhone.setText(userData.getMobilePhone());
+        etCollectorName.setText(userData.getFullName());
+        etEmail.setText(userData.getEmailAddr());
 
         etPhone.setMovementMethod(LinkMovementMethod.getInstance());
 

@@ -31,8 +31,7 @@
                     android:focusable="false"
                     android:focusableInTouchMode="false"
                     android:hint="Contract No"
-                    android:maxLines="1"
-                    android:singleLine="true" />
+                    android:maxLines="1" />
             </android.support.design.widget.TextInputLayout>
 
             <LinearLayout
@@ -53,8 +52,7 @@
                         android:focusable="false"
                         android:focusableInTouchMode="false"
                         android:hint="Kategori"
-                        android:maxLines="1"
-                        android:singleLine="true" />
+                        android:maxLines="1" />
                 </android.support.design.widget.TextInputLayout>
 
                 <android.support.design.widget.TextInputLayout
@@ -70,8 +68,7 @@
                         android:focusable="false"
                         android:focusableInTouchMode="false"
                         android:hint="Merk"
-                        android:maxLines="1"
-                        android:singleLine="true" />
+                        android:maxLines="1" />
                 </android.support.design.widget.TextInputLayout>
 
             </LinearLayout>
@@ -94,8 +91,7 @@
                         android:focusable="false"
                         android:focusableInTouchMode="false"
                         android:hint="Type"
-                        android:maxLines="1"
-                        android:singleLine="true" />
+                        android:maxLines="1" />
                 </android.support.design.widget.TextInputLayout>
 
                 <android.support.design.widget.TextInputLayout
@@ -111,8 +107,7 @@
                         android:focusable="false"
                         android:focusableInTouchMode="false"
                         android:hint="Warna"
-                        android:maxLines="1"
-                        android:singleLine="true" />
+                        android:maxLines="1" />
                 </android.support.design.widget.TextInputLayout>
             </LinearLayout>
 
@@ -141,8 +136,7 @@
                         android:focusable="false"
                         android:focusableInTouchMode="false"
                         android:hint="No Polisi"
-                        android:maxLines="1"
-                        android:singleLine="true" />
+                        android:maxLines="1" />
                 </android.support.design.widget.TextInputLayout>
 
                 <android.support.design.widget.TextInputLayout
@@ -158,8 +152,7 @@
                         android:focusable="false"
                         android:focusableInTouchMode="false"
                         android:hint="Tahun Produksi"
-                        android:maxLines="1"
-                        android:singleLine="true" />
+                        android:maxLines="1" />
                 </android.support.design.widget.TextInputLayout>
             </LinearLayout>
 
@@ -175,8 +168,7 @@
                     android:focusable="false"
                     android:focusableInTouchMode="false"
                     android:hint="No Mesin"
-                    android:maxLines="1"
-                    android:singleLine="true" />
+                    android:maxLines="1" />
             </android.support.design.widget.TextInputLayout>
 
             <android.support.design.widget.TextInputLayout
@@ -191,8 +183,7 @@
                     android:focusable="false"
                     android:focusableInTouchMode="false"
                     android:hint="No Rangka"
-                    android:maxLines="1"
-                    android:singleLine="true" />
+                    android:maxLines="1" />
             </android.support.design.widget.TextInputLayout>
 
         </LinearLayout>
@@ -202,6 +193,7 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:gravity="center"
+            android:background="@color/colorLKPYellow"
             android:text="BPKB" />
 
         <LinearLayout
@@ -222,8 +214,7 @@
                     android:focusable="false"
                     android:focusableInTouchMode="false"
                     android:hint="No Polisi"
-                    android:maxLines="1"
-                    android:singleLine="true" />
+                    android:maxLines="1" />
             </android.support.design.widget.TextInputLayout>
 
             <android.support.design.widget.TextInputLayout
@@ -238,8 +229,7 @@
                     android:focusable="false"
                     android:focusableInTouchMode="false"
                     android:hint="No BPKB"
-                    android:maxLines="1"
-                    android:singleLine="true" />
+                    android:maxLines="1" />
             </android.support.design.widget.TextInputLayout>
 
             <android.support.design.widget.TextInputLayout
@@ -254,8 +244,7 @@
                     android:focusable="false"
                     android:focusableInTouchMode="false"
                     android:hint="Alamat BPKB"
-                    android:maxLines="1"
-                    android:singleLine="true" />
+                    android:maxLines="1" />
             </android.support.design.widget.TextInputLayout>
         </LinearLayout>
     </LinearLayout>

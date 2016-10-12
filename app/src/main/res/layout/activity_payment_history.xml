@@ -15,6 +15,7 @@
             android:layout_height="wrap_content"
             android:background="@color/colorPrimaryDark"
             android:orientation="vertical"
+            android:paddingLeft="@dimen/activity_horizontal_margin"
             android:paddingRight="@dimen/activity_horizontal_margin"
             android:paddingTop="@dimen/activity_vertical_margin">
 
@@ -40,10 +41,11 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:orientation="horizontal">
+
                 <android.support.design.widget.TextInputLayout
-                    android:layout_weight="0.4"
                     android:layout_width="0dp"
                     android:layout_height="wrap_content"
+                    android:layout_weight="0.4"
                     android:textColorHint="@android:color/primary_text_dark">
 
                     <EditText
@@ -54,16 +56,14 @@
                         android:focusable="false"
                         android:focusableInTouchMode="false"
                         android:hint="Tenor / Bln"
-                        android:gravity="right"
                         android:maxLines="1"
-                        android:singleLine="true"
                         android:textColor="@android:color/primary_text_dark" />
                 </android.support.design.widget.TextInputLayout>
 
                 <android.support.design.widget.TextInputLayout
-                    android:layout_weight="0.6"
                     android:layout_width="0dp"
                     android:layout_height="wrap_content"
+                    android:layout_weight="0.6"
                     android:textColorHint="@android:color/primary_text_dark">
 
                     <EditText
@@ -73,12 +73,12 @@
                         android:clickable="false"
                         android:focusable="false"
                         android:focusableInTouchMode="false"
-                        android:textStyle="bold"
                         android:gravity="right"
                         android:hint="Angsuran"
                         android:maxLines="1"
                         android:singleLine="true"
-                        android:textColor="@android:color/primary_text_dark" />
+                        android:textColor="@android:color/primary_text_dark"
+                        android:textStyle="bold" />
                 </android.support.design.widget.TextInputLayout>
 
             </LinearLayout>

@@ -26,8 +26,6 @@ import id.co.ppu.collectionfast2.R;
 import id.co.ppu.collectionfast2.pojo.ServerInfo;
 import id.co.ppu.collectionfast2.pojo.UserData;
 import id.co.ppu.collectionfast2.pojo.master.MstLDVStatus;
-import id.co.ppu.collectionfast2.pojo.master.MstSecUser;
-import id.co.ppu.collectionfast2.pojo.master.MstUser;
 import id.co.ppu.collectionfast2.pojo.trn.TrnLDVDetails;
 import id.co.ppu.collectionfast2.pojo.trn.TrnLDVHeader;
 import id.co.ppu.collectionfast2.pojo.trn.TrnRVColl;
@@ -37,7 +35,7 @@ import io.realm.Realm;
 import io.realm.RealmResults;
 
 /**
- * A simple {@link Fragment} subclass.
+ * Sysdate only. penerimaan lkpinquiry tidak dihitung disini
  */
 public class FragmentSummaryLKP extends Fragment {
 
@@ -92,16 +90,22 @@ public class FragmentSummaryLKP extends Fragment {
     public void onStart() {
         super.onStart();
         this.realm = Realm.getDefaultInstance();
-        TrnLDVHeader header = this.realm.where(TrnLDVHeader.class).findFirst();
+
+        Date serverDate = this.realm.where(ServerInfo.class).findFirst().getServerDate();
+        String createdBy = "JOB" + Utility.convertDateToString(serverDate, "yyyyMMdd");
+
+        // TODO: ask pak yoce, jika kasusnya hr ini udah closebatch, inquiry hr kmrn akan donlot header kmrn ?
+        TrnLDVHeader header = this.realm.where(TrnLDVHeader.class)
+                .equalTo("createdBy", createdBy)
+                .findFirst();
 
         if (header == null) {
             return;
         }
+
         UserData userData = (UserData) Storage.getObjPreference(getContext(), Storage.KEY_USER, UserData.class);
 
         long unitTarget = this.realm.where(TrnLDVDetails.class).count();
-
-        Date serverDate = this.realm.where(ServerInfo.class).findFirst().getServerDate();
 
         StringBuilder rvColl = new StringBuilder();
         rvColl.append(Utility.convertDateToString(serverDate, "dd"))
@@ -109,17 +113,18 @@ public class FragmentSummaryLKP extends Fragment {
                 .append(Utility.convertDateToString(serverDate, "yyyy"))
                 .append(collectorCode);
 
-        Number receivedAmount = this.realm.where(TrnRVColl.class)
+        RealmResults<TrnRVColl> trnRVColls = this.realm.where(TrnRVColl.class).findAll();
+
+        long receivedAmount = this.realm.where(TrnRVColl.class)
                 .equalTo("pk.rvCollNo", rvColl.toString())
                 .isNull("ldvNo")
-                .sum("receivedAmount");
+                .sum("receivedAmount")
+                .longValue();
 
         // TODO: ask pak yoce maksudnya count(mc_trn_rvcoll.ldv_no) yg ldv_no nya null ??
         long unitNonLKP = this.realm.where(TrnRVColl.class)
                             .isNull("ldvNo")
                             .count();
-
-        RealmResults<TrnRVColl> trnRVColls = this.realm.where(TrnRVColl.class).findAll();
 
 //        long _totalRVColl = this.realm.where(TrnRVColl.class).count();
 
@@ -130,26 +135,14 @@ public class FragmentSummaryLKP extends Fragment {
 
 //        long totalTertagih = header.getPrncAC() + header.getIntrAC() + receivedAmount.longValue();
 
-        loadSummary(header, userData.getUser().get(0), userData.getSecUser().get(0), unitTarget, receivedAmount.longValue(), unitNonLKP, totalTertagih);
-
-        RealmResults<MstLDVStatus> list = this.realm.where(MstLDVStatus.class).findAll();
-        WorkFlagAdapter workFlagAdapter = new WorkFlagAdapter(getContext(), android.R.layout.simple_spinner_item, list);
-        spWorkFlag.setAdapter(workFlagAdapter);
-
-    }
-
-    private void loadSummary(TrnLDVHeader header, MstUser mstUser, MstSecUser mstSecUser, long unitTarget, long receivedAmount, long unitNonLKP, long totalTertagih) {
         etNoLKP.setText(header.getLdvNo());
 
-        etTglLKP.setText(DateUtils.formatDateTime(getContext(), header.getLdvDate().getTime(), DateUtils.FORMAT_SHOW_DATE | DateUtils.FORMAT_SHOW_YEAR | DateUtils.FORMAT_SHOW_WEEKDAY));
+        etTglLKP.setText(DateUtils.formatDateTime(getContext(), serverDate.getTime(), DateUtils.FORMAT_SHOW_DATE | DateUtils.FORMAT_SHOW_YEAR | DateUtils.FORMAT_SHOW_WEEKDAY));
+//        etTglLKP.setText(DateUtils.formatDateTime(getContext(), header.getLdvDate().getTime(), DateUtils.FORMAT_SHOW_DATE | DateUtils.FORMAT_SHOW_YEAR | DateUtils.FORMAT_SHOW_WEEKDAY));
 
-        if (mstUser != null) {
-            etCabang.setText(mstUser.getBranchName());
-        }
+        etCabang.setText(userData.getBranchName());
 
-        if (mstSecUser != null) {
-            etARStaff.setText(mstSecUser.getFullName());
-        }
+        etARStaff.setText(userData.getFullName());
 
         long targetPenerimaan = header.getPrncAMBC() + header.getIntrAMBC();
         etTargetPenerimaan.setText(Utility.convertLongToRupiah(targetPenerimaan));
@@ -170,6 +163,16 @@ public class FragmentSummaryLKP extends Fragment {
         etNonLKPUnit.setText(String.valueOf(unitNonLKP));
 
         etTotalTertagih.setText(Utility.convertLongToRupiah(totalTertagih));
+
+        buildWorkFlag();
+
+    }
+
+    private void buildWorkFlag() {
+        RealmResults<MstLDVStatus> list = this.realm.where(MstLDVStatus.class).findAll();
+        WorkFlagAdapter workFlagAdapter = new WorkFlagAdapter(getContext(), android.R.layout.simple_spinner_item, list);
+        spWorkFlag.setAdapter(workFlagAdapter);
+
     }
 
     @Override

@@ -62,6 +62,7 @@ import id.co.ppu.collectionfast2.pojo.sync.SyncTrnBastbj;
 import id.co.ppu.collectionfast2.pojo.sync.SyncTrnLDVComments;
 import id.co.ppu.collectionfast2.pojo.sync.SyncTrnLDVDetails;
 import id.co.ppu.collectionfast2.pojo.sync.SyncTrnLDVHeader;
+import id.co.ppu.collectionfast2.pojo.sync.SyncTrnRVB;
 import id.co.ppu.collectionfast2.pojo.sync.SyncTrnRVColl;
 import id.co.ppu.collectionfast2.pojo.sync.SyncTrnRepo;
 import id.co.ppu.collectionfast2.pojo.trn.HistInstallments;
@@ -160,10 +161,14 @@ public class MainActivity extends SyncActivity
         currentUser = (UserData) Storage.getObjPreference(getApplicationContext(), Storage.KEY_USER, UserData.class);
 
         TextView tvProfileName = ButterKnife.findById(v, R.id.tvProfileName);
-        tvProfileName.setText(currentUser.getSecUser().get(0).getFullName());
+        tvProfileName.setText(currentUser.getFullName());
+
+        if (getSupportActionBar() != null) {
+            getSupportActionBar().setSubtitle(currentUser.getFullName());
+        }
 
         TextView tvProfileEmail = ButterKnife.findById(v, R.id.tvProfileEmail);
-        tvProfileEmail.setText(currentUser.getSecUser().get(0).getEmailAddr());
+        tvProfileEmail.setText(currentUser.getEmailAddr());
 
         final ImageView imageView = ButterKnife.findById(v, R.id.imageView);
         imageView.setOnClickListener(new View.OnClickListener() {
@@ -323,6 +328,8 @@ public class MainActivity extends SyncActivity
             });
         }
 
+//        stopJob();
+//        startJob();
 //        startLocationTracker();
     }
 
@@ -574,7 +581,7 @@ public class MainActivity extends SyncActivity
 
         if (getSupportActionBar() != null) {
             getSupportActionBar().setTitle(title);
-            getSupportActionBar().setSubtitle(getString(R.string.title_mob_coll));
+//            getSupportActionBar().setSubtitle(getString(R.string.title_mob_coll));
             getSupportActionBar().setDisplayUseLogoEnabled(true);
             getSupportActionBar().setDisplayShowHomeEnabled(true);
         }
@@ -725,7 +732,6 @@ public class MainActivity extends SyncActivity
                                     d = bgRealm.where(TrnRVB.class).equalTo(Utility.COLUMN_CREATED_BY, createdBy).findAll().deleteAllFromRealm();
                                     bgRealm.copyToRealm(respGetLKP.getData().getRvb());
 
-                                    /*
                                     for (TrnRVB _rvb : respGetLKP.getData().getRvb()) {
                                         if (_rvb == null)
                                             continue;
@@ -733,11 +739,18 @@ public class MainActivity extends SyncActivity
                                         if (_rvb.getFlagDone() != null && _rvb.getFlagDone().equalsIgnoreCase("Y")) {
                                             SyncTrnRVB s = bgRealm.where(SyncTrnRVB.class)
                                                     .equalTo("rvbNo", _rvb.getRvbNo()).findFirst();
+
+                                            if (s == null) {
+                                                s = new SyncTrnRVB();
+                                            }
+                                            s.setRvbNo(_rvb.getRvbNo());
+                                            s.setLastUpdateBy(_rvb.getLastupdateBy());
+                                            s.setCreatedBy(_rvb.getCreatedBy());
                                             s.setSyncedDate(_rvb.getDateDone());
 
                                             bgRealm.copyToRealm(s);
                                         }
-                                    }*/
+                                    }
 
 
                                     // insert bastbj
@@ -1235,6 +1248,8 @@ public class MainActivity extends SyncActivity
     protected void onDestroy() {
         super.onDestroy();
 
+        stopJob();
+
     }
 
     /**
@@ -1463,7 +1478,7 @@ public class MainActivity extends SyncActivity
             if (listener != null)
                 listener.onSkip();
 
-            Toast.makeText(this, "No Data to sync", Toast.LENGTH_SHORT).show();
+//            Toast.makeText(this, "No Data to sync", Toast.LENGTH_SHORT).show();
             return;
         } else {
         }

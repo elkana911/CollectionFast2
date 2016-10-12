@@ -11,8 +11,8 @@
         android:layout_height="wrap_content"
         android:background="@color/colorRadanaBlue"
         android:orientation="vertical"
-        android:paddingRight="@dimen/activity_horizontal_margin"
-        android:paddingTop="@dimen/activity_vertical_margin">
+        android:paddingLeft="@dimen/activity_horizontal_margin"
+        android:paddingRight="@dimen/activity_horizontal_margin">
 
         <CheckBox
             android:id="@+id/cbLKPInquiry"
@@ -70,6 +70,7 @@
         style="?android:attr/listSeparatorTextViewStyle"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
+        android:paddingBottom="8dp"
         android:text="No Contracts" />
 
     <RelativeLayout
@@ -83,7 +84,6 @@
             android:layout_marginBottom="@dimen/activity_vertical_margin"
             android:layout_marginLeft="@dimen/activity_horizontal_margin"
             android:layout_marginRight="@dimen/activity_horizontal_margin"
-            android:layout_marginTop="@dimen/activity_vertical_margin"
             app:rsvHint="@string/search_hint" />
 
         <android.support.design.widget.FloatingActionButton
@@ -91,8 +91,8 @@
             android:id="@+id/fab"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_alignParentRight="true"
             android:layout_alignParentBottom="true"
+            android:layout_alignParentRight="true"
             android:tint="@android:color/white"
             app:srcCompat="@drawable/ic_loop_black_24dp" />
 

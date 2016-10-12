@@ -15,6 +15,9 @@ import io.realm.annotations.PrimaryKey;
 public class TrnCollPos extends RealmObject implements Serializable {
 
     @PrimaryKey
+    @SerializedName("uid")
+    private String uid;
+
     @SerializedName("collectorId")
     private String collectorId;
 
@@ -26,6 +29,14 @@ public class TrnCollPos extends RealmObject implements Serializable {
 
     @SerializedName("lastUpdate")
     private Date lastUpdate;
+
+    public String getUid() {
+        return uid;
+    }
+
+    public void setUid(String uid) {
+        this.uid = uid;
+    }
 
     public String getCollectorId() {
         return collectorId;

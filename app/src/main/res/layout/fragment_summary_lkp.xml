@@ -14,7 +14,9 @@
             style="?android:attr/listSeparatorTextViewStyle"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
+            android:background="@color/colorLKPBlue"
             android:gravity="center"
+            android:maxLines="1"
             android:text="LKP" />
 
         <LinearLayout
@@ -37,8 +39,7 @@
                     android:focusableInTouchMode="false"
                     android:hint="No LKP"
                     android:maxLines="1"
-                    android:textColor="@android:color/tertiary_text_dark"
-                    />
+                    android:textColor="@android:color/tertiary_text_dark" />
             </android.support.design.widget.TextInputLayout>
 
             <android.support.design.widget.TextInputLayout
@@ -54,7 +55,7 @@
                     android:focusableInTouchMode="false"
                     android:hint="Tgl LKP"
                     android:maxLines="1"
-                    />
+                    android:textColor="@android:color/tertiary_text_dark" />
             </android.support.design.widget.TextInputLayout>
 
             <android.support.design.widget.TextInputLayout
@@ -70,12 +71,13 @@
                     android:focusableInTouchMode="false"
                     android:hint="Cabang"
                     android:maxLines="1"
-                    />
+                    android:textColor="@android:color/tertiary_text_dark" />
             </android.support.design.widget.TextInputLayout>
 
             <android.support.design.widget.TextInputLayout
                 android:layout_width="match_parent"
-                android:layout_height="wrap_content">
+                android:layout_height="wrap_content"
+                android:visibility="gone">
 
                 <EditText
                     android:id="@+id/etARStaff"
@@ -85,22 +87,20 @@
                     android:focusable="false"
                     android:focusableInTouchMode="false"
                     android:hint="AR Staff"
-                    android:maxLines="1"
-                    />
+                    android:maxLines="1" />
             </android.support.design.widget.TextInputLayout>
 
             <TableLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:showDividers="beginning|end"
                 android:background="@drawable/rounded_shape"
                 android:paddingLeft="8dp"
+                android:showDividers="beginning|end"
                 android:stretchColumns="*">
 
                 <TableRow
                     android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    >
+                    android:layout_height="wrap_content">
 
                     <TextView />
 
@@ -129,8 +129,7 @@
                         android:focusable="false"
                         android:focusableInTouchMode="false"
                         android:hint="AR Staff"
-                        android:maxLines="1"
-                        />
+                        android:maxLines="1" />
 
                     <EditText
                         android:id="@+id/etTertagihPenerimaan"
@@ -140,8 +139,7 @@
                         android:focusable="false"
                         android:focusableInTouchMode="false"
                         android:hint="AR Staff"
-                        android:maxLines="1"
-                        />
+                        android:maxLines="1" />
                 </TableRow>
 
                 <TableRow>
@@ -156,8 +154,7 @@
                         android:focusable="false"
                         android:focusableInTouchMode="false"
                         android:hint="AR Staff"
-                        android:maxLines="1"
-                        />
+                        android:maxLines="1" />
 
                     <EditText
                         android:id="@+id/etTertagihUnit"
@@ -167,8 +164,7 @@
                         android:focusable="false"
                         android:focusableInTouchMode="false"
                         android:hint="AR Staff"
-                        android:maxLines="1"
-                        />
+                        android:maxLines="1" />
                 </TableRow>
 
                 <TableRow>
@@ -191,6 +187,7 @@
             style="?android:attr/listSeparatorTextViewStyle"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
+            android:background="@color/colorLKPGreen"
             android:gravity="center"
             android:text="Non LKP" />
 
@@ -201,59 +198,81 @@
             android:paddingLeft="@dimen/activity_horizontal_margin"
             android:paddingRight="@dimen/activity_horizontal_margin">
 
-            <android.support.design.widget.TextInputLayout
+            <LinearLayout
                 android:layout_width="match_parent"
-                android:layout_height="wrap_content">
+                android:layout_height="wrap_content"
+                android:orientation="horizontal">
 
-                <EditText
-                    android:id="@+id/etNonLKPPenerimaan"
-                    android:layout_width="match_parent"
+                <android.support.design.widget.TextInputLayout
+                    android:layout_width="0dp"
                     android:layout_height="wrap_content"
-                    android:clickable="false"
-                    android:focusable="false"
-                    android:focusableInTouchMode="false"
-                    android:hint="Penerimaan"
-                    android:maxLines="1"
-                    android:gravity="end"
-                    android:textStyle="bold"
-                    />
-            </android.support.design.widget.TextInputLayout>
+                    android:layout_weight="0.5">
 
-            <android.support.design.widget.TextInputLayout
+                    <EditText
+                        android:id="@+id/etNonLKPUnit"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:clickable="false"
+                        android:focusable="false"
+                        android:focusableInTouchMode="false"
+                        android:hint="Unit"
+                        android:maxLines="1" />
+                </android.support.design.widget.TextInputLayout>
+
+                <android.support.design.widget.TextInputLayout
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="0.5">
+
+                    <EditText
+                        android:id="@+id/etNonLKPPenerimaan"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:clickable="false"
+                        android:focusable="false"
+                        android:focusableInTouchMode="false"
+                        android:gravity="end"
+                        android:hint="Penerimaan"
+                        android:maxLines="1"
+                        android:textStyle="bold" />
+                </android.support.design.widget.TextInputLayout>
+
+
+            </LinearLayout>
+
+            <LinearLayout
                 android:layout_width="match_parent"
-                android:layout_height="wrap_content">
+                android:layout_height="wrap_content"
+                android:orientation="horizontal">
 
-                <EditText
-                    android:id="@+id/etNonLKPUnit"
-                    android:layout_width="match_parent"
+                <android.support.design.widget.TextInputLayout
+                    android:layout_width="0dp"
                     android:layout_height="wrap_content"
-                    android:clickable="false"
-                    android:focusable="false"
-                    android:focusableInTouchMode="false"
-                    android:hint="Unit"
-                    android:maxLines="1"
-                    android:gravity="end"
-                    />
-            </android.support.design.widget.TextInputLayout>
+                    android:layout_weight="0.5">
+                    <TextView
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:text=""/>
+                </android.support.design.widget.TextInputLayout>
 
-            <android.support.design.widget.TextInputLayout
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content">
-
-                <EditText
-                    android:id="@+id/etTotalTertagih"
-                    android:layout_width="match_parent"
+                <android.support.design.widget.TextInputLayout
+                    android:layout_width="0dp"
                     android:layout_height="wrap_content"
-                    android:clickable="false"
-                    android:focusable="false"
-                    android:focusableInTouchMode="false"
-                    android:hint="Total Tertagih"
-                    android:maxLines="1"
-                    android:textStyle="bold"
-                    android:gravity="end"
-                    />
-            </android.support.design.widget.TextInputLayout>
+                    android:layout_weight="0.5">
 
+                    <EditText
+                        android:id="@+id/etTotalTertagih"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:clickable="false"
+                        android:focusable="false"
+                        android:focusableInTouchMode="false"
+                        android:gravity="end"
+                        android:hint="Total Tertagih"
+                        android:maxLines="1"
+                        android:textStyle="bold" />
+                </android.support.design.widget.TextInputLayout>
+            </LinearLayout>
         </LinearLayout>
     </LinearLayout>
 
