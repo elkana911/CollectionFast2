@@ -96,6 +96,7 @@ public class FragmentSummaryLKP extends Fragment {
 
         // TODO: ask pak yoce, jika kasusnya hr ini udah closebatch, inquiry hr kmrn akan donlot header kmrn ?
         TrnLDVHeader header = this.realm.where(TrnLDVHeader.class)
+                .equalTo("collCode", collectorCode)
                 .equalTo("createdBy", createdBy)
                 .findFirst();
 
@@ -105,7 +106,20 @@ public class FragmentSummaryLKP extends Fragment {
 
         UserData userData = (UserData) Storage.getObjPreference(getContext(), Storage.KEY_USER, UserData.class);
 
-        long unitTarget = this.realm.where(TrnLDVDetails.class).count();
+        // based on collectorcode
+        long unitTarget = 0;
+        RealmResults<TrnLDVDetails> ldvDetailses = this.realm.where(TrnLDVDetails.class)
+                .findAll();
+        for (TrnLDVDetails ldvDetails : ldvDetailses) {
+            if (ldvDetails.getPk().getLdvNo().equals(header.getLdvNo())) {
+                unitTarget += 1;
+            }
+        }
+/*
+        long unitTarget = this.realm.where(TrnLDVDetails.class)
+//                .equalTo("")
+                .count();
+*/
 
         StringBuilder rvColl = new StringBuilder();
         rvColl.append(Utility.convertDateToString(serverDate, "dd"))
@@ -123,6 +137,7 @@ public class FragmentSummaryLKP extends Fragment {
 
         // TODO: ask pak yoce maksudnya count(mc_trn_rvcoll.ldv_no) yg ldv_no nya null ??
         long unitNonLKP = this.realm.where(TrnRVColl.class)
+                            .equalTo("collId", collectorCode)
                             .isNull("ldvNo")
                             .count();
 
@@ -149,13 +164,21 @@ public class FragmentSummaryLKP extends Fragment {
 
         String ldvNo = header.getLdvNo();
 
-        Number sumReceivedAmount = this.realm.where(TrnRVColl.class).equalTo("ldvNo", ldvNo).sum("receivedAmount");
+        Number sumReceivedAmount = this.realm.where(TrnRVColl.class)
+                .equalTo("ldvNo", ldvNo)
+                .equalTo("collId", collectorCode)
+                .sum("receivedAmount");
+
         long tertagihPenerimaan = sumReceivedAmount.longValue(); //header.getPrncAC() + header.getIntrAC();
         etTertagihPenerimaan.setText(Utility.convertLongToRupiah(tertagihPenerimaan));
 
         etTargetUnit.setText(String.valueOf(unitTarget));
 
-        long tertagihUnit = this.realm.where(TrnRVColl.class).equalTo("ldvNo", ldvNo).count();
+        long tertagihUnit = this.realm.where(TrnRVColl.class)
+                .equalTo("ldvNo", ldvNo)
+                .equalTo("collId", collectorCode)
+                .count();
+
 //        long tertagihUnit = header.getUnitTotal();
         etTertagihUnit.setText(String.valueOf(tertagihUnit));
 

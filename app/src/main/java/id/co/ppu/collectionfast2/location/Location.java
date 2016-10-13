@@ -16,6 +16,13 @@ import java.util.List;
  */
 
 public class Location {
+    // The minimum distance to change Updates in meters
+    private static final long MIN_DISTANCE_CHANGE_FOR_UPDATES = 10; // 10 meters
+
+    // The minimum time between updates in milliseconds
+    private static final long MIN_TIME_BW_UPDATES = 1000 * 60 * 1; // 1 minute
+
+
     public static double[] getGPS(Context ctx) {
         LocationManager lm = (LocationManager) ctx.getSystemService(Context.LOCATION_SERVICE);
 
@@ -44,13 +51,16 @@ public class Location {
                 ContextCompat.checkSelfPermission( ctx, android.Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
         }
 
-        if (!lm.isProviderEnabled(LocationManager.GPS_PROVIDER)) {
+        boolean isGPSEnabled = lm.isProviderEnabled(LocationManager.GPS_PROVIDER);
+        boolean isNetworkEnabled = lm.isProviderEnabled(LocationManager.NETWORK_PROVIDER);
+
+        if (!isGPSEnabled) {
             Log.e("gps", "Use Network Provider");
-            lm.requestLocationUpdates(LocationManager.NETWORK_PROVIDER, 0L, 0F,
+            lm.requestLocationUpdates(LocationManager.NETWORK_PROVIDER, MIN_TIME_BW_UPDATES, MIN_DISTANCE_CHANGE_FOR_UPDATES,
                     loclis);
         } else {
             Log.e("gps", "Use GPS Provider");
-            lm.requestLocationUpdates(LocationManager.GPS_PROVIDER, 0L, 0F,
+            lm.requestLocationUpdates(LocationManager.GPS_PROVIDER, MIN_TIME_BW_UPDATES, MIN_DISTANCE_CHANGE_FOR_UPDATES,
                     loclis);
         }
 

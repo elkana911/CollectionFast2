@@ -41,6 +41,9 @@ import retrofit2.Response;
  */
 
 public class DataUtil {
+    public static final int SYNC_AS_PAYMENT = 1;
+    public static final int SYNC_AS_VISIT = 2;
+    public static final int SYNC_AS_REPO = 3;
 
     /*
     public static boolean isSynced(Realm realm, String tableName, String key1, String contractNo, String createdBy) {
@@ -294,7 +297,7 @@ public class DataUtil {
         }
     }
 
-    public static boolean isLKPSynced(Realm realm, TrnLDVDetails dtl) {
+    public static int isLKPSynced(Realm realm, TrnLDVDetails dtl) {
         RealmResults<SyncTrnRVColl> trnSync = realm.where(SyncTrnRVColl.class)
                 .equalTo("ldvNo", dtl.getPk().getLdvNo())
                 .equalTo("contractNo", dtl.getContractNo())
@@ -302,21 +305,28 @@ public class DataUtil {
                 .isNotNull("syncedDate")
                 .findAll();
 
+        if (trnSync.size() > 0)
+            return SYNC_AS_PAYMENT;
+
         RealmResults<SyncTrnLDVComments> trnSyncLDVComments = realm.where(SyncTrnLDVComments.class)
                 .equalTo("ldvNo", dtl.getPk().getLdvNo())
                 .equalTo("contractNo", dtl.getContractNo())
                 .equalTo("createdBy", Utility.LAST_UPDATE_BY)
                 .isNotNull("syncedDate")
                 .findAll();
+        if (trnSyncLDVComments.size() > 0)
+            return SYNC_AS_VISIT;
 
         RealmResults<SyncTrnRepo> trnSyncRepo = realm.where(SyncTrnRepo.class)
                 .equalTo("contractNo", dtl.getContractNo())
                 .equalTo("createdBy", Utility.LAST_UPDATE_BY)
                 .isNotNull("syncedDate")
                 .findAll();
+        if (trnSyncRepo.size() > 0)
+            return SYNC_AS_REPO;
+//        return trnSync.size() > 0 || trnSyncLDVComments.size() > 0 || trnSyncRepo.size() > 0;
 
-        return trnSync.size() > 0 || trnSyncLDVComments.size() > 0 || trnSyncRepo.size() > 0;
-
+        return 0;   // no sync
     }
 
 }

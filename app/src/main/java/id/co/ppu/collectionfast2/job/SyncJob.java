@@ -3,6 +3,7 @@ package id.co.ppu.collectionfast2.job;
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
+import android.util.Log;
 
 import java.util.Date;
 
@@ -12,6 +13,7 @@ import id.co.ppu.collectionfast2.pojo.trn.TrnCollPos;
 import id.co.ppu.collectionfast2.util.Storage;
 import id.co.ppu.collectionfast2.util.Utility;
 import io.realm.Realm;
+import io.realm.RealmResults;
 
 /**
  * Created by Eric on 12-Sep-16.
@@ -25,6 +27,7 @@ public class SyncJob extends BroadcastReceiver{
 
             final double[] gps = Location.getGPS(context);
 
+            Log.i("eric.gps", "lat=" + String.valueOf(gps[0]) + ",lng=" + String.valueOf(gps[1]));
             final Date twoDaysAgo = Utility.getTwoDaysAgo(new Date());
 
             Realm realm = Realm.getDefaultInstance();
@@ -36,7 +39,9 @@ public class SyncJob extends BroadcastReceiver{
                         // delete data two days ago
                         long total = realm.where(TrnCollPos.class).count();
 
-                        long totalTwoDaysAgo = realm.where(TrnCollPos.class).lessThanOrEqualTo("lastUpdate", twoDaysAgo).count();
+                        RealmResults<TrnCollPos> all = realm.where(TrnCollPos.class).findAll();
+
+//                        long totalTwoDaysAgo = realm.where(TrnCollPos.class).lessThanOrEqualTo("lastUpdate", twoDaysAgo).count();
 
                         UserData userData = (UserData) Storage.getObjPreference(context, Storage.KEY_USER, UserData.class);
 
@@ -52,6 +57,8 @@ public class SyncJob extends BroadcastReceiver{
 
                     }
                 });
+            } catch (Exception e) {
+                e.printStackTrace();
             } finally {
                 realm.close();
             }

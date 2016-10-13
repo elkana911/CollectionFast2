@@ -71,6 +71,12 @@ public class TrnRVColl extends RealmObject implements Serializable {
     @SerializedName("daysIntrAc")
     private Long daysIntrAc;
 
+    @SerializedName("platform")
+    private String platform;
+
+    @SerializedName("danaSosial")
+    private Long danaSosial;
+
     @SerializedName("createdTimestamp")
     private Date createdTimestamp;
 
@@ -275,6 +281,22 @@ public class TrnRVColl extends RealmObject implements Serializable {
         this.daysIntrAc = daysIntrAc;
     }
 
+    public String getPlatform() {
+        return platform;
+    }
+
+    public void setPlatform(String platform) {
+        this.platform = platform;
+    }
+
+    public Long getDanaSosial() {
+        return danaSosial;
+    }
+
+    public void setDanaSosial(Long danaSosial) {
+        this.danaSosial = danaSosial;
+    }
+
     @Override
     public String toString() {
         return "TrnRVColl{" +
@@ -298,6 +320,8 @@ public class TrnRVColl extends RealmObject implements Serializable {
                 ", penaltyAc=" + penaltyAc +
                 ", collFeeAc=" + collFeeAc +
                 ", daysIntrAc=" + daysIntrAc +
+                ", platform='" + platform + '\'' +
+                ", danaSosial=" + danaSosial +
                 ", createdTimestamp=" + createdTimestamp +
                 ", createdBy='" + createdBy + '\'' +
                 ", lastupdateBy='" + lastupdateBy + '\'' +

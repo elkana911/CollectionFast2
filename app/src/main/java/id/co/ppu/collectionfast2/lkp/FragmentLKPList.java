@@ -306,7 +306,7 @@ public class FragmentLKPList extends Fragment {
                     displayTrnLDVDetails.setFlagDone(obj.getFlagDone());
                     displayTrnLDVDetails.setAddress(obj.getAddress());
 
-                    if (DataUtil.isLKPSynced(realm, obj)) {
+                    if (DataUtil.isLKPSynced(realm, obj) > 0) {
                         displayTrnLDVDetails.setWorkStatus("SYNC");
                     }else{
                         displayTrnLDVDetails.setWorkStatus(obj.getWorkStatus());

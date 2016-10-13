@@ -216,11 +216,24 @@ public class ActivityScrollingLKPDetails extends BasicActivity {
         }
 
 
-        if (DataUtil.isLKPSynced(this.realm, dtl)) {
+        int syncAsWhat = DataUtil.isLKPSynced(this.realm, dtl);
+        if (syncAsWhat > 0) {
             btnChangeAddr.setVisibility(View.GONE);
-            btnPaymentReceive.setVisibility(View.GONE);
-            btnRepoEntry.setVisibility(View.GONE);
-            btnVisitResultEntry.setVisibility(View.GONE);
+
+            if (syncAsWhat == DataUtil.SYNC_AS_PAYMENT)
+                btnPaymentReceive.setEnabled(false);
+            else
+                btnPaymentReceive.setVisibility(View.GONE);
+
+            if (syncAsWhat == DataUtil.SYNC_AS_REPO)
+                btnRepoEntry.setEnabled(false);
+            else
+                btnRepoEntry.setVisibility(View.GONE);
+
+            if (syncAsWhat == DataUtil.SYNC_AS_VISIT)
+                btnVisitResultEntry.setEnabled(false);
+            else
+                btnVisitResultEntry.setVisibility(View.GONE);
         }
 
     }

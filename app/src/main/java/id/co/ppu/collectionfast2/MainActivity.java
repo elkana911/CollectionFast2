@@ -38,6 +38,7 @@ import android.widget.Toast;
 import java.io.IOException;
 import java.util.Calendar;
 import java.util.Date;
+import java.util.List;
 
 import butterknife.BindView;
 import butterknife.ButterKnife;
@@ -67,6 +68,7 @@ import id.co.ppu.collectionfast2.pojo.sync.SyncTrnRVColl;
 import id.co.ppu.collectionfast2.pojo.sync.SyncTrnRepo;
 import id.co.ppu.collectionfast2.pojo.trn.HistInstallments;
 import id.co.ppu.collectionfast2.pojo.trn.TrnBastbj;
+import id.co.ppu.collectionfast2.pojo.trn.TrnCollPos;
 import id.co.ppu.collectionfast2.pojo.trn.TrnCollectAddr;
 import id.co.ppu.collectionfast2.pojo.trn.TrnContractBuckets;
 import id.co.ppu.collectionfast2.pojo.trn.TrnLDVComments;
@@ -81,6 +83,7 @@ import id.co.ppu.collectionfast2.rest.ApiInterface;
 import id.co.ppu.collectionfast2.rest.ServiceGenerator;
 import id.co.ppu.collectionfast2.rest.request.RequestLKPByDate;
 import id.co.ppu.collectionfast2.rest.request.RequestSyncLKP;
+import id.co.ppu.collectionfast2.rest.request.RequestSyncLocation;
 import id.co.ppu.collectionfast2.rest.response.ResponseGetLKP;
 import id.co.ppu.collectionfast2.rest.response.ResponseSync;
 import id.co.ppu.collectionfast2.settings.SettingsActivity;
@@ -328,8 +331,8 @@ public class MainActivity extends SyncActivity
             });
         }
 
-//        stopJob();
-//        startJob();
+        stopJob();
+        startJob();
 //        startLocationTracker();
     }
 
@@ -538,7 +541,7 @@ public class MainActivity extends SyncActivity
             fragment = new FragmentLKPList();
 
             Bundle bundle = new Bundle();
-            bundle.putString(FragmentLKPList.ARG_PARAM1, currentUser.getSecUser().get(0).getUserName());
+            bundle.putString(FragmentLKPList.ARG_PARAM1, currentUser.getUserId());
             fragment.setArguments(bundle);
 
             title = "LKP List";
@@ -961,6 +964,9 @@ public class MainActivity extends SyncActivity
                                     // Transaction failed and was automatically canceled.
                                     Toast.makeText(MainActivity.this, "Error while getting LKP", Toast.LENGTH_LONG).show();
                                     error.printStackTrace();
+
+                                    if (listener != null)
+                                        listener.onFailure();
                                 }
                             });
 
@@ -1004,7 +1010,7 @@ public class MainActivity extends SyncActivity
     }
 
     public void retrieveLKPFromServer(final String collectorCode, final Date lkpDate, boolean useCache, final OnPostRetrieveLKP listener) {
-        if (currentUser == null || currentUser.getUser().size() != currentUser.getSecUser().size()) {
+        if (currentUser == null) {
             return;
         }
 
@@ -1269,8 +1275,8 @@ public class MainActivity extends SyncActivity
 
         AlarmManager alarmManager = (AlarmManager) getSystemService(Context.ALARM_SERVICE);
 
-        // repeat every 10 seconds
-        alarmManager.setRepeating(AlarmManager.RTC, cal.getTimeInMillis(), 10000, pendingIntent);
+        // repeat every 15 minutes
+        alarmManager.setRepeating(AlarmManager.RTC, cal.getTimeInMillis(), 15 * 60 * 1000, pendingIntent);
         Log.i("fast.sync", "sync job started");
 
     }
@@ -1361,6 +1367,98 @@ public class MainActivity extends SyncActivity
         alertDialogBuilder.show();
     }
 
+    // wiwan: maunya dipanggil real time, tp kalo sudah sukses terkirim hapus yg dilokal spy ga penuh
+    protected void syncLocation(final boolean showDialog, final OnSuccessError listener) {
+        if (!NetUtil.isConnected(this)) {
+            Snackbar.make(coordinatorLayout, getString(R.string.error_online_required), Snackbar.LENGTH_LONG).show();
+            return;
+        }
+
+        String collCode = currentUser.getUserId();
+
+        List<TrnCollPos> list = this.realm.copyFromRealm(this.realm.where(TrnCollPos.class).equalTo("collectorId", collCode).findAll());
+
+        RequestSyncLocation req = new RequestSyncLocation();
+        req.setList(list);
+
+        final ProgressDialog mProgressDialog = new ProgressDialog(this);
+
+        if (showDialog) {
+
+            mProgressDialog.setIndeterminate(true);
+            mProgressDialog.setCancelable(false);
+            mProgressDialog.setMessage("Please wait...");
+            mProgressDialog.show();
+
+        }
+
+        ApiInterface fastService =
+                ServiceGenerator.createService(ApiInterface.class, Utility.buildUrl(Storage.getPreferenceAsInt(getApplicationContext(), Storage.KEY_SERVER_ID, 0)));
+        Call<ResponseBody> call = fastService.syncLocation(req);
+        call.enqueue(new Callback<ResponseBody>() {
+            @Override
+            public void onResponse(Call<ResponseBody> call, Response<ResponseBody> response) {
+                if (mProgressDialog.isShowing()) {
+                    mProgressDialog.dismiss();
+                }
+
+                if (response.isSuccessful()) {
+
+                    realm.executeTransactionAsync(new Realm.Transaction() {
+                        @Override
+                        public void execute(Realm realm) {
+
+                            boolean b = realm.where(TrnCollPos.class).findAll().deleteAllFromRealm();
+
+                        }
+                    }, new Realm.Transaction.OnSuccess() {
+                        @Override
+                        public void onSuccess() {
+                            if (listener != null)
+                                listener.onSuccess(null);
+                        }
+                    }, new Realm.Transaction.OnError() {
+                        @Override
+                        public void onError(Throwable error) {
+                            if (listener != null)
+                                listener.onFailure(error);
+                        }
+                    });
+
+                } else {
+                    int statusCode = response.code();
+
+                    // handle request errors yourself
+                    ResponseBody errorBody = response.errorBody();
+
+                    try {
+                        Utility.showDialog(MainActivity.this, "Server Problem (" + statusCode + ")", errorBody.string());
+                    } catch (IOException e) {
+                        e.printStackTrace();
+                    }
+
+                    if (listener != null)
+                        listener.onFailure(null);
+
+                }
+
+            }
+
+            @Override
+            public void onFailure(Call<ResponseBody> call, Throwable t) {
+                if (listener != null)
+                    listener.onFailure(t);
+
+                if (mProgressDialog.isShowing()) {
+                    mProgressDialog.dismiss();
+                }
+                Toast.makeText(MainActivity.this, t.getMessage(), Toast.LENGTH_SHORT).show();
+
+            }
+        });
+
+    }
+
     protected void syncTransaction(final boolean closeBatch, final boolean showDialog, final OnSuccessError listener) {
 
         if (!NetUtil.isConnected(this)) {
@@ -1438,7 +1536,7 @@ public class MainActivity extends SyncActivity
 
                     TrnLDVHeader trnLDVHeader = realm.where(TrnLDVHeader.class)
                             .equalTo("ldvNo", currentLDVNo)
-                            .equalTo("collCode", currentUser.getUser().get(0).getUserId())
+                            .equalTo("collCode", currentUser.getUserId())
 //                    .equalTo("createdBy", createdBy)
                             .findFirst();
 

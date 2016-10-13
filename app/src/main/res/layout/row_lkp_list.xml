@@ -37,6 +37,13 @@
                 android:text="ELKANA" />
 
             <TextView
+                android:id="@+id/tvKelKec"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center_vertical"
+                android:text="ELKANA" />
+
+            <TextView
                 android:id="@+id/tvNoLKP"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
@@ -44,12 +51,6 @@
                 android:textAppearance="@android:style/TextAppearance.DeviceDefault.Small"
                 android:text="ELKANA" />
 
-            <TextView
-                android:id="@+id/tvKelKec"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_gravity="center_vertical"
-                android:text="ELKANA" />
         </LinearLayout>
 
     </LinearLayout>

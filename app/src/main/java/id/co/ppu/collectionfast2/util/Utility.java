@@ -33,7 +33,7 @@ public class Utility {
     public final static String DATE_EXPIRED_YYYYMMDD = "20161231";
     public final static String[][] servers = {
 //            {"local-server", "10.100.100.167", "8090"},
-            {"local-server", "192.168.1.103", "8090"},
+            {"local-server", "192.168.1.106", "8090"},
             {"fast-mobile", "cmobile.radanafinance.co.id", "7001"}
     };
 
@@ -125,7 +125,7 @@ public class Utility {
 //        AlertDialog alertDialog = new AlertDialog.Builder(new ContextThemeWrapper(ctx, R.style.AppTheme_Teal_Dialog))
         AlertDialog alertDialog = new AlertDialog.Builder(new ContextThemeWrapper(ctx, R.style.AppTheme))
                 .setTitle(INFO)
-                .setMessage("Your location is unavailable. Please enable GPS from the Settings menu.")
+                .setMessage("GPS is not enabled. Do you want to go to settings menu ?")
                 .setCancelable(false)
                 .setPositiveButton("Settings", new DialogInterface.OnClickListener() {
                     public void onClick(DialogInterface dialog, int which) {

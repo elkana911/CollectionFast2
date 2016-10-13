@@ -27,6 +27,7 @@ import id.co.ppu.collectionfast2.pojo.trn.TrnLDVDetails;
 import id.co.ppu.collectionfast2.pojo.trn.TrnRVB;
 import id.co.ppu.collectionfast2.pojo.trn.TrnRVColl;
 import id.co.ppu.collectionfast2.pojo.trn.TrnRVCollPK;
+import id.co.ppu.collectionfast2.util.NetUtil;
 import id.co.ppu.collectionfast2.util.Storage;
 import id.co.ppu.collectionfast2.util.Utility;
 import io.realm.Realm;
@@ -441,6 +442,10 @@ public class ActivityPaymentReceive extends BasicActivity {
 
                 realm.copyToRealm(trnContractBuckets);
 */
+                if (true) {
+                    throw new RuntimeException("sengaja error");
+                }
+
                 RealmResults<TrnLDVDetails> trnLDVDetailses = realm.where(TrnLDVDetails.class)
                         .equalTo("pk.ldvNo", ldvNo)
                         .equalTo("contractNo", contractNo)
@@ -527,6 +532,11 @@ public class ActivityPaymentReceive extends BasicActivity {
 
                 trnRVColl.setPaymentFlag(1L);
 
+                // payment receive udah pasti denda, maka ambil dana sosial apa adanya dari detil
+                long danaSosial = trnLDVDetails.getDanaSosial() == null ? 0 : trnLDVDetails.getDanaSosial().longValue();
+                trnRVColl.setDanaSosial(danaSosial);
+                trnRVColl.setPlatform(trnLDVDetails.getPlatform());
+
                 trnRVColl.setCollId(collectorId);
                 trnRVColl.setOfficeCode(userData.getUser().get(0).getBranchId());
                 trnRVColl.setInstNo(Long.parseLong(etAngsuranKe.getText().toString()));
@@ -568,8 +578,9 @@ public class ActivityPaymentReceive extends BasicActivity {
         }, new Realm.Transaction.OnError() {
             @Override
             public void onError(Throwable error) {
-                Toast.makeText(ActivityPaymentReceive.this, "Database Error", Toast.LENGTH_LONG).show();
+                NetUtil.syncLogError(getBaseContext(), realm, error);
 
+                Toast.makeText(ActivityPaymentReceive.this, "Database Error", Toast.LENGTH_LONG).show();
             }
         });
 

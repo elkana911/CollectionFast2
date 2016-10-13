@@ -2,9 +2,11 @@ package id.co.ppu.collectionfast2.rest;
 
 import id.co.ppu.collectionfast2.rest.request.RequestArea;
 import id.co.ppu.collectionfast2.rest.request.RequestLKPByDate;
+import id.co.ppu.collectionfast2.rest.request.RequestLogError;
 import id.co.ppu.collectionfast2.rest.request.RequestLogin;
 import id.co.ppu.collectionfast2.rest.request.RequestRVB;
 import id.co.ppu.collectionfast2.rest.request.RequestSyncLKP;
+import id.co.ppu.collectionfast2.rest.request.RequestSyncLocation;
 import id.co.ppu.collectionfast2.rest.request.RequestZipCode;
 import id.co.ppu.collectionfast2.rest.response.ResponseArea;
 import id.co.ppu.collectionfast2.rest.response.ResponseAreaList;
@@ -86,4 +88,9 @@ public interface ApiInterface {
             , @Part MultipartBody.Part file);
 
 
+    @POST("fast/sync_gps")
+    Call<ResponseBody> syncLocation(@Body RequestSyncLocation req);
+
+    @POST("fast/log_error")
+    Call<ResponseBody> logError(@Body RequestLogError req);
 }

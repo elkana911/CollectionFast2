@@ -12,6 +12,8 @@ import java.io.File;
 import id.co.ppu.collectionfast2.pojo.trn.TrnPhoto;
 import id.co.ppu.collectionfast2.rest.ApiInterface;
 import id.co.ppu.collectionfast2.rest.ServiceGenerator;
+import id.co.ppu.collectionfast2.rest.request.RequestLogError;
+import io.realm.Realm;
 import okhttp3.MediaType;
 import okhttp3.MultipartBody;
 import okhttp3.RequestBody;
@@ -29,6 +31,22 @@ public class NetUtil {
         return (connec.getActiveNetworkInfo() != null)
                 && (connec.getActiveNetworkInfo().isAvailable())
                 && (connec.getActiveNetworkInfo().isConnected());
+    }
+
+    public static void syncLogError(Context ctx, Realm realm, Throwable t) {
+
+        if (isConnected(ctx)) {
+
+            ApiInterface fastService =
+                    ServiceGenerator.createService(ApiInterface.class, Utility.buildUrl(Storage.getPreferenceAsInt(ctx, Storage.KEY_SERVER_ID, 0)));
+            RequestLogError req = new RequestLogError();
+
+
+//            ResponseBody resp = fastService.logError(req);
+
+        } else {
+
+        }
     }
 
     public static boolean uploadPicture(Context ctx, String officeCode, String collectorId, String ldvNo, String contractNo, String pictureId, String latitude, String longitude, Uri uri, Callback<ResponseBody> callback) {
