@@ -932,7 +932,6 @@ public class MainActivity extends SyncActivity
                                                     .equalTo("contractNo", _obj.getContractNo())
                                                     .equalTo("collectorId", _obj.getCollCode())
                                                     .equalTo("pictureId", "picture1")
-
                                                     .findFirst();
 
                                             if (sync == null) {
@@ -945,7 +944,7 @@ public class MainActivity extends SyncActivity
                                             sync.setSyncedDate(_obj.getCreatedTimestamp());
 
 
-                                            bgRealm.copyToRealm(sync);
+                                            bgRealm.copyToRealmOrUpdate(sync);
                                         }
                                     }
 

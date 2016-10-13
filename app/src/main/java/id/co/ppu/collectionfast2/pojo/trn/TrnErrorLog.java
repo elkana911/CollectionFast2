@@ -14,7 +14,9 @@ public class TrnErrorLog extends RealmObject implements Serializable{
     @PrimaryKey
     private String uid;
     private String collectorId;
-    private String message;
+    private String module;
+    private String message1;
+    private String message2;
 
     private Date createdTimestamp;
 
@@ -34,12 +36,28 @@ public class TrnErrorLog extends RealmObject implements Serializable{
         this.collectorId = collectorId;
     }
 
-    public String getMessage() {
-        return message;
+    public String getModule() {
+        return module;
     }
 
-    public void setMessage(String message) {
-        this.message = message;
+    public void setModule(String module) {
+        this.module = module;
+    }
+
+    public String getMessage1() {
+        return message1;
+    }
+
+    public void setMessage1(String message1) {
+        this.message1 = message1;
+    }
+
+    public String getMessage2() {
+        return message2;
+    }
+
+    public void setMessage2(String message2) {
+        this.message2 = message2;
     }
 
     public Date getCreatedTimestamp() {

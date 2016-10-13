@@ -71,7 +71,7 @@ public interface ApiInterface {
     Call<ResponseBody> closeBatchYesterday(@Query("collector_code") String collectorCode);
 
     @Multipart
-    @POST("/fast/upload_photo")
+    @POST("fast/upload_photo")
     Call<ResponseBody> uploadPhoto(@Part("office_code") RequestBody officeCode
             , @Part("collector_id") RequestBody collectorId
             , @Part("ldv_no") RequestBody ldvNo
@@ -81,12 +81,10 @@ public interface ApiInterface {
             , @Part("longitude") RequestBody longitude
             , @Part MultipartBody.Part file);
 
-//    Call<ResponseBody> uploadPhoto(@Part("contract_no") String contractNo, @Part("photo_id") String photoId, @Part MultipartBody.Part file);
     @Multipart
-    @POST("/fast/upload_photo")
+    @POST("fast/upload_photo")
     Call<ResponseBody> upload_Photo(@Part("trn_photo") RequestBody trnPhoto
             , @Part MultipartBody.Part file);
-
 
     @POST("fast/sync_gps")
     Call<ResponseBody> syncLocation(@Body RequestSyncLocation req);

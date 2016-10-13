@@ -442,9 +442,6 @@ public class ActivityPaymentReceive extends BasicActivity {
 
                 realm.copyToRealm(trnContractBuckets);
 */
-                if (true) {
-                    throw new RuntimeException("sengaja error");
-                }
 
                 RealmResults<TrnLDVDetails> trnLDVDetailses = realm.where(TrnLDVDetails.class)
                         .equalTo("pk.ldvNo", ldvNo)
@@ -578,7 +575,7 @@ public class ActivityPaymentReceive extends BasicActivity {
         }, new Realm.Transaction.OnError() {
             @Override
             public void onError(Throwable error) {
-                NetUtil.syncLogError(getBaseContext(), realm, error);
+                NetUtil.syncLogError(getBaseContext(), realm, collectorId, "PaymentReceive", error.getMessage(), null);
 
                 Toast.makeText(ActivityPaymentReceive.this, "Database Error", Toast.LENGTH_LONG).show();
             }

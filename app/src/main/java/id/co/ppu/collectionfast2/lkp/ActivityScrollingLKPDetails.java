@@ -153,7 +153,7 @@ public class ActivityScrollingLKPDetails extends BasicActivity {
         if (isLKPInquiry) {
             btnPaymentReceive.setText("PAYMENT ENTRY");
 
-            btnVisitResultEntry.setVisibility(View.GONE);
+//            btnVisitResultEntry.setVisibility(View.GONE);
 
             btnRepoEntry.setVisibility(View.GONE);
 

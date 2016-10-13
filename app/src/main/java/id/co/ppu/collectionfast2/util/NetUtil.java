@@ -8,18 +8,23 @@ import android.text.TextUtils;
 import com.google.gson.Gson;
 
 import java.io.File;
+import java.io.IOException;
+import java.util.Date;
 
+import id.co.ppu.collectionfast2.pojo.trn.TrnErrorLog;
 import id.co.ppu.collectionfast2.pojo.trn.TrnPhoto;
 import id.co.ppu.collectionfast2.rest.ApiInterface;
 import id.co.ppu.collectionfast2.rest.ServiceGenerator;
 import id.co.ppu.collectionfast2.rest.request.RequestLogError;
 import io.realm.Realm;
+import io.realm.RealmResults;
 import okhttp3.MediaType;
 import okhttp3.MultipartBody;
 import okhttp3.RequestBody;
 import okhttp3.ResponseBody;
 import retrofit2.Call;
 import retrofit2.Callback;
+import retrofit2.Response;
 
 /**
  * Created by Eric on 30-Aug-16.
@@ -33,20 +38,54 @@ public class NetUtil {
                 && (connec.getActiveNetworkInfo().isConnected());
     }
 
-    public static void syncLogError(Context ctx, Realm realm, Throwable t) {
+    public static void syncLogError(final Context ctx, final Realm realm, final String collectorId, final String moduleName, final String message1, final String message2) {
 
-        if (isConnected(ctx)) {
+        realm.executeTransactionAsync(new Realm.Transaction() {
+            @Override
+            public void execute(Realm realm) {
+                TrnErrorLog trnErrorLog = new TrnErrorLog();
+                trnErrorLog.setUid(java.util.UUID.randomUUID().toString());
+                trnErrorLog.setCollectorId(collectorId);
+                trnErrorLog.setCreatedTimestamp(new Date());
+                trnErrorLog.setMessage1(message1);
+                trnErrorLog.setMessage2(message2);
+                realm.copyToRealm(trnErrorLog);
+            }
+        }, new Realm.Transaction.OnSuccess() {
+            @Override
+            public void onSuccess() {
+                if (isConnected(ctx)) {
 
-            ApiInterface fastService =
-                    ServiceGenerator.createService(ApiInterface.class, Utility.buildUrl(Storage.getPreferenceAsInt(ctx, Storage.KEY_SERVER_ID, 0)));
-            RequestLogError req = new RequestLogError();
+                    ApiInterface fastService =
+                            ServiceGenerator.createService(ApiInterface.class, Utility.buildUrl(Storage.getPreferenceAsInt(ctx, Storage.KEY_SERVER_ID, 0)));
+                    RequestLogError req = new RequestLogError();
 
+                    RealmResults<TrnErrorLog> trnErrorLogs = realm.where(TrnErrorLog.class)
+                            .equalTo("collectorId", collectorId)
+                            .findAll();
 
-//            ResponseBody resp = fastService.logError(req);
+                    req.setLogs(realm.copyFromRealm(trnErrorLogs));
+                    Call<ResponseBody> call = fastService.logError(req);
+                    call.enqueue(new Callback<ResponseBody>() {
+                        @Override
+                        public void onResponse(Call<ResponseBody> call, Response<ResponseBody> response) {
+                            boolean b = realm.where(TrnErrorLog.class)
+                                    .equalTo("collectorId", collectorId)
+                                    .findAll().deleteAllFromRealm();
+                        }
 
-        } else {
+                        @Override
+                        public void onFailure(Call<ResponseBody> call, Throwable t) {
 
-        }
+                        }
+                    });
+
+                } else {
+                }
+
+            }
+        });
+
     }
 
     public static boolean uploadPicture(Context ctx, String officeCode, String collectorId, String ldvNo, String contractNo, String pictureId, String latitude, String longitude, Uri uri, Callback<ResponseBody> callback) {
@@ -126,18 +165,48 @@ public class NetUtil {
         }
 
         // create RequestBody instance from file
+//        RequestBody requestFile =
+//                RequestBody.create(MediaType.parse("multipart/form-data"), file4);
         RequestBody requestFile =
-                RequestBody.create(MediaType.parse("multipart/form-data"), file4);
-        MultipartBody.Part body =
-                MultipartBody.Part.createFormData("picture", file4.getName(), requestFile);
+                null;
+        try {
+            requestFile = RequestBody.create(MediaType.parse("multipart/form-data"), Storage.getCompressedImage(ctx, file4, trnPhoto.getPhotoId()));
+            MultipartBody.Part body =
+                    MultipartBody.Part.createFormData("picture", file4.getName(), requestFile);
 
-        RequestBody body_trnPhoto =
-                RequestBody.create(
-                        MediaType.parse("multipart/form-data"), new Gson().toJson(trnPhoto));
+            RequestBody body_trnPhoto =
+                    RequestBody.create(
+                            MediaType.parse("multipart/form-data"), new Gson().toJson(trnPhoto));
 
-        Call<ResponseBody> call = fastService.upload_Photo(body_trnPhoto, body);
+            Call<ResponseBody> call = fastService.upload_Photo(body_trnPhoto, body);
+
+            call.enqueue(callback);
+        } catch (IOException e) {
+            e.printStackTrace();
+            return false;
+        }
+//        RequestBody reqFile = RequestBody.create(MediaType.parse("image/jpeg"), file4);
+
+/*
+        byte[] buf;
+        try {
+            InputStream in = new FileInputStream(file4Compressed);
+            buf = new byte[in.available()];
+            while (in.read(buf) != -1);
+
+            RequestBody requestBody = RequestBody
+                    .create(MediaType.parse("application/octet-stream"), buf);
+
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+*/
+//        Call<ResponseBody> call = fastService.upload_Photo2(body_trnPhoto, requestBody);
+//            Call<ResponseBody> call = fastService.upload_Photo(body_trnPhoto, body);
+//            Call<ResponseBody> call = fastService.upload_Photo2(body_trnPhoto, reqFile);
 //        Call<ResponseBody> call = fastService.uploadPhoto(contractNo, pictureId, body);
-        call.enqueue(callback);
+
+//        call.enqueue(callback);
 
         return true;
     }

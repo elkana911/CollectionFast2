@@ -2,8 +2,17 @@ package id.co.ppu.collectionfast2.util;
 
 import android.content.Context;
 import android.content.SharedPreferences;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
 
 import com.google.gson.Gson;
+
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
 
 /**
  * Created by Eric on 16-Aug-16.
@@ -106,4 +115,18 @@ public class Storage {
         prefsEditor.apply();
     }
 
+    public static File getCompressedImage(Context context, File rawFile, String photoId) throws IOException {
+        InputStream in = new FileInputStream(rawFile);
+        Bitmap bm2 = BitmapFactory.decodeStream(in);
+
+        File outputDir = context.getCacheDir();
+        File outputFile = File.createTempFile(photoId + "-", ".jpg", outputDir);
+
+        OutputStream stream = new FileOutputStream(outputFile);
+        bm2.compress(Bitmap.CompressFormat.JPEG, 20, stream);
+        stream.close();
+        in.close();
+
+        return outputFile;
+    }
 }

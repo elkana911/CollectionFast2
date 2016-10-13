@@ -168,10 +168,13 @@ public class ActivityUploadPictureGeo extends BasicActivity {
                 .findFirst();
 
         if (trnPhoto1 != null) {
-            // read as html
-            Picasso.with(this)
-                    .load(convertPictureIDToUrl(trnPhoto1.getPhotoId()))
+            Picasso pic = new Picasso.Builder(this)
+                    .downloader(new OkHttp3Downloader(client))
+                    .build();
+            pic.setIndicatorsEnabled(true);
+            pic.load(convertPictureIDToUrl(trnPhoto1.getPhotoId()))
                     .into(ivUpload1);
+
         }
 
         TrnPhoto trnPhoto2 = this.realm.where(TrnPhoto.class)
@@ -199,10 +202,13 @@ public class ActivityUploadPictureGeo extends BasicActivity {
                 .findFirst();
 
         if (trnPhoto3 != null) {
-            // read as html
-            Picasso.with(this)
-                    .load(convertPictureIDToUrl(trnPhoto3.getPhotoId()))
+            Picasso pic = new Picasso.Builder(this)
+                    .downloader(new OkHttp3Downloader(client))
+                    .build();
+            pic.setIndicatorsEnabled(true);
+            pic.load(convertPictureIDToUrl(trnPhoto3.getPhotoId()))
                     .into(ivUpload3);
+
         }
 
         TrnPhoto trnPhoto4 = this.realm.where(TrnPhoto.class)
@@ -213,10 +219,13 @@ public class ActivityUploadPictureGeo extends BasicActivity {
                 .findFirst();
 
         if (trnPhoto4 != null) {
-            // read as html
-            Picasso.with(this)
-                    .load(convertPictureIDToUrl(trnPhoto4.getPhotoId()))
+            Picasso pic = new Picasso.Builder(this)
+                    .downloader(new OkHttp3Downloader(client))
+                    .build();
+            pic.setIndicatorsEnabled(true);
+            pic.load(convertPictureIDToUrl(trnPhoto4.getPhotoId()))
                     .into(ivUpload4);
+
         }
 
 
