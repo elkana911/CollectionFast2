@@ -3,17 +3,8 @@ package id.co.ppu.collectionfast2.job;
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
-import android.util.Log;
 
-import java.util.Date;
-
-import id.co.ppu.collectionfast2.location.Location;
-import id.co.ppu.collectionfast2.pojo.UserData;
-import id.co.ppu.collectionfast2.pojo.trn.TrnCollPos;
-import id.co.ppu.collectionfast2.util.Storage;
-import id.co.ppu.collectionfast2.util.Utility;
-import io.realm.Realm;
-import io.realm.RealmResults;
+import id.co.ppu.collectionfast2.util.NetUtil;
 
 /**
  * Created by Eric on 12-Sep-16.
@@ -22,7 +13,8 @@ public class SyncJob extends BroadcastReceiver{
     @Override
     public void onReceive(final Context context, Intent intent) {
 
-
+        NetUtil.syncLocation(context);
+        /*
         try {
 
             final double[] gps = Location.getGPS(context);
@@ -62,28 +54,8 @@ public class SyncJob extends BroadcastReceiver{
             } finally {
                 realm.close();
             }
-
-            /*
-            realm.executeTransactionAsync(new Realm.Transaction() {
-                @Override
-                public void execute(Realm realm) {
-//            long totalTwoDaysAgo = realm.where(TrnCollPos.class).lessThanOrEqualTo("lastUpdate", twoDaysAgo).findAll().deleteAllFromRealm();
-
-                    UserData userData = (UserData) Storage.getObjPreference(context, Storage.KEY_USER, UserData.class);
-
-                    TrnCollPos trnCollPos = new TrnCollPos();
-
-                    trnCollPos.setCollectorId(userData.getUserId());
-                    trnCollPos.setLatitude(String.valueOf(gps[0]));
-                    trnCollPos.setLongitude(String.valueOf(gps[1]));
-                    trnCollPos.setLastUpdate(new Date());
-
-                    realm.copyToRealm(trnCollPos);
-                }
-            });
-*/
         } catch (Exception e) {
             e.printStackTrace();
-        }
+        }*/
     }
 }

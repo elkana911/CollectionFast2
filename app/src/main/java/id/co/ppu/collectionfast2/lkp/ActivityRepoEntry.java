@@ -32,6 +32,7 @@ import id.co.ppu.collectionfast2.pojo.trn.TrnBastbj;
 import id.co.ppu.collectionfast2.pojo.trn.TrnLDVDetails;
 import id.co.ppu.collectionfast2.pojo.trn.TrnLDVHeader;
 import id.co.ppu.collectionfast2.pojo.trn.TrnRepo;
+import id.co.ppu.collectionfast2.util.NetUtil;
 import id.co.ppu.collectionfast2.util.Utility;
 import io.realm.Realm;
 import io.realm.RealmResults;
@@ -296,7 +297,9 @@ public class ActivityRepoEntry extends BasicActivity {
         }, new Realm.Transaction.OnError() {
             @Override
             public void onError(Throwable error) {
+                NetUtil.syncLogError(getBaseContext(), realm, collectorId, "RepoEntry", error.getMessage(), null);
                 Toast.makeText(ActivityRepoEntry.this, "Database Error !", Toast.LENGTH_LONG).show();
+                Snackbar.make(activityRepoEntri, error.getMessage(), Snackbar.LENGTH_LONG).show();
 
             }
         });

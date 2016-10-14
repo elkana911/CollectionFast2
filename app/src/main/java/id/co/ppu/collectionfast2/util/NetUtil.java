@@ -3,7 +3,7 @@ package id.co.ppu.collectionfast2.util;
 import android.content.Context;
 import android.net.ConnectivityManager;
 import android.net.Uri;
-import android.text.TextUtils;
+import android.util.Log;
 
 import com.google.gson.Gson;
 
@@ -11,11 +11,15 @@ import java.io.File;
 import java.io.IOException;
 import java.util.Date;
 
+import id.co.ppu.collectionfast2.location.Location;
+import id.co.ppu.collectionfast2.pojo.UserData;
+import id.co.ppu.collectionfast2.pojo.trn.TrnCollPos;
 import id.co.ppu.collectionfast2.pojo.trn.TrnErrorLog;
 import id.co.ppu.collectionfast2.pojo.trn.TrnPhoto;
 import id.co.ppu.collectionfast2.rest.ApiInterface;
 import id.co.ppu.collectionfast2.rest.ServiceGenerator;
 import id.co.ppu.collectionfast2.rest.request.RequestLogError;
+import id.co.ppu.collectionfast2.rest.request.RequestSyncLocation;
 import io.realm.Realm;
 import io.realm.RealmResults;
 import okhttp3.MediaType;
@@ -38,6 +42,16 @@ public class NetUtil {
                 && (connec.getActiveNetworkInfo().isConnected());
     }
 
+    /**
+     * KOnsepnya kalo ada koneksi langsung kirim, kalo tidak ada, simpan dulu di lokal.
+     * Kalo sukses terkirim clear out data
+     * @param ctx
+     * @param realm
+     * @param collectorId
+     * @param moduleName
+     * @param message1
+     * @param message2
+     */
     public static void syncLogError(final Context ctx, final Realm realm, final String collectorId, final String moduleName, final String message1, final String message2) {
 
         realm.executeTransactionAsync(new Realm.Transaction() {
@@ -65,6 +79,7 @@ public class NetUtil {
                             .findAll();
 
                     req.setLogs(realm.copyFromRealm(trnErrorLogs));
+
                     Call<ResponseBody> call = fastService.logError(req);
                     call.enqueue(new Callback<ResponseBody>() {
                         @Override
@@ -88,6 +103,77 @@ public class NetUtil {
 
     }
 
+    /**
+     * Make sure this method is run in background or asynctask
+     * @param ctx
+     */
+    public static void syncLocation(final Context ctx) {
+        Realm realm = Realm.getDefaultInstance();
+        try {
+            final double[] gps = Location.getGPS(ctx);
+
+            Log.i("eric.gps", "lat=" + String.valueOf(gps[0]) + ",lng=" + String.valueOf(gps[1]));
+            final Date twoDaysAgo = Utility.getTwoDaysAgo(new Date());
+
+            final UserData userData = (UserData) Storage.getObjPreference(ctx, Storage.KEY_USER, UserData.class);
+
+            realm.executeTransaction(new Realm.Transaction() {
+                @Override
+                public void execute(Realm realm) {
+
+                    // delete data two days ago
+                    long total = realm.where(TrnCollPos.class).count();
+
+                    RealmResults<TrnCollPos> all = realm.where(TrnCollPos.class).findAll();
+
+//                        long totalTwoDaysAgo = realm.where(TrnCollPos.class).lessThanOrEqualTo("lastUpdate", twoDaysAgo).count();
+
+
+                    TrnCollPos trnCollPos = new TrnCollPos();
+
+                    trnCollPos.setUid(java.util.UUID.randomUUID().toString());
+
+                    trnCollPos.setCollectorId(userData.getUserId());
+                    trnCollPos.setLatitude(String.valueOf(gps[0]));
+                    trnCollPos.setLongitude(String.valueOf(gps[1]));
+                    trnCollPos.setLastUpdate(new Date());
+                    realm.copyToRealmOrUpdate(trnCollPos);
+
+                }
+            });
+
+            if (!isConnected(ctx)) {
+                return;
+            }
+
+            ApiInterface fastService =
+                    ServiceGenerator.createService(ApiInterface.class, Utility.buildUrl(Storage.getPreferenceAsInt(ctx, Storage.KEY_SERVER_ID, 0)));
+
+            RequestSyncLocation req = new RequestSyncLocation();
+
+            RealmResults<TrnCollPos> trnCollPoses = realm.where(TrnCollPos.class)
+                    .equalTo("collectorId", userData.getUserId())
+                    .findAll();
+
+            req.setList(realm.copyFromRealm(trnCollPoses));
+
+            Call<ResponseBody> call = fastService.syncLocation(req);
+            Response<ResponseBody> response = call.execute();
+
+            if (response.isSuccessful()) {
+                boolean b = realm.where(TrnCollPos.class)
+                        .equalTo("collectorId", userData.getUserId())
+                        .findAll().deleteAllFromRealm();
+            }
+
+        } catch (Exception e) {
+            e.printStackTrace();
+        } finally {
+            realm.close();
+        }
+
+    }
+/*
     public static boolean uploadPicture(Context ctx, String officeCode, String collectorId, String ldvNo, String contractNo, String pictureId, String latitude, String longitude, Uri uri, Callback<ResponseBody> callback) {
         if (TextUtils.isEmpty(officeCode)
                 || TextUtils.isEmpty(collectorId)
@@ -100,7 +186,7 @@ public class NetUtil {
         ApiInterface fastService =
                 ServiceGenerator.createService(ApiInterface.class, Utility.buildUrl(Storage.getPreferenceAsInt(ctx, Storage.KEY_SERVER_ID, 0)));
 
-        File file4 = new File(DataUtil.getRealPathFromUri(ctx, uri ));
+        File file4 = new File(DataUtil.getRealPathFromUri(ctx, uri));
 
         boolean b4 = file4.exists();
 
@@ -148,7 +234,7 @@ public class NetUtil {
 
         return true;
     }
-
+*/
     public static boolean uploadPhoto(Context ctx, TrnPhoto trnPhoto, Uri uri, Callback<ResponseBody> callback) {
         if (trnPhoto == null)
             return false;
@@ -156,7 +242,7 @@ public class NetUtil {
         ApiInterface fastService =
                 ServiceGenerator.createService(ApiInterface.class, Utility.buildUrl(Storage.getPreferenceAsInt(ctx, Storage.KEY_SERVER_ID, 0)));
 
-        File file4 = new File(DataUtil.getRealPathFromUri(ctx, uri ));
+        File file4 = new File(DataUtil.getRealPathFromUri(ctx, uri));
 
         boolean b4 = file4.exists();
 
@@ -167,10 +253,8 @@ public class NetUtil {
         // create RequestBody instance from file
 //        RequestBody requestFile =
 //                RequestBody.create(MediaType.parse("multipart/form-data"), file4);
-        RequestBody requestFile =
-                null;
         try {
-            requestFile = RequestBody.create(MediaType.parse("multipart/form-data"), Storage.getCompressedImage(ctx, file4, trnPhoto.getPhotoId()));
+            RequestBody requestFile = RequestBody.create(MediaType.parse("multipart/form-data"), Storage.getCompressedImage(ctx, file4, trnPhoto.getPhotoId()));
             MultipartBody.Part body =
                     MultipartBody.Part.createFormData("picture", file4.getName(), requestFile);
 

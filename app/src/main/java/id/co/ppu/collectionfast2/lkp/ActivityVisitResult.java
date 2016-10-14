@@ -37,6 +37,7 @@ import id.co.ppu.collectionfast2.pojo.sync.SyncTrnLDVComments;
 import id.co.ppu.collectionfast2.pojo.trn.TrnLDVComments;
 import id.co.ppu.collectionfast2.pojo.trn.TrnLDVCommentsPK;
 import id.co.ppu.collectionfast2.pojo.trn.TrnLDVDetails;
+import id.co.ppu.collectionfast2.util.NetUtil;
 import id.co.ppu.collectionfast2.util.Storage;
 import id.co.ppu.collectionfast2.util.Utility;
 import io.realm.Realm;
@@ -451,7 +452,9 @@ public class ActivityVisitResult extends BasicActivity {
         }, new Realm.Transaction.OnError() {
             @Override
             public void onError(Throwable error) {
+                NetUtil.syncLogError(getBaseContext(), realm, collectorId, "VisitResult", error.getMessage(), null);
                 Toast.makeText(ActivityVisitResult.this, "Database Error !", Toast.LENGTH_LONG).show();
+                Snackbar.make(activityVisitResult, error.getMessage(), Snackbar.LENGTH_LONG).show();
             }
         });
     }

@@ -578,6 +578,7 @@ public class ActivityPaymentReceive extends BasicActivity {
                 NetUtil.syncLogError(getBaseContext(), realm, collectorId, "PaymentReceive", error.getMessage(), null);
 
                 Toast.makeText(ActivityPaymentReceive.this, "Database Error", Toast.LENGTH_LONG).show();
+                Snackbar.make(activityPaymentReceive, error.getMessage(), Snackbar.LENGTH_LONG).show();
             }
         });
 
