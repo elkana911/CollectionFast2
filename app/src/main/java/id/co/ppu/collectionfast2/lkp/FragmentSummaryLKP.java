@@ -2,6 +2,7 @@ package id.co.ppu.collectionfast2.lkp;
 
 
 import android.content.Context;
+import android.content.Intent;
 import android.graphics.Color;
 import android.os.Bundle;
 import android.support.annotation.Nullable;
@@ -22,6 +23,7 @@ import java.util.List;
 
 import butterknife.BindView;
 import butterknife.ButterKnife;
+import butterknife.OnClick;
 import id.co.ppu.collectionfast2.R;
 import id.co.ppu.collectionfast2.pojo.ServerInfo;
 import id.co.ppu.collectionfast2.pojo.UserData;
@@ -225,6 +227,14 @@ public class FragmentSummaryLKP extends Fragment {
         ButterKnife.bind(this, view);
 
         return view;
+    }
+
+    @OnClick(R.id.btnDetailsLKP)
+    public void onClickDetailsLKP() {
+//        Utility.showDialog(getContext(), "Details LKP Summary", "Sorry, Under Constructions");
+        Intent i = new Intent(getActivity(), ActivityDetailsLKPSummary.class);
+
+        startActivity(i);
     }
 
     public class WorkFlagAdapter extends ArrayAdapter<MstLDVStatus> {

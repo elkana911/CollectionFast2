@@ -2,7 +2,7 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     package="id.co.ppu.collectionfast2">
 
-    <uses-permission android:name="android.permission.CALL_PHONE"/>
+    <uses-permission android:name="android.permission.CALL_PHONE" />
     <uses-permission android:name="android.permission.GET_ACCOUNTS" />
     <uses-permission android:name="android.permission.READ_PROFILE" />
     <uses-permission android:name="android.permission.READ_CONTACTS" />
@@ -76,9 +76,6 @@
             android:name=".lkp.ActivityVehicleInfo"
             android:screenOrientation="portrait" />
         <activity
-            android:name=".lkp.ActivityUploadPicture"
-            android:screenOrientation="portrait" />
-        <activity
             android:name=".lkp.ActivityUploadPictureGeo"
             android:screenOrientation="portrait" />
         <activity
@@ -89,13 +86,19 @@
             android:screenOrientation="portrait" />
         <activity
             android:name=".payment.entry.ActivityPaymentEntri"
-            android:screenOrientation="portrait"></activity>
+            android:screenOrientation="portrait" />
+        <activity
+            android:name=".lkp.ActivityDetailsLKPSummary"
+            android:screenOrientation="portrait" />
 
-        <!-- ATTENTION: This was auto-generated to add Google Play services to your project for
-     App Indexing.  See https://g.co/AppIndexing/AndroidStudio for more information. -->
+        <!--
+     ATTENTION: This was auto-generated to add Google Play services to your project for
+     App Indexing.  See https://g.co/AppIndexing/AndroidStudio for more information.
+        -->
         <meta-data
             android:name="com.google.android.gms.version"
             android:value="@integer/google_play_services_version" />
+
     </application>
 
 </manifest>

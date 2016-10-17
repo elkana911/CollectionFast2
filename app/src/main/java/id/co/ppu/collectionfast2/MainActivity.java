@@ -1,20 +1,26 @@
 package id.co.ppu.collectionfast2;
 
+import android.Manifest;
 import android.app.AlarmManager;
 import android.app.PendingIntent;
 import android.app.ProgressDialog;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
+import android.content.pm.PackageManager;
 import android.graphics.drawable.Drawable;
+import android.location.Location;
 import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
 import android.provider.MediaStore;
+import android.support.annotation.NonNull;
+import android.support.annotation.Nullable;
 import android.support.design.widget.FloatingActionButton;
 import android.support.design.widget.NavigationView;
 import android.support.design.widget.Snackbar;
 import android.support.graphics.drawable.VectorDrawableCompat;
+import android.support.v4.app.ActivityCompat;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentTransaction;
 import android.support.v4.content.ContextCompat;
@@ -34,6 +40,13 @@ import android.view.View;
 import android.widget.ImageView;
 import android.widget.TextView;
 import android.widget.Toast;
+
+import com.google.android.gms.common.ConnectionResult;
+import com.google.android.gms.common.api.GoogleApiClient;
+import com.google.android.gms.location.LocationListener;
+import com.google.android.gms.location.LocationRequest;
+import com.google.android.gms.location.LocationServices;
+import com.google.android.gms.maps.model.LatLng;
 
 import java.io.IOException;
 import java.util.Calendar;
@@ -109,9 +122,14 @@ import retrofit2.Call;
 import retrofit2.Callback;
 import retrofit2.Response;
 
+import static id.co.ppu.collectionfast2.location.LocationFused.FASTEST_INTERVAL;
+import static id.co.ppu.collectionfast2.location.LocationFused.UPDATE_INTERVAL;
+
 // TODO: tombol sync multi fitur jd lbh simple, bisa utk tarik lkp ataupun sync. pembedanya bisa dr trnldvHeader
 public class MainActivity extends SyncActivity
-        implements NavigationView.OnNavigationItemSelectedListener, OnLKPListListener {
+        implements GoogleApiClient.ConnectionCallbacks,
+        GoogleApiClient.OnConnectionFailedListener,
+        LocationListener,NavigationView.OnNavigationItemSelectedListener, OnLKPListListener {
 
     public static final String SELECTED_NAV_MENU_KEY = "selected_nav_menu_key";
 
@@ -128,7 +146,7 @@ public class MainActivity extends SyncActivity
     FloatingActionButton fab;
 
     @BindView(R.id.coordinatorLayout)
-    View coordinatorLayout;
+    public View coordinatorLayout;
 
     @BindView(R.id.nav_view)
     NavigationView navigationView;
@@ -138,6 +156,8 @@ public class MainActivity extends SyncActivity
 
     private UserData currentUser;
     public String currentLDVNo = null;
+
+    private GoogleApiClient mGoogleApiClient;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -330,11 +350,44 @@ public class MainActivity extends SyncActivity
                 }
             });
         }
-
-        stopJob();
-        startJob();
-//        startLocationTracker();
+// Create the location client to start receiving updates
+        mGoogleApiClient = new GoogleApiClient.Builder(this)
+                .addApi(LocationServices.API)
+                .addConnectionCallbacks(this)
+                .addOnConnectionFailedListener(this).build();
     }
+
+    @Override
+    protected void onStart() {
+        super.onStart();
+//        stopJob();
+//        startJob();
+
+        mGoogleApiClient.connect();
+
+    }
+
+    @Override
+    protected void onStop() {
+
+        // Disconnecting the client invalidates it.
+        LocationServices.FusedLocationApi.removeLocationUpdates(mGoogleApiClient, this);
+
+        // only stop if it's connected, otherwise we crash
+        if (mGoogleApiClient != null) {
+            mGoogleApiClient.disconnect();
+        }
+        super.onStop();
+//        stopJob();
+
+    }
+
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+
+    }
+
 
     @Override
     public void onSaveInstanceState(Bundle outState) {
@@ -872,7 +925,7 @@ public class MainActivity extends SyncActivity
                                             SyncTrnLDVComments sync = bgRealm.where(SyncTrnLDVComments.class)
                                                     .equalTo("ldvNo", _obj.getPk().getLdvNo())
                                                     .equalTo("seqNo", _obj.getPk().getSeqNo())
-                                                    .equalTo("contractNo", _obj.getContractNo())
+                                                    .equalTo("contractNo", _obj.getPk().getContractNo())
                                                     .findFirst();
 
                                             if (sync == null) {
@@ -880,7 +933,7 @@ public class MainActivity extends SyncActivity
                                             }
                                             sync.setLdvNo(_obj.getPk().getLdvNo());
                                             sync.setSeqNo(_obj.getPk().getSeqNo());
-                                            sync.setContractNo(_obj.getContractNo());
+                                            sync.setContractNo(_obj.getPk().getContractNo());
                                             sync.setLastUpdateBy(_obj.getLastupdateBy());
                                             sync.setCreatedBy(_obj.getCreatedBy());
                                             sync.setSyncedDate(_obj.getDateDone());
@@ -931,16 +984,17 @@ public class MainActivity extends SyncActivity
 //                                                    .equalTo("ldvNo", _obj.getLdvNo())
                                                     .equalTo("contractNo", _obj.getContractNo())
                                                     .equalTo("collectorId", _obj.getCollCode())
-                                                    .equalTo("pictureId", "picture1")
+                                                    .equalTo("pictureId", _obj.getPhotoId())
                                                     .findFirst();
 
                                             if (sync == null) {
                                                 sync = new SyncFileUpload();
+                                                sync.setUid(java.util.UUID.randomUUID().toString());
                                             }
 //                                            sync.setLdvNo(_obj.getLdvNo());
                                             sync.setContractNo(_obj.getContractNo());
-                                            sync.setCollectorId(_obj.getLastupdateBy());
-                                            sync.setPictureId(_obj.getLastupdateBy());
+                                            sync.setCollectorId(_obj.getCollCode());
+                                            sync.setPictureId(_obj.getPhotoId());
                                             sync.setSyncedDate(_obj.getCreatedTimestamp());
 
 
@@ -1111,17 +1165,13 @@ public class MainActivity extends SyncActivity
         this.realm.executeTransactionAsync(new Realm.Transaction() {
             @Override
             public void execute(Realm realm) {
-                boolean b = realm.where(TrnLDVComments.class)
-                        .equalTo("pk.ldvNo", ldvNo)
-                        .equalTo("contractNo", contractNo)
-                        .equalTo("createdBy", Utility.LAST_UPDATE_BY)
+                boolean b = getLDVComments(realm, ldvNo, contractNo)
                         .findAll().deleteAllFromRealm();
 
                 // sebelum hapus rvcoll, restore dulu rvb
-                TrnRVColl trnRVColl = realm.where(TrnRVColl.class)
-                        .equalTo("contractNo", contractNo)
-                        .equalTo("createdBy", Utility.LAST_UPDATE_BY)
+                TrnRVColl trnRVColl = getRVColl(realm, contractNo)
                         .findFirst();
+
                 if (trnRVColl != null) {
                     String lastRvbNo = trnRVColl.getPk().getRbvNo();
 
@@ -1137,9 +1187,7 @@ public class MainActivity extends SyncActivity
                     trnRVColl.deleteFromRealm();
                 }
 
-                b = realm.where(TrnRepo.class)
-                        .equalTo("contractNo", contractNo)
-                        .equalTo("createdBy", Utility.LAST_UPDATE_BY)
+                b = getRepo(realm, contractNo)
                         .findAll().deleteAllFromRealm();
 
                 RealmResults<TrnLDVDetails> trnLDVDetailses = realm.where(TrnLDVDetails.class)
@@ -1213,6 +1261,23 @@ public class MainActivity extends SyncActivity
     }
 
     public void openPaymentEntry() {
+        UserData userData = (UserData) Storage.getObjPreference(getApplicationContext(), Storage.KEY_USER, UserData.class);
+
+        String collectorId = userData.getUserId();
+
+        Date serverDate = this.realm.where(ServerInfo.class).findFirst().getServerDate();
+        String createdBy = "JOB" + Utility.convertDateToString(serverDate, "yyyyMMdd");
+
+        TrnLDVHeader trnLDVHeader = realm.where(TrnLDVHeader.class)
+                .equalTo("collCode", collectorId)
+                .equalTo("createdBy", createdBy)
+                .findFirst();
+
+        if (trnLDVHeader == null) {
+            Utility.showDialog(MainActivity.this, "No Data", "Please Get LKP first");
+            return;
+        }
+
         Intent i = new Intent(this, ActivityPaymentEntri.class);
         // DO NOT SEND ANY PARAMs !
         startActivity(i);
@@ -1247,14 +1312,6 @@ public class MainActivity extends SyncActivity
                 }
 
         }
-    }
-
-    @Override
-    protected void onDestroy() {
-        super.onDestroy();
-
-        stopJob();
-
     }
 
     /**
@@ -1614,21 +1671,30 @@ public class MainActivity extends SyncActivity
             public void onResponse(Call<ResponseSync> call, Response<ResponseSync> response) {
                 final ResponseSync respSync = response.body();
 
-                if (showDialog) {
-                    if (mProgressDialog.isShowing())
-                        mProgressDialog.dismiss();
-                }
+                if (respSync == null || respSync.getError() != null) {
+                    if (showDialog) {
+                        if (mProgressDialog.isShowing())
+                            mProgressDialog.dismiss();
+                    }
 
-                if (respSync.getError() != null) {
                     if (listener != null)
-                        listener.onSkip();
+                        listener.onFailure(new RuntimeException("Sync Failed due to Server Error"));
 
-                    Toast.makeText(MainActivity.this, "Data Error (" + respSync.getError() + ")\n" + respSync.getError().getErrorDesc(), Toast.LENGTH_SHORT).show();
+                    if (respSync == null) {
+                        Snackbar.make(coordinatorLayout, response.message() + "(" + response.code() + ")", Snackbar.LENGTH_LONG).show();
+                    } else {
+                        Toast.makeText(MainActivity.this, "Data Error (" + respSync.getError() + ")\n" + respSync.getError().getErrorDesc(), Toast.LENGTH_SHORT).show();
+                    }
                     return;
                 }
 
                 // TODO: tackle successful sync result here
                 if (respSync.getData() != 1) {
+                    if (showDialog) {
+                        if (mProgressDialog.isShowing())
+                            mProgressDialog.dismiss();
+                    }
+
                     if (listener != null)
                         listener.onSkip();
 
@@ -1674,6 +1740,12 @@ public class MainActivity extends SyncActivity
                 if (listener != null)
                     listener.onSuccess(null);
 
+                if (showDialog) {
+                    if (mProgressDialog.isShowing())
+                        mProgressDialog.dismiss();
+                }
+
+
                 Snackbar.make(coordinatorLayout, "Sync success", Snackbar.LENGTH_SHORT).show();
             }
 
@@ -1695,4 +1767,88 @@ public class MainActivity extends SyncActivity
         });
     }
 
+    @Override
+    public void onConnected(@Nullable Bundle bundle) {
+        // Get last known recent location.
+        if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED && ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
+            // TODO: Consider calling
+            //    ActivityCompat#requestPermissions
+            // here to request the missing permissions, and then overriding
+            //   public void onRequestPermissionsResult(int requestCode, String[] permissions,
+            //                                          int[] grantResults)
+            // to handle the case where the user grants the permission. See the documentation
+            // for ActivityCompat#requestPermissions for more details.
+            return;
+        }
+        Location mCurrentLocation = LocationServices.FusedLocationApi.getLastLocation(mGoogleApiClient);
+        // Note that this can be NULL if last location isn't already known.
+        if (mCurrentLocation != null) {
+            // Print current location if not null
+            Log.d("DEBUG", "current location: " + mCurrentLocation.toString());
+            LatLng latLng = new LatLng(mCurrentLocation.getLatitude(), mCurrentLocation.getLongitude());
+        }
+        // Begin polling for new location updates.
+        startLocationUpdates();
+    }
+
+    @Override
+    public void onConnectionSuspended(int i) {
+
+    }
+
+    @Override
+    public void onConnectionFailed(@NonNull ConnectionResult connectionResult) {
+
+    }
+    // Trigger new location updates at interval
+    protected void startLocationUpdates() {
+        // Create the location request
+        LocationRequest mLocationRequest = LocationRequest.create()
+                .setPriority(LocationRequest.PRIORITY_HIGH_ACCURACY)
+                .setInterval(UPDATE_INTERVAL)
+                .setFastestInterval(FASTEST_INTERVAL);
+        // Request location updates
+        if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED && ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
+            // TODO: Consider calling
+            //    ActivityCompat#requestPermissions
+            // here to request the missing permissions, and then overriding
+            //   public void onRequestPermissionsResult(int requestCode, String[] permissions,
+            //                                          int[] grantResults)
+            // to handle the case where the user grants the permission. See the documentation
+            // for ActivityCompat#requestPermissions for more details.
+            return;
+        }
+        LocationServices.FusedLocationApi.requestLocationUpdates(mGoogleApiClient,
+                mLocationRequest, this);
+    }
+
+    @Override
+    public void onLocationChanged(Location location) {
+        // New location has now been determined
+        String msg = "Updated Location: " +
+                Double.toString(location.getLatitude()) + "," +
+                Double.toString(location.getLongitude());
+//        Toast.makeText(this, msg, Toast.LENGTH_SHORT).show();
+        // You can now create a LatLng Object for use with maps
+        LatLng latLng = new LatLng(location.getLatitude(), location.getLongitude());
+
+        double[] gps = new double[2];
+        gps[0] = latLng.latitude;
+        gps[1] = latLng.longitude;
+
+        NetUtil.syncLocation(this, gps);
+//        updateLoc(latLng);
+    }
+    @Override
+    public void onRequestPermissionsResult(int requestCode, String[] permissions, int[] grantResults) {
+        switch (requestCode) {
+            case 108:
+                if (grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+                    //continueYourTask
+                }
+                break;
+            default:
+                super.onRequestPermissionsResult(requestCode, permissions, grantResults);
+        }
+    }
 }

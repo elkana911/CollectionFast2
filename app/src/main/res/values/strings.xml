@@ -1,5 +1,5 @@
 <resources>
-    <string name="app_name">mFAST</string>
+    <string name="app_name">Radana Collection</string>
     <string name="title_activity_login">Sign in</string>
 
     <!-- Strings related to login -->
@@ -211,6 +211,7 @@
     <string name="title_activity_scrolling_vehicle_info">Vehicle Information</string>
     <string name="title_activity_activity_scrolling_vehicle_info">Vehicle Information</string>
     <string name="title_activity_payment_history">Payment History</string>
+    <string name="title_activity_details_lkp">Details LKP</string>
     <string name="title_no_connection">No Connection</string>
     <string name="error_online_required">This task require internet connection\nMake sure Flight mode is off.</string>
     <string name="title_activity_vehicle_info">Vehicle Information</string>

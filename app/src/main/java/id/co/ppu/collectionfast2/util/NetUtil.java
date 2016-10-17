@@ -6,12 +6,12 @@ import android.net.Uri;
 import android.util.Log;
 
 import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
 
 import java.io.File;
 import java.io.IOException;
 import java.util.Date;
 
-import id.co.ppu.collectionfast2.location.Location;
 import id.co.ppu.collectionfast2.pojo.UserData;
 import id.co.ppu.collectionfast2.pojo.trn.TrnCollPos;
 import id.co.ppu.collectionfast2.pojo.trn.TrnErrorLog;
@@ -61,6 +61,7 @@ public class NetUtil {
                 trnErrorLog.setUid(java.util.UUID.randomUUID().toString());
                 trnErrorLog.setCollectorId(collectorId);
                 trnErrorLog.setCreatedTimestamp(new Date());
+                trnErrorLog.setModule(moduleName);
                 trnErrorLog.setMessage1(message1);
                 trnErrorLog.setMessage2(message2);
                 realm.copyToRealm(trnErrorLog);
@@ -84,9 +85,17 @@ public class NetUtil {
                     call.enqueue(new Callback<ResponseBody>() {
                         @Override
                         public void onResponse(Call<ResponseBody> call, Response<ResponseBody> response) {
-                            boolean b = realm.where(TrnErrorLog.class)
-                                    .equalTo("collectorId", collectorId)
-                                    .findAll().deleteAllFromRealm();
+
+                            Realm r = Realm.getDefaultInstance();
+                            r.executeTransactionAsync(new Realm.Transaction() {
+                                @Override
+                                public void execute(Realm realm) {
+                                    boolean b = realm.where(TrnErrorLog.class)
+                                            .equalTo("collectorId", collectorId)
+                                            .findAll().deleteAllFromRealm();
+
+                                }
+                            });
                         }
 
                         @Override
@@ -107,10 +116,10 @@ public class NetUtil {
      * Make sure this method is run in background or asynctask
      * @param ctx
      */
-    public static void syncLocation(final Context ctx) {
+    public static void syncLocation(final Context ctx, final double[] gps) {
         Realm realm = Realm.getDefaultInstance();
         try {
-            final double[] gps = Location.getGPS(ctx);
+//            final double[] gps = Location.getGPS(ctx);
 
             Log.i("eric.gps", "lat=" + String.valueOf(gps[0]) + ",lng=" + String.valueOf(gps[1]));
             final Date twoDaysAgo = Utility.getTwoDaysAgo(new Date());
@@ -136,7 +145,7 @@ public class NetUtil {
                     trnCollPos.setCollectorId(userData.getUserId());
                     trnCollPos.setLatitude(String.valueOf(gps[0]));
                     trnCollPos.setLongitude(String.valueOf(gps[1]));
-                    trnCollPos.setLastUpdate(new Date());
+                    trnCollPos.setLastupdateTimestamp(new Date());
                     realm.copyToRealmOrUpdate(trnCollPos);
 
                 }
@@ -158,13 +167,28 @@ public class NetUtil {
             req.setList(realm.copyFromRealm(trnCollPoses));
 
             Call<ResponseBody> call = fastService.syncLocation(req);
-            Response<ResponseBody> response = call.execute();
+            call.enqueue(new Callback<ResponseBody>() {
+                @Override
+                public void onResponse(Call<ResponseBody> call, Response<ResponseBody> response) {
+                    if (response.isSuccessful()) {
+                        Realm r = Realm.getDefaultInstance();
+                        r.executeTransactionAsync(new Realm.Transaction() {
+                            @Override
+                            public void execute(Realm realm) {
+                                boolean b = realm.where(TrnCollPos.class)
+                                        .equalTo("collectorId", userData.getUserId())
+                                        .findAll().deleteAllFromRealm();
 
-            if (response.isSuccessful()) {
-                boolean b = realm.where(TrnCollPos.class)
-                        .equalTo("collectorId", userData.getUserId())
-                        .findAll().deleteAllFromRealm();
-            }
+                            }
+                        });
+                    }
+                }
+
+                @Override
+                public void onFailure(Call<ResponseBody> call, Throwable t) {
+
+                }
+            });
 
         } catch (Exception e) {
             e.printStackTrace();
@@ -258,9 +282,13 @@ public class NetUtil {
             MultipartBody.Part body =
                     MultipartBody.Part.createFormData("picture", file4.getName(), requestFile);
 
+            Gson gson = new GsonBuilder()
+                    .setDateFormat("dd-MM-yyyy HH:mm:ss")
+                    .create();
+            String jsonData = gson.toJson(trnPhoto);
             RequestBody body_trnPhoto =
                     RequestBody.create(
-                            MediaType.parse("multipart/form-data"), new Gson().toJson(trnPhoto));
+                            MediaType.parse("multipart/form-data"), jsonData);
 
             Call<ResponseBody> call = fastService.upload_Photo(body_trnPhoto, body);
 

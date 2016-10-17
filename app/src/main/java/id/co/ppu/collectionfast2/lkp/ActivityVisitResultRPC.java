@@ -2,18 +2,25 @@ package id.co.ppu.collectionfast2.lkp;
 
 import android.content.Intent;
 import android.os.Bundle;
+import android.support.design.widget.Snackbar;
 import android.text.TextUtils;
 import android.view.View;
 import android.widget.EditText;
 import android.widget.Toast;
+
+import java.util.Date;
 
 import butterknife.BindView;
 import butterknife.ButterKnife;
 import butterknife.OnClick;
 import id.co.ppu.collectionfast2.R;
 import id.co.ppu.collectionfast2.component.BasicActivity;
+import id.co.ppu.collectionfast2.pojo.ServerInfo;
+import id.co.ppu.collectionfast2.pojo.UserData;
+import id.co.ppu.collectionfast2.pojo.sync.SyncTrnLDVComments;
 import id.co.ppu.collectionfast2.pojo.trn.TrnLDVComments;
 import id.co.ppu.collectionfast2.pojo.trn.TrnLDVDetails;
+import id.co.ppu.collectionfast2.util.Storage;
 import id.co.ppu.collectionfast2.util.Utility;
 import io.realm.Realm;
 
@@ -21,9 +28,14 @@ public class ActivityVisitResultRPC extends BasicActivity {
 
     public static final String PARAM_CONTRACT_NO = "customer.contractNo";
     public static final String PARAM_COLLECTOR_ID = "collector.id";
+    public static final String PARAM_LDV_NO = "ldvNo";
 
     private String contractNo = null;
     private String collectorId = null;
+    private String ldvNo = null;
+
+    @BindView(R.id.activity_visit_result_rpc)
+    View activityVisitResultRPC;
 
     @BindView(R.id.etContractNo)
     EditText etContractNo;
@@ -45,6 +57,7 @@ public class ActivityVisitResultRPC extends BasicActivity {
         if (extras != null) {
             this.contractNo = extras.getString(PARAM_CONTRACT_NO);
             this.collectorId = extras.getString(PARAM_COLLECTOR_ID);
+            this.ldvNo = extras.getString(PARAM_LDV_NO);
         }
 
         TrnLDVDetails dtl = this.realm.where(TrnLDVDetails.class).equalTo("contractNo", contractNo).findFirst();
@@ -83,10 +96,31 @@ public class ActivityVisitResultRPC extends BasicActivity {
             return;
         }
 
+        final Date serverDate = realm.where(ServerInfo.class).findFirst().getServerDate();
+        final UserData userData = (UserData) Storage.getObjPreference(getApplicationContext(), Storage.KEY_USER, UserData.class);
         this.realm.executeTransactionAsync(new Realm.Transaction() {
             @Override
             public void execute(Realm realm) {
-                TrnLDVDetails trnLDVDetails = realm.where(TrnLDVDetails.class).equalTo("pk.ldvNo", contractNo).findFirst();
+
+
+                String createdBy = "JOB" + Utility.convertDateToString(serverDate, Utility.DATE_DATA_PATTERN);
+
+                SyncTrnLDVComments trnSync = realm.where(SyncTrnLDVComments.class)
+                        .equalTo("ldvNo", ldvNo)
+                        .equalTo("seqNo", 1L)
+                        .equalTo("contractNo", contractNo)
+                        .equalTo("createdBy", createdBy)
+                        .isNotNull("syncedDate")
+                        .findFirst();
+
+                if (trnSync != null) {
+                    Snackbar.make(activityVisitResultRPC, "Data already synced", Snackbar.LENGTH_SHORT).show();
+                    return;
+                }
+
+                TrnLDVDetails trnLDVDetails = realm.where(TrnLDVDetails.class)
+                                                    .equalTo("pk.ldvNo", contractNo)
+                                                    .findFirst();
                 // TODO: ga jelas krn tidak ada tampilan LDVStatus
                 /*
                 trnLDVDetails.setLdvFlag();
@@ -133,9 +167,10 @@ public class ActivityVisitResultRPC extends BasicActivity {
 
     @OnClick(R.id.btnUploadPicture)
     public void onClickUploadPicture(){
-        Intent i = new Intent(this, ActivityUploadPicture.class);
-        i.putExtra(ActivityUploadPicture.PARAM_CONTRACT_NO, etContractNo.getText().toString());
-        i.putExtra(ActivityUploadPicture.PARAM_COLLECTOR_ID, this.collectorId);
+        Intent i = new Intent(this, ActivityUploadPictureGeo.class);
+        i.putExtra(ActivityUploadPictureGeo.PARAM_CONTRACT_NO, etContractNo.getText().toString());
+        i.putExtra(ActivityUploadPictureGeo.PARAM_COLLECTOR_ID, this.collectorId);
+        i.putExtra(ActivityUploadPictureGeo.PARAM_LDV_NO, this.ldvNo);
         startActivity(i);
 
     }

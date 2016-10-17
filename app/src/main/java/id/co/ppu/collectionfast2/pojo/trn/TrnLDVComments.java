@@ -6,7 +6,6 @@ import java.io.Serializable;
 import java.util.Date;
 
 import io.realm.RealmObject;
-import io.realm.annotations.PrimaryKey;
 
 /**
  * Created by Eric on 13-Sep-16.
@@ -15,10 +14,6 @@ public class TrnLDVComments extends RealmObject implements Serializable {
 
     @SerializedName("pk")
     private TrnLDVCommentsPK pk;
-
-    @PrimaryKey
-    @SerializedName("contractNo")
-    private String contractNo;
 
     @SerializedName("delqCode")
     private String delqCode;
@@ -89,14 +84,6 @@ public class TrnLDVComments extends RealmObject implements Serializable {
 
     public void setPk(TrnLDVCommentsPK pk) {
         this.pk = pk;
-    }
-
-    public String getContractNo() {
-        return contractNo;
-    }
-
-    public void setContractNo(String contractNo) {
-        this.contractNo = contractNo;
     }
 
     public String getDelqCode() {
@@ -271,7 +258,6 @@ public class TrnLDVComments extends RealmObject implements Serializable {
     public String toString() {
         return "TrnLDVComments{" +
                 "pk=" + pk +
-                ", contractNo='" + contractNo + '\'' +
                 ", delqCode='" + delqCode + '\'' +
                 ", classCode='" + classCode + '\'' +
                 ", potensi=" + potensi +

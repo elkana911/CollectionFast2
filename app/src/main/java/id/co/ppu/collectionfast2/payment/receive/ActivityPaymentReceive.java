@@ -403,11 +403,17 @@ public class ActivityPaymentReceive extends BasicActivity {
             return;
         }
 
+        final Date serverDate = realm.where(ServerInfo.class).findFirst().getServerDate();
+        final UserData userData = (UserData) Storage.getObjPreference(getApplicationContext(), Storage.KEY_USER, UserData.class);
+
+        if (userData == null) {
+            Snackbar.make(activityPaymentReceive, "Invalid User Data. Please relogin.", Snackbar.LENGTH_SHORT).show();
+            return;
+        }
         // better use async so you can throw and automatic canceltransaction
         this.realm.executeTransactionAsync(new Realm.Transaction() {
             @Override
             public void execute(Realm realm) {
-                UserData userData = (UserData) Storage.getObjPreference(getApplicationContext(), Storage.KEY_USER, UserData.class);
 
                 SyncTrnRVColl trnSync = realm.where(SyncTrnRVColl.class)
                         .equalTo("ldvNo", ldvNo)
@@ -480,8 +486,6 @@ public class ActivityPaymentReceive extends BasicActivity {
                 trnRVB.setLastupdateTimestamp(new Date());
                 realm.copyToRealmOrUpdate(trnRVB);
 
-                Date serverDate = realm.where(ServerInfo.class).findFirst().getServerDate();
-
                 // just in case re-entry need to query
                 TrnRVColl trnRVColl = isExists(realm);
 
@@ -535,7 +539,7 @@ public class ActivityPaymentReceive extends BasicActivity {
                 trnRVColl.setPlatform(trnLDVDetails.getPlatform());
 
                 trnRVColl.setCollId(collectorId);
-                trnRVColl.setOfficeCode(userData.getUser().get(0).getBranchId());
+                trnRVColl.setOfficeCode(userData.getBranchId());
                 trnRVColl.setInstNo(Long.parseLong(etAngsuranKe.getText().toString()));
                 trnRVColl.setFlagDone("Y");
                 trnRVColl.setTransDate(serverDate);
@@ -575,7 +579,17 @@ public class ActivityPaymentReceive extends BasicActivity {
         }, new Realm.Transaction.OnError() {
             @Override
             public void onError(Throwable error) {
-                NetUtil.syncLogError(getBaseContext(), realm, collectorId, "PaymentReceive", error.getMessage(), null);
+                StringBuffer message2 = new StringBuffer();
+                message2.append("contractNo=").append(contractNo)
+                        .append(",penerimaan=").append(penerimaan)
+                        .append(",denda=").append(denda)
+                        .append(",dendaBerjalan=").append(dendaBerjalan)
+                        .append(",biayaTagih=").append(penerimaan)
+                        .append(",rvbNo=").append(rvbNo)
+                        .append(",serverDate=").append(serverDate)
+                ;
+
+                NetUtil.syncLogError(getBaseContext(), realm, collectorId, "PaymentReceive", error.getMessage(), message2.toString());
 
                 Toast.makeText(ActivityPaymentReceive.this, "Database Error", Toast.LENGTH_LONG).show();
                 Snackbar.make(activityPaymentReceive, error.getMessage(), Snackbar.LENGTH_LONG).show();

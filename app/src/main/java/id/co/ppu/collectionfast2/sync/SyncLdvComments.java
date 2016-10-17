@@ -29,7 +29,7 @@ public class SyncLdvComments extends ASyncDataHandler {
 
             String key1 = obj.getPk().getLdvNo();
             Long key2 = obj.getPk().getSeqNo();
-            String key3 = obj.getContractNo();
+            String key3 = obj.getPk().getContractNo();
 
             SyncTrnLDVComments sync = realm.where(SyncTrnLDVComments.class)
                     .equalTo("ldvNo", key1)
@@ -58,7 +58,7 @@ public class SyncLdvComments extends ASyncDataHandler {
                     TrnLDVComments t = (TrnLDVComments) obj;
                     String key1 = t.getPk().getLdvNo();
                     Long key2 = t.getPk().getSeqNo();
-                    String key3 = t.getContractNo();
+                    String key3 = t.getPk().getContractNo();
 
                     SyncTrnLDVComments sync = realm.where(SyncTrnLDVComments.class)
                             .equalTo("ldvNo", key1)

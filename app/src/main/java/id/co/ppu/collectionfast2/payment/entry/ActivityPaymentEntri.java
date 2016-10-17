@@ -38,6 +38,7 @@ import id.co.ppu.collectionfast2.pojo.trn.TrnLDVHeader;
 import id.co.ppu.collectionfast2.pojo.trn.TrnRVB;
 import id.co.ppu.collectionfast2.pojo.trn.TrnRVColl;
 import id.co.ppu.collectionfast2.pojo.trn.TrnRVCollPK;
+import id.co.ppu.collectionfast2.util.NetUtil;
 import id.co.ppu.collectionfast2.util.Storage;
 import id.co.ppu.collectionfast2.util.Utility;
 import io.realm.Realm;
@@ -148,13 +149,14 @@ public class ActivityPaymentEntri extends BasicActivity implements FragmentActiv
         } else {
             UserData userData = (UserData) Storage.getObjPreference(getApplicationContext(), Storage.KEY_USER, UserData.class);
 
-            this.collectorId = userData.getUser().get(0).getUserId();
+            this.collectorId = userData.getUserId();
 
-            RealmResults<TrnContractBuckets> buckets = this.realm.where(TrnContractBuckets.class)
+            final RealmResults<TrnContractBuckets> buckets = this.realm.where(TrnContractBuckets.class)
                     .equalTo("collectorId", this.collectorId).findAll();
 
             Date serverDate = this.realm.where(ServerInfo.class).findFirst().getServerDate();
-            String createdBy = "JOB" + Utility.convertDateToString(serverDate, "yyyyMMdd");
+
+            final String createdBy = "JOB" + Utility.convertDateToString(serverDate, "yyyyMMdd");
 
             if (this.ldvNo == null) {
                 TrnLDVHeader trnLDVHeader = realm.where(TrnLDVHeader.class)
@@ -165,6 +167,76 @@ public class ActivityPaymentEntri extends BasicActivity implements FragmentActiv
                 this.ldvNo = trnLDVHeader.getLdvNo();
             }
 
+            /*
+            new AsyncTask<Void, Void, List<String>>() {
+                @Override
+                protected List<String> doInBackground(Void... voids) {
+                    Realm r = Realm.getDefaultInstance();
+                    List<String> list = new ArrayList<>();
+
+                    try {
+                        RealmResults<TrnLDVDetails> _buffer = r.where(TrnLDVDetails.class)
+                                .equalTo("pk.ldvNo", ldvNo)
+                                .equalTo("createdBy", createdBy)
+                                .findAll();
+
+                        for (TrnContractBuckets b : buckets) {
+                            boolean exist = false;
+                            for (TrnLDVDetails _dtl : _buffer) {
+                                if (_dtl.getContractNo().equalsIgnoreCase(b.getPk().getContractNo())) {
+                                    exist = true;
+                                    break;
+                                }
+                            }
+
+                            if (!exist)
+                                list.add(b.getPk().getContractNo());
+                        }
+
+                        if (list.size() > 0) {
+                            // sort
+                            Collections.sort(list);
+                        }
+                    } finally {
+                        if (r != null) {
+                            r.close();
+                        }
+                    }
+
+                    return list;
+
+                }
+
+                @Override
+                protected void onPostExecute( List<String> data) {
+                    super.onPostExecute(data);
+
+                    if (data.size() > 0) {
+
+                        // override color of text item
+                        ArrayAdapter<String> dataAdapter = new ArrayAdapter<String>(ActivityPaymentEntri.this,
+                                android.R.layout.simple_list_item_1, data) {
+                            @Override
+                            public View getView(int position, View convertView, ViewGroup parent) {
+                                View view = super.getView(position, convertView, parent);
+                                TextView text = (TextView) view.findViewById(android.R.id.text1);
+                                text.setTextColor(Color.BLACK);
+                                return view;
+                            }
+                        };
+
+                        etContractNo.setAdapter(dataAdapter);
+
+                    } else {
+                        Button btnSave = ButterKnife.findById(ActivityPaymentEntri.this, R.id.btnSave);
+                        btnSave.setVisibility(View.INVISIBLE);
+
+                        Snackbar.make(activityPaymentEntri, "No contracts found !", Snackbar.LENGTH_LONG).show();
+                    }
+
+                }
+            }.execute();
+            */
             RealmResults<TrnLDVDetails> _buffer = this.realm.where(TrnLDVDetails.class)
                     .equalTo("pk.ldvNo", ldvNo)
                     .equalTo("createdBy", createdBy)
@@ -509,10 +581,10 @@ public class ActivityPaymentEntri extends BasicActivity implements FragmentActiv
             return;
         }
 
+        final Date serverDate = realm.where(ServerInfo.class).findFirst().getServerDate();
         this.realm.executeTransactionAsync(new Realm.Transaction() {
             @Override
             public void execute(Realm realm) {
-                Date serverDate = realm.where(ServerInfo.class).findFirst().getServerDate();
                 UserData userData = (UserData) Storage.getObjPreference(getApplicationContext(), Storage.KEY_USER, UserData.class);
 
                 String createdBy = "JOB" + Utility.convertDateToString(lkpDate, Utility.DATE_DATA_PATTERN);
@@ -680,7 +752,20 @@ public class ActivityPaymentEntri extends BasicActivity implements FragmentActiv
         }, new Realm.Transaction.OnError() {
             @Override
             public void onError(Throwable error) {
+                StringBuffer message2 = new StringBuffer();
+                message2.append("contractNo=").append(contractNo)
+                        .append(",penerimaan=").append(penerimaan)
+                        .append(",denda=").append(denda)
+                        .append(",dendaBerjalan=").append(dendaBerjalan)
+                        .append(",biayaTagih=").append(penerimaan)
+                        .append(",rvbNo=").append(rvbNo)
+                        .append(",serverDate=").append(serverDate)
+                ;
+
+                NetUtil.syncLogError(getBaseContext(), realm, collectorId, "PaymentEntri", error.getMessage(), message2.toString());
+
                 Toast.makeText(ActivityPaymentEntri.this, "Database Error", Toast.LENGTH_LONG).show();
+                Snackbar.make(activityPaymentEntri, error.getMessage(), Snackbar.LENGTH_LONG).show();
 
             }
         });

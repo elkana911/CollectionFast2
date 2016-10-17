@@ -40,6 +40,7 @@ import id.co.ppu.collectionfast2.util.NetUtil;
 import id.co.ppu.collectionfast2.util.Storage;
 import id.co.ppu.collectionfast2.util.Utility;
 import io.realm.Realm;
+import io.realm.RealmResults;
 import okhttp3.HttpUrl;
 import okhttp3.Interceptor;
 import okhttp3.OkHttpClient;
@@ -172,8 +173,15 @@ public class ActivityUploadPictureGeo extends BasicActivity {
                     .downloader(new OkHttp3Downloader(client))
                     .build();
             pic.setIndicatorsEnabled(true);
-            pic.load(convertPictureIDToUrl(trnPhoto1.getPhotoId()))
-                    .into(ivUpload1);
+            if (trnPhoto1.getFilename().startsWith("content")) {
+                Uri uri = Uri.parse(trnPhoto1.getFilename().toString());
+                pic.load(uri).into(ivUpload1);
+
+                ivUpload1.setTag(uri);
+
+            } else
+                pic.load(convertPictureIDToUrl(trnPhoto1.getPhotoId()))
+                        .into(ivUpload1);
 
         }
 
@@ -190,8 +198,13 @@ public class ActivityUploadPictureGeo extends BasicActivity {
                     .downloader(new OkHttp3Downloader(client))
                     .build();
             pic.setIndicatorsEnabled(true);
-            pic.load(convertPictureIDToUrl(trnPhoto2.getPhotoId()))
-                    .into(ivUpload2);
+            if (trnPhoto2.getFilename().startsWith("content")) {
+                Uri uri = Uri.parse(trnPhoto2.getFilename().toString());
+                pic.load(uri).into(ivUpload2);
+                ivUpload2.setTag(uri);
+            } else
+                pic.load(convertPictureIDToUrl(trnPhoto2.getPhotoId()))
+                        .into(ivUpload2);
         }
 
         TrnPhoto trnPhoto3 = this.realm.where(TrnPhoto.class)
@@ -206,8 +219,14 @@ public class ActivityUploadPictureGeo extends BasicActivity {
                     .downloader(new OkHttp3Downloader(client))
                     .build();
             pic.setIndicatorsEnabled(true);
-            pic.load(convertPictureIDToUrl(trnPhoto3.getPhotoId()))
-                    .into(ivUpload3);
+
+            if (trnPhoto3.getFilename().startsWith("content")) {
+                Uri uri = Uri.parse(trnPhoto3.getFilename().toString());
+                pic.load(uri).into(ivUpload3);
+                ivUpload3.setTag(uri);
+            } else
+                pic.load(convertPictureIDToUrl(trnPhoto3.getPhotoId()))
+                        .into(ivUpload3);
 
         }
 
@@ -223,11 +242,22 @@ public class ActivityUploadPictureGeo extends BasicActivity {
                     .downloader(new OkHttp3Downloader(client))
                     .build();
             pic.setIndicatorsEnabled(true);
-            pic.load(convertPictureIDToUrl(trnPhoto4.getPhotoId()))
-                    .into(ivUpload4);
+
+            if (trnPhoto4.getFilename().startsWith("content")) {
+                Uri uri = Uri.parse(trnPhoto4.getFilename().toString());
+                pic.load(uri).into(ivUpload4);
+                ivUpload4.setTag(uri);
+            } else
+                pic.load(convertPictureIDToUrl(trnPhoto4.getPhotoId()))
+                        .into(ivUpload4);
 
         }
 
+
+        RealmResults<SyncFileUpload> uploads = this.realm.where(SyncFileUpload.class)
+                .equalTo("contractNo", this.contractNo)
+                .equalTo("collectorId", this.collectorId)
+                .findAll();
 
         SyncFileUpload first = this.realm.where(SyncFileUpload.class)
                 .equalTo("contractNo", this.contractNo)
@@ -283,7 +313,7 @@ public class ActivityUploadPictureGeo extends BasicActivity {
         HttpUrl httpUrl = Utility.buildUrl(Storage.getPreferenceAsInt(this, Storage.KEY_SERVER_ID, 0));
         String fixUrl = httpUrl.toString();
 
-        if(fixUrl.charAt(fixUrl.length()-1)!= '/'){
+        if (fixUrl.charAt(fixUrl.length() - 1) != '/') {
             fixUrl += '/';
         }
 
@@ -397,7 +427,7 @@ public class ActivityUploadPictureGeo extends BasicActivity {
                     .equalTo("collCode", collectorId)
                     .equalTo("photoId", "picture1")
                     .findFirst()
-                    ;
+            ;
 
             latitude = trnPhoto.getLatitude();
             longitude = trnPhoto.getLongitude();
@@ -408,7 +438,7 @@ public class ActivityUploadPictureGeo extends BasicActivity {
                     .equalTo("collCode", collectorId)
                     .equalTo("photoId", "picture2")
                     .findFirst()
-                    ;
+            ;
 
             latitude = trnPhoto.getLatitude();
             longitude = trnPhoto.getLongitude();
@@ -420,7 +450,7 @@ public class ActivityUploadPictureGeo extends BasicActivity {
                     .equalTo("collCode", collectorId)
                     .equalTo("photoId", "picture3")
                     .findFirst()
-                    ;
+            ;
 
             latitude = trnPhoto.getLatitude();
             longitude = trnPhoto.getLongitude();
@@ -432,13 +462,13 @@ public class ActivityUploadPictureGeo extends BasicActivity {
                     .equalTo("collCode", collectorId)
                     .equalTo("photoId", "picture4")
                     .findFirst()
-                    ;
+            ;
 
             latitude = trnPhoto.getLatitude();
             longitude = trnPhoto.getLongitude();
         }
 
-        if (trnPhoto == null){
+        if (trnPhoto == null) {
             if (listener != null) {
                 listener.onSkip();
                 return;
@@ -463,6 +493,7 @@ public class ActivityUploadPictureGeo extends BasicActivity {
                                     .findFirst();
                             if (sync == null) {
                                 sync = new SyncFileUpload();
+                                sync.setUid(java.util.UUID.randomUUID().toString());
                                 sync.setContractNo(contractNo);
                                 sync.setCollectorId(collectorId);
                                 sync.setPictureId(picId);

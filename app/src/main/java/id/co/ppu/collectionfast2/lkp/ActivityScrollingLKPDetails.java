@@ -10,6 +10,7 @@ import android.view.View;
 import android.widget.AutoCompleteTextView;
 import android.widget.Button;
 import android.widget.EditText;
+import android.widget.RadioButton;
 
 import java.util.Date;
 
@@ -22,6 +23,7 @@ import id.co.ppu.collectionfast2.payment.entry.ActivityPaymentEntri;
 import id.co.ppu.collectionfast2.payment.receive.ActivityPaymentReceive;
 import id.co.ppu.collectionfast2.pojo.UserData;
 import id.co.ppu.collectionfast2.pojo.master.MstUser;
+import id.co.ppu.collectionfast2.pojo.trn.TrnCollectAddr;
 import id.co.ppu.collectionfast2.pojo.trn.TrnContractBuckets;
 import id.co.ppu.collectionfast2.pojo.trn.TrnLDVComments;
 import id.co.ppu.collectionfast2.pojo.trn.TrnLDVDetails;
@@ -61,6 +63,9 @@ public class ActivityScrollingLKPDetails extends BasicActivity {
     @BindView(R.id.etContractNo)
     AutoCompleteTextView etContractNo;
 
+    @BindView(R.id.etPlatform)
+    AutoCompleteTextView etPlatform;
+
     @BindView(R.id.etPhone)
     AutoCompleteTextView etPhone;
 
@@ -99,6 +104,15 @@ public class ActivityScrollingLKPDetails extends BasicActivity {
 
     @BindView(R.id.etBiayaTagih)
     EditText etBiayaTagih;
+
+    @BindView(R.id.etDanaSosial)
+    EditText etDanaSosial;
+
+    @BindView(R.id.radioHome)
+    RadioButton radioHome;
+
+    @BindView(R.id.radioOffice)
+    RadioButton radioOffice;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -145,6 +159,31 @@ public class ActivityScrollingLKPDetails extends BasicActivity {
 
     }
 
+    @OnClick(R.id.radioHome)
+    public void onClickRadioHome() {
+
+        String createdBy = "JOB" + Utility.convertDateToString(this.lkpDate, "yyyyMMdd");
+        TrnCollectAddr trnCollectAddr = this.realm.where(TrnCollectAddr.class)
+                .equalTo("pk.contractNo", this.contractNo)
+                .equalTo("pk.seqNo", 1)
+                .equalTo("createdBy", createdBy)
+                .findFirst();
+
+        etAddress.setText(trnCollectAddr == null ? "" : trnCollectAddr.getCollAddr());
+    }
+
+    @OnClick(R.id.radioOffice)
+    public void onClickRadioOffice() {
+        String createdBy = "JOB" + Utility.convertDateToString(this.lkpDate, "yyyyMMdd");
+        TrnCollectAddr trnCollectAddr = this.realm.where(TrnCollectAddr.class)
+                .equalTo("pk.contractNo", this.contractNo)
+                .equalTo("pk.seqNo", 2)
+                .equalTo("createdBy", createdBy)
+                .findFirst();
+
+        etAddress.setText(trnCollectAddr == null ? "-" : trnCollectAddr.getCollAddr());
+    }
+
     private void updateButtonsVisibility(TrnLDVDetails dtl) {
         Button btnPaymentReceive = ButterKnife.findById(this, R.id.btnPaymentReceive);
         Button btnVisitResultEntry = ButterKnife.findById(this, R.id.btnVisitResultEntry);
@@ -153,7 +192,7 @@ public class ActivityScrollingLKPDetails extends BasicActivity {
         if (isLKPInquiry) {
             btnPaymentReceive.setText("PAYMENT ENTRY");
 
-//            btnVisitResultEntry.setVisibility(View.GONE);
+            btnVisitResultEntry.setVisibility(View.GONE);
 
             btnRepoEntry.setVisibility(View.GONE);
 
@@ -181,11 +220,7 @@ public class ActivityScrollingLKPDetails extends BasicActivity {
             }
         }
 
-        RealmResults<TrnLDVComments> trnLDVCommentses = this.realm.where(TrnLDVComments.class)
-                .equalTo("pk.ldvNo", ldvNo)
-                .equalTo("contractNo", contractNo)
-                .equalTo("createdBy", Utility.LAST_UPDATE_BY)
-                .findAll();
+        RealmResults<TrnLDVComments> trnLDVCommentses = this.getLDVComments(realm, ldvNo, contractNo).findAll();
 
         if (trnLDVCommentses.size() > 0) {
             btnPaymentReceive.setVisibility(View.GONE);
@@ -193,10 +228,7 @@ public class ActivityScrollingLKPDetails extends BasicActivity {
             btnVisitResultEntry.setVisibility(View.VISIBLE);
         }
 
-        RealmResults<TrnRVColl> trnRVColls = this.realm.where(TrnRVColl.class)
-                .equalTo("contractNo", contractNo)
-                .equalTo("createdBy", Utility.LAST_UPDATE_BY)
-                .findAll();
+        RealmResults<TrnRVColl> trnRVColls = this.getRVColl(realm, contractNo).findAll();
 
         if (trnRVColls.size() > 0) {
             btnRepoEntry.setVisibility(View.GONE);
@@ -204,10 +236,7 @@ public class ActivityScrollingLKPDetails extends BasicActivity {
             btnPaymentReceive.setVisibility(View.VISIBLE);
         }
 
-        RealmResults<TrnRepo> trnRepos = this.realm.where(TrnRepo.class)
-                .equalTo("contractNo", contractNo)
-                .equalTo("createdBy", Utility.LAST_UPDATE_BY)
-                .findAll();
+        RealmResults<TrnRepo> trnRepos = this.getRepo(realm, contractNo).findAll();
 
         if (trnRepos.size() > 0) {
             btnPaymentReceive.setVisibility(View.GONE);
@@ -250,6 +279,7 @@ public class ActivityScrollingLKPDetails extends BasicActivity {
         toolbar_layout.setTitle(dtl.getCustName());
 
         etContractNo.setText(dtl.getContractNo());
+        etPlatform.setText(dtl.getPlatform());
 
         if (dtl.getAddress() != null) {
             etAddress.setText(dtl.getAddress().getCollAddr());
@@ -285,6 +315,9 @@ public class ActivityScrollingLKPDetails extends BasicActivity {
         long biayaTagih = (dtl.getCollectionFee() == null ? 0 : dtl.getCollectionFee()) ;
         etBiayaTagih.setText(Utility.convertLongToRupiah(biayaTagih));
 
+        long danaSosial = (dtl.getDanaSosial() == null ? 0 : dtl.getDanaSosial()) ;
+        etDanaSosial.setText(Utility.convertLongToRupiah(danaSosial));
+
         return dtl;
     }
 
@@ -292,21 +325,14 @@ public class ActivityScrollingLKPDetails extends BasicActivity {
     public void onClickPaymentReceive() {
 
         // should disable when user already do visit result/repo entri
-        RealmResults<TrnRepo> trnRepos = this.realm.where(TrnRepo.class)
-                .equalTo("contractNo", contractNo)
-                .equalTo("createdBy", Utility.LAST_UPDATE_BY)
-                .findAll();
+        RealmResults<TrnRepo> trnRepos = this.getRepo(realm, contractNo).findAll();
 
         if (trnRepos.size() > 0) {
             Snackbar.make(activityScrollingLkpdtl, "This contract available via Repo Entri only", Snackbar.LENGTH_SHORT).show();
             return;
         }
 
-        RealmResults<TrnLDVComments> trnLDVCommentses = this.realm.where(TrnLDVComments.class)
-                .equalTo("pk.ldvNo", ldvNo)
-                .equalTo("contractNo", contractNo)
-                .equalTo("createdBy", Utility.LAST_UPDATE_BY)
-                .findAll();
+        RealmResults<TrnLDVComments> trnLDVCommentses = this.getLDVComments(realm, ldvNo, contractNo).findAll();
 
         if (trnLDVCommentses.size() > 0) {
             Snackbar.make(activityScrollingLkpdtl, "This contract available via Visit Result only", Snackbar.LENGTH_SHORT).show();
@@ -345,20 +371,14 @@ public class ActivityScrollingLKPDetails extends BasicActivity {
     public void onClickVisitResultEntry() {
 
         // should disable when user already do payment/repo entri
-        RealmResults<TrnRepo> trnRepos = this.realm.where(TrnRepo.class)
-                .equalTo("contractNo", contractNo)
-                .equalTo("createdBy", Utility.LAST_UPDATE_BY)
-                .findAll();
+        RealmResults<TrnRepo> trnRepos = this.getRepo(realm, contractNo).findAll();
 
         if (trnRepos.size() > 0) {
             Snackbar.make(activityScrollingLkpdtl, "This contract available via Repo Entri only", Snackbar.LENGTH_SHORT).show();
             return;
         }
 
-        RealmResults<TrnRVColl> trnRVColls = this.realm.where(TrnRVColl.class)
-                .equalTo("contractNo", contractNo)
-                .equalTo("createdBy", Utility.LAST_UPDATE_BY)
-                .findAll();
+        RealmResults<TrnRVColl> trnRVColls = this.getRVColl(realm, contractNo).findAll();
 
         if (trnRVColls.size() > 0) {
             Snackbar.make(activityScrollingLkpdtl, "This contract available via Payment only", Snackbar.LENGTH_SHORT).show();
@@ -388,21 +408,14 @@ public class ActivityScrollingLKPDetails extends BasicActivity {
 
         // should disable when user already do payment/visit result
         // cek by createdby MOBCOL
-        RealmResults<TrnLDVComments> trnLDVCommentses = this.realm.where(TrnLDVComments.class)
-                .equalTo("pk.ldvNo", ldvNo)
-                .equalTo("contractNo", contractNo)
-                .equalTo("createdBy", Utility.LAST_UPDATE_BY)
-                .findAll();
+        RealmResults<TrnLDVComments> trnLDVCommentses = this.getLDVComments(realm, ldvNo, contractNo).findAll();
 
         if (trnLDVCommentses.size() > 0) {
             Snackbar.make(activityScrollingLkpdtl, "This contract available via Visit Result only", Snackbar.LENGTH_SHORT).show();
             return;
         }
 
-        RealmResults<TrnRVColl> trnRVColls = this.realm.where(TrnRVColl.class)
-                .equalTo("contractNo", contractNo)
-                .equalTo("createdBy", Utility.LAST_UPDATE_BY)
-                .findAll();
+        RealmResults<TrnRVColl> trnRVColls = this.getRVColl(realm, contractNo).findAll();
 
         if (trnRVColls.size() > 0) {
             Snackbar.make(activityScrollingLkpdtl, "This contract available via Payment only", Snackbar.LENGTH_SHORT).show();

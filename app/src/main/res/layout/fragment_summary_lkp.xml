@@ -14,9 +14,10 @@
             style="?android:attr/listSeparatorTextViewStyle"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:background="@color/colorLKPBlue"
+            android:background="@android:color/darker_gray"
             android:gravity="center"
             android:maxLines="1"
+            android:padding="8dp"
             android:text="LKP" />
 
         <LinearLayout
@@ -24,7 +25,8 @@
             android:layout_height="wrap_content"
             android:orientation="vertical"
             android:paddingLeft="@dimen/activity_horizontal_margin"
-            android:paddingRight="@dimen/activity_horizontal_margin">
+            android:paddingRight="@dimen/activity_horizontal_margin"
+            android:paddingBottom="12dp">
 
             <android.support.design.widget.TextInputLayout
                 android:layout_width="match_parent"
@@ -187,7 +189,8 @@
             style="?android:attr/listSeparatorTextViewStyle"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:background="@color/colorLKPGreen"
+            android:background="@android:color/darker_gray"
+            android:padding="8dp"
             android:gravity="center"
             android:text="Non LKP" />
 
@@ -196,7 +199,8 @@
             android:layout_height="wrap_content"
             android:orientation="vertical"
             android:paddingLeft="@dimen/activity_horizontal_margin"
-            android:paddingRight="@dimen/activity_horizontal_margin">
+            android:paddingRight="@dimen/activity_horizontal_margin"
+            android:paddingBottom="12dp">
 
             <LinearLayout
                 android:layout_width="match_parent"
@@ -274,6 +278,12 @@
                 </android.support.design.widget.TextInputLayout>
             </LinearLayout>
         </LinearLayout>
+
+        <Button
+            android:id="@+id/btnDetailsLKP"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Details LKP"/>
     </LinearLayout>
 
 </android.support.v4.widget.NestedScrollView>

@@ -13,11 +13,20 @@ import io.realm.annotations.PrimaryKey;
 public class SyncFileUpload extends RealmObject implements Serializable {
 
     @PrimaryKey
+    private String uid;
     private String contractNo;
     private String collectorId;
     private String pictureId;
 
     private Date syncedDate;
+
+    public String getUid() {
+        return uid;
+    }
+
+    public void setUid(String uid) {
+        this.uid = uid;
+    }
 
     public String getContractNo() {
         return contractNo;

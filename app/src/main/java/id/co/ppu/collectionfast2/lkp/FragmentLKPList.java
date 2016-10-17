@@ -339,7 +339,7 @@ public class FragmentLKPList extends Fragment {
         mAdapter = new LKPListAdapter(
                 getContext(),
                 this.realm,
-                "custName"
+                "seqNo"                //"custName"
         );
 //        LKPListAdapter mAdapter = new LKPListAdapter(
 //                getContext(),

@@ -17,6 +17,9 @@ public class TrnLDVCommentsPK extends RealmObject implements Serializable {
     @SerializedName("seqNo")
     private Long seqNo;
 
+    @SerializedName("contractNo")
+    private String contractNo;
+
     public String getLdvNo() {
         return ldvNo;
     }
@@ -33,11 +36,20 @@ public class TrnLDVCommentsPK extends RealmObject implements Serializable {
         this.seqNo = seqNo;
     }
 
+    public String getContractNo() {
+        return contractNo;
+    }
+
+    public void setContractNo(String contractNo) {
+        this.contractNo = contractNo;
+    }
+
     @Override
     public String toString() {
         return "TrnLDVCommentsPK{" +
                 "ldvNo='" + ldvNo + '\'' +
                 ", seqNo=" + seqNo +
+                ", contractNo='" + contractNo + '\'' +
                 '}';
     }
 }

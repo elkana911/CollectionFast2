@@ -4,6 +4,7 @@ import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 
+import id.co.ppu.collectionfast2.location.Location;
 import id.co.ppu.collectionfast2.util.NetUtil;
 
 /**
@@ -13,7 +14,8 @@ public class SyncJob extends BroadcastReceiver{
     @Override
     public void onReceive(final Context context, Intent intent) {
 
-        NetUtil.syncLocation(context);
+        final double[] gps = Location.getGPS(context);
+        NetUtil.syncLocation(context, gps);
         /*
         try {
 

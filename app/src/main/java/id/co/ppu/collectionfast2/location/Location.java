@@ -16,6 +16,8 @@ import java.util.List;
  */
 
 public class Location {
+
+
     // The minimum distance to change Updates in meters
     private static final long MIN_DISTANCE_CHANGE_FOR_UPDATES = 10; // 10 meters
 

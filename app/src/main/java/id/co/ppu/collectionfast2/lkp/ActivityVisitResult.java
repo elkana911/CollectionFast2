@@ -181,11 +181,7 @@ public class ActivityVisitResult extends BasicActivity {
         };
 
         // load last save
-        TrnLDVComments trnLDVComments = this.realm.where(TrnLDVComments.class)
-                .equalTo("pk.ldvNo", ldvNo)
-                .equalTo("contractNo", contractNo)
-                .equalTo("lastupdateBy", Utility.LAST_UPDATE_BY)
-                .findFirst();
+        TrnLDVComments trnLDVComments = this.getLDVComments(realm, ldvNo, contractNo).findFirst();
 
         if (trnLDVComments != null) {
             String lkpFlag = dtl.getLdvFlag();
@@ -266,7 +262,7 @@ public class ActivityVisitResult extends BasicActivity {
         final String komentar = etKomentar.getText().toString();
 
         String sLKPFlags = spLKPFlags.getSelectedItem().toString();
-        MstLDVParameters ldvParameters = realm.where(MstLDVParameters.class).equalTo("description", sLKPFlags).findFirst();
+        final MstLDVParameters ldvParameters = realm.where(MstLDVParameters.class).equalTo("description", sLKPFlags).findFirst();
         String sAlasan = spAlasan.getSelectedItem().toString();
         MstDelqReasons delqReasons = realm.where(MstDelqReasons.class).equalTo("description", sAlasan).findFirst();
         String sKlasifikasi = spKlasifikasi.getSelectedItem().toString();
@@ -367,11 +363,11 @@ public class ActivityVisitResult extends BasicActivity {
             return;
         }
 
+        final Date serverDate = realm.where(ServerInfo.class).findFirst().getServerDate();
+        final UserData userData = (UserData) Storage.getObjPreference(getApplicationContext(), Storage.KEY_USER, UserData.class);
         this.realm.executeTransactionAsync(new Realm.Transaction() {
             @Override
             public void execute(Realm realm) {
-                Date serverDate = realm.where(ServerInfo.class).findFirst().getServerDate();
-                UserData userData = (UserData) Storage.getObjPreference(getApplicationContext(), Storage.KEY_USER, UserData.class);
 
                 String createdBy = "JOB" + Utility.convertDateToString(serverDate, Utility.DATE_DATA_PATTERN);
 
@@ -401,21 +397,22 @@ public class ActivityVisitResult extends BasicActivity {
 
 
                 // just in case re-entry need to query
-                TrnLDVComments trnLDVComments = realm.where(TrnLDVComments.class)
-                        .equalTo("pk.ldvNo", ldvNo)
-                        .equalTo("lastupdateBy", Utility.LAST_UPDATE_BY)
-                        .equalTo("contractNo", contractNo)
-                        .findFirst();
+                TrnLDVComments trnLDVComments = getLDVComments(realm, ldvNo, contractNo).findFirst();
+
+                // TODO: krn ga ada primary key maka harus di delete dulu ?
+                if (trnLDVComments != null) {
+                }
 
                 if (trnLDVComments == null) {
-                    trnLDVComments = new TrnLDVComments();
                     TrnLDVCommentsPK pk = new TrnLDVCommentsPK();
                     pk.setSeqNo(1L);
                     pk.setLdvNo(ldvNo);
+                    pk.setContractNo(contractNo);
+
+                    trnLDVComments = new TrnLDVComments();
                     trnLDVComments.setPk(pk);
                 }
 
-                trnLDVComments.setContractNo(contractNo);
                 trnLDVComments.setDelqCode(delqCode);
                 trnLDVComments.setLkpComments(etKomentar.getText().toString());
                 trnLDVComments.setActionPlan(etTindakSelanjutnya.getText().toString());
@@ -430,8 +427,11 @@ public class ActivityVisitResult extends BasicActivity {
 
                 trnLDVComments.setWhoMet(etBertemuDengan.getText().toString());
 
-                if (!TextUtils.isEmpty(etTglJanjiBayar.getText().toString()))
-                    trnLDVComments.setPromiseDate(Utility.convertStringToDate(etTglJanjiBayar.getText().toString(), "d / M / yyyy") );
+                if (lkpFlag.equals("PTP")) {
+                    if (!TextUtils.isEmpty(etTglJanjiBayar.getText().toString()))
+                        trnLDVComments.setPromiseDate(Utility.convertStringToDate(etTglJanjiBayar.getText().toString(), "d / M / yyyy") );
+                }
+
                 /*
                 trnLDVComments.setLatitude();
                 trnLDVComments.setLongitude();
@@ -442,7 +442,7 @@ public class ActivityVisitResult extends BasicActivity {
                 trnLDVComments.setCreatedTimestamp(new Date());
                 trnLDVComments.setLastupdateBy(Utility.LAST_UPDATE_BY);
                 trnLDVComments.setLastupdateTimestamp(new Date());
-                realm.copyToRealmOrUpdate(trnLDVComments);
+                realm.copyToRealm(trnLDVComments);
             }
         }, new Realm.Transaction.OnSuccess() {
             @Override
@@ -452,7 +452,17 @@ public class ActivityVisitResult extends BasicActivity {
         }, new Realm.Transaction.OnError() {
             @Override
             public void onError(Throwable error) {
-                NetUtil.syncLogError(getBaseContext(), realm, collectorId, "VisitResult", error.getMessage(), null);
+                StringBuffer message2 = new StringBuffer();
+                message2.append("contractNo=").append(contractNo)
+                        .append(",potensi=").append(potensi)
+                        .append(",lkpFlag=").append(lkpFlag)
+                        .append(",delqCode=").append(delqCode)
+                        .append(",classCode=").append(classCode)
+                        .append(",classCode=").append(classCode)
+                        .append(",serverDate=").append(serverDate)
+                ;
+
+                NetUtil.syncLogError(getBaseContext(), realm, collectorId, "VisitResult", error.getMessage(), message2.toString());
                 Toast.makeText(ActivityVisitResult.this, "Database Error !", Toast.LENGTH_LONG).show();
                 Snackbar.make(activityVisitResult, error.getMessage(), Snackbar.LENGTH_LONG).show();
             }

@@ -217,7 +217,7 @@ public class ActivityRepoEntry extends BasicActivity {
             @Override
             public void execute(Realm realm) {
                 UserConfig userConfig = realm.where(UserConfig.class).findFirst();
-                Date serverDate = realm.where(ServerInfo.class).findFirst().getServerDate();
+//                Date serverDate = realm.where(ServerInfo.class).findFirst().getServerDate();
 
                 String createdBy = "JOB" + Utility.convertDateToString(serverDate, Utility.DATE_DATA_PATTERN);
 
@@ -297,7 +297,16 @@ public class ActivityRepoEntry extends BasicActivity {
         }, new Realm.Transaction.OnError() {
             @Override
             public void onError(Throwable error) {
-                NetUtil.syncLogError(getBaseContext(), realm, collectorId, "RepoEntry", error.getMessage(), null);
+                StringBuffer message2 = new StringBuffer();
+                message2.append("contractNo=").append(contractNo)
+                        .append(",bastbjNo=").append(bastbjNo)
+                        .append(",repoNo=").append(repoNo)
+//                        .append("komentar=").append(komentar)
+                        .append(",useStnk=").append(useStnk)
+                        .append(",serverDate=").append(serverDate)
+                ;
+
+                NetUtil.syncLogError(getBaseContext(), realm, collectorId, "RepoEntry", error.getMessage(), message2.toString());
                 Toast.makeText(ActivityRepoEntry.this, "Database Error !", Toast.LENGTH_LONG).show();
                 Snackbar.make(activityRepoEntri, error.getMessage(), Snackbar.LENGTH_LONG).show();
 
@@ -307,10 +316,10 @@ public class ActivityRepoEntry extends BasicActivity {
 
     @OnClick(R.id.btnUploadPicture)
     public void onClickUploadPicture() {
-        Intent i = new Intent(this, ActivityUploadPicture.class);
-        i.putExtra(ActivityUploadPicture.PARAM_CONTRACT_NO, etContractNo.getText().toString());
-        i.putExtra(ActivityUploadPicture.PARAM_COLLECTOR_ID, this.collectorId);
-        i.putExtra(ActivityUploadPicture.PARAM_LDV_NO, this.ldvNo);
+        Intent i = new Intent(this, ActivityUploadPictureGeo.class);
+        i.putExtra(ActivityUploadPictureGeo.PARAM_CONTRACT_NO, etContractNo.getText().toString());
+        i.putExtra(ActivityUploadPictureGeo.PARAM_COLLECTOR_ID, this.collectorId);
+        i.putExtra(ActivityUploadPictureGeo.PARAM_LDV_NO, this.ldvNo);
 
         startActivity(i);
 

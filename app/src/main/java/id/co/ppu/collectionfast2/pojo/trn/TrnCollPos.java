@@ -27,8 +27,8 @@ public class TrnCollPos extends RealmObject implements Serializable {
     @SerializedName("longitude")
     private String longitude;
 
-    @SerializedName("lastUpdate")
-    private Date lastUpdate;
+    @SerializedName("lastupdateTimestamp")
+    private Date lastupdateTimestamp;
 
     public String getUid() {
         return uid;
@@ -62,11 +62,11 @@ public class TrnCollPos extends RealmObject implements Serializable {
         this.longitude = longitude;
     }
 
-    public Date getLastUpdate() {
-        return lastUpdate;
+    public Date getLastupdateTimestamp() {
+        return lastupdateTimestamp;
     }
 
-    public void setLastUpdate(Date lastUpdate) {
-        this.lastUpdate = lastUpdate;
+    public void setLastupdateTimestamp(Date lastupdateTimestamp) {
+        this.lastupdateTimestamp = lastupdateTimestamp;
     }
 }

@@ -14,9 +14,6 @@ public class TrnCollectAddr extends RealmObject implements Serializable {
     @SerializedName("pk")
     private TrnCollectAddrPK pk;
 
-    @SerializedName("seqNo")
-    private Long seqNo;
-
     @SerializedName("collAddr")
     private String collAddr;
 
@@ -101,14 +98,6 @@ public class TrnCollectAddr extends RealmObject implements Serializable {
 
     public void setPk(TrnCollectAddrPK pk) {
         this.pk = pk;
-    }
-
-    public Long getSeqNo() {
-        return seqNo;
-    }
-
-    public void setSeqNo(Long seqNo) {
-        this.seqNo = seqNo;
     }
 
     public String getCollAddr() {
@@ -291,7 +280,6 @@ public class TrnCollectAddr extends RealmObject implements Serializable {
     public String toString() {
         return "TrnCollectAddr{" +
                 "pk=" + pk +
-                ", seqNo=" + seqNo +
                 ", collAddr='" + collAddr + '\'' +
                 ", collRt='" + collRt + '\'' +
                 ", collRw='" + collRw + '\'' +
