@@ -12,6 +12,7 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
+import android.widget.AutoCompleteTextView;
 import android.widget.DatePicker;
 import android.widget.EditText;
 import android.widget.Spinner;
@@ -62,10 +63,10 @@ public class ActivityVisitResult extends BasicActivity {
     EditText etContractNo;
 
     @BindView(R.id.etJob)
-    EditText etJob;
+    AutoCompleteTextView etJob;
 
     @BindView(R.id.etSubJob)
-    EditText etSubJob;
+    AutoCompleteTextView etSubJob;
 
     @BindView(R.id.etTglJanjiBayar)
     EditText etTglJanjiBayar;

@@ -234,6 +234,10 @@ public class FragmentSummaryLKP extends Fragment {
 //        Utility.showDialog(getContext(), "Details LKP Summary", "Sorry, Under Constructions");
         Intent i = new Intent(getActivity(), ActivityDetailsLKPSummary.class);
 
+//        i.putExtra(ActivityDetailsLKPSummary.PARAM_IS_LKP_INQUIRY, isLKPInquiry);
+//        i.putExtra(ActivityDetailsLKPSummary.PARAM_LKP_DATE, this.lkpDate.getTime());
+        i.putExtra(ActivityDetailsLKPSummary.PARAM_COLLECTOR_ID, this.collectorCode);
+
         startActivity(i);
     }
 

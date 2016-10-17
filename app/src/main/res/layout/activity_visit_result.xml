@@ -36,39 +36,52 @@
                     android:textColor="@android:color/primary_text_dark" />
             </android.support.design.widget.TextInputLayout>
 
-            <android.support.design.widget.TextInputLayout
+
+            <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:textColorHint="@android:color/primary_text_dark">
+                android:orientation="horizontal">
 
-                <EditText
-                    android:id="@+id/etJob"
-                    android:layout_width="match_parent"
+                <android.support.design.widget.TextInputLayout
+                    android:layout_weight="0.5"
+                    android:layout_width="0dp"
                     android:layout_height="wrap_content"
-                    android:clickable="false"
-                    android:focusable="false"
-                    android:focusableInTouchMode="false"
-                    android:hint="Pekerjaan"
-                    android:maxLines="1"
-                    android:textColor="@android:color/primary_text_dark" />
-            </android.support.design.widget.TextInputLayout>
+                    android:textColorHint="@android:color/primary_text_dark">
 
-            <android.support.design.widget.TextInputLayout
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:textColorHint="@android:color/primary_text_dark">
+                    <AutoCompleteTextView
+                        android:id="@+id/etJob"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:clickable="false"
+                        android:focusable="false"
+                        android:focusableInTouchMode="false"
+                        android:hint="Pekerjaan"
+                        android:maxLines="2"
+                        android:textAppearance="@android:style/TextAppearance.DeviceDefault.Small"
+                        android:textColor="@android:color/primary_text_dark" />
+                </android.support.design.widget.TextInputLayout>
 
-                <EditText
-                    android:id="@+id/etSubJob"
-                    android:layout_width="match_parent"
+                <android.support.design.widget.TextInputLayout
+                    android:layout_weight="0.5"
+                    android:layout_width="0dp"
                     android:layout_height="wrap_content"
-                    android:clickable="false"
-                    android:focusable="false"
-                    android:focusableInTouchMode="false"
-                    android:hint="Sub Pekerjaan"
-                    android:maxLines="1"
-                    android:textColor="@android:color/primary_text_dark" />
-            </android.support.design.widget.TextInputLayout>
+                    android:textColorHint="@android:color/primary_text_dark">
+
+                    <AutoCompleteTextView
+                        android:id="@+id/etSubJob"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:clickable="false"
+                        android:focusable="false"
+                        android:focusableInTouchMode="false"
+                        android:hint="Sub Pekerjaan"
+                        android:maxLines="2"
+                        android:textAppearance="@android:style/TextAppearance.DeviceDefault.Small"
+                        android:textColor="@android:color/primary_text_dark" />
+                </android.support.design.widget.TextInputLayout>
+
+            </LinearLayout>
+
         </LinearLayout>
 
         <LinearLayout
@@ -104,6 +117,7 @@
                 <TableRow>
 
                     <TextView />
+
                     <TextView />
 
                     <android.support.design.widget.TextInputLayout
@@ -117,8 +131,8 @@
                             android:focusable="false"
                             android:focusableInTouchMode="false"
                             android:hint="Tgl Janji Bayar (tgl/bln/thn)"
-                            android:visibility="gone"
-                            android:maxLines="1" />
+                            android:maxLines="1"
+                            android:visibility="gone" />
                     </android.support.design.widget.TextInputLayout>
 
                 </TableRow>
@@ -172,7 +186,7 @@
                     android:layout_height="wrap_content"
                     android:hint="Potensi (0 - 100%)"
                     android:inputType="number"
-                    android:maxLines="1"/>
+                    android:maxLines="1" />
 
             </android.support.design.widget.TextInputLayout>
 
@@ -185,7 +199,7 @@
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:hint="Bertemu Dengan"
-                    android:maxLines="1"/>
+                    android:maxLines="1" />
 
             </android.support.design.widget.TextInputLayout>
 
@@ -198,7 +212,7 @@
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:hint="Tindak Selanjutnya"
-                    android:maxLines="1"/>
+                    android:maxLines="1" />
 
             </android.support.design.widget.TextInputLayout>
 
@@ -212,7 +226,7 @@
                     android:layout_height="wrap_content"
                     android:hint="Janji Bayar"
                     android:inputType="number"
-                    android:maxLines="1"/>
+                    android:maxLines="1" />
 
             </android.support.design.widget.TextInputLayout>
 

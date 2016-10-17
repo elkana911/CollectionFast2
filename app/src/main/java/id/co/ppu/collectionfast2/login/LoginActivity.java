@@ -51,6 +51,7 @@ import id.co.ppu.collectionfast2.rest.response.ResponseLogin;
 import id.co.ppu.collectionfast2.rest.response.ResponseServerInfo;
 import id.co.ppu.collectionfast2.util.DataUtil;
 import id.co.ppu.collectionfast2.util.NetUtil;
+import id.co.ppu.collectionfast2.util.RootUtil;
 import id.co.ppu.collectionfast2.util.Storage;
 import id.co.ppu.collectionfast2.util.Utility;
 import io.realm.Realm;
@@ -194,6 +195,11 @@ public class LoginActivity extends AppCompatActivity {
 
     @OnClick(R.id.sign_in_button)
     public void onSignInClick() {
+
+        if (RootUtil.isDeviceRooted()) {
+            Utility.showDialog(this, "Rooted", "This device is rooted. Unable to open application.");
+            return;
+        }
 
         try {
             attemptLogin();

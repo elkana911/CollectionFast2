@@ -32,8 +32,8 @@ public class Utility {
 
     public final static String DATE_EXPIRED_YYYYMMDD = "20161021";
     public final static String[][] servers = {
-            {"local-server", "10.212.0.233", "8090"},
-//            {"local-server", "192.168.1.103", "8090"},
+//            {"local-server", "10.212.0.233", "8090"},
+            {"local-server", "192.168.43.104", "8090"},
             {"fast-mobile", "cmobile.radanafinance.co.id", "7001"}
     };
 
