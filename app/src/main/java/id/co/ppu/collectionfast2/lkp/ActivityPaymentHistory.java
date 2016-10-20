@@ -1,7 +1,9 @@
 package id.co.ppu.collectionfast2.lkp;
 
+import android.app.ProgressDialog;
 import android.graphics.Color;
 import android.graphics.Typeface;
+import android.os.AsyncTask;
 import android.os.Build;
 import android.os.Bundle;
 import android.view.LayoutInflater;
@@ -22,6 +24,7 @@ import id.co.ppu.collectionfast2.pojo.ServerInfo;
 import id.co.ppu.collectionfast2.pojo.trn.HistInstallments;
 import id.co.ppu.collectionfast2.pojo.trn.TrnLDVDetails;
 import id.co.ppu.collectionfast2.util.Utility;
+import io.realm.Realm;
 import io.realm.RealmResults;
 
 public class ActivityPaymentHistory extends BasicActivity {
@@ -144,8 +147,8 @@ public class ActivityPaymentHistory extends BasicActivity {
         runOnUiThread(t);
         */
 
-//        loadTable();
-        loadTable(listInstallments);
+        loadTable();
+//        loadTable(listInstallments);
     }
 
     private void setTableHeader(TextView textView, String text) {
@@ -161,6 +164,11 @@ public class ActivityPaymentHistory extends BasicActivity {
     }
 
     private void loadTable() {
+        final ProgressDialog mProgressDialog = new ProgressDialog(this);
+        mProgressDialog.setIndeterminate(true);
+        mProgressDialog.setCancelable(false);
+        mProgressDialog.setMessage("Please wait...");
+        mProgressDialog.show();
 
         // clear table
         tableLayout.removeAllViews();
@@ -174,7 +182,74 @@ public class ActivityPaymentHistory extends BasicActivity {
 
         tableLayout.addView(row_header);
         // add rows
-//        RealmResults<HistInstallments> list = this.realm.where(HistInstallments.class).equalTo("pk.contractNo", this.contractNo).findAllSorted(new String[]{"pk.contractNo", "pk.instNo"}, new Sort[]{Sort.ASCENDING, Sort.ASCENDING});
+        new AsyncTask<Void, Void, Void>() {
+
+            @Override
+            protected Void doInBackground(Void... voids) {
+                return null;
+            }
+
+            @Override
+            protected void onPostExecute(Void aVoid) {
+                super.onPostExecute(aVoid);
+
+                Realm r = null;
+                try{
+                    r = Realm.getDefaultInstance();
+
+                    RealmResults<HistInstallments> list = r.where(HistInstallments.class)
+                            .equalTo("pk.contractNo", contractNo)
+                            .findAll();
+
+                    for (int i = 0; i < list.size(); i++) {
+
+                        HistInstallments obj = r.copyFromRealm(list.get(i));
+
+                        TableRow row = (TableRow) LayoutInflater.from(ActivityPaymentHistory.this).inflate(R.layout.row_payment_history, null);
+                        ((TextView) row.findViewById(R.id.attrib_no)).setText(String.valueOf(i + 1));
+//            ((TextView) row.findViewById(R.id.attrib_due_date)).setText(Utility.convertDateToString(new Date(), "dd/MM/yyyy"));
+                        ((TextView) row.findViewById(R.id.attrib_due_date)).setText( Utility.convertDateToString(obj.getDueDate(), "dd/MM/yyyy"));
+
+                        TextView tvPaidDate = ButterKnife.findById(row, R.id.attrib_paid_date);
+                        if (obj.getPaidDate() != null) {
+                            tvPaidDate.setText(Utility.convertDateToString(obj.getPaidDate(), "dd/MM/yyyy"));
+                        }else
+                            tvPaidDate.setText(null);
+
+//            if (i > 9) {
+//                paidDate.setTextColor(Color.RED);
+//            }
+
+                        TextView tvOvdDays = ButterKnife.findById(row, R.id.attrib_ovd_days);
+
+                        if (obj.getPaidDate() != null) {
+                            long ovdDays = Utility.getDateDiff(obj.getDueDate(), obj.getPaidDate(), TimeUnit.DAYS);
+                            tvOvdDays.setText(ovdDays < 1 ? "0" : String.valueOf(ovdDays));
+
+                            if (ovdDays > 0) {
+                                tvOvdDays.setTextColor(Color.RED);
+                                tvPaidDate.setTextColor(Color.RED);
+                            }
+
+                        } else {
+
+                        }
+                        tableLayout.addView(row);
+                    }
+
+                }finally {
+                    if (r != null)
+                        r.close();
+
+                    if (mProgressDialog.isShowing()) {
+                        mProgressDialog.dismiss();
+                    }
+                }
+
+            }
+        }.execute();
+
+        /*
         RealmResults<HistInstallments> list = this.realm.where(HistInstallments.class)
                 .equalTo("pk.contractNo", this.contractNo)
                 .findAll();
@@ -217,6 +292,7 @@ public class ActivityPaymentHistory extends BasicActivity {
 
             tableLayout.addView(row);
         }
+        */
     }
 
     private void loadTable(List<HistInstallments> list) {

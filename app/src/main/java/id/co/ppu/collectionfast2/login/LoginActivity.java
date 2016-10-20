@@ -2,6 +2,7 @@ package id.co.ppu.collectionfast2.login;
 
 import android.app.ProgressDialog;
 import android.content.Context;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.res.Configuration;
@@ -9,6 +10,7 @@ import android.graphics.Color;
 import android.net.Uri;
 import android.os.Bundle;
 import android.preference.PreferenceManager;
+import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
 import android.text.TextUtils;
 import android.util.Log;
@@ -42,6 +44,7 @@ import id.co.ppu.collectionfast2.MainActivity;
 import id.co.ppu.collectionfast2.R;
 import id.co.ppu.collectionfast2.listener.OnPostRetrieveServerInfo;
 import id.co.ppu.collectionfast2.pojo.ServerInfo;
+import id.co.ppu.collectionfast2.pojo.UserData;
 import id.co.ppu.collectionfast2.pojo.master.MstSecUser;
 import id.co.ppu.collectionfast2.pojo.master.MstUser;
 import id.co.ppu.collectionfast2.rest.ApiInterface;
@@ -49,6 +52,7 @@ import id.co.ppu.collectionfast2.rest.ServiceGenerator;
 import id.co.ppu.collectionfast2.rest.request.RequestLogin;
 import id.co.ppu.collectionfast2.rest.response.ResponseLogin;
 import id.co.ppu.collectionfast2.rest.response.ResponseServerInfo;
+import id.co.ppu.collectionfast2.rest.response.ResponseUserPwd;
 import id.co.ppu.collectionfast2.util.DataUtil;
 import id.co.ppu.collectionfast2.util.NetUtil;
 import id.co.ppu.collectionfast2.util.RootUtil;
@@ -162,21 +166,24 @@ public class LoginActivity extends AppCompatActivity {
 
         boolean b = DataUtil.isMasterDataDownloaded(this, this.realm);
 
+        UserData prevUserData = (UserData) Storage.getObjPreference(getApplicationContext(), Storage.KEY_USER, UserData.class);
 
-        String lastUsername = Storage.getPreference(getApplicationContext(), "lastUser");
-        mUserNameView.setText(lastUsername);
+//        String lastUsername = Storage.getPreference(getApplicationContext(), Storage.KEY_USER_NAME_LAST);
+        if (prevUserData != null)
+            mUserNameView.setText(prevUserData.getUserId());
 
-        String password_rem = Storage.getPreference(getApplicationContext(), "password_rem");
+        String password_rem = Storage.getPreference(getApplicationContext(), Storage.KEY_PASSWORD_REMEMBER);
         if (!TextUtils.isEmpty(password_rem)) {
             if (password_rem.equalsIgnoreCase("true")) {
                 cbRememberPwd.setChecked(true);
 
                 // load user & password
-                String lastPwd = Storage.getPreference(getApplicationContext(), "lastPwd");
+                String lastPwd = Storage.getPreference(getApplicationContext(), Storage.KEY_PASSWORD_LAST);
 
-                if (mUserNameView.getText().toString().equalsIgnoreCase(lastUsername)) {
+                String username = mUserNameView.getText().toString();
+                if (prevUserData != null && username.equalsIgnoreCase(prevUserData.getUserId())) {
                     mPasswordView.setText(lastPwd);
-                }else
+                } else
                     mPasswordView.setText(null);
             }
         }
@@ -215,12 +222,135 @@ public class LoginActivity extends AppCompatActivity {
 //        startActivity(new Intent(LoginActivity.this, RegisterActivity.class));
     }
 
+    private void resetData() {
+        if (realm == null)
+            return;
+
+        realm.executeTransactionAsync(new Realm.Transaction() {
+            @Override
+            public void execute(Realm realm) {
+                realm.deleteAll();
+            }
+        });
+
+    }
+
+    private void attemptLogin() throws Exception {
+        Date sysDate = new Date();
+        if (sysDate.after(Utility.convertStringToDate(Utility.DATE_EXPIRED_YYYYMMDD, "yyyyMMdd"))) {
+            Utility.showDialog(this, "Expired App", "This application version is expired. Please update from the latest");
+            return;
+        }
+
+        // Reset errors.
+        mUserNameView.setError(null);
+        mPasswordView.setError(null);
+
+        // Store values at the time of the login attempt.
+        final String username = mUserNameView.getText().toString();
+        final String password = mPasswordView.getText().toString();
+
+        boolean cancel = false;
+        View focusView = null;
+
+        // Check for a valid password, if the user entered one.
+        if (!TextUtils.isEmpty(password) && !isPasswordValid(password)) {
+            mPasswordView.setError(getString(R.string.error_invalid_password));
+            focusView = mPasswordView;
+            cancel = true;
+        }
+
+        // Check for a valid email address.
+        if (TextUtils.isEmpty(username)) {
+            mUserNameView.setError(getString(R.string.error_field_required));
+            focusView = mUserNameView;
+            cancel = true;
+        }
+
+        if (cancel) {
+            // There was an error; don't attempt login and focus the first
+            // form field with an error.
+            focusView.requestFocus();
+            return;
+        }
+
+        Storage.savePreferenceAsInt(getApplicationContext(), Storage.KEY_SERVER_ID, Utility.getServerID(spServers.getSelectedItem().toString()));
+
+//        String lastUsername = Storage.getPreference(getApplicationContext(), Storage.KEY_USER_NAME_LAST);
+
+        UserData prevUserData = (UserData) Storage.getObjPreference(getApplicationContext(), Storage.KEY_USER, UserData.class);
+
+//        RealmResults<MstSecUser> all = this.realm.where(MstSecUser.class).findAll();
+
+        if (prevUserData == null) {
+            boolean isOnline = NetUtil.isConnected(this);
+
+            if (isOnline) {
+                loginOnline(username, password);
+            } else {
+                Utility.showDialog(this, "Offline", getString(R.string.error_offline));
+            }
+        } else {
+            if (!username.equalsIgnoreCase(prevUserData.getUserId())) {
+
+                AlertDialog.Builder alertDialogBuilder = new AlertDialog.Builder(this);
+                alertDialogBuilder.setTitle("Reset Data");
+                alertDialogBuilder.setMessage("You are using different account, previous data will be reset.\nDo you want to login as " + username + " ?");
+                alertDialogBuilder.setPositiveButton("Yes", new DialogInterface.OnClickListener() {
+
+                    @Override
+                    public void onClick(DialogInterface dialog, int which) {
+
+                        if (realm != null) {
+
+                            realm.executeTransactionAsync(new Realm.Transaction() {
+                                @Override
+                                public void execute(Realm realm) {
+                                    realm.deleteAll();
+                                }
+                            }, new Realm.Transaction.OnSuccess() {
+                                @Override
+                                public void onSuccess() {
+                                    loginOnline(username, password);
+
+                                }
+                            });
+
+                        }
+
+                    }
+                });
+
+                alertDialogBuilder.setNegativeButton("No", new DialogInterface.OnClickListener() {
+
+                    @Override
+                    public void onClick(DialogInterface dialog, int which) {
+                        dialog.dismiss();
+                    }
+                });
+
+                alertDialogBuilder.show();
+
+            } else {
+                Date lastMorning = (Date) Storage.getObjPreference(getApplicationContext(), Storage.KEY_USER_LAST_DAY, Date.class);
+                if (lastMorning == null) {
+                    loginOffline(username, password);
+                } else if (Utility.isSameDay(lastMorning, new Date())) {
+                    loginOffline(username, password);
+                } else
+                    loginOnline(username, password);
+
+            }
+        }
+
+    }
+
     /**
      * Attempts to sign in or register the account specified by the login form.
      * If there are form errors (invalid email, missing fields, etc.), the
      * errors are presented and no actual login attempt is made.
      */
-    private void attemptLogin() throws Exception {
+    private void attemptLogin2() throws Exception {
 
         Date sysDate = new Date();
         if (sysDate.after(Utility.convertStringToDate(Utility.DATE_EXPIRED_YYYYMMDD, "yyyyMMdd"))) {
@@ -275,8 +405,59 @@ public class LoginActivity extends AppCompatActivity {
                 Utility.showDialog(this, "Offline", getString(R.string.error_offline));
             }
         } else {
+/*
+            String lastUsername = Storage.getPreference(getApplicationContext(), Storage.KEY_USER_NAME_LAST);
 
-            // TODO: enable this code on production
+            if (!username.equalsIgnoreCase(lastUsername)) {
+
+                AlertDialog.Builder alertDialogBuilder = new AlertDialog.Builder(this);
+                alertDialogBuilder.setTitle("Reset Data");
+                alertDialogBuilder.setMessage("You are using different account, previous data will be reset.\nDo you want to login as " + username + " ?");
+                alertDialogBuilder.setPositiveButton("Yes", new DialogInterface.OnClickListener() {
+
+                    @Override
+                    public void onClick(DialogInterface dialog, int which) {
+
+                        if (realm != null) {
+
+                            realm.executeTransactionAsync(new Realm.Transaction() {
+                                @Override
+                                public void execute(Realm realm) {
+                                    realm.deleteAll();
+                                }
+                            }, new Realm.Transaction.OnSuccess() {
+                                @Override
+                                public void onSuccess() {
+
+                                    Date lastMorning = (Date) Storage.getObjPreference(getApplicationContext(), Storage.KEY_USER_LAST_DAY, Date.class);
+                                    if (lastMorning == null) {
+                                        loginOffline(username, password);
+                                    } else if (Utility.isSameDay(lastMorning, new Date())) {
+                                        loginOffline(username, password);
+                                    } else
+                                        loginOnline(username, password);
+
+                                }
+                            });
+
+                        }
+
+                    }
+                });
+
+                alertDialogBuilder.setNegativeButton("No", new DialogInterface.OnClickListener() {
+
+                    @Override
+                    public void onClick(DialogInterface dialog, int which) {
+                        dialog.dismiss();
+                    }
+                });
+
+                alertDialogBuilder.show();
+
+                return;
+            }
+
             Date lastMorning = (Date) Storage.getObjPreference(getApplicationContext(), Storage.KEY_USER_LAST_DAY, Date.class);
             if (lastMorning == null) {
                 loginOffline(username, password);
@@ -284,6 +465,8 @@ public class LoginActivity extends AppCompatActivity {
                 loginOffline(username, password);
             } else
                 loginOnline(username, password);
+
+            */
         }
 
     }
@@ -457,24 +640,63 @@ public class LoginActivity extends AppCompatActivity {
             });
         } catch (Exception e) {
             e.printStackTrace();
+
+            if (mProgressDialog.isShowing())
+                mProgressDialog.dismiss();
+
         }
 
     }
 
-    private void startMainActivity(){
-        final String username = mUserNameView.getText().toString();
-        Storage.savePreference(getApplicationContext(), "lastUser",  username);
+    private void startMainActivity() {
+//        final String username = mUserNameView.getText().toString();
+//        Storage.savePreference(getApplicationContext(), Storage.KEY_USER_NAME_LAST,  username);
         if (cbRememberPwd.isChecked()) {
             final String password = mPasswordView.getText().toString();
 
             String cbRememberPwds = String.valueOf(cbRememberPwd.isChecked());
-            Storage.savePreference(getApplicationContext(), "password_rem", cbRememberPwds);
-            Storage.savePreference(getApplicationContext(), "lastPwd", password);
+
+            Storage.savePreference(getApplicationContext(), Storage.KEY_PASSWORD_REMEMBER, cbRememberPwds);
+            Storage.savePreference(getApplicationContext(), Storage.KEY_PASSWORD_LAST, password);
 
         }
         startActivity(new Intent(getApplicationContext(), MainActivity.class));
     }
+
     private void loginOffline(String username, String password) {
+
+        String logoutDate = Storage.getPreference(getApplicationContext(), Storage.KEY_LOGOUT_DATE);
+
+        if (TextUtils.isEmpty(logoutDate)) {
+            resetData();
+
+            Utility.showDialog(this, "Logout Warning", "Sorry, You are not logged out correctly last time.\n" +
+                    "Please refresh your LKP");
+        }
+
+        final ProgressDialog mProgressDialog = new ProgressDialog(this);
+        mProgressDialog.setIndeterminate(true);
+        mProgressDialog.setCancelable(false);
+        mProgressDialog.setMessage("Logging in...");
+        mProgressDialog.show();
+
+        UserData prevUserData = (UserData) Storage.getObjPreference(getApplicationContext(), Storage.KEY_USER, UserData.class);
+
+        String pwd = prevUserData.getUserPwd() == null ? "" : prevUserData.getUserPwd();
+
+        if (prevUserData == null || !pwd.equals(password)) {
+            Utility.showDialog(this, "Invalid Login", getString(R.string.error_invalid_login));
+        } else {
+
+            startMainActivity();
+
+        }
+
+        if (mProgressDialog.isShowing())
+            mProgressDialog.dismiss();
+    }
+
+    private void loginOffline2(String username, String password) {
 
         final ProgressDialog mProgressDialog = new ProgressDialog(this);
         mProgressDialog.setIndeterminate(true);
@@ -501,6 +723,46 @@ public class LoginActivity extends AppCompatActivity {
     @OnClick(R.id.btnTestGPS)
     public void onClickTestGPS() {
 
+
+    }
+
+    @OnClick(R.id.btnGetLKPUser)
+    public void onClickGetLKPUser() {
+
+        final ProgressDialog mProgressDialog = new ProgressDialog(this);
+        mProgressDialog.setIndeterminate(true);
+        mProgressDialog.setCancelable(false);
+        mProgressDialog.setMessage("Get Any LKP User...");
+        mProgressDialog.show();
+
+        ApiInterface fastService =
+                ServiceGenerator.createService(ApiInterface.class, Utility.buildUrl(Utility.getServerID(spServers.getSelectedItem().toString())));
+
+        Call<ResponseUserPwd> call = fastService.getAnyLKPUser();
+        call.enqueue(new Callback<ResponseUserPwd>() {
+            @Override
+            public void onResponse(Call<ResponseUserPwd> call, Response<ResponseUserPwd> response) {
+
+                if (mProgressDialog.isShowing())
+                    mProgressDialog.dismiss();
+
+                final ResponseUserPwd resp = response.body();
+
+                if (resp.getError() == null) {
+                    if (resp.getData() != null) {
+                        mUserNameView.setText(resp.getData()[0]);
+                        mPasswordView.setText(resp.getData()[1]);
+                    }
+                }
+
+            }
+
+            @Override
+            public void onFailure(Call<ResponseUserPwd> call, Throwable t) {
+                if (mProgressDialog.isShowing())
+                    mProgressDialog.dismiss();
+            }
+        });
 
     }
 

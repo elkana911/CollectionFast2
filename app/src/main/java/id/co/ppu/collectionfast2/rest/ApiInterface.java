@@ -19,6 +19,7 @@ import id.co.ppu.collectionfast2.rest.response.ResponseLogin;
 import id.co.ppu.collectionfast2.rest.response.ResponseRVB;
 import id.co.ppu.collectionfast2.rest.response.ResponseServerInfo;
 import id.co.ppu.collectionfast2.rest.response.ResponseSync;
+import id.co.ppu.collectionfast2.rest.response.ResponseUserPwd;
 import okhttp3.MultipartBody;
 import okhttp3.RequestBody;
 import okhttp3.ResponseBody;
@@ -91,4 +92,7 @@ public interface ApiInterface {
 
     @POST("fast/log_error")
     Call<ResponseBody> logError(@Body RequestLogError req);
+
+    @POST("fast/get_any_lkp_user")
+    Call<ResponseUserPwd> getAnyLKPUser();
 }

@@ -29,6 +29,7 @@ import butterknife.ButterKnife;
 import butterknife.OnClick;
 import id.co.ppu.collectionfast2.R;
 import id.co.ppu.collectionfast2.component.BasicActivity;
+import id.co.ppu.collectionfast2.location.Location;
 import id.co.ppu.collectionfast2.pojo.ServerInfo;
 import id.co.ppu.collectionfast2.pojo.UserData;
 import id.co.ppu.collectionfast2.pojo.master.MstDelqReasons;
@@ -364,6 +365,15 @@ public class ActivityVisitResult extends BasicActivity {
             return;
         }
 
+        double[] gps = Location.getGPS(this);
+        final String latitude = String.valueOf(gps[0]);
+        final String longitude = String.valueOf(gps[1]);
+
+        if (latitude.equals("0.0") && longitude.equals("0.0")) {
+            Snackbar.make(activityVisitResult, "Unable to get location. Please turn on GPS.", Snackbar.LENGTH_LONG).show();
+            return;
+        }
+
         final Date serverDate = realm.where(ServerInfo.class).findFirst().getServerDate();
         final UserData userData = (UserData) Storage.getObjPreference(getApplicationContext(), Storage.KEY_USER, UserData.class);
         this.realm.executeTransactionAsync(new Realm.Transaction() {
@@ -433,9 +443,9 @@ public class ActivityVisitResult extends BasicActivity {
                         trnLDVComments.setPromiseDate(Utility.convertStringToDate(etTglJanjiBayar.getText().toString(), "d / M / yyyy") );
                 }
 
+                trnLDVComments.setLatitude(latitude);
+                trnLDVComments.setLongitude(longitude);
                 /*
-                trnLDVComments.setLatitude();
-                trnLDVComments.setLongitude();
                 trnLDVComments.setOcptCode();
                 trnLDVComments.setOcptCodeSub();
                 */

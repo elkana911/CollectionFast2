@@ -32,7 +32,6 @@ import android.support.v7.app.AlertDialog;
 import android.support.v7.widget.AppCompatDrawableManager;
 import android.support.v7.widget.SearchView;
 import android.support.v7.widget.Toolbar;
-import android.text.TextUtils;
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
@@ -52,6 +51,7 @@ import java.io.IOException;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.List;
+import java.util.concurrent.TimeUnit;
 
 import butterknife.BindView;
 import butterknife.ButterKnife;
@@ -282,7 +282,7 @@ public class MainActivity extends SyncActivity
                                 UserConfig userConfig = realm.where(UserConfig.class).findFirst();
 
                                 if (!Utility.isSameDay(userConfig.getLastLogin(), serverInfo.getServerDate())) {
-                                    Snackbar.make(coordinatorLayout, "Server date changed", Snackbar.LENGTH_SHORT).show();
+                                    Snackbar.make(coordinatorLayout, "Server date changed. Please Close Batch", Snackbar.LENGTH_SHORT).show();
                                 }
 
                                 if (userConfig.getPhotoProfileUri() != null) {
@@ -337,7 +337,7 @@ public class MainActivity extends SyncActivity
                     UserConfig userConfig = realm.where(UserConfig.class).findFirst();
 
                     if (!Utility.isSameDay(userConfig.getLastLogin(), serverDate)) {
-                        Snackbar.make(coordinatorLayout, "Server date changed", Snackbar.LENGTH_SHORT).show();
+                        Snackbar.make(coordinatorLayout, "Server date changed. Please Close Batch.", Snackbar.LENGTH_SHORT).show();
                     }
 
                     if (userConfig.getPhotoProfileUri() != null) {
@@ -360,8 +360,8 @@ public class MainActivity extends SyncActivity
     @Override
     protected void onStart() {
         super.onStart();
-//        stopJob();
-//        startJob();
+        stopJob();
+        startJob();
 
         mGoogleApiClient.connect();
 
@@ -377,8 +377,9 @@ public class MainActivity extends SyncActivity
         if (mGoogleApiClient != null) {
             mGoogleApiClient.disconnect();
         }
+        stopJob();
+
         super.onStop();
-//        stopJob();
 
     }
 
@@ -544,7 +545,7 @@ public class MainActivity extends SyncActivity
                     }
 
                     Date serverDate = realm.where(ServerInfo.class).findFirst().getServerDate();
-//                    retrieveLKPFromServer(currentUser.getUser().get(0).getUserId(), serverDate, true, null);
+//                    getLKP(currentUser.getUser().get(0).getUserId(), serverDate, true, null);
 
                 }
 
@@ -582,10 +583,10 @@ public class MainActivity extends SyncActivity
 
         navigationView.setCheckedItem(viewId);
 
+        title = getString(R.string.app_name);
+
         if (viewId == R.id.nav_home) {
             fragment = new HomeFragment();
-
-            title = getString(R.string.app_name);
 
             viewIsAtHome = true;
 
@@ -658,6 +659,10 @@ public class MainActivity extends SyncActivity
         } else {
             intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TOP);
         }
+
+        // flag as clean logout
+        Storage.savePreference(getApplicationContext(), Storage.KEY_LOGOUT_DATE,  new Date().toString());
+
         startActivity(intent);
 //                moveTaskToBack(true);
         finish();
@@ -675,6 +680,8 @@ public class MainActivity extends SyncActivity
             @Override
             public void onClick(DialogInterface dialog, int which) {
                 // TODO: clear cookie
+                Storage.savePreferenceAsBoolean(getApplicationContext(), "isLKPInquiry",  false);
+
                 backToLoginScreen();
             }
         });
@@ -709,7 +716,7 @@ public class MainActivity extends SyncActivity
     }
 
 
-    private void getLKP(final ProgressDialog mProgressDialog, final String collectorCode, Date lkpDate, final String createdBy, final OnPostRetrieveLKP listener) {
+    private void getLKPFromServer(final ProgressDialog mProgressDialog, final String collectorCode, Date lkpDate, final String createdBy, final OnPostRetrieveLKP listener) {
         ApiInterface fastService =
                 ServiceGenerator.createService(ApiInterface.class, Utility.buildUrl(Storage.getPreferenceAsInt(getApplicationContext(), Storage.KEY_SERVER_ID, 0)));
 
@@ -1062,12 +1069,12 @@ public class MainActivity extends SyncActivity
 
     }
 
-    public void retrieveLKPFromServer(final String collectorCode, final Date lkpDate, boolean useCache, final OnPostRetrieveLKP listener) {
+    public void getLKP(final String collectorCode, final Date lkpDate, boolean useCache, final OnPostRetrieveLKP listener) {
         if (currentUser == null) {
             return;
         }
 
-        Date serverDate = this.realm.where(ServerInfo.class).findFirst().getServerDate();
+        Date serverDate = getServerDate(this.realm);
 
         final String createdBy = "JOB" + Utility.convertDateToString(lkpDate, "yyyyMMdd");
         // load cache
@@ -1096,7 +1103,7 @@ public class MainActivity extends SyncActivity
         syncTransaction(false, false, new OnSuccessError() {
             @Override
             public void onSuccess(String msg) {
-                getLKP(mProgressDialog, collectorCode, lkpDate, createdBy, listener);
+                getLKPFromServer(mProgressDialog, collectorCode, lkpDate, createdBy, listener);
             }
 
             @Override
@@ -1107,7 +1114,7 @@ public class MainActivity extends SyncActivity
 
             @Override
             public void onSkip() {
-                getLKP(mProgressDialog, collectorCode, lkpDate, createdBy, listener);
+                getLKPFromServer(mProgressDialog, collectorCode, lkpDate, createdBy, listener);
             }
 
         });
@@ -1165,9 +1172,11 @@ public class MainActivity extends SyncActivity
         this.realm.executeTransactionAsync(new Realm.Transaction() {
             @Override
             public void execute(Realm realm) {
+                // hapus VISIT RESULT
                 boolean b = getLDVComments(realm, ldvNo, contractNo)
                         .findAll().deleteAllFromRealm();
 
+                // hapus PAYMENT
                 // sebelum hapus rvcoll, restore dulu rvb
                 TrnRVColl trnRVColl = getRVColl(realm, contractNo)
                         .findFirst();
@@ -1187,9 +1196,11 @@ public class MainActivity extends SyncActivity
                     trnRVColl.deleteFromRealm();
                 }
 
+                // hapus REPO
                 b = getRepo(realm, contractNo)
                         .findAll().deleteAllFromRealm();
 
+                // update/restore ldv details
                 RealmResults<TrnLDVDetails> trnLDVDetailses = realm.where(TrnLDVDetails.class)
                         .equalTo("pk.ldvNo", ldvNo)
                         .equalTo("contractNo", contractNo)
@@ -1203,7 +1214,6 @@ public class MainActivity extends SyncActivity
                 TrnLDVDetails trnLDVDetails = realm.copyFromRealm(trnLDVDetailses.get(0));
                 b = trnLDVDetailses.deleteAllFromRealm();
 
-                // TODO: confirm pak yoce mengenai NEW
                 trnLDVDetails.setLdvFlag("NEW");
                 trnLDVDetails.setWorkStatus("A");
                 trnLDVDetails.setFlagToEmrafin("N");
@@ -1219,6 +1229,14 @@ public class MainActivity extends SyncActivity
                 displayTrnLDVDetails.setWorkStatus("A");
                 realm.copyToRealm(displayTrnLDVDetails);
 
+
+                // TODO: harusnya hapus foto juga, sementara di lokal dulu. photo yg terlanjur upload ke server biarin aja
+                b = realm.where(TrnPhoto.class)
+                        .equalTo("collCode", currentUser.getUserId())
+                        .equalTo("contractNo", contractNo)
+                        .equalTo("lastupdateBy", Utility.LAST_UPDATE_BY)
+//                        .equalTo("createdBy", createdBy)
+                        .findAll().deleteAllFromRealm();
             }
         }, new Realm.Transaction.OnSuccess() {
             @Override
@@ -1239,7 +1257,7 @@ public class MainActivity extends SyncActivity
         final Fragment frag = getSupportFragmentManager().findFragmentById(R.id.content_frame);
 
         if (frag != null && frag instanceof FragmentLKPList) {
-            retrieveLKPFromServer(collectorCode, lkpDate, false, new OnPostRetrieveLKP() {
+            getLKP(collectorCode, lkpDate, false, new OnPostRetrieveLKP() {
                 @Override
                 public void onLoadFromLocal() {
                     currentLDVNo = ((FragmentLKPList)frag).loadLKP(collectorCode, lkpDate);
@@ -1261,9 +1279,9 @@ public class MainActivity extends SyncActivity
     }
 
     public void openPaymentEntry() {
-        UserData userData = (UserData) Storage.getObjPreference(getApplicationContext(), Storage.KEY_USER, UserData.class);
+//        UserData userData = (UserData) Storage.getObjPreference(getApplicationContext(), Storage.KEY_USER, UserData.class);
 
-        String collectorId = userData.getUserId();
+        String collectorId = currentUser.getUserId();
 
         Date serverDate = this.realm.where(ServerInfo.class).findFirst().getServerDate();
         String createdBy = "JOB" + Utility.convertDateToString(serverDate, "yyyyMMdd");
@@ -1370,6 +1388,28 @@ public class MainActivity extends SyncActivity
             return;
         }
 
+        // konfirm
+        final SyncLdvDetails syncLdvDetails = new SyncLdvDetails(this.realm);
+        final SyncLdvComments syncLdvComments = new SyncLdvComments(this.realm);
+        final SyncRvb syncRvb = new SyncRvb(this.realm);
+        final SyncRVColl syncRVColl = new SyncRVColl(this.realm);
+        final SyncBastbj syncBastbj = new SyncBastbj(this.realm);
+        final SyncRepo syncRepo = new SyncRepo(this.realm);
+        final SyncChangeAddr syncChangeAddr = new SyncChangeAddr(this.realm);
+        boolean anyDataToSync =
+                        syncLdvDetails.anyDataToSync()
+                        || syncLdvComments.anyDataToSync()
+                        || syncRvb.anyDataToSync()
+                        || syncRVColl.anyDataToSync()
+                        || syncBastbj.anyDataToSync()
+                        || syncRepo.anyDataToSync()
+                        || syncChangeAddr.anyDataToSync();
+
+        if (anyDataToSync) {
+            Utility.showDialog(this, "Need to sync", "Please sync data first");
+            return;
+        }
+
         AlertDialog.Builder alertDialogBuilder = new AlertDialog.Builder(this);
         alertDialogBuilder.setTitle("Close Batch");
 
@@ -1385,7 +1425,7 @@ public class MainActivity extends SyncActivity
                 syncTransaction(true, true, new OnSuccessError() {
                     @Override
                     public void onSuccess(String msg) {
-                        Utility.showDialog(MainActivity.this, "Close Batch", "Close Batch successful");
+                        Utility.showDialog(MainActivity.this, "Close Batch", "Close Batch Success");
 
                         clearLKPTables();
                         clearSyncTables();
@@ -1515,10 +1555,15 @@ public class MainActivity extends SyncActivity
 
     }
 
-    protected void syncTransaction(final boolean closeBatch, final boolean showDialog, final OnSuccessError listener) {
+    public void syncTransaction(final boolean closeBatch, final boolean showDialog, final OnSuccessError listener) {
 
         if (!NetUtil.isConnected(this)) {
             Snackbar.make(coordinatorLayout, getString(R.string.error_online_required), Snackbar.LENGTH_LONG).show();
+            return;
+        }
+
+        if (currentUser == null) {
+            Snackbar.make(coordinatorLayout, "Please relogin", Snackbar.LENGTH_LONG).show();
             return;
         }
 
@@ -1526,8 +1571,17 @@ public class MainActivity extends SyncActivity
                 ServiceGenerator.createService(ApiInterface.class, Utility.buildUrl(Storage.getPreferenceAsInt(getApplicationContext(), Storage.KEY_SERVER_ID, 0)));
 
         if (closeBatch) {
+            Date serverDate = getServerDate(this.realm);
+            final String createdBy = "JOB" + Utility.convertDateToString(serverDate, "yyyyMMdd");
 
-            if (TextUtils.isEmpty(currentLDVNo)) {
+            TrnLDVHeader trnLDVHeaderToday = this.realm.where(TrnLDVHeader.class)
+//                    .equalTo("ldvNo", currentLDVNo)
+                    .equalTo("collCode", currentUser.getUserId())
+                    .equalTo("createdBy", createdBy)
+                    .findFirst();
+
+//            if ( TextUtils.isEmpty(currentLDVNo)) {
+            if (trnLDVHeaderToday == null) {
 
                 // coba close LKP yg kmrn
                 final ProgressDialog mProgressDialog = new ProgressDialog(this);
@@ -1763,6 +1817,19 @@ public class MainActivity extends SyncActivity
                 if (listener != null)
                     listener.onFailure(t);
                 Snackbar.make(coordinatorLayout, "Sync Failed\n" + t.getMessage(), Snackbar.LENGTH_LONG).show();
+
+                // TODO: utk mencegah data di server udah sync, coba get lkp lagi
+                if (t.getMessage() == null) {
+                    // should add delay to gave server a breath
+                    try {
+                        TimeUnit.SECONDS.sleep(10);
+                    } catch (InterruptedException e) {
+                        //Handle exception
+                    }
+
+                    resetData();
+                    getLKP(currentUser.getUserId(), getServerDate(realm), false, null);
+                }
             }
         });
     }
@@ -1804,7 +1871,8 @@ public class MainActivity extends SyncActivity
     protected void startLocationUpdates() {
         // Create the location request
         LocationRequest mLocationRequest = LocationRequest.create()
-                .setPriority(LocationRequest.PRIORITY_HIGH_ACCURACY)
+                .setPriority(LocationRequest.PRIORITY_LOW_POWER)
+//                .setPriority(LocationRequest.PRIORITY_HIGH_ACCURACY)
                 .setInterval(UPDATE_INTERVAL)
                 .setFastestInterval(FASTEST_INTERVAL);
         // Request location updates
@@ -1836,7 +1904,7 @@ public class MainActivity extends SyncActivity
         gps[0] = latLng.latitude;
         gps[1] = latLng.longitude;
 
-        NetUtil.syncLocation(this, gps);
+        NetUtil.syncLocation(this, gps, true);
 //        updateLoc(latLng);
     }
     @Override

@@ -15,9 +15,11 @@ import id.co.ppu.collectionfast2.pojo.trn.TrnBastbj;
 import id.co.ppu.collectionfast2.pojo.trn.TrnChangeAddr;
 import id.co.ppu.collectionfast2.pojo.trn.TrnCollectAddr;
 import id.co.ppu.collectionfast2.pojo.trn.TrnContractBuckets;
+import id.co.ppu.collectionfast2.pojo.trn.TrnErrorLog;
 import id.co.ppu.collectionfast2.pojo.trn.TrnLDVComments;
 import id.co.ppu.collectionfast2.pojo.trn.TrnLDVDetails;
 import id.co.ppu.collectionfast2.pojo.trn.TrnLDVHeader;
+import id.co.ppu.collectionfast2.pojo.trn.TrnPhoto;
 import id.co.ppu.collectionfast2.pojo.trn.TrnRVB;
 import id.co.ppu.collectionfast2.pojo.trn.TrnRVColl;
 import id.co.ppu.collectionfast2.pojo.trn.TrnRepo;
@@ -116,6 +118,8 @@ public class SyncActivity extends BasicActivity {
                 realm.where(TrnRVColl.class).findAll().deleteAllFromRealm();
                 realm.where(TrnVehicleInfo.class).findAll().deleteAllFromRealm();
                 realm.where(HistInstallments.class).findAll().deleteAllFromRealm();
+                realm.where(TrnPhoto.class).findAll().deleteAllFromRealm();
+                realm.where(TrnErrorLog.class).findAll().deleteAllFromRealm();
 
 
             }

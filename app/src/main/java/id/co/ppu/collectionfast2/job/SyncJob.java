@@ -15,7 +15,7 @@ public class SyncJob extends BroadcastReceiver{
     public void onReceive(final Context context, Intent intent) {
 
         final double[] gps = Location.getGPS(context);
-        NetUtil.syncLocation(context, gps);
+        NetUtil.syncLocation(context, gps, true);
         /*
         try {
 

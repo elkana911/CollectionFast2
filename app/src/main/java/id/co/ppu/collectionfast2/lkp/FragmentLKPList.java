@@ -2,6 +2,7 @@ package id.co.ppu.collectionfast2.lkp;
 
 import android.app.DatePickerDialog;
 import android.content.Context;
+import android.content.Intent;
 import android.graphics.Color;
 import android.os.Build;
 import android.os.Bundle;
@@ -196,7 +197,7 @@ public class FragmentLKPList extends Fragment {
 
         if (getContext() instanceof OnLKPListListener) {
             Date serverDate = this.realm.where(ServerInfo.class).findFirst().getServerDate();
-            UserConfig userConfig = realm.where(UserConfig.class).findFirst();
+            UserConfig userConfig = this.realm.where(UserConfig.class).findFirst();
 
             if (!Utility.isSameDay(userConfig.getLastLogin(), serverDate)) {
                 Utility.showDialog(getContext(), "Close Batch", "Please do Close Batch first");
@@ -204,6 +205,18 @@ public class FragmentLKPList extends Fragment {
             }
 
             Date dateLKP = TextUtils.isEmpty(etTglLKP.getText().toString()) ? serverDate : Utility.convertStringToDate(etTglLKP.getText().toString(), Utility.DATE_DISPLAY_PATTERN);
+
+            final String createdBy = "JOB" + Utility.convertDateToString(dateLKP, "yyyyMMdd");
+
+            TrnLDVHeader header = this.realm.where(TrnLDVHeader.class)
+                    .equalTo("collCode", collectorCode)
+                    .equalTo("createdBy", createdBy)
+                    .findFirst();
+
+            if (header != null) {
+                ((MainActivity)getActivity()).syncTransaction(false, true, null);
+                return;
+            }
 
             ((OnLKPListListener)getContext()).onLKPInquiry(this.collectorCode, dateLKP);
         }
@@ -220,6 +233,15 @@ public class FragmentLKPList extends Fragment {
         } else {
 
         }
+    }
+
+    @OnClick(R.id.etNoLKP)
+    public void onClickNoLKP() {
+        Intent i = new Intent(getActivity(), ActivityDetailsLKPSummary.class);
+        i.putExtra(ActivityDetailsLKPSummary.PARAM_COLLECTOR_ID, this.collectorCode);
+
+        startActivity(i);
+
     }
 
     @Override
@@ -439,35 +461,6 @@ public class FragmentLKPList extends Fragment {
                 dataViewHolder.llRowLKP.setBackgroundColor(ContextCompat.getColor(getContext(), R.color.colorLKPGreen));
                 dataViewHolder.ivCancelSync.setVisibility(View.GONE);
             }
-
-            /*
-            RealmResults<SyncTrnRVColl> trnSync = realm.where(SyncTrnRVColl.class)
-                    .equalTo("ldvNo", detail.getLdvNo())
-                    .equalTo("contractNo", detail.getContractNo())
-                    .equalTo("createdBy", Utility.LAST_UPDATE_BY)
-                    .isNotNull("syncedDate")
-                    .findAll();
-
-            RealmResults<SyncTrnLDVComments> trnSyncLDVComments = realm.where(SyncTrnLDVComments.class)
-                    .equalTo("ldvNo", detail.getLdvNo())
-                    .equalTo("contractNo", detail.getContractNo())
-                    .equalTo("createdBy", Utility.LAST_UPDATE_BY)
-                    .isNotNull("syncedDate")
-                    .findAll();
-
-            RealmResults<SyncTrnRepo> trnSyncRepo = realm.where(SyncTrnRepo.class)
-                    .equalTo("contractNo", detail.getLdvNo())
-                    .equalTo("createdBy", Utility.LAST_UPDATE_BY)
-                    .isNotNull("syncedDate")
-                    .findAll();
-
-            if (trnSync.size() > 0 || trnSyncLDVComments.size() > 0 || trnSyncRepo.size() > 0) {
-                dataViewHolder.llRowLKP.setBackgroundColor(Color.GREEN);
-                dataViewHolder.ivCancelSync.setVisibility(View.GONE);
-            }
-
-
-            */
 
             TextView custName = dataViewHolder.tvCustName;
             if (Build.VERSION.SDK_INT >= 24) {

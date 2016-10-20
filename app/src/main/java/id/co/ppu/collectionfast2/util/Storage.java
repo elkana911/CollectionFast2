@@ -24,6 +24,11 @@ public class Storage {
 //    public static final String KEY_SERVER_DATE = "server.date";
     public static final String KEY_USER = "user";
     public static final String KEY_USER_LAST_DAY = "user.lastMorning";
+//    public static final String KEY_USER_NAME_LAST = "lastUsername";
+    public static final String KEY_PASSWORD_REMEMBER = "password.remember";
+    public static final String KEY_PASSWORD_LAST = "password.last";
+
+    public static final String KEY_LOGOUT_DATE = "logout.date";
 
     /*
     public static String getPrefAsString(Context ctx, String key) {
@@ -49,6 +54,13 @@ public class Storage {
         SharedPreferences objPrefs = ctx.getSharedPreferences(PREF_APP, 0); // 0 - for private mode
         SharedPreferences.Editor prefsEditor = objPrefs.edit();
         prefsEditor.putInt(key, value);
+        prefsEditor.apply(); //asynkron
+    }
+
+    public static void savePreferenceAsBoolean(Context ctx, String key, boolean value) {
+        SharedPreferences objPrefs = ctx.getSharedPreferences(PREF_APP, 0); // 0 - for private mode
+        SharedPreferences.Editor prefsEditor = objPrefs.edit();
+        prefsEditor.putBoolean(key, value);
         prefsEditor.apply(); //asynkron
     }
 

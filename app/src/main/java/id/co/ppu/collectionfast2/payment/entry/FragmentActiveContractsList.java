@@ -234,7 +234,9 @@ public class FragmentActiveContractsList extends DialogFragment {
                 @Override
                 public void onClick(View view) {
                     if (getContext() instanceof OnActiveContractSelectedListener) {
-                        ((OnActiveContractSelectedListener) getContext()).onContractSelected(listItem.getContractNo());
+                        String contractNo = listItem.getContractNo();
+
+                        ((OnActiveContractSelectedListener) getContext()).onContractSelected(contractNo);
 
                         getDialog().dismiss();
                     }

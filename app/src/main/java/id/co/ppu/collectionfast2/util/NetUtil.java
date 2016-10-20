@@ -116,13 +116,13 @@ public class NetUtil {
      * Make sure this method is run in background or asynctask
      * @param ctx
      */
-    public static void syncLocation(final Context ctx, final double[] gps) {
+    public static void syncLocation(final Context ctx, final double[] gps, boolean offline) {
         Realm realm = Realm.getDefaultInstance();
         try {
 //            final double[] gps = Location.getGPS(ctx);
 
             Log.i("eric.gps", "lat=" + String.valueOf(gps[0]) + ",lng=" + String.valueOf(gps[1]));
-            final Date twoDaysAgo = Utility.getTwoDaysAgo(new Date());
+//            final Date twoDaysAgo = Utility.getTwoDaysAgo(new Date());
 
             final UserData userData = (UserData) Storage.getObjPreference(ctx, Storage.KEY_USER, UserData.class);
 
@@ -130,7 +130,6 @@ public class NetUtil {
                 @Override
                 public void execute(Realm realm) {
 
-                    // delete data two days ago
                     long total = realm.where(TrnCollPos.class).count();
 
                     RealmResults<TrnCollPos> all = realm.where(TrnCollPos.class).findAll();
@@ -150,6 +149,9 @@ public class NetUtil {
 
                 }
             });
+
+            if (offline)
+                return;
 
             if (!isConnected(ctx)) {
                 return;
@@ -175,6 +177,7 @@ public class NetUtil {
                         r.executeTransactionAsync(new Realm.Transaction() {
                             @Override
                             public void execute(Realm realm) {
+                                // delete local data
                                 boolean b = realm.where(TrnCollPos.class)
                                         .equalTo("collectorId", userData.getUserId())
                                         .findAll().deleteAllFromRealm();

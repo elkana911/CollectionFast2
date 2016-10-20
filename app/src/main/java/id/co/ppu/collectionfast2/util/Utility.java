@@ -1,6 +1,5 @@
 package id.co.ppu.collectionfast2.util;
 
-import android.Manifest;
 import android.app.Activity;
 import android.app.AlertDialog;
 import android.content.Context;
@@ -30,12 +29,14 @@ import okhttp3.HttpUrl;
 
 public class Utility {
 
-    public final static String DATE_EXPIRED_YYYYMMDD = "20161021";
+    public final static String DATE_EXPIRED_YYYYMMDD = "20161028";
     public final static String[][] servers = {
-//            {"local-server", "10.212.0.233", "8090"},
-            {"local-server", "192.168.43.104", "8090"},
+//            {"local-server", "10.212.4.214", "8090"},
+            {"local-server", "192.168.142.69", "8090"},
             {"fast-mobile", "cmobile.radanafinance.co.id", "7001"}
     };
+
+    public final static int NETWORK_TIMEOUT_MINUTES = 4;
 
 //    public final static String[][] servers = {{"local-server", "10.100.100.77", "8090"}
 //            ,{"fast-mobile", "cmobile.radanafinance.co.id", "7001"}
@@ -50,13 +51,8 @@ public class Utility {
     public final static String INFO = "Info";
     public final static String WARNING = "Warning";
 
-    public static final int PERMISSION_REQUEST_LOCATION = 0;
     public static final int MAX_MONEY_DIGITS = 10;
     public static final int MAX_MONEY_LIMIT = 99999999;
-    public static String[] PERMISSION_LOCATION = {Manifest.permission.ACCESS_COARSE_LOCATION, Manifest.permission.ACCESS_FINE_LOCATION};
-
-    public static final int PERMISSION_REQUEST_READPHONESTATE = 1;
-    public static String[] PERMISSION_READPHONESTATE = {Manifest.permission.READ_PHONE_STATE};
 
     public static String getServerName(int serverId) {
         String[] s = servers[serverId];

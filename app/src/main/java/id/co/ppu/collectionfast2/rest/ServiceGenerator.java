@@ -17,6 +17,7 @@ import java.lang.reflect.Type;
 import java.util.Date;
 import java.util.concurrent.TimeUnit;
 
+import id.co.ppu.collectionfast2.util.Utility;
 import okhttp3.HttpUrl;
 import okhttp3.Interceptor;
 import okhttp3.OkHttpClient;
@@ -73,8 +74,8 @@ public class ServiceGenerator {
             });
         }
 
-        OkHttpClient client = httpClient.connectTimeout(2, TimeUnit.MINUTES)
-                .readTimeout(2, TimeUnit.MINUTES)
+        OkHttpClient client = httpClient.connectTimeout(Utility.NETWORK_TIMEOUT_MINUTES, TimeUnit.MINUTES)
+                .readTimeout(Utility.NETWORK_TIMEOUT_MINUTES, TimeUnit.MINUTES)
                 .build();
 
         /*

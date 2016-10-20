@@ -5,7 +5,10 @@ import android.os.Bundle;
 import android.support.v7.app.AppCompatActivity;
 import android.view.MenuItem;
 
+import java.util.Date;
+
 import id.co.ppu.collectionfast2.R;
+import id.co.ppu.collectionfast2.pojo.ServerInfo;
 import id.co.ppu.collectionfast2.pojo.trn.TrnLDVComments;
 import id.co.ppu.collectionfast2.pojo.trn.TrnRVColl;
 import id.co.ppu.collectionfast2.pojo.trn.TrnRepo;
@@ -75,6 +78,13 @@ public class BasicActivity extends AppCompatActivity {
         return realm.where(TrnRVColl.class)
                 .equalTo("contractNo", contractNo)
                 .equalTo("createdBy", Utility.LAST_UPDATE_BY);
+    }
+
+    protected Date getServerDate(Realm realm) {
+        return realm.where(ServerInfo.class)
+                .findFirst()
+                .getServerDate();
+
     }
 
 }

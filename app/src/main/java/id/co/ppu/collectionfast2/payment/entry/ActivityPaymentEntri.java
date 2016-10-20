@@ -1,6 +1,8 @@
 package id.co.ppu.collectionfast2.payment.entry;
 
+import android.app.ProgressDialog;
 import android.graphics.Color;
+import android.os.AsyncTask;
 import android.os.Bundle;
 import android.support.design.widget.Snackbar;
 import android.support.v4.app.DialogFragment;
@@ -151,9 +153,6 @@ public class ActivityPaymentEntri extends BasicActivity implements FragmentActiv
 
             this.collectorId = userData.getUserId();
 
-            final RealmResults<TrnContractBuckets> buckets = this.realm.where(TrnContractBuckets.class)
-                    .equalTo("collectorId", this.collectorId).findAll();
-
             Date serverDate = this.realm.where(ServerInfo.class).findFirst().getServerDate();
 
             final String createdBy = "JOB" + Utility.convertDateToString(serverDate, "yyyyMMdd");
@@ -167,14 +166,24 @@ public class ActivityPaymentEntri extends BasicActivity implements FragmentActiv
                 this.ldvNo = trnLDVHeader.getLdvNo();
             }
 
-            /*
+
+            final ProgressDialog mProgressDialog = new ProgressDialog(this);
+            mProgressDialog.setIndeterminate(true);
+            mProgressDialog.setCancelable(false);
+            mProgressDialog.setMessage("Please wait...");
+            mProgressDialog.show();
+
             new AsyncTask<Void, Void, List<String>>() {
                 @Override
                 protected List<String> doInBackground(Void... voids) {
-                    Realm r = Realm.getDefaultInstance();
+                    Realm r = null;
                     List<String> list = new ArrayList<>();
 
                     try {
+                        r = Realm.getDefaultInstance();
+                        final RealmResults<TrnContractBuckets> buckets = r.where(TrnContractBuckets.class)
+                                .equalTo("collectorId", collectorId).findAll();
+
                         RealmResults<TrnLDVDetails> _buffer = r.where(TrnLDVDetails.class)
                                 .equalTo("pk.ldvNo", ldvNo)
                                 .equalTo("createdBy", createdBy)
@@ -234,9 +243,13 @@ public class ActivityPaymentEntri extends BasicActivity implements FragmentActiv
                         Snackbar.make(activityPaymentEntri, "No contracts found !", Snackbar.LENGTH_LONG).show();
                     }
 
+                    if (mProgressDialog.isShowing())
+                        mProgressDialog.dismiss();
+
                 }
             }.execute();
-            */
+
+            /*
             RealmResults<TrnLDVDetails> _buffer = this.realm.where(TrnLDVDetails.class)
                     .equalTo("pk.ldvNo", ldvNo)
                     .equalTo("createdBy", createdBy)
@@ -280,7 +293,7 @@ public class ActivityPaymentEntri extends BasicActivity implements FragmentActiv
 
                 Snackbar.make(activityPaymentEntri, "No contracts found !", Snackbar.LENGTH_LONG).show();
             }
-
+*/
         }
 
         if (getSupportActionBar() != null) {
