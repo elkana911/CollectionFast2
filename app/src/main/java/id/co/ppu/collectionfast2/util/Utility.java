@@ -32,9 +32,10 @@ public class Utility {
     public final static String DATE_EXPIRED_YYYYMMDD = "20161028";
     public final static String[][] servers = {
 //            {"local-server", "10.212.4.214", "8090"},
-            {"local-server", "192.168.142.69", "8090"},
+            {"local-server", "192.168.1.107", "8090"},
             {"fast-mobile", "cmobile.radanafinance.co.id", "7001"}
     };
+    public final static boolean developerMode = true;
 
     public final static int NETWORK_TIMEOUT_MINUTES = 4;
 

@@ -277,13 +277,13 @@ public class FragmentLKPList extends Fragment {
      * @param collectorCode sementara ignore, karena gadget hanya dipakai 1 orang/collector saja
      *                      @return ldvNo
      */
-    public String loadLKP(final String collectorCode, Date dateLKP) {
+    public String loadLKP(final String collectorCode, final Date dateLKP) {
 
         search_view.setAdapter(null);
 
         final String createdBy = "JOB" + Utility.convertDateToString(dateLKP, "yyyyMMdd");
 
-        TrnLDVHeader header = this.realm.where(TrnLDVHeader.class)
+        final TrnLDVHeader header = this.realm.where(TrnLDVHeader.class)
                 .equalTo("collCode", collectorCode)
                 .equalTo("createdBy", createdBy)
                 .findFirst();
@@ -292,25 +292,43 @@ public class FragmentLKPList extends Fragment {
             return null;
         }
 
-        String ldvNo = header.getLdvNo();
+        final String ldvNo = header.getLdvNo();
 
         ((MainActivity)getActivity()).currentLDVNo = ldvNo;
 
         etNoLKP.setText(header.getLdvNo());
         etTglLKP.setText(Utility.convertDateToString(header.getLdvDate(), Utility.DATE_DISPLAY_PATTERN));
-//        etTglLKP.setText(DateUtils.formatDateTime(getContext(), header.getLdvDate().getTime(), DateUtils.FORMAT_SHOW_DATE | DateUtils.FORMAT_SHOW_YEAR | DateUtils.FORMAT_SHOW_WEEKDAY));
 
-        //populate
-        final RealmResults<TrnLDVDetails> _buffer = this.realm.where(TrnLDVDetails.class)
-                .equalTo("pk.ldvNo", header.getLdvNo())
-                .equalTo("createdBy", createdBy)
-                .findAll();
-
+        // TODO: must sort by seqno but must also be searchable by custName
+        tvSeparator.setText("Sorting...");
         this.realm.executeTransaction(new Realm.Transaction() {
             @Override
             public void execute(Realm realm) {
                 realm.delete(DisplayTrnLDVDetails.class);
-//                boolean d = realm.where(DisplayTrnLDVDetails.class).equalTo(Utility.COLUMN_CREATED_BY, createdBy).findAll().deleteAllFromRealm();
+
+                //populate
+                final RealmResults<TrnLDVDetails> _buffer = realm.where(TrnLDVDetails.class)
+                        .equalTo("pk.ldvNo", ldvNo)
+                        .equalTo("createdBy", createdBy)
+                        .findAll();
+
+                /* ga perlu sort karena udah sort
+
+                List<TrnLDVDetails> _list = realm.copyFromRealm(_buffer);
+
+                // sort by no installments
+                Collections.sort(_list, new Comparator<TrnLDVDetails>() {
+                    @Override
+                    public int compare(TrnLDVDetails t1, TrnLDVDetails t2) {
+                        if (t1.getPk().getSeqNo() > t2.getPk().getSeqNo())
+                            return 1;
+                        else if (t1.getPk().getSeqNo() < t2.getPk().getSeqNo()) {
+                            return -1;
+                        }else
+                            return 0;
+                    }
+                });
+                */
 
                 for (TrnLDVDetails obj : _buffer) {
 
@@ -340,36 +358,61 @@ public class FragmentLKPList extends Fragment {
             }
         });
 
+        long count = realm.where(DisplayTrnLDVDetails.class).count();
         String dateLabel = "Today";
 
         if (!Utility.isSameDay(dateLKP, serverDate)) {
             dateLabel = "Previous";
         }
 
-        long count = this.realm.where(DisplayTrnLDVDetails.class).count();
-
         tvSeparator.setText(dateLabel + " Contracts: " + count);
 
         if (count < 1) {
-//            fab.show();
             search_view.setVisibility(View.INVISIBLE);
         } else {
             search_view.setVisibility(View.VISIBLE);
-//            fab.hide();
         }
+/*
+        this.realm.executeTransaction(new Realm.Transaction() {
+            @Override
+            public void execute(Realm realm) {
+                realm.delete(DisplayTrnLDVDetails.class);
 
+                for (TrnLDVDetails obj : _buffer) {
+
+                    DisplayTrnLDVDetails displayTrnLDVDetails = realm.createObject(DisplayTrnLDVDetails.class);
+
+                    displayTrnLDVDetails.setLkpDate(Utility.convertStringToDate(etTglLKP.getText().toString(), Utility.DATE_DISPLAY_PATTERN));
+
+                    displayTrnLDVDetails.setSeqNo(obj.getPk().getSeqNo());
+                    displayTrnLDVDetails.setLdvNo(obj.getPk().getLdvNo());
+                    displayTrnLDVDetails.setCollId(collectorCode);
+                    displayTrnLDVDetails.setContractNo(obj.getContractNo());
+                    displayTrnLDVDetails.setCustName(obj.getCustName());
+                    displayTrnLDVDetails.setCustNo(obj.getCustNo());
+                    displayTrnLDVDetails.setCreatedBy(obj.getCreatedBy());
+                    displayTrnLDVDetails.setFlagDone(obj.getFlagDone());
+                    displayTrnLDVDetails.setAddress(obj.getAddress());
+
+                    if (DataUtil.isLKPSynced(realm, obj) > 0) {
+                        displayTrnLDVDetails.setWorkStatus("SYNC");
+                    }else{
+                        displayTrnLDVDetails.setWorkStatus(obj.getWorkStatus());
+                    }
+
+
+                    realm.copyToRealm(displayTrnLDVDetails);
+                }
+            }
+        });
+*/
+        // due to the limitations of realmsearchview, searchable column has been disabled
+        // because when sort by seqNo, i cant search by custname
         mAdapter = new LKPListAdapter(
                 getContext(),
                 this.realm,
-                "seqNo"                //"custName"
+                "seqNo"
         );
-//        LKPListAdapter mAdapter = new LKPListAdapter(
-//                getContext(),
-//                this.realm,
-//                "custName"
-//        );
-
-//        mAdapter.notifyDataSetChanged();
 
         search_view.setAdapter(mAdapter);
         search_view.getRealmRecyclerView().invalidate();

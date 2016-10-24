@@ -329,4 +329,27 @@ public class DataUtil {
         return 0;   // no sync
     }
 
+    public static void resetData(Realm realm) {
+
+        if (realm != null) {
+            realm.executeTransaction(new Realm.Transaction() {
+                @Override
+                public void execute(Realm realm) {
+                    realm.deleteAll();
+                }
+            });
+        }
+
+    }
+
+    public static void resetData() {
+        Realm r = Realm.getDefaultInstance();
+        try{
+            resetData(r);
+        }finally {
+            if (r != null) {
+                r.close();
+            }
+        }
+    }
 }

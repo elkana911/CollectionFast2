@@ -23,14 +23,15 @@
             android:icon="@drawable/ic_arrow_downward_black_24dp"
             android:title="Close Batch" />
         <item
+            android:visible="false"
             android:id="@+id/nav_manualSync"
             android:icon="@drawable/ic_sync_black_24dp"
             android:title="Manual Sync" />
         <item
             android:id="@+id/nav_clearSyncTables"
-            android:visible="false"
             android:icon="@drawable/ic_phonelink_erase_black_24dp"
-            android:title="Clear Sync Tables" />
+            android:title="Clear Sync Tables"
+            android:visible="false" />
         <!--          <item
                     android:id="@+id/nav_camera"
                     android:icon="@drawable/ic_menu_camera"
@@ -49,7 +50,9 @@
                     android:title="Tools" />-->
     </group>
 
-    <item android:title="General Information">
+    <item
+        android:title="General Information"
+        android:visible="false">
         <menu>
             <item
                 android:id="@+id/nav_customerProgram"
@@ -72,6 +75,7 @@
     <item android:title="Communicate">
         <menu>
             <item
+                android:visible="false"
                 android:id="@+id/nav_reset"
                 android:icon="@drawable/ic_phonelink_erase_black_24dp"
                 android:title="Reset Data" />

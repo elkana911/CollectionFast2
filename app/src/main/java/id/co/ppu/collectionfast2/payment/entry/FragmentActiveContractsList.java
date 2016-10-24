@@ -16,7 +16,6 @@ import android.widget.FrameLayout;
 import android.widget.TextView;
 
 import java.util.ArrayList;
-import java.util.Date;
 import java.util.List;
 
 import butterknife.BindView;
@@ -27,12 +26,7 @@ import id.co.ppu.collectionfast2.R;
 import id.co.ppu.collectionfast2.component.DividerItemDecoration;
 import id.co.ppu.collectionfast2.component.RealmSearchView;
 import id.co.ppu.collectionfast2.pojo.DisplayTrnContractBuckets;
-import id.co.ppu.collectionfast2.pojo.ServerInfo;
-import id.co.ppu.collectionfast2.pojo.trn.TrnContractBuckets;
-import id.co.ppu.collectionfast2.pojo.trn.TrnLDVDetails;
-import id.co.ppu.collectionfast2.util.Utility;
 import io.realm.Realm;
-import io.realm.RealmResults;
 
 /**
  * Masalahnya tidak dpt menggunakan RealmRecyclerView karena Realm tidak mendukung pencarian via child property
@@ -108,9 +102,9 @@ public class FragmentActiveContractsList extends DialogFragment {
 
     private void loadList(String collectorCode) {
 
+/*
         Date serverDate = this.realm.where(ServerInfo.class).findFirst().getServerDate();
         final String createdBy = "JOB" + Utility.convertDateToString(serverDate, "yyyyMMdd");
-
         //populate
         final RealmResults<TrnContractBuckets> _buffer = this.realm.where(TrnContractBuckets.class)
                 .equalTo("collectorId", collectorCode)
@@ -150,7 +144,7 @@ public class FragmentActiveContractsList extends DialogFragment {
                 }
             }
         });
-
+*/
         long count = this.realm.where(DisplayTrnContractBuckets.class).count();
 
         getDialog().setTitle("Pick Contract (" + count + ")");

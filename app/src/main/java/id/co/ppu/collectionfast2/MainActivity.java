@@ -67,6 +67,7 @@ import id.co.ppu.collectionfast2.lkp.FragmentLKPList;
 import id.co.ppu.collectionfast2.lkp.FragmentSummaryLKP;
 import id.co.ppu.collectionfast2.login.LoginActivity;
 import id.co.ppu.collectionfast2.payment.entry.ActivityPaymentEntri;
+import id.co.ppu.collectionfast2.pojo.DisplayTrnContractBuckets;
 import id.co.ppu.collectionfast2.pojo.DisplayTrnLDVDetails;
 import id.co.ppu.collectionfast2.pojo.ServerInfo;
 import id.co.ppu.collectionfast2.pojo.UserConfig;
@@ -355,6 +356,7 @@ public class MainActivity extends SyncActivity
                 .addApi(LocationServices.API)
                 .addConnectionCallbacks(this)
                 .addOnConnectionFailedListener(this).build();
+
     }
 
     @Override
@@ -453,14 +455,6 @@ public class MainActivity extends SyncActivity
                 return true;
             }
         });
-
-
-//        MenuItem item = menu.findItem(R.id.action_search);
-
-//        Fragment f = getSupportFragmentManager().findFragmentById(R.id.content_frame);
-
-//        item.setVisible(mSelectedNavMenuIndex == R.id.nav_loa);
-//        item.setVisible(f instanceof FragmentLKPList);
 
         return true;
     }
@@ -577,8 +571,9 @@ public class MainActivity extends SyncActivity
         viewIsAtHome = false;
 
         if (this.menu != null) {
-            MenuItem item = this.menu.findItem(R.id.action_search);
-            item.setVisible(viewId == R.id.nav_loa);
+            // action_search is now disabled due to the limitation of realmsearchview. filterkey cant search by custName if data sorted by seqNo
+//            MenuItem item = this.menu.findItem(R.id.action_search);
+//            item.setVisible(viewId == R.id.nav_loa);
         }
 
         navigationView.setCheckedItem(viewId);
@@ -699,15 +694,7 @@ public class MainActivity extends SyncActivity
 
     private void resetData() {
         // TODO: clear cookie
-        if (realm != null) {
-            realm.executeTransaction(new Realm.Transaction() {
-                @Override
-                public void execute(Realm realm) {
-                    realm.deleteAll();
-                }
-            });
-        }
-
+        DataUtil.resetData(realm);
     }
 
     @OnClick(R.id.fab)
@@ -786,11 +773,6 @@ public class MainActivity extends SyncActivity
                                     d = bgRealm.where(TrnCollectAddr.class).equalTo(Utility.COLUMN_CREATED_BY, createdBy).findAll().deleteAllFromRealm();
                                     bgRealm.copyToRealm(respGetLKP.getData().getAddress());
 
-
-                                    // insert buckets
-                                    d = bgRealm.where(TrnContractBuckets.class).equalTo(Utility.COLUMN_CREATED_BY, createdBy).findAll().deleteAllFromRealm();
-                                    bgRealm.copyToRealm(respGetLKP.getData().getBuckets());
-
                                     // insert rvb
                                     d = bgRealm.where(TrnRVB.class).equalTo(Utility.COLUMN_CREATED_BY, createdBy).findAll().deleteAllFromRealm();
                                     bgRealm.copyToRealm(respGetLKP.getData().getRvb());
@@ -849,6 +831,10 @@ public class MainActivity extends SyncActivity
                                     d = bgRealm.where(HistInstallments.class)./*equalTo(Utility.COLUMN_CREATED_BY, createdBy).*/findAll().deleteAllFromRealm();
                                     bgRealm.copyToRealmOrUpdate(respGetLKP.getData().getHistoryInstallments());
 
+                                    // insert buckets
+                                    d = bgRealm.where(TrnContractBuckets.class).equalTo(Utility.COLUMN_CREATED_BY, createdBy).findAll().deleteAllFromRealm();
+                                    bgRealm.copyToRealm(respGetLKP.getData().getBuckets());
+
                                     // insert details
                                     d = bgRealm.where(TrnLDVDetails.class).equalTo(Utility.COLUMN_CREATED_BY, createdBy).findAll().deleteAllFromRealm();
 
@@ -889,6 +875,29 @@ public class MainActivity extends SyncActivity
 
                                             bgRealm.copyToRealm(sync);
                                         }
+                                    }
+
+                                    // for faster show, but must be load after ldvdetails
+                                    bgRealm.delete(DisplayTrnContractBuckets.class);
+                                    for (TrnContractBuckets obj : respGetLKP.getData().getBuckets()) {
+                                        boolean exist = false;
+                                        for (TrnLDVDetails _dtl :  respGetLKP.getData().getDetails()) {
+                                            if (_dtl.getContractNo().equalsIgnoreCase(obj.getPk().getContractNo())) {
+                                                exist = true;
+                                                break;
+                                            }
+                                        }
+
+                                        if (exist)
+                                            continue;
+
+                                        DisplayTrnContractBuckets displayTrnContractBuckets = bgRealm.createObject(DisplayTrnContractBuckets.class);
+
+                                        displayTrnContractBuckets.setContractNo(obj.getPk().getContractNo());
+                                        displayTrnContractBuckets.setCreatedBy(obj.getCreatedBy());
+                                        displayTrnContractBuckets.setCustName(obj.getCustName());
+
+                                        bgRealm.copyToRealm(displayTrnContractBuckets);
                                     }
 
                                     //repo inserted by MOBCOL
@@ -988,7 +997,6 @@ public class MainActivity extends SyncActivity
 
                                         if (_obj.getCreatedTimestamp() != null) {
                                             SyncFileUpload  sync = bgRealm.where(SyncFileUpload.class)
-//                                                    .equalTo("ldvNo", _obj.getLdvNo())
                                                     .equalTo("contractNo", _obj.getContractNo())
                                                     .equalTo("collectorId", _obj.getCollCode())
                                                     .equalTo("pictureId", _obj.getPhotoId())
@@ -1918,5 +1926,13 @@ public class MainActivity extends SyncActivity
             default:
                 super.onRequestPermissionsResult(requestCode, permissions, grantResults);
         }
+    }
+
+    @Override
+    public boolean onPrepareOptionsMenu(Menu menu) {
+
+
+
+        return super.onPrepareOptionsMenu(menu);
     }
 }

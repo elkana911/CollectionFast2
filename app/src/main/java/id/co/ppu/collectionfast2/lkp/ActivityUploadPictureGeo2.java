@@ -50,7 +50,11 @@ import retrofit2.Call;
 import retrofit2.Callback;
 import retrofit2.Response;
 
-public class ActivityUploadPictureGeo extends BasicActivity {
+/**
+ * Cara lama, upload sync terpisah dari sinkronisasi utama.
+ * ide baru adalah upload sync digabung dengan sinkronisasi utama, tp sepertinya akan memperlambat jd cara lama ini masih kupakai dulu
+ */
+public class ActivityUploadPictureGeo2 extends BasicActivity {
     public static final String PARAM_CONTRACT_NO = "customer.contractNo";
     public static final String PARAM_COLLECTOR_ID = "collector.id";
     public static final String PARAM_LDV_NO = "ldvNo";
@@ -123,7 +127,7 @@ public class ActivityUploadPictureGeo extends BasicActivity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_upload_picture);
+        setContentView(R.layout.activity_upload_picture2);
 
         ButterKnife.bind(this);
 
@@ -342,7 +346,7 @@ public class ActivityUploadPictureGeo extends BasicActivity {
                                     .findFirst();
                             if (sync == null) {
                                 sync = new SyncFileUpload();
-                                sync.setUid(java.util.UUID.randomUUID().toString());
+                                sync.setUid(UUID.randomUUID().toString());
                                 sync.setContractNo(contractNo);
                                 sync.setCollectorId(collectorId);
                                 sync.setPictureId(picId);
@@ -381,7 +385,7 @@ public class ActivityUploadPictureGeo extends BasicActivity {
                         e.printStackTrace();
                     }
 
-                    Toast.makeText(ActivityUploadPictureGeo.this, "upload " + picId + " failed", Toast.LENGTH_SHORT).show();
+                    Toast.makeText(ActivityUploadPictureGeo2.this, "upload " + picId + " failed", Toast.LENGTH_SHORT).show();
                     if (listener != null)
                         listener.onSkip();
                 }
@@ -389,7 +393,7 @@ public class ActivityUploadPictureGeo extends BasicActivity {
 
             @Override
             public void onFailure(Call<ResponseBody> call, Throwable t) {
-                Toast.makeText(ActivityUploadPictureGeo.this, t.getMessage(), Toast.LENGTH_SHORT).show();
+                Toast.makeText(ActivityUploadPictureGeo2.this, t.getMessage(), Toast.LENGTH_SHORT).show();
                 t.printStackTrace();
                 if (listener != null)
                     listener.onFailure(t);
@@ -494,6 +498,7 @@ public class ActivityUploadPictureGeo extends BasicActivity {
         });
     }
 
+    @OnClick(R.id.btnUpload)
     public void onClickUpload() {
 
         if (!NetUtil.isConnected(this)) {

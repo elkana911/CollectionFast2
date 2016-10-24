@@ -12,5 +12,33 @@
         android:id="@+id/action_settings"
         android:orderInCategory="100"
         android:title="@string/action_settings"
-        app:showAsAction="never" />
+        app:showAsAction="never">
+        </item>
+    <item
+        android:orderInCategory="101"
+        android:title="@string/action_general_info"
+        app:showAsAction="never">
+        <menu>
+            <item
+                android:id="@+id/nav_customerProgram"
+                android:icon="@drawable/ic_looks_one_black_24dp"
+                android:title="Customer Program"
+                app:showAsAction="never" />
+            <item
+                android:id="@+id/nav_marketingPromo"
+                android:icon="@drawable/ic_looks_two_black_24dp"
+                android:title="Marketing Promo / Program"
+                app:showAsAction="never" />
+            <item
+                android:id="@+id/nav_nearlyPayment"
+                android:icon="@drawable/ic_looks_3_black_24dp"
+                android:title="Nearly Payment Point"
+                app:showAsAction="never"/>
+            <item
+                android:id="@+id/nav_radanaOffice"
+                android:icon="@drawable/ic_looks_4_black_24dp"
+                android:title="Radana Office Address"
+                app:showAsAction="never"/>
+        </menu>
+        </item>
 </menu>

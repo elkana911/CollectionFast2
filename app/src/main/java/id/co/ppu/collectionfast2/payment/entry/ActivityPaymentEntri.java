@@ -1,25 +1,17 @@
 package id.co.ppu.collectionfast2.payment.entry;
 
-import android.app.ProgressDialog;
-import android.graphics.Color;
-import android.os.AsyncTask;
 import android.os.Bundle;
 import android.support.design.widget.Snackbar;
 import android.support.v4.app.DialogFragment;
 import android.view.View;
-import android.view.ViewGroup;
-import android.widget.ArrayAdapter;
 import android.widget.AutoCompleteTextView;
-import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ImageView;
 import android.widget.Spinner;
 import android.widget.TableLayout;
-import android.widget.TextView;
 import android.widget.Toast;
 
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.Date;
 import java.util.List;
 
@@ -35,7 +27,6 @@ import id.co.ppu.collectionfast2.pojo.UserData;
 import id.co.ppu.collectionfast2.pojo.master.MstParam;
 import id.co.ppu.collectionfast2.pojo.sync.SyncTrnRVColl;
 import id.co.ppu.collectionfast2.pojo.trn.TrnContractBuckets;
-import id.co.ppu.collectionfast2.pojo.trn.TrnLDVDetails;
 import id.co.ppu.collectionfast2.pojo.trn.TrnLDVHeader;
 import id.co.ppu.collectionfast2.pojo.trn.TrnRVB;
 import id.co.ppu.collectionfast2.pojo.trn.TrnRVColl;
@@ -125,29 +116,10 @@ public class ActivityPaymentEntri extends BasicActivity implements FragmentActiv
 
             this.collectorId = extras.getString(PARAM_COLLECTOR_ID);
 
-            /*
-            String createdBy = "JOB" + Utility.convertDateToString(this.lkpDate, "yyyyMMdd");
-            TrnLDVDetails dtl = this.realm.where(TrnLDVDetails.class)
-                    .equalTo("contractNo", this.contractNo)
-                    .equalTo("createdBy", createdBy)
-                    .findFirst();
-                    */
             ivDropDown.setVisibility(View.GONE);
 
             onContractSelected(this.contractNo);
-/*
-            if (getSupportActionBar() != null) {
-                getSupportActionBar().setSubtitle(dtl.getCustName());
-            }
 
-            etContractNo.setText(contractNo);
-            etAngsuran.setText(Utility.convertLongToRupiah(dtl.getMonthInst()));
-            etAngsuranKe.setText(String.valueOf(dtl.getInstNo() + 1));
-            etDenda.setText(String.valueOf(dtl.getPenaltyAMBC()));
-
-
-            buildRVB();
-*/
         } else {
             UserData userData = (UserData) Storage.getObjPreference(getApplicationContext(), Storage.KEY_USER, UserData.class);
 
@@ -166,7 +138,7 @@ public class ActivityPaymentEntri extends BasicActivity implements FragmentActiv
                 this.ldvNo = trnLDVHeader.getLdvNo();
             }
 
-
+/*
             final ProgressDialog mProgressDialog = new ProgressDialog(this);
             mProgressDialog.setIndeterminate(true);
             mProgressDialog.setCancelable(false);
@@ -248,51 +220,6 @@ public class ActivityPaymentEntri extends BasicActivity implements FragmentActiv
 
                 }
             }.execute();
-
-            /*
-            RealmResults<TrnLDVDetails> _buffer = this.realm.where(TrnLDVDetails.class)
-                    .equalTo("pk.ldvNo", ldvNo)
-                    .equalTo("createdBy", createdBy)
-                    .findAll();
-
-            List<String> list = new ArrayList<>();
-            for (TrnContractBuckets b : buckets) {
-                boolean exist = false;
-                for (TrnLDVDetails _dtl : _buffer) {
-                    if (_dtl.getContractNo().equalsIgnoreCase(b.getPk().getContractNo())) {
-                        exist = true;
-                        break;
-                    }
-                }
-
-                if (!exist)
-                    list.add(b.getPk().getContractNo());
-            }
-
-            if (list.size() > 0) {
-                // sort
-                Collections.sort(list);
-
-                // override color of text item
-                ArrayAdapter<String> dataAdapter = new ArrayAdapter<String>(this,
-                        android.R.layout.simple_list_item_1, list) {
-                    @Override
-                    public View getView(int position, View convertView, ViewGroup parent) {
-                        View view = super.getView(position, convertView, parent);
-                        TextView text = (TextView) view.findViewById(android.R.id.text1);
-                        text.setTextColor(Color.BLACK);
-                        return view;
-                    }
-                };
-
-                etContractNo.setAdapter(dataAdapter);
-
-            } else {
-                Button btnSave = ButterKnife.findById(this, R.id.btnSave);
-                btnSave.setVisibility(View.INVISIBLE);
-
-                Snackbar.make(activityPaymentEntri, "No contracts found !", Snackbar.LENGTH_LONG).show();
-            }
 */
         }
 
@@ -483,49 +410,10 @@ public class ActivityPaymentEntri extends BasicActivity implements FragmentActiv
                         .findFirst();
                 if (keyMinPenalty != null) {
                     minDendaValue = Long.parseLong(keyMinPenalty.getValue());
-/*
-                    if (dendaTotal > minDendaValue) {
-                        if (dendaValue < minDendaValue) {
-                            etDenda.setError("Should not under " + minDendaValue);
-                            focusView = etDenda;
-                            cancel = true;
-                        }
-                    } else {
-                        if (dendaValue < dendaTotal) {
-                            etDenda.setError("Should not under " + dendaValue);
-                            focusView = etDenda;
-                            cancel = true;
-                        }
-                    }
-                    */
                 }
             }
         }
-/*
-        if (TextUtils.isEmpty(etDendaBerjalan.getText())
-                || !Utility.isNumeric(etDendaBerjalan.getText().toString())
-                ) {
-            etDendaBerjalan.setError(getString(R.string.error_amount_invalid));
-            focusView = etDendaBerjalan;
-            cancel = true;
-        } else {
 
-            if (dendaBerjalan.length() > Utility.MAX_MONEY_DIGITS) {
-                etDendaBerjalan.setError(getString(R.string.error_amount_invalid));
-                focusView = etDendaBerjalan;
-                cancel = true;
-
-            } else {
-
-//                long dendaBerjalanValue = Long.parseLong(dendaBerjalan);
-//                if (dendaBerjalanValue < dtl.getDaysIntrAmbc().longValue()) {
-//                    etDendaBerjalan.setError("Should not under " + String.valueOf(dtl.getDaysIntrAmbc()));
-//                    focusView = etDendaBerjalan;
-//                    cancel = true;
-//                }
-            }
-        }
-*/
         if (!Utility.isValidMoney(biayaTagih)) {
             etBiayaTagih.setError(getString(R.string.error_amount_invalid));
             focusView = etBiayaTagih;
@@ -548,12 +436,6 @@ public class ActivityPaymentEntri extends BasicActivity implements FragmentActiv
                     cancel = true;
                 }
 
-//                long collFee = dtl.getCollectionFee() == null ? 0 : dtl.getCollectionFee().longValue();
-//                if (biayaTagihValue < collFee) {
-//                    etBiayaTagih.setText("Should not under " + String.valueOf(collFee));
-//                    focusView = etBiayaTagih;
-//                    cancel = true;
-//                }
             }
         }
 
@@ -613,59 +495,6 @@ public class ActivityPaymentEntri extends BasicActivity implements FragmentActiv
                     Snackbar.make(activityPaymentEntri, "Data already synced", Snackbar.LENGTH_SHORT).show();
                     return;
                 }
-
-                /*
-                RealmResults<TrnContractBuckets> trnContractBucketses = realm.where(TrnContractBuckets.class)
-                        .equalTo("pk.contractNo", ActivityPaymentEntri.this.contractNo)
-//                        .equalTo("createdBy", createdBy)
-                        .findAll();
-
-                if (trnContractBucketses.size() > 1) {
-                    throw new RuntimeException("Duplicate data ContractBucket found");
-                }
-
-                TrnContractBuckets trnContractBuckets = realm.copyFromRealm(trnContractBucketses.get(0));
-                boolean b = trnContractBucketses.deleteAllFromRealm();
-
-                trnContractBuckets.setPaidDate(serverDate);
-                trnContractBuckets.setRvNo(rvbNo);
-                trnContractBuckets.setLkpStatus("W");
-                trnContractBuckets.setLastupdateBy(Utility.LAST_UPDATE_BY);
-                trnContractBuckets.setLastupdateTimestamp(new Date());
-
-                realm.copyToRealm(trnContractBuckets);
-*/
-                /* kata pak yoce ga perlu lagi ke ldv details
-                RealmResults<TrnLDVDetails> trnLDVDetailses = realm.where(TrnLDVDetails.class)
-                        .equalTo("pk.ldvNo", ldvNo)
-                        .equalTo("contractNo", contractNo)
-//                        .equalTo("createdBy", createdBy)
-                        .findAll();
-                if (trnLDVDetailses.size() > 1) {
-                    throw new RuntimeException("Duplicate data LDVDetail found");
-                }
-                TrnLDVDetails trnLDVDetails = realm.copyFromRealm(trnLDVDetailses.get(0));
-                boolean b = trnLDVDetailses.deleteAllFromRealm();
-
-                trnLDVDetails.setLdvFlag("COL");
-                trnLDVDetails.setWorkStatus("V");
-                trnLDVDetails.setFlagToEmrafin("N");
-                trnLDVDetails.setLastupdateBy(Utility.LAST_UPDATE_BY);
-                trnLDVDetails.setLastupdateTimestamp(new Date());
-                realm.copyToRealm(trnLDVDetails);
-*/
-                // dari detil dapat header utk diambil ldvNo
-                /*
-                TrnLDVHeader trnLDVHeader = realm.where(TrnLDVHeader.class)
-                        .equalTo("ldvNo", trnLDVDetails.getPk().getLdvNo())
-                        .equalTo("createdBy", createdBy)
-                        .findFirst();
-
-                trnLDVHeader.setWorkFlag("C");
-                trnLDVHeader.setLastupdateBy(Utility.LAST_UPDATE_BY);
-                trnLDVHeader.setLastupdateTimestamp(new Date());
-                realm.copyToRealmOrUpdate(trnLDVHeader); // hanya di update waktu close batch
-                */
 
                 TrnRVB trnRVB = realm.where(TrnRVB.class)
                         .equalTo("rvbNo", rvbNo)

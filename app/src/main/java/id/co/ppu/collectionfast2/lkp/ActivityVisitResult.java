@@ -488,10 +488,10 @@ public class ActivityVisitResult extends BasicActivity {
         i.putExtra(ActivityUploadPicture.PARAM_COLLECTOR_ID, this.collectorId);
         i.putExtra(ActivityUploadPicture.PARAM_LDV_NO, this.ldvNo);
         */
-        Intent i = new Intent(this, ActivityUploadPictureGeo.class);
-        i.putExtra(ActivityUploadPictureGeo.PARAM_CONTRACT_NO, etContractNo.getText().toString());
-        i.putExtra(ActivityUploadPictureGeo.PARAM_COLLECTOR_ID, this.collectorId);
-        i.putExtra(ActivityUploadPictureGeo.PARAM_LDV_NO, this.ldvNo);
+        Intent i = new Intent(this, ActivityUploadPictureGeo2.class);
+        i.putExtra(ActivityUploadPictureGeo2.PARAM_CONTRACT_NO, etContractNo.getText().toString());
+        i.putExtra(ActivityUploadPictureGeo2.PARAM_COLLECTOR_ID, this.collectorId);
+        i.putExtra(ActivityUploadPictureGeo2.PARAM_LDV_NO, this.ldvNo);
 
         startActivity(i);
 

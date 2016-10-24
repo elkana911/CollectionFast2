@@ -97,6 +97,7 @@
 
     <string name="action_reset">Reset</string>
     <string name="action_settings">Settings</string>
+    <string name="action_general_info">General Information</string>
 
 
     <!-- Database message -->

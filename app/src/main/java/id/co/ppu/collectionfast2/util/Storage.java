@@ -135,7 +135,8 @@ public class Storage {
         File outputFile = File.createTempFile(photoId + "-", ".jpg", outputDir);
 
         OutputStream stream = new FileOutputStream(outputFile);
-        bm2.compress(Bitmap.CompressFormat.JPEG, 20, stream);
+        bm2.compress(Bitmap.CompressFormat.JPEG, 10, stream);
+//        bm2.compress(Bitmap.CompressFormat.JPEG, 20, stream);
         stream.close();
         in.close();
 

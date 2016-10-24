@@ -55,9 +55,6 @@
             android:screenOrientation="portrait"
             android:theme="@style/AppTheme.NoActionBar" />
         <activity
-            android:name=".payment.ActivityPaymentEntry"
-            android:screenOrientation="portrait" />
-        <activity
             android:name=".lkp.ActivityVisitResult"
             android:screenOrientation="portrait" />
         <activity
@@ -77,6 +74,9 @@
             android:screenOrientation="portrait" />
         <activity
             android:name=".lkp.ActivityUploadPictureGeo"
+            android:screenOrientation="portrait" />
+        <activity
+            android:name=".lkp.ActivityUploadPictureGeo2"
             android:screenOrientation="portrait" />
         <activity
             android:name=".lkp.ActivityVisitResultRPC"

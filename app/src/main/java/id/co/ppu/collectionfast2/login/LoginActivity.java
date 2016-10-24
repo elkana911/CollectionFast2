@@ -21,6 +21,7 @@ import android.view.ViewGroup;
 import android.view.inputmethod.EditorInfo;
 import android.widget.ArrayAdapter;
 import android.widget.AutoCompleteTextView;
+import android.widget.Button;
 import android.widget.CheckBox;
 import android.widget.EditText;
 import android.widget.ImageView;
@@ -85,6 +86,9 @@ public class LoginActivity extends AppCompatActivity {
     @BindView(R.id.imageLogo)
     ImageView imageLogo;
 
+    @BindView(R.id.btnGetLKPUser)
+    Button btnGetLKPUser;
+
     private Realm realm;
     /**
      * ATTENTION: This was auto-generated to implement the App Indexing API.
@@ -120,17 +124,6 @@ public class LoginActivity extends AppCompatActivity {
                 return false;
             }
         });
-
-        List<String> servers = new ArrayList<>();
-        for (int i = 0; i < Utility.servers.length; i++) {
-            servers.add(Utility.servers[i][0]);
-        }
-
-        ServerAdapter arrayAdapter = new ServerAdapter(this, android.R.layout.simple_spinner_item, servers);
-        spServers.setAdapter(arrayAdapter);
-
-        int x = Storage.getPreferenceAsInt(getApplicationContext(), Storage.KEY_SERVER_ID, 0);
-        Utility.setSpinnerAsString(spServers, Utility.getServerName(x));
 
         //  Declare a new thread to do a preference check
         Thread t = new Thread(new Runnable() {
@@ -191,6 +184,28 @@ public class LoginActivity extends AppCompatActivity {
         // ATTENTION: This was auto-generated to implement the App Indexing API.
         // See https://g.co/AppIndexing/AndroidStudio for more information.
         client = new GoogleApiClient.Builder(this).addApi(AppIndex.API).build();
+
+        List<String> servers = new ArrayList<>();
+        for (int i = 0; i < Utility.servers.length; i++) {
+
+            if (!Utility.developerMode) {
+                if (Utility.servers[i][0].startsWith("local"))
+                    continue;
+            }
+
+            servers.add(Utility.servers[i][0]);
+        }
+
+        ServerAdapter arrayAdapter = new ServerAdapter(this, android.R.layout.simple_spinner_item, servers);
+        spServers.setAdapter(arrayAdapter);
+
+        int x = Storage.getPreferenceAsInt(getApplicationContext(), Storage.KEY_SERVER_ID, 0);
+        Utility.setSpinnerAsString(spServers, Utility.getServerName(x));
+
+        if (Utility.developerMode) {
+            btnGetLKPUser.setVisibility(View.VISIBLE);
+
+        }
     }
 
     @Override
