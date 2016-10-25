@@ -6,6 +6,7 @@ import android.content.Intent;
 
 import id.co.ppu.collectionfast2.location.Location;
 import id.co.ppu.collectionfast2.util.NetUtil;
+import id.co.ppu.collectionfast2.util.Utility;
 
 /**
  * Created by Eric on 12-Sep-16.
@@ -14,8 +15,11 @@ public class SyncJob extends BroadcastReceiver{
     @Override
     public void onReceive(final Context context, Intent intent) {
 
+        if (!Utility.isWorkingHours())
+            return;
+
         final double[] gps = Location.getGPS(context);
-        NetUtil.syncLocation(context, gps, true);
+        NetUtil.syncLocation(context, gps, false);
         /*
         try {
 

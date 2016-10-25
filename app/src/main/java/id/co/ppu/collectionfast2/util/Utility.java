@@ -270,6 +270,22 @@ public class Utility {
         return cal.getTime();
     }
 
+    /**
+     * Usually used for sync location.
+     * @param time between 8 AM to 5 PM
+     * @return
+     */
+    public static boolean isWorkingHours(Date time) {
+        Calendar cal = Calendar.getInstance(); //Create Calendar-Object
+        cal.setTime(time);               //Set the Calendar to now
+        int hour = cal.get(Calendar.HOUR_OF_DAY); //Get the hour from the calendar
+        return hour <= 17 && hour >= 8;
+
+    }
+
+    public static boolean isWorkingHours() {
+        return isWorkingHours(new Date());
+    }
 
     public static String convertLongToRupiah(long amount) {
 //        double harga = 250000000;

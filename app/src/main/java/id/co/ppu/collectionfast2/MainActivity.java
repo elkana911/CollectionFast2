@@ -1402,17 +1402,6 @@ public class MainActivity extends SyncActivity
 
     }
 
-        /*
-    private void startLocationTracker() {
-        Intent intent = new Intent(this, LocationTracker.class);
-        AlarmManager alarmManager = (AlarmManager) getSystemService(Context.ALARM_SERVICE);
-        PendingIntent pendingIntent = PendingIntent.getBroadcast(this, 0, intent, 0);
-        alarmManager.setRepeating(AlarmManager.RTC_WAKEUP, Calendar.getInstance().getTimeInMillis(),
-                LocationProvider.FIVE_MINUTES, pendingIntent);
-        // Configure the LocationTracker's broadcast receiver to run every 5 minutes.
-    }
-        */
-
     protected void closeBatch() {
 
         if (!NetUtil.isConnected(this)) {
@@ -1421,6 +1410,7 @@ public class MainActivity extends SyncActivity
         }
 
         // konfirm
+        // header should not checked
         final SyncLdvDetails syncLdvDetails = new SyncLdvDetails(this.realm);
         final SyncLdvComments syncLdvComments = new SyncLdvComments(this.realm);
         final SyncRvb syncRvb = new SyncRvb(this.realm);
@@ -1428,6 +1418,7 @@ public class MainActivity extends SyncActivity
         final SyncBastbj syncBastbj = new SyncBastbj(this.realm);
         final SyncRepo syncRepo = new SyncRepo(this.realm);
         final SyncChangeAddr syncChangeAddr = new SyncChangeAddr(this.realm);
+
         boolean anyDataToSync =
                         syncLdvDetails.anyDataToSync()
                         || syncLdvComments.anyDataToSync()
@@ -1444,8 +1435,6 @@ public class MainActivity extends SyncActivity
 
         AlertDialog.Builder alertDialogBuilder = new AlertDialog.Builder(this);
         alertDialogBuilder.setTitle("Close Batch");
-
-//        Date serverDate = (Date) Storage.getObjPreference(getApplicationContext(), Storage.KEY_SERVER_DATE, Date.class);
 
         alertDialogBuilder.setMessage("Are you sure?");
         //null should be your on click listener
@@ -1929,6 +1918,10 @@ public class MainActivity extends SyncActivity
 
     @Override
     public void onLocationChanged(Location location) {
+
+        if (!Utility.isWorkingHours())
+            return;
+
         // New location has now been determined
         String msg = "Updated Location: " +
                 Double.toString(location.getLatitude()) + "," +
