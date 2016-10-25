@@ -110,8 +110,10 @@ import id.co.ppu.collectionfast2.sync.SyncLdvHeader;
 import id.co.ppu.collectionfast2.sync.SyncRVColl;
 import id.co.ppu.collectionfast2.sync.SyncRepo;
 import id.co.ppu.collectionfast2.sync.SyncRvb;
+import id.co.ppu.collectionfast2.test.ActivityDeveloper;
 import id.co.ppu.collectionfast2.util.DataUtil;
 import id.co.ppu.collectionfast2.util.NetUtil;
+import id.co.ppu.collectionfast2.util.RootUtil;
 import id.co.ppu.collectionfast2.util.Storage;
 import id.co.ppu.collectionfast2.util.Utility;
 import io.realm.Realm;
@@ -179,6 +181,15 @@ public class MainActivity extends SyncActivity
         toggle.syncState();
 
         navigationView.setNavigationItemSelectedListener(this);
+
+        Menu mn = navigationView.getMenu();
+        if (mn != null) {
+            MenuItem mi = mn.findItem(R.id.nav_developer);
+
+            if (mi != null) {
+                mi.setVisible(Utility.developerMode);
+            }
+        }
 
         View v = navigationView.getHeaderView(0);
 
@@ -483,6 +494,12 @@ public class MainActivity extends SyncActivity
 
         if (id == R.id.nav_paymentEntry) {
             openPaymentEntry();
+
+            return false;
+        } else if (id == R.id.nav_developer) {
+
+            Intent i = new Intent(this, ActivityDeveloper.class);
+            startActivity(i);
 
             return false;
         } else if (id == R.id.nav_reset) {
@@ -1304,6 +1321,13 @@ public class MainActivity extends SyncActivity
             return;
         }
 
+        long count = realm.where(DisplayTrnContractBuckets.class).count();
+
+        if (count < 1) {
+            Utility.showDialog(MainActivity.this, "No Data", "No Contracts found !");
+            return;
+        }
+
         Intent i = new Intent(this, ActivityPaymentEntri.class);
         // DO NOT SEND ANY PARAMs !
         startActivity(i);
@@ -1572,6 +1596,11 @@ public class MainActivity extends SyncActivity
 
         if (currentUser == null) {
             Snackbar.make(coordinatorLayout, "Please relogin", Snackbar.LENGTH_LONG).show();
+            return;
+        }
+
+        if (RootUtil.isDeviceRooted()) {
+            Utility.showDialog(this, "Rooted", "This device is rooted. Unable to open application.");
             return;
         }
 

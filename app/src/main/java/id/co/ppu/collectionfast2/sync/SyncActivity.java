@@ -1,6 +1,8 @@
 package id.co.ppu.collectionfast2.sync;
 
 import id.co.ppu.collectionfast2.component.BasicActivity;
+import id.co.ppu.collectionfast2.pojo.DisplayTrnContractBuckets;
+import id.co.ppu.collectionfast2.pojo.DisplayTrnLDVDetails;
 import id.co.ppu.collectionfast2.pojo.sync.SyncFileUpload;
 import id.co.ppu.collectionfast2.pojo.sync.SyncTrnBastbj;
 import id.co.ppu.collectionfast2.pojo.sync.SyncTrnChangeAddr;
@@ -120,6 +122,9 @@ public class SyncActivity extends BasicActivity {
                 realm.where(HistInstallments.class).findAll().deleteAllFromRealm();
                 realm.where(TrnPhoto.class).findAll().deleteAllFromRealm();
                 realm.where(TrnErrorLog.class).findAll().deleteAllFromRealm();
+
+                realm.where(DisplayTrnContractBuckets.class).findAll().deleteAllFromRealm();
+                realm.where(DisplayTrnLDVDetails.class).findAll().deleteAllFromRealm();
 
 
             }

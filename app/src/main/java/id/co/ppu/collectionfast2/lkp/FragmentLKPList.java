@@ -299,8 +299,6 @@ public class FragmentLKPList extends Fragment {
         etNoLKP.setText(header.getLdvNo());
         etTglLKP.setText(Utility.convertDateToString(header.getLdvDate(), Utility.DATE_DISPLAY_PATTERN));
 
-        // TODO: must sort by seqno but must also be searchable by custName
-        tvSeparator.setText("Sorting...");
         this.realm.executeTransaction(new Realm.Transaction() {
             @Override
             public void execute(Realm realm) {
@@ -312,23 +310,7 @@ public class FragmentLKPList extends Fragment {
                         .equalTo("createdBy", createdBy)
                         .findAll();
 
-                /* ga perlu sort karena udah sort
-
-                List<TrnLDVDetails> _list = realm.copyFromRealm(_buffer);
-
-                // sort by no installments
-                Collections.sort(_list, new Comparator<TrnLDVDetails>() {
-                    @Override
-                    public int compare(TrnLDVDetails t1, TrnLDVDetails t2) {
-                        if (t1.getPk().getSeqNo() > t2.getPk().getSeqNo())
-                            return 1;
-                        else if (t1.getPk().getSeqNo() < t2.getPk().getSeqNo()) {
-                            return -1;
-                        }else
-                            return 0;
-                    }
-                });
-                */
+                //ga perlu sort karena dr server udah sort by seqNo
 
                 for (TrnLDVDetails obj : _buffer) {
 

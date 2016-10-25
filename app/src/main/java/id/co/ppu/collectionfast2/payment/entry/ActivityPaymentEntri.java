@@ -1,14 +1,21 @@
 package id.co.ppu.collectionfast2.payment.entry;
 
+import android.app.ProgressDialog;
+import android.graphics.Color;
+import android.os.AsyncTask;
 import android.os.Bundle;
 import android.support.design.widget.Snackbar;
 import android.support.v4.app.DialogFragment;
 import android.view.View;
+import android.view.ViewGroup;
+import android.widget.ArrayAdapter;
 import android.widget.AutoCompleteTextView;
+import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ImageView;
 import android.widget.Spinner;
 import android.widget.TableLayout;
+import android.widget.TextView;
 import android.widget.Toast;
 
 import java.util.ArrayList;
@@ -21,6 +28,7 @@ import butterknife.OnClick;
 import id.co.ppu.collectionfast2.R;
 import id.co.ppu.collectionfast2.component.BasicActivity;
 import id.co.ppu.collectionfast2.component.RVBAdapter;
+import id.co.ppu.collectionfast2.pojo.DisplayTrnContractBuckets;
 import id.co.ppu.collectionfast2.pojo.ServerInfo;
 import id.co.ppu.collectionfast2.pojo.UserConfig;
 import id.co.ppu.collectionfast2.pojo.UserData;
@@ -138,7 +146,81 @@ public class ActivityPaymentEntri extends BasicActivity implements FragmentActiv
                 this.ldvNo = trnLDVHeader.getLdvNo();
             }
 
-/*
+            /*
+            RealmResults<DisplayTrnContractBuckets> displayTrnContractBucketses = realm.where(DisplayTrnContractBuckets.class)
+                    .findAllSorted("contractNo");
+
+            List<DisplayTrnContractBuckets> list = realm.copyFromRealm(displayTrnContractBucketses);
+
+            ContractBucketsAdapter dataAdapter = new ContractBucketsAdapter(this, android.R.layout.simple_spinner_item, list);
+            etContractNo.setAdapter(dataAdapter);
+            */
+
+            final ProgressDialog mProgressDialog = new ProgressDialog(this);
+            mProgressDialog.setIndeterminate(true);
+            mProgressDialog.setCancelable(false);
+            mProgressDialog.setMessage("Please wait...");
+            mProgressDialog.show();
+
+            new AsyncTask<Void, Void, List<String>>() {
+                @Override
+                protected List<String> doInBackground(Void... voids) {
+                    Realm r = null;
+                    List<String> list = new ArrayList<>();
+
+                    try {
+                        r = Realm.getDefaultInstance();
+                        final RealmResults<DisplayTrnContractBuckets> buckets = r.where(DisplayTrnContractBuckets.class)
+                                .findAllSorted("contractNo");
+
+                        for (DisplayTrnContractBuckets b : buckets) {
+                            list.add(b.getContractNo());
+                        }
+
+                    } finally {
+                        if (r != null) {
+                            r.close();
+                        }
+                    }
+
+                    return list;
+
+                }
+
+                @Override
+                protected void onPostExecute( List<String> data) {
+                    super.onPostExecute(data);
+
+                    if (data.size() > 0) {
+
+                        // override color of text item
+                        ArrayAdapter<String> dataAdapter = new ArrayAdapter<String>(ActivityPaymentEntri.this,
+                                android.R.layout.simple_list_item_1, data) {
+                            @Override
+                            public View getView(int position, View convertView, ViewGroup parent) {
+                                View view = super.getView(position, convertView, parent);
+                                TextView text = (TextView) view.findViewById(android.R.id.text1);
+                                text.setTextColor(Color.BLACK);
+                                return view;
+                            }
+                        };
+
+                        etContractNo.setAdapter(dataAdapter);
+
+                    } else {
+                        Button btnSave = ButterKnife.findById(ActivityPaymentEntri.this, R.id.btnSave);
+                        btnSave.setVisibility(View.INVISIBLE);
+
+                        Snackbar.make(activityPaymentEntri, "No contracts found !", Snackbar.LENGTH_LONG).show();
+                    }
+
+                    if (mProgressDialog.isShowing())
+                        mProgressDialog.dismiss();
+
+                }
+            }.execute();
+
+            /*
             final ProgressDialog mProgressDialog = new ProgressDialog(this);
             mProgressDialog.setIndeterminate(true);
             mProgressDialog.setCancelable(false);

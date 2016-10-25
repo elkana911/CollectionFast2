@@ -102,57 +102,8 @@ public class ActivityDetailsLKPSummary extends BasicActivity {
         setTableHeader((TextView) ButterKnife.findById(row_header, R.id.attrib_penerimaan), "Penerimaan");
 
         tableLayout.addView(row_header);
+
         // add rows
-        /*
-        new AsyncTask<Void, Void, Void>() {
-
-            @Override
-            protected Void doInBackground(Void... voids) {
-                return null;
-            }
-
-            @Override
-            protected void onPostExecute(Void aVoid) {
-                super.onPostExecute(aVoid);
-
-                Realm r = null;
-                try{
-                    r = Realm.getDefaultInstance();
-
-                    //populate
-                    RealmResults<TrnRVColl> _buffer = r.where(TrnRVColl.class)
-                            .equalTo("collId", collectorId)
-                            .equalTo("createdBy", createdBy)
-                            .findAll();
-                    for (int i = 0; i < _buffer.size(); i++) {
-                        TableRow row = (TableRow) LayoutInflater.from(ActivityDetailsLKPSummary.this).inflate(R.layout.row_details_lkp_summary, null);
-
-                        TrnRVColl trnRVColl = _buffer.get(i);
-
-                        ((TextView) row.findViewById(R.id.attrib_no)).setText(String.valueOf(i + 1));
-
-                        ((TextView) row.findViewById(R.id.attrib_no_contract)).setText(ldvDetails.getContractNo());
-
-                        ((TextView) row.findViewById(R.id.attrib_is_lkp)).setText(trnRVColl.getPaymentFlag() == 1L ? "Y" : "N");
-
-                        if (trnRVColl.getPaymentFlag() == 1L) {
-
-                            r.where()
-                            ((TextView) row.findViewById(R.id.attrib_lkp_flag)).setText(ldvDetails.getLdvFlag());
-                        }else
-                            ((TextView) row.findViewById(R.id.attrib_lkp_flag)).setText("COL");
-
-                        ((TextView) row.findViewById(R.id.attrib_penerimaan)).setText(String.valueOf(trnRVColl.getReceivedAmount()));
-
-                    }
-
-                }finally {
-                    if (r != null)
-                        r.close();
-                }
-            }
-        }.execute();
-*/
         new AsyncTask<Void, Void, Void>() {
 
             @Override
