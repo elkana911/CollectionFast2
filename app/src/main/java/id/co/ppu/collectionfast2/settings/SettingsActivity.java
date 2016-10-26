@@ -3,7 +3,6 @@ package id.co.ppu.collectionfast2.settings;
 
 import android.annotation.TargetApi;
 import android.content.Context;
-import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.res.Configuration;
 import android.media.Ringtone;
@@ -18,14 +17,12 @@ import android.preference.PreferenceFragment;
 import android.preference.PreferenceManager;
 import android.preference.RingtonePreference;
 import android.support.v7.app.ActionBar;
-import android.support.v7.app.AlertDialog;
 import android.text.TextUtils;
 import android.view.MenuItem;
 
 import java.util.List;
 
 import id.co.ppu.collectionfast2.R;
-import id.co.ppu.collectionfast2.util.DataUtil;
 
 /**
  * A {@link PreferenceActivity} that presents a set of application settings. On
@@ -195,19 +192,25 @@ public class SettingsActivity extends AppCompatPreferenceActivity {
             // guidelines.
 //            bindPreferenceSummaryToValue(findPreference("example_text"));
 //            bindPreferenceSummaryToValue(findPreference("example_list"));
+
+            /* susah karena habis reset harus logout
             Preference button = findPreference("data_reset");
             button.setOnPreferenceClickListener(new Preference.OnPreferenceClickListener() {
                 @Override
                 public boolean onPreferenceClick(Preference preference) {
                     AlertDialog.Builder alertDialogBuilder = new AlertDialog.Builder(getActivity());
                     alertDialogBuilder.setTitle("Reset Data");
-                    alertDialogBuilder.setMessage("Are you sure ?");
+                    alertDialogBuilder.setMessage("This will Logout Application.\nAre you sure?");
                     alertDialogBuilder.setPositiveButton("Yes", new DialogInterface.OnClickListener() {
                         @Override
                         public void onClick(DialogInterface dialog, int which) {
                             DataUtil.resetData();
-                        }
-                    });
+
+//                            Intent data = new Intent();
+//                            data.putExtra("command", "logout");
+//                            getActivity().setResult(RESULT_OK, data);
+//                        }
+//                    });
 
                     alertDialogBuilder.setNegativeButton("No", new DialogInterface.OnClickListener() {
 
@@ -222,6 +225,7 @@ public class SettingsActivity extends AppCompatPreferenceActivity {
                     return true;
                 }
             });
+            */
         }
 
         @Override

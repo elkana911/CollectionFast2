@@ -81,6 +81,11 @@
         <menu>
             <item
                 android:visible="false"
+                android:id="@+id/nav_chats"
+                android:icon="@drawable/ic_question_answer_black_24dp"
+                android:title="Chats" />
+            <item
+                android:visible="false"
                 android:id="@+id/nav_reset"
                 android:icon="@drawable/ic_phonelink_erase_black_24dp"
                 android:title="Reset Data" />

@@ -40,7 +40,7 @@
         android:negativeButtonText="@null"
         android:positiveButtonText="@null"
         android:title="@string/pref_title_add_friends_to_messages" /-->
-    <Preference android:title="Reset Data"
+    <!-- Preference android:title="Reset Data"
         android:key="data_reset"
-        android:summary="Clear local data."/>
+        android:summary="Clear local data."/-->
 </PreferenceScreen>

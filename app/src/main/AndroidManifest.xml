@@ -90,8 +90,14 @@
         <activity
             android:name=".lkp.ActivityDetailsLKPSummary"
             android:screenOrientation="portrait" />
-        <activity android:name=".test.ActivityDeveloper"
-            android:screenOrientation="portrait"/>
+        <activity
+            android:name=".test.ActivityDeveloper"
+            android:screenOrientation="portrait" />
+        <activity
+            android:name=".chats.ActivityChats"
+            android:label="@string/title_activity_chats"
+            android:screenOrientation="portrait"
+            android:theme="@style/AppTheme.NoActionBar"></activity>
 
         <!--
      ATTENTION: This was auto-generated to add Google Play services to your project for

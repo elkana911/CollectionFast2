@@ -12,6 +12,7 @@ import java.io.File;
 import java.io.IOException;
 import java.util.Date;
 
+import id.co.ppu.collectionfast2.listener.OnSuccessError;
 import id.co.ppu.collectionfast2.pojo.UserData;
 import id.co.ppu.collectionfast2.pojo.trn.TrnCollPos;
 import id.co.ppu.collectionfast2.pojo.trn.TrnErrorLog;
@@ -262,6 +263,18 @@ public class NetUtil {
         return true;
     }
 */
+
+    // TODO: sync all photos
+    public static boolean uploadPhotos(Context ctx, Realm realm, OnSuccessError listener) {
+
+        RealmResults<TrnPhoto> trnPhotos = realm.where(TrnPhoto.class)
+//                .equalTo("collCode", collectorCode)
+                .findAll();
+
+        return trnPhotos.size() >= 1;
+
+    }
+
     public static boolean uploadPhoto(Context ctx, TrnPhoto trnPhoto, Uri uri, Callback<ResponseBody> callback) {
         if (trnPhoto == null)
             return false;

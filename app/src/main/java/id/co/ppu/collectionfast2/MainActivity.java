@@ -48,6 +48,7 @@ import com.google.android.gms.location.LocationServices;
 import com.google.android.gms.maps.model.LatLng;
 
 import java.io.IOException;
+import java.net.ConnectException;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.List;
@@ -56,6 +57,7 @@ import java.util.concurrent.TimeUnit;
 import butterknife.BindView;
 import butterknife.ButterKnife;
 import butterknife.OnClick;
+import id.co.ppu.collectionfast2.chats.ActivityChats;
 import id.co.ppu.collectionfast2.fragments.HomeFragment;
 import id.co.ppu.collectionfast2.job.SyncJob;
 import id.co.ppu.collectionfast2.listener.OnLKPListListener;
@@ -107,6 +109,7 @@ import id.co.ppu.collectionfast2.sync.SyncChangeAddr;
 import id.co.ppu.collectionfast2.sync.SyncLdvComments;
 import id.co.ppu.collectionfast2.sync.SyncLdvDetails;
 import id.co.ppu.collectionfast2.sync.SyncLdvHeader;
+import id.co.ppu.collectionfast2.sync.SyncPhoto;
 import id.co.ppu.collectionfast2.sync.SyncRVColl;
 import id.co.ppu.collectionfast2.sync.SyncRepo;
 import id.co.ppu.collectionfast2.sync.SyncRvb;
@@ -184,10 +187,19 @@ public class MainActivity extends SyncActivity
 
         Menu mn = navigationView.getMenu();
         if (mn != null) {
-            MenuItem mi = mn.findItem(R.id.nav_developer);
+            MenuItem miDeveloper = mn.findItem(R.id.nav_developer);
+            if (miDeveloper != null) {
+                miDeveloper.setVisible(Utility.developerMode);
+            }
 
-            if (mi != null) {
-                mi.setVisible(Utility.developerMode);
+            MenuItem miChats = mn.findItem(R.id.nav_chats);
+            if (miChats != null) {
+                miChats.setVisible(Utility.developerMode);
+            }
+
+            MenuItem miReset = mn.findItem(R.id.nav_reset);
+            if (miReset != null) {
+                miReset.setVisible(Utility.developerMode);
             }
         }
 
@@ -479,7 +491,7 @@ public class MainActivity extends SyncActivity
 
         //noinspection SimplifiableIfStatement
         if (id == R.id.action_settings) {
-            startActivity(new Intent(this, SettingsActivity.class));
+            startActivityForResult(new Intent(this, SettingsActivity.class), 999);
             return true;
         }
 
@@ -499,6 +511,12 @@ public class MainActivity extends SyncActivity
         } else if (id == R.id.nav_developer) {
 
             Intent i = new Intent(this, ActivityDeveloper.class);
+            startActivity(i);
+
+            return false;
+        } else if (id == R.id.nav_chats) {
+
+            Intent i = new Intent(this, ActivityChats.class);
             startActivity(i);
 
             return false;
@@ -1338,6 +1356,19 @@ public class MainActivity extends SyncActivity
         super.onActivityResult(requestCode, resultCode, data);
 
         switch (requestCode) {
+            case 999:
+                /*
+                if (data != null && data.getExtras().containsKey("command")) {
+                    String value = data.getStringExtra("command");
+
+                    if (!TextUtils.isEmpty(value)) {
+                        if (value.equalsIgnoreCase("logout")) {
+                            backToLoginScreen();
+                        }
+                    }
+                }
+                */
+                break;
             case 44:
             case 55:
                 if (resultCode == RESULT_OK) {
@@ -1688,6 +1719,7 @@ public class MainActivity extends SyncActivity
             });
 
         }
+
         final SyncLdvHeader syncLdvHeader = new SyncLdvHeader(this.realm);
         final SyncLdvDetails syncLdvDetails = new SyncLdvDetails(this.realm);
         final SyncLdvComments syncLdvComments = new SyncLdvComments(this.realm);
@@ -1745,6 +1777,29 @@ public class MainActivity extends SyncActivity
             mProgressDialog.show();
 
         }
+
+        // upload photo first
+        final SyncPhoto syncPhoto = new SyncPhoto(this.realm);
+        if (syncPhoto.anyDataToSync()) {
+            NetUtil.uploadPhotos(this, this.realm, new OnSuccessError() {
+                @Override
+                public void onSuccess(String msg) {
+
+                }
+
+                @Override
+                public void onFailure(Throwable throwable) {
+
+                }
+
+                @Override
+                public void onSkip() {
+
+                }
+            });
+        }
+
+
         Call<ResponseSync> call = fastService.syncLKP(req);
         call.enqueue(new Callback<ResponseSync>() {
             @Override
@@ -1840,8 +1895,16 @@ public class MainActivity extends SyncActivity
 
 //                Toast.makeText(MainActivity.this, "Sync Failed\n" + t.getMessage(), Toast.LENGTH_LONG).show();
 
+                if (t instanceof ConnectException) {
+                    if (Utility.developerMode)
+                        Utility.showDialog(MainActivity.this, "No Connection", t.getMessage());
+                    else
+                        Utility.showDialog(MainActivity.this, "No Connection", getString(R.string.error_contact_admin));
+                }
+
                 if (listener != null)
                     listener.onFailure(t);
+
                 Snackbar.make(coordinatorLayout, "Sync Failed\n" + t.getMessage(), Snackbar.LENGTH_LONG).show();
 
                 // TODO: utk mencegah data di server udah sync, coba get lkp lagi

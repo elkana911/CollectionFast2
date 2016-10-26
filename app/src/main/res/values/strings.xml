@@ -6,6 +6,7 @@
     <string name="remember_pwd">Remember Password</string>
     <string name="action_register">Register</string>
     <string name="prompt_username">Username</string>
+    <string name="prompt_userid">User ID</string>
     <string name="prompt_email">Email</string>
     <string name="prompt_password">Password</string>
     <string name="action_sign_in">Sign in or register</string>
@@ -228,4 +229,5 @@
     <string name="title_activity_payment_entry">Payment Entry</string>
     <string name="error_invalid_phone">Invalid phone number</string>
     <string name="error_coll_fee_range">Only 0 or 10000 is allowed</string>
+    <string name="title_activity_chats">Chats</string>
 </resources>
