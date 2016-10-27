@@ -5,15 +5,6 @@ import java.util.Set;
 import id.co.ppu.collectionfast2.component.BasicActivity;
 import id.co.ppu.collectionfast2.pojo.DisplayTrnContractBuckets;
 import id.co.ppu.collectionfast2.pojo.DisplayTrnLDVDetails;
-import id.co.ppu.collectionfast2.pojo.sync.SyncFileUpload;
-import id.co.ppu.collectionfast2.pojo.sync.SyncTrnBastbj;
-import id.co.ppu.collectionfast2.pojo.sync.SyncTrnChangeAddr;
-import id.co.ppu.collectionfast2.pojo.sync.SyncTrnLDVComments;
-import id.co.ppu.collectionfast2.pojo.sync.SyncTrnLDVDetails;
-import id.co.ppu.collectionfast2.pojo.sync.SyncTrnLDVHeader;
-import id.co.ppu.collectionfast2.pojo.sync.SyncTrnRVB;
-import id.co.ppu.collectionfast2.pojo.sync.SyncTrnRVColl;
-import id.co.ppu.collectionfast2.pojo.sync.SyncTrnRepo;
 import id.co.ppu.collectionfast2.pojo.trn.HistInstallments;
 import id.co.ppu.collectionfast2.pojo.trn.HistInstallmentsPK;
 import io.realm.Realm;
@@ -296,6 +287,17 @@ public class SyncActivity extends BasicActivity {
         realm.executeTransactionAsync(new Realm.Transaction() {
             @Override
             public void execute(Realm realm) {
+                Set<Class<? extends RealmModel>> tables = realm.getConfiguration().getRealmObjectClasses();
+                for (Class<? extends RealmModel> table : tables) {
+                    String key = table.getSimpleName();
+                    if (key.toLowerCase().startsWith("sync")) {
+
+                        realm.where(table).findAll().deleteAllFromRealm();
+
+                    }
+
+                }
+                /*
                 realm.where(SyncTrnLDVHeader.class).findAll().deleteAllFromRealm();
                 realm.where(SyncTrnLDVDetails.class).findAll().deleteAllFromRealm();
                 realm.where(SyncTrnLDVComments.class).findAll().deleteAllFromRealm();
@@ -305,6 +307,7 @@ public class SyncActivity extends BasicActivity {
                 realm.where(SyncTrnRVB.class).findAll().deleteAllFromRealm();
                 realm.where(SyncTrnRVColl.class).findAll().deleteAllFromRealm();
                 realm.where(SyncFileUpload.class).findAll().deleteAllFromRealm();
+                */
 
             }
         });
