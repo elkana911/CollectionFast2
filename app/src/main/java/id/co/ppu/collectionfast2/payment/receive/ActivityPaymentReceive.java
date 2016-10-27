@@ -423,31 +423,9 @@ public class ActivityPaymentReceive extends BasicActivity {
                         .findFirst();
 
                 if (trnSync != null) {
-                    Snackbar.make(activityPaymentReceive, "Data already synced", Snackbar.LENGTH_SHORT).show();
+                    Snackbar.make(activityPaymentReceive, "Cannot save, Data already synced", Snackbar.LENGTH_SHORT).show();
                     return;
                 }
-
-/*
-                RealmResults<TrnContractBuckets> trnContractBucketses = realm.where(TrnContractBuckets.class)
-                        .equalTo("pk.contractNo", contractNo)
-                        .equalTo("createdBy", createdBy)
-                        .findAll();
-
-                if (trnContractBucketses.size() > 1) {
-                    throw new RuntimeException("Duplicate data ContractBucket found");
-                }
-
-                TrnContractBuckets trnContractBuckets = realm.copyFromRealm(trnContractBucketses.get(0));
-                boolean b = trnContractBucketses.deleteAllFromRealm();
-
-                trnContractBuckets.setPaidDate(serverDate);
-                trnContractBuckets.setRvNo(rvbNo);
-                trnContractBuckets.setLkpStatus("W");
-                trnContractBuckets.setLastupdateBy(Utility.LAST_UPDATE_BY);
-                trnContractBuckets.setLastupdateTimestamp(new Date());
-
-                realm.copyToRealm(trnContractBuckets);
-*/
 
                 RealmResults<TrnLDVDetails> trnLDVDetailses = realm.where(TrnLDVDetails.class)
                         .equalTo("pk.ldvNo", ldvNo)

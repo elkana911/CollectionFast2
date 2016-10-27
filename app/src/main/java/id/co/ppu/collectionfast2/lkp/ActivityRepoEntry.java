@@ -229,7 +229,7 @@ public class ActivityRepoEntry extends BasicActivity {
                         .findFirst();
 
                 if (trnSync != null) {
-                    Snackbar.make(activityRepoEntri, "Data already synced", Snackbar.LENGTH_SHORT).show();
+                    Snackbar.make(activityRepoEntri, "Cannot save, Data already synced", Snackbar.LENGTH_SHORT).show();
                     return;
                 }
                 TrnBastbj trnBastbj = realm.where(TrnBastbj.class).equalTo("bastbjNo", bastbjNo).findFirst();

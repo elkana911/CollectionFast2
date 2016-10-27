@@ -31,7 +31,6 @@ import id.co.ppu.collectionfast2.R;
 import id.co.ppu.collectionfast2.component.BasicActivity;
 import id.co.ppu.collectionfast2.location.Location;
 import id.co.ppu.collectionfast2.pojo.ServerInfo;
-import id.co.ppu.collectionfast2.pojo.UserData;
 import id.co.ppu.collectionfast2.pojo.master.MstDelqReasons;
 import id.co.ppu.collectionfast2.pojo.master.MstLDVClassifications;
 import id.co.ppu.collectionfast2.pojo.master.MstLDVParameters;
@@ -40,7 +39,6 @@ import id.co.ppu.collectionfast2.pojo.trn.TrnLDVComments;
 import id.co.ppu.collectionfast2.pojo.trn.TrnLDVCommentsPK;
 import id.co.ppu.collectionfast2.pojo.trn.TrnLDVDetails;
 import id.co.ppu.collectionfast2.util.NetUtil;
-import id.co.ppu.collectionfast2.util.Storage;
 import id.co.ppu.collectionfast2.util.Utility;
 import io.realm.Realm;
 import io.realm.RealmResults;
@@ -375,7 +373,7 @@ public class ActivityVisitResult extends BasicActivity {
         }
 
         final Date serverDate = realm.where(ServerInfo.class).findFirst().getServerDate();
-        final UserData userData = (UserData) Storage.getObjPreference(getApplicationContext(), Storage.KEY_USER, UserData.class);
+//        final UserData userData = (UserData) Storage.getObjPreference(getApplicationContext(), Storage.KEY_USER, UserData.class);
         this.realm.executeTransactionAsync(new Realm.Transaction() {
             @Override
             public void execute(Realm realm) {
@@ -392,13 +390,15 @@ public class ActivityVisitResult extends BasicActivity {
                         .findFirst();
 
                 if (trnSync != null) {
-                    Snackbar.make(activityVisitResult, "Data already synced", Snackbar.LENGTH_SHORT).show();
+                    Snackbar.make(activityVisitResult, "Cannot save, Data already synced", Snackbar.LENGTH_SHORT).show();
                     return;
                 }
 
                 TrnLDVDetails trnLDVDetails = realm.where(TrnLDVDetails.class)
+                        .equalTo("pk.ldvNo", ldvNo)
                         .equalTo("contractNo", contractNo)
                         .findFirst();
+
                 trnLDVDetails.setLdvFlag(lkpFlag);
                 trnLDVDetails.setWorkStatus("V");
                 trnLDVDetails.setFlagToEmrafin("N");

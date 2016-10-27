@@ -9,8 +9,9 @@ import android.view.View;
 import butterknife.ButterKnife;
 import id.co.ppu.collectionfast2.R;
 import id.co.ppu.collectionfast2.component.BasicActivity;
+import id.co.ppu.collectionfast2.listener.OnContactsListener;
 
-public class ActivityChats extends BasicActivity {
+public class ActivityChats extends BasicActivity implements OnContactsListener{
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -38,4 +39,13 @@ public class ActivityChats extends BasicActivity {
         });
     }
 
+    @Override
+    public void onContactSelected() {
+
+    }
+
+    @Override
+    public void onClearContact() {
+
+    }
 }

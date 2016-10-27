@@ -49,7 +49,7 @@ public class SyncLdvDetails extends ASyncDataHandler {
         this.realm.executeTransactionAsync(new Realm.Transaction() {
             @Override
             public void execute(Realm realm) {
-                RealmResults<SyncTrnLDVDetails> syncTrnRVColls = realm.where(SyncTrnLDVDetails.class)
+                RealmResults<SyncTrnLDVDetails> syncTrnLDVDetailses = realm.where(SyncTrnLDVDetails.class)
                         .findAll();
 
                 for (Object obj : list) {

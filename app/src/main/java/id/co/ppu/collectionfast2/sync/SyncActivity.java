@@ -1,5 +1,7 @@
 package id.co.ppu.collectionfast2.sync;
 
+import java.util.Set;
+
 import id.co.ppu.collectionfast2.component.BasicActivity;
 import id.co.ppu.collectionfast2.pojo.DisplayTrnContractBuckets;
 import id.co.ppu.collectionfast2.pojo.DisplayTrnLDVDetails;
@@ -13,20 +15,9 @@ import id.co.ppu.collectionfast2.pojo.sync.SyncTrnRVB;
 import id.co.ppu.collectionfast2.pojo.sync.SyncTrnRVColl;
 import id.co.ppu.collectionfast2.pojo.sync.SyncTrnRepo;
 import id.co.ppu.collectionfast2.pojo.trn.HistInstallments;
-import id.co.ppu.collectionfast2.pojo.trn.TrnBastbj;
-import id.co.ppu.collectionfast2.pojo.trn.TrnChangeAddr;
-import id.co.ppu.collectionfast2.pojo.trn.TrnCollectAddr;
-import id.co.ppu.collectionfast2.pojo.trn.TrnContractBuckets;
-import id.co.ppu.collectionfast2.pojo.trn.TrnErrorLog;
-import id.co.ppu.collectionfast2.pojo.trn.TrnLDVComments;
-import id.co.ppu.collectionfast2.pojo.trn.TrnLDVDetails;
-import id.co.ppu.collectionfast2.pojo.trn.TrnLDVHeader;
-import id.co.ppu.collectionfast2.pojo.trn.TrnPhoto;
-import id.co.ppu.collectionfast2.pojo.trn.TrnRVB;
-import id.co.ppu.collectionfast2.pojo.trn.TrnRVColl;
-import id.co.ppu.collectionfast2.pojo.trn.TrnRepo;
-import id.co.ppu.collectionfast2.pojo.trn.TrnVehicleInfo;
+import id.co.ppu.collectionfast2.pojo.trn.HistInstallmentsPK;
 import io.realm.Realm;
+import io.realm.RealmModel;
 
 /**
  * Created by Eric on 28-Sep-16.
@@ -108,20 +99,38 @@ public class SyncActivity extends BasicActivity {
         realm.executeTransactionAsync(new Realm.Transaction() {
             @Override
             public void execute(Realm realm) {
+                Set<Class<? extends RealmModel>> tables = realm.getConfiguration().getRealmObjectClasses();
+                for (Class<? extends RealmModel> table : tables) {
+                    String key = table.getSimpleName();
+                    if (key.toLowerCase().startsWith("trn")) {
+
+                        realm.where(table).findAll().deleteAllFromRealm();
+
+                    }
+
+                }
+/*
                 realm.where(TrnLDVHeader.class).findAll().deleteAllFromRealm();
                 realm.where(TrnLDVDetails.class).findAll().deleteAllFromRealm();
+                realm.where(TrnLDVDetailsPK.class).findAll().deleteAllFromRealm();
                 realm.where(TrnLDVComments.class).findAll().deleteAllFromRealm();
+                realm.where(TrnLDVCommentsPK.class).findAll().deleteAllFromRealm();
                 realm.where(TrnBastbj.class).findAll().deleteAllFromRealm();
                 realm.where(TrnChangeAddr.class).findAll().deleteAllFromRealm();
+                realm.where(TrnChangeAddrPK.class).findAll().deleteAllFromRealm();
                 realm.where(TrnCollectAddr.class).findAll().deleteAllFromRealm();
+                realm.where(TrnCollectAddrPK.class).findAll().deleteAllFromRealm();
                 realm.where(TrnContractBuckets.class).findAll().deleteAllFromRealm();
+                realm.where(TrnContractBucketsPK.class).findAll().deleteAllFromRealm();
                 realm.where(TrnRepo.class).findAll().deleteAllFromRealm();
                 realm.where(TrnRVB.class).findAll().deleteAllFromRealm();
                 realm.where(TrnRVColl.class).findAll().deleteAllFromRealm();
                 realm.where(TrnVehicleInfo.class).findAll().deleteAllFromRealm();
-                realm.where(HistInstallments.class).findAll().deleteAllFromRealm();
                 realm.where(TrnPhoto.class).findAll().deleteAllFromRealm();
                 realm.where(TrnErrorLog.class).findAll().deleteAllFromRealm();
+                */
+                realm.where(HistInstallments.class).findAll().deleteAllFromRealm();
+                realm.where(HistInstallmentsPK.class).findAll().deleteAllFromRealm();
 
                 realm.where(DisplayTrnContractBuckets.class).findAll().deleteAllFromRealm();
                 realm.where(DisplayTrnLDVDetails.class).findAll().deleteAllFromRealm();

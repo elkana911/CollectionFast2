@@ -126,7 +126,9 @@ public class FragmentLKPList extends Fragment {
         this.realm = Realm.getDefaultInstance();
 
         if (serverDate == null)
-            serverDate = this.realm.where(ServerInfo.class).findFirst().getServerDate();
+            serverDate = this.realm.where(ServerInfo.class)
+                    .findFirst()
+                    .getServerDate();
 
         loadCurrentLKP();
 

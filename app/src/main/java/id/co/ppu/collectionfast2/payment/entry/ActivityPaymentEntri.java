@@ -574,7 +574,7 @@ public class ActivityPaymentEntri extends BasicActivity implements FragmentActiv
                         .findFirst();
 
                 if (trnSync != null) {
-                    Snackbar.make(activityPaymentEntri, "Data already synced", Snackbar.LENGTH_SHORT).show();
+                    Snackbar.make(activityPaymentEntri, "Cannot save, Data already synced", Snackbar.LENGTH_SHORT).show();
                     return;
                 }
 

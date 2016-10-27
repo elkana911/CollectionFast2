@@ -617,7 +617,7 @@ public class ActivityChangeAddress extends BasicActivity {
                         .findFirst();
 
                 if (trnSync != null) {
-                    Snackbar.make(activityChangeAddr, "Data already synced", Snackbar.LENGTH_SHORT).show();
+                    Snackbar.make(activityChangeAddr, "Cannot save, Data already synced", Snackbar.LENGTH_SHORT).show();
                     return;
                 }
 
