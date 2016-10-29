@@ -562,7 +562,7 @@ public class MainActivity extends SyncActivity
                                 public void onClick(DialogInterface dialogInterface, int i) {
                                     String value = input.getText().toString();
 
-                                    if (!value.equals(currentUser.getUserPwd())) {
+                                    if (!Utility.developerMode && !value.equals(currentUser.getUserPwd())) {
                                         Snackbar.make(coordinatorLayout, "Invalid password !", Snackbar.LENGTH_LONG).show();
                                         return;
                                     }
@@ -1393,7 +1393,14 @@ public class MainActivity extends SyncActivity
                     .setPositiveButton("Yes", new DialogInterface.OnClickListener() {
                         @Override
                         public void onClick(DialogInterface dialog, int which) {
-                            cancelSync(dtl.getLdvNo(), dtl.getContractNo());
+                            cancelSync(realm, dtl.getLdvNo(), dtl.getContractNo());
+
+                            Fragment frag = getSupportFragmentManager().findFragmentById(R.id.content_frame);
+
+                            if (frag != null && frag instanceof FragmentLKPList) {
+                                ((FragmentLKPList) frag).refresh();
+                            }
+
                         }
 
                     })
@@ -1402,9 +1409,82 @@ public class MainActivity extends SyncActivity
         }
     }
 
-    public void cancelSync(final String ldvNo, final String contractNo) {
+    public void cancelSync(Realm realm, final String ldvNo, final String contractNo) {
 
-        this.realm.executeTransactionAsync(new Realm.Transaction() {
+        realm.executeTransaction(new Realm.Transaction() {
+            @Override
+            public void execute(Realm realm) {
+                // hapus VISIT RESULT
+                boolean b = getLDVComments(realm, ldvNo, contractNo)
+                        .findAll().deleteAllFromRealm();
+
+                // hapus PAYMENT
+                // sebelum hapus rvcoll, restore dulu rvb
+                TrnRVColl trnRVColl = getRVColl(realm, contractNo)
+                        .findFirst();
+
+                if (trnRVColl != null) {
+                    String lastRvbNo = trnRVColl.getPk().getRbvNo();
+
+                    // reopen voucher
+                    TrnRVB trnRVB = realm.where(TrnRVB.class)
+                            .equalTo("rvbNo", lastRvbNo)
+                            .findFirst();
+                    trnRVB.setRvbStatus("OP");
+                    trnRVB.setLastupdateBy(Utility.LAST_UPDATE_BY);
+                    trnRVB.setLastupdateTimestamp(new Date());
+                    realm.copyToRealmOrUpdate(trnRVB);
+
+                    trnRVColl.deleteFromRealm();
+                }
+
+                // hapus REPO
+                b = getRepo(realm, contractNo)
+                        .findAll().deleteAllFromRealm();
+
+                // update/restore ldv details
+                RealmResults<TrnLDVDetails> trnLDVDetailses = realm.where(TrnLDVDetails.class)
+                        .equalTo("pk.ldvNo", ldvNo)
+                        .equalTo("contractNo", contractNo)
+                        .equalTo("lastupdateBy", Utility.LAST_UPDATE_BY)
+//                        .equalTo("createdBy", createdBy)
+                        .findAll();
+
+                if (trnLDVDetailses.size() > 1) {
+                    throw new RuntimeException("Duplicate data LDVDetail found");
+                }
+                TrnLDVDetails trnLDVDetails = realm.copyFromRealm(trnLDVDetailses.get(0));
+                b = trnLDVDetailses.deleteAllFromRealm();
+
+                trnLDVDetails.setLdvFlag("NEW");
+                trnLDVDetails.setWorkStatus("A");
+                trnLDVDetails.setFlagToEmrafin("N");
+                trnLDVDetails.setLastupdateBy(Utility.LAST_UPDATE_BY);
+                trnLDVDetails.setLastupdateTimestamp(new Date());
+                realm.copyToRealm(trnLDVDetails);
+
+                // update the display
+                DisplayTrnLDVDetails displayTrnLDVDetails = realm.where(DisplayTrnLDVDetails.class)
+                        .equalTo("ldvNo", ldvNo)
+                        .equalTo("contractNo", contractNo)
+                        .findFirst();
+                displayTrnLDVDetails.setWorkStatus("A");
+                realm.copyToRealm(displayTrnLDVDetails);
+
+
+                // TODO: harusnya hapus foto juga, sementara di lokal dulu. photo yg terlanjur upload ke server biarin aja
+                b = realm.where(TrnPhoto.class)
+                        .equalTo("collCode", currentUser.getUserId())
+                        .equalTo("contractNo", contractNo)
+                        .equalTo("lastupdateBy", Utility.LAST_UPDATE_BY)
+//                        .equalTo("createdBy", createdBy)
+                        .findAll().deleteAllFromRealm();
+
+            }
+        });
+        // must sync (not async) to avoid process sequence
+        /*
+        realm.executeTransaction(new Realm.Transaction() {
             @Override
             public void execute(Realm realm) {
                 // hapus VISIT RESULT
@@ -1484,6 +1564,7 @@ public class MainActivity extends SyncActivity
 
             }
         });
+        */
     }
 
     @Override
@@ -2127,7 +2208,7 @@ public class MainActivity extends SyncActivity
                             public void onClick(DialogInterface dialogInterface, int i) {
                                 String value = input.getText().toString();
 
-                                if (!value.equals(currentUser.getUserPwd())) {
+                                if (!Utility.developerMode && !value.equals(currentUser.getUserPwd())) {
                                     Snackbar.make(coordinatorLayout, "Invalid password !", Snackbar.LENGTH_LONG).show();
                                     return;
                                 }
@@ -2500,8 +2581,14 @@ public class MainActivity extends SyncActivity
                 }
 
                 if (respGetLKP.getData().getDetails() != null && respGetLKP.getData().getDetails().size() > 0) {
+                    // cancel first to avoid realm clash
+                    for (TrnLDVDetails ldvDetails : respGetLKP.getData().getDetails()) {
+                        cancelSync(realm, ldvDetails.getPk().getLdvNo(), ldvDetails.getContractNo());
+                    }
+
+
                     // do here
-                    realm.executeTransactionAsync(new Realm.Transaction() {
+                    realm.executeTransaction(new Realm.Transaction() {
                         @Override
                         public void execute(Realm realm) {
 
@@ -2531,7 +2618,6 @@ public class MainActivity extends SyncActivity
                                         */
 
                                 // 3. cancel syncdata
-                                cancelSync(ldvDetails.getPk().getLdvNo(), ldvDetails.getContractNo());
                             }
 
                             // 4. refresh lkp list

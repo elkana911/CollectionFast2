@@ -194,6 +194,11 @@ public class FragmentLKPList extends Fragment {
                 ? new Date()
                 : Utility.convertStringToDate(etTglLKP.getText().toString(), Utility.DATE_DISPLAY_PATTERN);
 
+        // fix cbLKPInquiry
+        if (Utility.isSameDay(dateLKP, new Date())) {
+            cbLKPInquiry.setChecked(false);
+        }
+
         retrieveLKP((OnFragmentLKPListInteractionListener) getActivity(), dateLKP);
 
     }
