@@ -35,6 +35,7 @@ import id.co.ppu.collectionfast2.pojo.UserData;
 import id.co.ppu.collectionfast2.pojo.master.MstParam;
 import id.co.ppu.collectionfast2.pojo.sync.SyncTrnRVColl;
 import id.co.ppu.collectionfast2.pojo.trn.TrnContractBuckets;
+import id.co.ppu.collectionfast2.pojo.trn.TrnLDVDetails;
 import id.co.ppu.collectionfast2.pojo.trn.TrnLDVHeader;
 import id.co.ppu.collectionfast2.pojo.trn.TrnRVB;
 import id.co.ppu.collectionfast2.pojo.trn.TrnRVColl;
@@ -553,6 +554,21 @@ public class ActivityPaymentEntri extends BasicActivity implements FragmentActiv
             }
         }
 
+        final String createdBy = "JOB" + Utility.convertDateToString(lkpDate, Utility.DATE_DATA_PATTERN);
+
+        // TODO: check lagi kalo ada di daftar LKP dan workstatus nya belum bayar ("V") jgn entri disini
+        RealmResults<TrnLDVDetails> lkpDtls = realm.where(TrnLDVDetails.class)
+                .equalTo("pk.ldvNo", ldvNo)
+                .equalTo("contractNo", etContractNo.getText().toString())
+                .equalTo("createdBy", createdBy)
+                .notEqualTo("workStatus", "V")
+                .findAll();
+
+        if (lkpDtls.size() > 0) {
+            Toast.makeText(this, "Please use LKP List screen to entri payment", Toast.LENGTH_SHORT).show();
+            cancel = true;
+        }
+
         if (cancel) {
             focusView.requestFocus();
             return;
@@ -563,8 +579,6 @@ public class ActivityPaymentEntri extends BasicActivity implements FragmentActiv
             @Override
             public void execute(Realm realm) {
                 UserData userData = (UserData) Storage.getObjPreference(getApplicationContext(), Storage.KEY_USER, UserData.class);
-
-                String createdBy = "JOB" + Utility.convertDateToString(lkpDate, Utility.DATE_DATA_PATTERN);
 
                 SyncTrnRVColl trnSync = realm.where(SyncTrnRVColl.class)
                         .equalTo("ldvNo", ldvNo)

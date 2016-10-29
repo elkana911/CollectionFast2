@@ -93,7 +93,14 @@ public class FragmentSummaryLKP extends Fragment {
         super.onStart();
         this.realm = Realm.getDefaultInstance();
 
-        Date serverDate = this.realm.where(ServerInfo.class).findFirst().getServerDate();
+        Date serverDate = null;
+        try {
+            serverDate = this.realm.where(ServerInfo.class).findFirst().getServerDate();
+        } catch (Exception e) {
+            e.printStackTrace();
+
+            serverDate = new Date();
+        }
         String createdBy = "JOB" + Utility.convertDateToString(serverDate, "yyyyMMdd");
 
         // TODO: ask pak yoce, jika kasusnya hr ini udah closebatch, inquiry hr kmrn akan donlot header kmrn ?

@@ -179,7 +179,11 @@ public class LoginActivity extends AppCompatActivity {
 
                             @Override
                             public void onSkip() {
-
+                                try {
+                                    attemptLogin();
+                                } catch (Exception e) {
+                                    e.printStackTrace();
+                                }
                             }
                         });
 
@@ -292,10 +296,12 @@ public class LoginActivity extends AppCompatActivity {
         }
 
         try {
+            /*
             if (!NetUtil.isConnected(this)) {
                 Utility.showDialog(this, getString(R.string.title_no_connection), getString(R.string.error_online_required));
                 return;
             }
+            */
 
             final ProgressDialog mProgressDialog = new ProgressDialog(this);
             mProgressDialog.setIndeterminate(true);
@@ -339,7 +345,14 @@ public class LoginActivity extends AppCompatActivity {
 
                 @Override
                 public void onSkip() {
+                    if (mProgressDialog.isShowing())
+                        mProgressDialog.dismiss();
 
+                    try {
+                        attemptLogin();
+                    } catch (Exception e) {
+                        e.printStackTrace();
+                    }
                 }
             });
 
@@ -479,7 +492,20 @@ public class LoginActivity extends AppCompatActivity {
 
     }
 
+    /*
+    ga wajib online
+     */
     private void isLatestVersion(final OnSuccessError listener) {
+        if (!NetUtil.isConnected(this)) {
+            Toast.makeText(this, getString(R.string.error_online_required), Toast.LENGTH_LONG).show();
+
+            if (listener != null) {
+                listener.onSkip();
+            }
+
+            return;
+        }
+
         int versionCode = BuildConfig.VERSION_CODE;
         final String versionName = BuildConfig.VERSION_NAME;
 
@@ -692,25 +718,28 @@ public class LoginActivity extends AppCompatActivity {
         call.enqueue(new Callback<ResponseServerInfo>() {
             @Override
             public void onResponse(Call<ResponseServerInfo> call, Response<ResponseServerInfo> response) {
-                if (response.isSuccessful()) {
-                    final ResponseServerInfo responseServerInfo = response.body();
-
-                    if (responseServerInfo.getError() == null) {
-                        LoginActivity.this.realm.executeTransaction(new Realm.Transaction() {
-                            @Override
-                            public void execute(Realm realm) {
-                                realm.delete(ServerInfo.class);
-                                realm.copyToRealm(responseServerInfo.getData());
-
-                                if (listener != null) {
-                                    listener.onSuccess(responseServerInfo.getData());
-                                }
-                            }
-                        });
-
-                    }
+                if (!response.isSuccessful()) {
+                    return;
 
                 }
+
+                final ResponseServerInfo responseServerInfo = response.body();
+
+                if (responseServerInfo.getError() != null) {
+                    return;
+                }
+
+                LoginActivity.this.realm.executeTransaction(new Realm.Transaction() {
+                    @Override
+                    public void execute(Realm realm) {
+                        realm.delete(ServerInfo.class);
+                        realm.copyToRealm(responseServerInfo.getData());
+
+                        if (listener != null) {
+                            listener.onSuccess(responseServerInfo.getData());
+                        }
+                    }
+                });
             }
 
             @Override

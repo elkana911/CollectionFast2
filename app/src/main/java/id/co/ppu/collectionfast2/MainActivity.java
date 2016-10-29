@@ -1081,6 +1081,8 @@ public class MainActivity extends SyncActivity
                                     // for faster show, but must be load after ldvdetails
                                     bgRealm.delete(DisplayTrnContractBuckets.class);
                                     for (TrnContractBuckets obj : respGetLKP.getData().getBuckets()) {
+                                        /*
+                                        batal difilter karena pak yoce bilang utk kasus lkp yg sudah bayar bisa dientri di payment entri utk cicilan di bulan berikutnya
                                         boolean exist = false;
                                         for (TrnLDVDetails _dtl : respGetLKP.getData().getDetails()) {
                                             if (_dtl.getContractNo().equalsIgnoreCase(obj.getPk().getContractNo())) {
@@ -1091,6 +1093,7 @@ public class MainActivity extends SyncActivity
 
                                         if (exist)
                                             continue;
+                                            */
 
                                         DisplayTrnContractBuckets displayTrnContractBuckets = bgRealm.createObject(DisplayTrnContractBuckets.class);
 
@@ -1399,7 +1402,7 @@ public class MainActivity extends SyncActivity
         }
     }
 
-    private void cancelSync(final String ldvNo, final String contractNo) {
+    public void cancelSync(final String ldvNo, final String contractNo) {
 
         this.realm.executeTransactionAsync(new Realm.Transaction() {
             @Override
@@ -1525,7 +1528,13 @@ public class MainActivity extends SyncActivity
 
         String collectorId = currentUser.getUserId();
 
-        Date serverDate = this.realm.where(ServerInfo.class).findFirst().getServerDate();
+        Date serverDate = null;
+        try {
+            serverDate = this.realm.where(ServerInfo.class).findFirst().getServerDate();
+        } catch (Exception e) {
+            e.printStackTrace();
+            serverDate = new Date();
+        }
         String createdBy = "JOB" + Utility.convertDateToString(serverDate, "yyyyMMdd");
 
         TrnLDVHeader trnLDVHeader = realm.where(TrnLDVHeader.class)
@@ -1534,7 +1543,7 @@ public class MainActivity extends SyncActivity
                 .findFirst();
 
         if (trnLDVHeader == null) {
-            Utility.showDialog(MainActivity.this, "No Data", "Please Get LKP first");
+            Utility.showDialog(MainActivity.this, "No LKP Data", "Please Get LKP first.");
             return;
         }
 
@@ -2390,6 +2399,174 @@ public class MainActivity extends SyncActivity
         return super.onPrepareOptionsMenu(menu);
     }
 
+    /**
+     * Hanya jalan bila sebelumnya udah get lkp
+     * @param showDialog
+     * @param listener
+     */
+    public void checkPaidLKP(final boolean showDialog, final OnSuccessError listener) {
+
+        if (!NetUtil.isConnected(this)) {
+            Snackbar.make(coordinatorLayout, getString(R.string.error_online_required), Snackbar.LENGTH_LONG).show();
+            return;
+        }
+
+        final String collCode = currentUser.getUserId();
+        final Date lkpDate = new Date();
+        final String createdBy = "JOB" + Utility.convertDateToString(lkpDate, "yyyyMMdd");
+
+        TrnLDVHeader header = realm.where(TrnLDVHeader.class)
+                .equalTo("collCode", collCode)
+                .equalTo(Utility.COLUMN_CREATED_BY, createdBy)
+                .findFirst();
+
+        if (header != null) {
+            long count = realm.where(TrnLDVDetails.class)
+                    .equalTo("pk.ldvNo", header.getLdvNo())
+                    .equalTo(Utility.COLUMN_CREATED_BY, createdBy)
+                    .count();
+            if (count < 1) {
+                if (listener != null)
+                    listener.onSuccess("No LKP found for " + createdBy);
+                return;
+            }
+        } else {
+            if (listener != null)
+                listener.onSuccess("No Header found for " + createdBy);
+            return;
+        }
+
+        // TODO: ambil kontrak mana saja yg udah bayar
+        final ProgressDialog mProgressDialog = new ProgressDialog(this);
+        mProgressDialog.setIndeterminate(true);
+        mProgressDialog.setCancelable(false);
+        mProgressDialog.setMessage(getString(R.string.message_please_wait));
+
+        if (showDialog) {
+            mProgressDialog.show();
+        }
+
+        ApiInterface fastService =
+                ServiceGenerator.createService(ApiInterface.class, Utility.buildUrl(Storage.getPreferenceAsInt(getApplicationContext(), Storage.KEY_SERVER_ID, 0)));
+
+        RequestLKPByDate requestLKP = new RequestLKPByDate();
+        requestLKP.setCollectorCode(collCode);
+        requestLKP.setYyyyMMdd(Utility.convertDateToString(lkpDate, "yyyyMMdd"));
+
+        Call<ResponseGetLKP> call = fastService.getLKPPaidByDate(requestLKP);
+        call.enqueue(new Callback<ResponseGetLKP>() {
+            @Override
+            public void onResponse(Call<ResponseGetLKP> call, Response<ResponseGetLKP> response) {
+
+                if (mProgressDialog.isShowing())
+                    mProgressDialog.dismiss();
+
+                if (!response.isSuccessful()) {
+                    int statusCode = response.code();
+
+                    // handle request errors yourself
+                    ResponseBody errorBody = response.errorBody();
+
+                    try {
+                        Utility.showDialog(MainActivity.this, "Server Problem (" + statusCode + ")", errorBody.string());
+
+                        if (listener != null)
+                            listener.onFailure(new RuntimeException("Server Problem (" + statusCode + ") " + errorBody.string()));
+
+                    } catch (IOException e) {
+                        e.printStackTrace();
+                    }
+
+                    return;
+                }
+
+                final ResponseGetLKP respGetLKP = response.body();
+
+
+                if (respGetLKP == null || respGetLKP.getData().getDetails() == null) {
+                    if (listener != null)
+                        listener.onSkip();
+                    return;
+                }
+
+                if (respGetLKP.getError() != null) {
+                    Utility.showDialog(MainActivity.this, "Error (" + respGetLKP.getError().getErrorCode() + ")", respGetLKP.getError().getErrorDesc());
+                    NetUtil.syncLogError(MainActivity.this, realm, currentUser.getUserId(), "getLKPPaidByDate", respGetLKP.getError().getErrorCode(), respGetLKP.getError().getErrorDesc());
+
+                    if (listener != null)
+                        listener.onSkip();
+
+                    return;
+                }
+
+                if (respGetLKP.getData().getDetails() != null && respGetLKP.getData().getDetails().size() > 0) {
+                    // do here
+                    realm.executeTransactionAsync(new Realm.Transaction() {
+                        @Override
+                        public void execute(Realm realm) {
+
+                            // 1. update ldvdetails tertentu saja
+                            for (TrnLDVDetails ldvDetails : respGetLKP.getData().getDetails()) {
+
+                                TrnLDVDetails first = realm.where(TrnLDVDetails.class)
+                                        .equalTo("contractNo", ldvDetails.getContractNo())
+                                        .equalTo(Utility.COLUMN_CREATED_BY, ldvDetails.getCreatedBy())
+                                        .notEqualTo("workStatus", "W")
+                                        .findFirst();
+
+                                if (first == null)
+                                    continue;
+
+                                first.deleteFromRealm();
+
+                                realm.copyToRealm(ldvDetails);
+
+                                // 2. ga perlu modify DisplayTrnLDVDetails krn akan direfresh via loadCurrentLKP
+                                /*
+                                realm.where(DisplayTrnLDVDetails.class)
+                                        .equalTo("contractNo", ldvDetails.getContractNo())
+                                        .equalTo(Utility.COLUMN_CREATED_BY, ldvDetails.getCreatedBy())
+                                        .notEqualTo("workStatus", "W")
+                                        .findFirst();
+                                        */
+
+                                // 3. cancel syncdata
+                                cancelSync(ldvDetails.getPk().getLdvNo(), ldvDetails.getContractNo());
+                            }
+
+                            // 4. refresh lkp list
+                            Fragment frag = getSupportFragmentManager().findFragmentById(R.id.content_frame);
+
+                            if (frag != null && frag instanceof FragmentLKPList) {
+                                ((FragmentLKPList) frag).loadCurrentLKP(); // kayanya masih terkadang ga mau update
+                            }
+
+                        }
+                    });
+                }
+
+                if (listener != null)
+                    listener.onSuccess(null);
+
+            }
+
+            @Override
+            public void onFailure(Call<ResponseGetLKP> call, Throwable t) {
+                Log.e("eric.onFailure", t.getMessage(), t);
+
+                if (mProgressDialog.isShowing())
+                    mProgressDialog.dismiss();
+
+                if (listener != null)
+                    listener.onFailure(t);
+
+                Utility.showDialog(MainActivity.this, "Server Problem", t.getMessage());
+
+            }
+        });
+
+    }
+
     public void syncTransaction(final boolean showDialog, final OnSuccessError listener) {
         if (!NetUtil.isConnected(this)) {
             Snackbar.make(coordinatorLayout, getString(R.string.error_online_required), Snackbar.LENGTH_LONG).show();
@@ -2408,211 +2585,229 @@ public class MainActivity extends SyncActivity
             return;
         }
 
-        final ProgressDialog mProgressDialog = new ProgressDialog(this);
-        mProgressDialog.setIndeterminate(true);
-        mProgressDialog.setCancelable(false);
-        mProgressDialog.setMessage(getString(R.string.message_please_wait));
-
-        if (showDialog) {
-            mProgressDialog.show();
-        }
-
-        final SyncLdvDetails syncLdvDetails = new SyncLdvDetails(realm);
-        final SyncLdvComments syncLdvComments = new SyncLdvComments(realm);
-        final SyncRvb syncRvb = new SyncRvb(realm);
-        final SyncRVColl syncRVColl = new SyncRVColl(realm);
-        final SyncBastbj syncBastbj = new SyncBastbj(realm);
-        final SyncRepo syncRepo = new SyncRepo(realm);
-        final SyncChangeAddr syncChangeAddr = new SyncChangeAddr(realm);
-
-        boolean anyDataToSync =
-                syncLdvDetails.anyDataToSync()
-                        || syncLdvComments.anyDataToSync()
-                        || syncRvb.anyDataToSync()
-                        || syncRVColl.anyDataToSync()
-                        || syncBastbj.anyDataToSync()
-                        || syncRepo.anyDataToSync()
-                        || syncChangeAddr.anyDataToSync();
-
-        if (!anyDataToSync) {
-
-            if (listener != null)
-                listener.onSkip();
-            return;
-        } else {
-        }
-
-        final RequestSyncLKP req = new RequestSyncLKP();
-
-        // TODO: you may test each of modules which data to sync. But dont forget to enable all on production
-        req.setRvb(syncRvb.getDataToSync());
-        req.setRvColl(syncRVColl.getDataToSync());
-        req.setLdvDetails(syncLdvDetails.getDataToSync());
-        req.setLdvComments(syncLdvComments.getDataToSync());
-        req.setBastbj(syncBastbj.getDataToSync());
-        req.setRepo(syncRepo.getDataToSync());
-        req.setChangeAddr(syncChangeAddr.getDataToSync());
-
-        Snackbar.make(coordinatorLayout, "Sync started", Snackbar.LENGTH_SHORT).show();
-
-        mProgressDialog.setMessage("Sync Data In Progress.\nPlease wait...");
-
-        if (showDialog) {
-            mProgressDialog.show();
-
-        }
-
-        // upload photo first
-        final SyncPhoto syncPhoto = new SyncPhoto(realm);
-        if (syncPhoto.anyDataToSync()) {
-            NetUtil.uploadPhotos(MainActivity.this, realm, new OnSuccessError() {
-                @Override
-                public void onSuccess(String msg) {
-
-                }
-
-                @Override
-                public void onFailure(Throwable throwable) {
-
-                }
-
-                @Override
-                public void onSkip() {
-
-                }
-            });
-        }
-
-
-        ApiInterface fastService =
-                ServiceGenerator.createService(ApiInterface.class, Utility.buildUrl(Storage.getPreferenceAsInt(getApplicationContext(), Storage.KEY_SERVER_ID, 0)));
-
-        Call<ResponseSync> call = fastService.syncLKP(req);
-        call.enqueue(new Callback<ResponseSync>() {
+        // check dulu udah dibayar apa belum, kalo udah yg status kuning di cancel saja
+        checkPaidLKP(showDialog, new OnSuccessError() {
             @Override
-            public void onResponse(Call<ResponseSync> call, Response<ResponseSync> response) {
-                if (!response.isSuccessful()) {
+            public void onSuccess(String msg) {
+                final ProgressDialog mProgressDialog = new ProgressDialog(MainActivity.this);
+                mProgressDialog.setIndeterminate(true);
+                mProgressDialog.setCancelable(false);
+                mProgressDialog.setMessage(getString(R.string.message_please_wait));
 
-                    ResponseBody errorBody = response.errorBody();
-
-                    String msg = "";
-                    try {
-//                        Utility.showDialog(MainActivity.this, "Server Problem (" + statusCode + ")", errorBody.string());
-                        msg = response.message() + "(" + response.code() + ") " + errorBody.string();
-                        Snackbar.make(coordinatorLayout, msg, Snackbar.LENGTH_LONG).show();
-                    } catch (Exception e) {
-                        e.printStackTrace();
-                    }
-
-                    if (listener != null)
-                        listener.onFailure(new RuntimeException(msg));
-
-                    if (showDialog) {
-                        if (mProgressDialog.isShowing())
-                            mProgressDialog.dismiss();
-                    }
-
-                    return;
+                if (showDialog) {
+                    mProgressDialog.show();
                 }
 
-                // successful here
-                final ResponseSync respSync = response.body();
+                final SyncLdvDetails syncLdvDetails = new SyncLdvDetails(realm);
+                final SyncLdvComments syncLdvComments = new SyncLdvComments(realm);
+                final SyncRvb syncRvb = new SyncRvb(realm);
+                final SyncRVColl syncRVColl = new SyncRVColl(realm);
+                final SyncBastbj syncBastbj = new SyncBastbj(realm);
+                final SyncRepo syncRepo = new SyncRepo(realm);
+                final SyncChangeAddr syncChangeAddr = new SyncChangeAddr(realm);
 
-                if (respSync == null || respSync.getError() != null) {
-                    if (listener != null)
-                        listener.onFailure(new RuntimeException("Sync Failed due to Server Error"));
+                boolean anyDataToSync =
+                        syncLdvDetails.anyDataToSync()
+                                || syncLdvComments.anyDataToSync()
+                                || syncRvb.anyDataToSync()
+                                || syncRVColl.anyDataToSync()
+                                || syncBastbj.anyDataToSync()
+                                || syncRepo.anyDataToSync()
+                                || syncChangeAddr.anyDataToSync();
 
-                    if (respSync == null) {
-                        // Not found(404) berarti ada yg salah di json
-                        Snackbar.make(coordinatorLayout, response.message() + "(" + response.code() + ") ", Snackbar.LENGTH_LONG).show();
-                    } else {
-                        Toast.makeText(MainActivity.this, "Data Error (" + respSync.getError() + ")\n" + respSync.getError().getErrorDesc(), Toast.LENGTH_SHORT).show();
-                    }
-
-                } else if (respSync.getData() != 1) {
+                if (!anyDataToSync) {
 
                     if (listener != null)
                         listener.onSkip();
-
+                    return;
                 } else {
-
-                    if (req.getLdvDetails() != null && req.getLdvDetails().size() > 0)
-                        syncLdvDetails.syncData();
-
-                    if (req.getLdvComments() != null && req.getLdvComments().size() > 0)
-                        syncLdvComments.syncData();
-
-                    if (req.getRepo() != null && req.getRepo().size() > 0)
-                        syncRepo.syncData();
-
-                    if (req.getRvb() != null && req.getRvb().size() > 0)
-                        syncRvb.syncData();
-
-                    if (req.getRvColl() != null && req.getRvColl().size() > 0)
-                        syncRVColl.syncData();
-
-                    if (req.getChangeAddr() != null && req.getChangeAddr().size() > 0)
-                        syncChangeAddr.syncData();
-
-                    if (req.getBastbj() != null && req.getBastbj().size() > 0)
-                        syncBastbj.syncData();
-
-                    Fragment frag = getSupportFragmentManager().findFragmentById(R.id.content_frame);
-
-                    if (frag != null && frag instanceof FragmentLKPList) {
-                        ((FragmentLKPList) frag).loadCurrentLKP(); // masih terkadang ga mau update
-//                    ((FragmentLKPList) frag).refresh(); ga mau update
-//                    frag.refresh();
-                    }
-
-                    if (listener != null)
-                        listener.onSuccess(null);
-
                 }
+
+                final RequestSyncLKP req = new RequestSyncLKP();
+
+                // TODO: you may test each of modules which data to sync. But dont forget to enable all on production
+                req.setRvb(syncRvb.getDataToSync());
+                req.setRvColl(syncRVColl.getDataToSync());
+                req.setLdvDetails(syncLdvDetails.getDataToSync());
+                req.setLdvComments(syncLdvComments.getDataToSync());
+                req.setBastbj(syncBastbj.getDataToSync());
+                req.setRepo(syncRepo.getDataToSync());
+                req.setChangeAddr(syncChangeAddr.getDataToSync());
+
+                Snackbar.make(coordinatorLayout, "Sync started", Snackbar.LENGTH_SHORT).show();
+
+                mProgressDialog.setMessage("Sync Data In Progress.\nPlease wait...");
 
                 if (showDialog) {
-                    if (mProgressDialog.isShowing())
-                        mProgressDialog.dismiss();
+                    mProgressDialog.show();
+
                 }
 
-                Snackbar.make(coordinatorLayout, "Sync success", Snackbar.LENGTH_SHORT).show();
+                // upload photo first
+                final SyncPhoto syncPhoto = new SyncPhoto(realm);
+                if (syncPhoto.anyDataToSync()) {
+                    NetUtil.uploadPhotos(MainActivity.this, realm, new OnSuccessError() {
+                        @Override
+                        public void onSuccess(String msg) {
+
+                        }
+
+                        @Override
+                        public void onFailure(Throwable throwable) {
+
+                        }
+
+                        @Override
+                        public void onSkip() {
+
+                        }
+                    });
+                }
+
+
+                ApiInterface fastService =
+                        ServiceGenerator.createService(ApiInterface.class, Utility.buildUrl(Storage.getPreferenceAsInt(getApplicationContext(), Storage.KEY_SERVER_ID, 0)));
+
+                Call<ResponseSync> call = fastService.syncLKP(req);
+                call.enqueue(new Callback<ResponseSync>() {
+                    @Override
+                    public void onResponse(Call<ResponseSync> call, Response<ResponseSync> response) {
+                        if (!response.isSuccessful()) {
+
+                            ResponseBody errorBody = response.errorBody();
+
+                            String msg = "";
+                            try {
+//                        Utility.showDialog(MainActivity.this, "Server Problem (" + statusCode + ")", errorBody.string());
+                                msg = response.message() + "(" + response.code() + ") " + errorBody.string();
+                                Snackbar.make(coordinatorLayout, msg, Snackbar.LENGTH_LONG).show();
+                            } catch (Exception e) {
+                                e.printStackTrace();
+                            }
+
+                            if (listener != null)
+                                listener.onFailure(new RuntimeException(msg));
+
+                            if (showDialog) {
+                                if (mProgressDialog.isShowing())
+                                    mProgressDialog.dismiss();
+                            }
+
+                            return;
+                        }
+
+                        // successful here
+                        final ResponseSync respSync = response.body();
+
+                        if (respSync == null || respSync.getError() != null) {
+                            if (listener != null)
+                                listener.onFailure(new RuntimeException("Sync Failed due to Server Error"));
+
+                            if (respSync == null) {
+                                // Not found(404) berarti ada yg salah di json
+                                Snackbar.make(coordinatorLayout, response.message() + "(" + response.code() + ") ", Snackbar.LENGTH_LONG).show();
+                            } else {
+                                Toast.makeText(MainActivity.this, "Data Error (" + respSync.getError() + ")\n" + respSync.getError().getErrorDesc(), Toast.LENGTH_SHORT).show();
+                            }
+
+                        } else if (respSync.getData() != 1) {
+
+                            if (listener != null)
+                                listener.onSkip();
+
+                        } else {
+
+                            if (req.getLdvDetails() != null && req.getLdvDetails().size() > 0)
+                                syncLdvDetails.syncData();
+
+                            if (req.getLdvComments() != null && req.getLdvComments().size() > 0)
+                                syncLdvComments.syncData();
+
+                            if (req.getRepo() != null && req.getRepo().size() > 0)
+                                syncRepo.syncData();
+
+                            if (req.getRvb() != null && req.getRvb().size() > 0)
+                                syncRvb.syncData();
+
+                            if (req.getRvColl() != null && req.getRvColl().size() > 0)
+                                syncRVColl.syncData();
+
+                            if (req.getChangeAddr() != null && req.getChangeAddr().size() > 0)
+                                syncChangeAddr.syncData();
+
+                            if (req.getBastbj() != null && req.getBastbj().size() > 0)
+                                syncBastbj.syncData();
+
+                            Fragment frag = getSupportFragmentManager().findFragmentById(R.id.content_frame);
+
+                            if (frag != null && frag instanceof FragmentLKPList) {
+                                ((FragmentLKPList) frag).loadCurrentLKP(); // masih terkadang ga mau update
+//                    ((FragmentLKPList) frag).refresh(); ga mau update
+//                    frag.refresh();
+                            }
+
+                            if (listener != null)
+                                listener.onSuccess(null);
+
+                        }
+
+                        if (showDialog) {
+                            if (mProgressDialog.isShowing())
+                                mProgressDialog.dismiss();
+                        }
+
+                        Snackbar.make(coordinatorLayout, "Sync success", Snackbar.LENGTH_SHORT).show();
+                    }
+
+                    @Override
+                    public void onFailure(Call<ResponseSync> call, Throwable t) {
+                        Log.e("eric.onFailure", t.getMessage(), t);
+
+                        if (showDialog) {
+                            if (mProgressDialog.isShowing())
+                                mProgressDialog.dismiss();
+                        }
+
+                        if (t instanceof ConnectException) {
+                            if (Utility.developerMode)
+                                Utility.showDialog(MainActivity.this, "No Connection", t.getMessage());
+                            else
+                                Utility.showDialog(MainActivity.this, "No Connection", getString(R.string.error_contact_admin));
+                        }
+
+                        if (listener != null)
+                            listener.onFailure(t);
+
+                        Snackbar.make(coordinatorLayout, "Sync Failed\n" + t.getMessage(), Snackbar.LENGTH_LONG).show();
+
+                        // TODO: utk mencegah data di server udah sync, coba get lkp lagi
+                        if (t.getMessage() == null) {
+                            // should add delay to gave server a breath
+                            try {
+                                TimeUnit.SECONDS.sleep(10);
+                            } catch (InterruptedException e) {
+                                //Handle exception
+                            }
+
+                            resetData();
+                            attemptGetLKP(currentUser.getUserId(), getServerDate(realm), false, null);
+                        }
+                    }
+                });
+
             }
 
             @Override
-            public void onFailure(Call<ResponseSync> call, Throwable t) {
-                Log.e("eric.onFailure", t.getMessage(), t);
+            public void onFailure(Throwable throwable) {
 
-                if (showDialog) {
-                    if (mProgressDialog.isShowing())
-                        mProgressDialog.dismiss();
-                }
+            }
 
-                if (t instanceof ConnectException) {
-                    if (Utility.developerMode)
-                        Utility.showDialog(MainActivity.this, "No Connection", t.getMessage());
-                    else
-                        Utility.showDialog(MainActivity.this, "No Connection", getString(R.string.error_contact_admin));
-                }
+            @Override
+            public void onSkip() {
 
-                if (listener != null)
-                    listener.onFailure(t);
-
-                Snackbar.make(coordinatorLayout, "Sync Failed\n" + t.getMessage(), Snackbar.LENGTH_LONG).show();
-
-                // TODO: utk mencegah data di server udah sync, coba get lkp lagi
-                if (t.getMessage() == null) {
-                    // should add delay to gave server a breath
-                    try {
-                        TimeUnit.SECONDS.sleep(10);
-                    } catch (InterruptedException e) {
-                        //Handle exception
-                    }
-
-                    resetData();
-                    attemptGetLKP(currentUser.getUserId(), getServerDate(realm), false, null);
-                }
             }
         });
+
     }
 
     public void syncTransactionOld(final boolean closeBatch, final boolean showDialog, final OnSuccessError listener) {
@@ -2702,7 +2897,6 @@ public class MainActivity extends SyncActivity
         req.setChangeAddr(syncChangeAddr.getDataToSync());
 
         Snackbar.make(coordinatorLayout, "Sync started", Snackbar.LENGTH_SHORT).show();
-
 
         final ProgressDialog mProgressDialog = new ProgressDialog(this);
 

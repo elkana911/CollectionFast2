@@ -44,6 +44,9 @@ public interface ApiInterface {
     @POST("fast/lkp_date")
     Call<ResponseGetLKP> getLKPByDate(@Body RequestLKPByDate request);
 
+    @POST("fast/get_lkp_paid")
+    Call<ResponseGetLKP> getLKPPaidByDate(@Body RequestLKPByDate request);
+
     @POST("fast/masterdata")
     Call<ResponseGetMasterData> getMasterData();
 

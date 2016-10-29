@@ -170,8 +170,9 @@ public class FragmentLKPList extends Fragment {
             @Override
             public void onClick(View view) {
 
-                if (!cbLKPInquiry.isChecked())
+                if (!cbLKPInquiry.isChecked()) {
                     return;
+                }
 
                 final Calendar c = Calendar.getInstance();
                 int year = c.get(Calendar.YEAR);
@@ -321,6 +322,9 @@ public class FragmentLKPList extends Fragment {
         if (cbLKPInquiry.isChecked()) {
             if (TextUtils.isEmpty(etTglLKP.getText().toString()))
                 etTglLKP.performClick();
+            else
+                // pilih tanggal kemarin
+                etTglLKP.setText(Utility.convertDateToString(Utility.getYesterday(new Date()), Utility.DATE_DISPLAY_PATTERN));
 
         } else {
             // reset ke hari ini
