@@ -22,7 +22,8 @@
     </string>
     <string name="title_activity_settings">Settings</string>
 
-    <string name="error_ptp_date">PTP Date cannot back date</string>
+    <string name="error_ptp_date">PTP Date cannot today, back date or more than 7 days</string>
+    <string name="error_ptp_date_range">PTP Date cannot end of month or next month</string>
 
     <!-- Strings related to Settings -->
     <string name="language">Language</string>
@@ -230,4 +231,6 @@
     <string name="error_invalid_phone">Invalid phone number</string>
     <string name="error_coll_fee_range">Only 0 or 10000 is allowed</string>
     <string name="title_activity_chats">Chats</string>
+    <string name="error_ptp_max_month">PTP Date cannot next month</string>
+    <string name="error_ptp_end_month">PTP Date cannot the end of the month</string>
 </resources>

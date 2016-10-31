@@ -33,6 +33,11 @@
             android:icon="@drawable/ic_payment_black_24dp"
             android:title="Developer Screen" />
         <item
+            android:visible="false"
+            android:id="@+id/nav_getRvb"
+            android:icon="@drawable/ic_sync_black_24dp"
+            android:title="Refresh RVB" />
+        <item
             android:id="@+id/nav_clearSyncTables"
             android:icon="@drawable/ic_phonelink_erase_black_24dp"
             android:title="Clear Sync Tables"

@@ -5,6 +5,7 @@ import java.util.Set;
 import id.co.ppu.collectionfast2.component.BasicActivity;
 import id.co.ppu.collectionfast2.pojo.DisplayTrnContractBuckets;
 import id.co.ppu.collectionfast2.pojo.DisplayTrnLDVDetails;
+import id.co.ppu.collectionfast2.pojo.UploadPicture;
 import id.co.ppu.collectionfast2.pojo.trn.HistInstallments;
 import id.co.ppu.collectionfast2.pojo.trn.HistInstallmentsPK;
 import io.realm.Realm;
@@ -120,6 +121,7 @@ public class SyncActivity extends BasicActivity {
                 realm.where(TrnPhoto.class).findAll().deleteAllFromRealm();
                 realm.where(TrnErrorLog.class).findAll().deleteAllFromRealm();
                 */
+                realm.where(UploadPicture.class).findAll().deleteAllFromRealm();
                 realm.where(HistInstallments.class).findAll().deleteAllFromRealm();
                 realm.where(HistInstallmentsPK.class).findAll().deleteAllFromRealm();
 

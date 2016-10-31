@@ -471,6 +471,20 @@ public class ActivityPaymentEntri extends BasicActivity implements FragmentActiv
                 .equalTo("rvbNo", rvbNo)
                 .findFirst();
 
+        if (selectedRVB == null) {
+            Toast.makeText(this, "Please select No RV !", Toast.LENGTH_SHORT).show();
+            focusView = spNoRVB;
+            cancel = true;
+        } else {
+            // cek lagi dulu apakah TrnRVBnya udah CL atau masih OP ?
+            if (!editMode && selectedRVB.getRvbStatus().equals("CL")) {
+                Toast.makeText(this, "The selected No RV is already used.\nPlease select another !", Toast.LENGTH_SHORT).show();
+                focusView = spNoRVB;
+                cancel = true;
+            }
+
+        }
+
         if (!Utility.isValidMoney(denda)) {
             etDenda.setError(getString(R.string.error_amount_invalid));
             focusView = etDenda;
@@ -519,20 +533,6 @@ public class ActivityPaymentEntri extends BasicActivity implements FragmentActiv
                 }
 
             }
-        }
-
-        if (selectedRVB == null) {
-            Toast.makeText(this, "Please select No RV !", Toast.LENGTH_SHORT).show();
-            focusView = spNoRVB;
-            cancel = true;
-        } else {
-            // cek lagi dulu apakah TrnRVBnya udah CL atau masih OP ?
-            if (!editMode && selectedRVB.getRvbStatus().equals("CL")) {
-                Toast.makeText(this, "The selected No RV is already used.\nPlease select another !", Toast.LENGTH_SHORT).show();
-                focusView = spNoRVB;
-                cancel = true;
-            }
-
         }
 
         if (!Utility.isValidMoney(penerimaan)) {

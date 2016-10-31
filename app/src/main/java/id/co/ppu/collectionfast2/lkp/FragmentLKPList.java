@@ -25,6 +25,7 @@ import android.widget.FrameLayout;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import java.util.Calendar;
 import java.util.Date;
@@ -39,12 +40,14 @@ import id.co.ppu.collectionfast2.R;
 import id.co.ppu.collectionfast2.component.DividerItemDecoration;
 import id.co.ppu.collectionfast2.component.RealmSearchView;
 import id.co.ppu.collectionfast2.listener.OnLKPListListener;
+import id.co.ppu.collectionfast2.listener.OnPostRetrieveServerInfo;
 import id.co.ppu.collectionfast2.pojo.DisplayTrnLDVDetails;
 import id.co.ppu.collectionfast2.pojo.ServerInfo;
 import id.co.ppu.collectionfast2.pojo.UserConfig;
 import id.co.ppu.collectionfast2.pojo.trn.TrnLDVDetails;
 import id.co.ppu.collectionfast2.pojo.trn.TrnLDVHeader;
 import id.co.ppu.collectionfast2.util.DataUtil;
+import id.co.ppu.collectionfast2.util.NetUtil;
 import id.co.ppu.collectionfast2.util.Utility;
 import io.realm.Realm;
 import io.realm.RealmResults;
@@ -125,11 +128,6 @@ public class FragmentLKPList extends Fragment {
         super.onStart();
         this.realm = Realm.getDefaultInstance();
 
-        if (serverDate == null)
-            serverDate = this.realm.where(ServerInfo.class)
-                    .findFirst()
-                    .getServerDate();
-
         loadCurrentLKP();
 
     }
@@ -197,31 +195,86 @@ public class FragmentLKPList extends Fragment {
     @OnClick(R.id.fab)
     public void onClickFab() {
 
-        if (getContext() instanceof OnLKPListListener) {
-            Date serverDate = this.realm.where(ServerInfo.class).findFirst().getServerDate();
-            UserConfig userConfig = this.realm.where(UserConfig.class).findFirst();
-
-            if (!Utility.isSameDay(userConfig.getLastLogin(), serverDate)) {
-                Utility.showDialog(getContext(), "Close Batch", "Please do Close Batch first");
-                return;
-            }
-
-            Date dateLKP = TextUtils.isEmpty(etTglLKP.getText().toString()) ? serverDate : Utility.convertStringToDate(etTglLKP.getText().toString(), Utility.DATE_DISPLAY_PATTERN);
-
-            final String createdBy = "JOB" + Utility.convertDateToString(dateLKP, "yyyyMMdd");
-
-            TrnLDVHeader header = this.realm.where(TrnLDVHeader.class)
-                    .equalTo("collCode", collectorCode)
-                    .equalTo("createdBy", createdBy)
-                    .findFirst();
-
-            if (header != null) {
-                ((MainActivity)getActivity()).syncTransaction(false, true, null);
-                return;
-            }
-
-            ((OnLKPListListener)getContext()).onLKPInquiry(this.collectorCode, dateLKP);
+        if (!NetUtil.isConnected(getContext())) {
+            Utility.showDialog(getContext(), getString(R.string.title_no_connection), getString(R.string.error_online_required));
+            return;
         }
+
+        if (getContext() instanceof OnLKPListListener) {
+
+            ServerInfo _si = this.realm.where(ServerInfo.class).findFirst();
+            if (_si == null) {
+                try {
+                    DataUtil.retrieveServerInfo(this.realm, getContext(), new OnPostRetrieveServerInfo() {
+
+                        @Override
+                        public void onSuccess(ServerInfo serverInfo) {
+                            Date serverDate = serverInfo.getServerDate();
+
+                            retrieveLKP((OnLKPListListener) getContext(), serverDate);
+                        }
+
+                        @Override
+                        public void onFailure(Throwable throwable) {
+
+                        }
+                    });
+                } catch (Exception e) {
+                    e.printStackTrace();
+                    Toast.makeText(getContext(), e.getMessage(), Toast.LENGTH_SHORT).show();
+                }
+            } else {
+
+                Date serverDate = _si.getServerDate();
+                retrieveLKP((OnLKPListListener) getContext(), serverDate);
+/*
+                if (!Utility.isSameDay(userConfig.getLastLogin(), serverDate)) {
+                    Utility.showDialog(getContext(), "Close Batch", "Please do Close Batch first");
+                    return;
+                }
+                Date dateLKP = TextUtils.isEmpty(etTglLKP.getText().toString()) ? serverDate : Utility.convertStringToDate(etTglLKP.getText().toString(), Utility.DATE_DISPLAY_PATTERN);
+                final String createdBy = "JOB" + Utility.convertDateToString(dateLKP, "yyyyMMdd");
+
+                TrnLDVHeader header = this.realm.where(TrnLDVHeader.class)
+                        .equalTo("collCode", collectorCode)
+                        .equalTo("createdBy", createdBy)
+                        .findFirst();
+
+                if (header != null) {
+                    ((MainActivity)getActivity()).syncTransaction(false, true, null);
+                    return;
+                }
+
+                ((OnLKPListListener)getContext()).onLKPInquiry(this.collectorCode, dateLKP);
+                */
+            }
+
+        }
+    }
+
+    public void retrieveLKP(OnLKPListListener listener, Date serverDate) {
+        UserConfig userConfig = this.realm.where(UserConfig.class).findFirst();
+
+        if (!Utility.isSameDay(userConfig.getLastLogin(), serverDate)) {
+            Utility.showDialog(getContext(), "Close Batch", "Please do Close Batch first");
+            return;
+        }
+
+        Date dateLKP = TextUtils.isEmpty(etTglLKP.getText().toString()) ? serverDate : Utility.convertStringToDate(etTglLKP.getText().toString(), Utility.DATE_DISPLAY_PATTERN);
+        final String createdBy = "JOB" + Utility.convertDateToString(dateLKP, "yyyyMMdd");
+
+        TrnLDVHeader header = this.realm.where(TrnLDVHeader.class)
+                .equalTo("collCode", collectorCode)
+                .equalTo("createdBy", createdBy)
+                .findFirst();
+
+        if (header != null) {
+            ((MainActivity)getActivity()).syncTransaction(false, true, null);
+            return;
+        }
+
+        if (listener != null)
+            listener.onLKPInquiry(this.collectorCode, dateLKP);
 
     }
 
@@ -270,9 +323,20 @@ public class FragmentLKPList extends Fragment {
     }
 
     public String loadCurrentLKP() {
-        Date dateLKP = TextUtils.isEmpty(etTglLKP.getText().toString()) ? serverDate : Utility.convertStringToDate(etTglLKP.getText().toString(), Utility.DATE_DISPLAY_PATTERN);
+        try {
+            if (serverDate == null)
+                serverDate = this.realm.where(ServerInfo.class)
+                        .findFirst()
+                        .getServerDate();
 
-        return loadLKP(collectorCode, dateLKP);
+            Date dateLKP = TextUtils.isEmpty(etTglLKP.getText().toString()) ? serverDate : Utility.convertStringToDate(etTglLKP.getText().toString(), Utility.DATE_DISPLAY_PATTERN);
+
+            return loadLKP(collectorCode, dateLKP);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+
+        return null;
     }
     /**
      *
@@ -421,7 +485,7 @@ public class FragmentLKPList extends Fragment {
 //        search_view.invalidate();
     }
 
-    public String getCurrentLKP() {
+    public String getCurrentLKPValue() {
         return etNoLKP.getText().toString().trim();
     }
 

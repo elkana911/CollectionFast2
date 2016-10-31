@@ -220,6 +220,7 @@ public class LoginActivity extends AppCompatActivity {
 
         if (RootUtil.isDeviceRooted()) {
             Utility.showDialog(this, "Rooted", "This device is rooted. Unable to open application.");
+            resetData();
             return;
         }
 

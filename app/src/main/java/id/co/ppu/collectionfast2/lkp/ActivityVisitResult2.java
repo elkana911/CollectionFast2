@@ -19,9 +19,6 @@ import android.widget.Spinner;
 import android.widget.TextView;
 import android.widget.Toast;
 
-import java.text.DateFormat;
-import java.text.ParseException;
-import java.text.SimpleDateFormat;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.List;
@@ -37,8 +34,6 @@ import id.co.ppu.collectionfast2.pojo.ServerInfo;
 import id.co.ppu.collectionfast2.pojo.master.MstDelqReasons;
 import id.co.ppu.collectionfast2.pojo.master.MstLDVClassifications;
 import id.co.ppu.collectionfast2.pojo.master.MstLDVParameters;
-import id.co.ppu.collectionfast2.pojo.master.MstParam;
-import id.co.ppu.collectionfast2.pojo.master.MstPotensi;
 import id.co.ppu.collectionfast2.pojo.sync.SyncTrnLDVComments;
 import id.co.ppu.collectionfast2.pojo.trn.TrnLDVComments;
 import id.co.ppu.collectionfast2.pojo.trn.TrnLDVCommentsPK;
@@ -48,7 +43,7 @@ import id.co.ppu.collectionfast2.util.Utility;
 import io.realm.Realm;
 import io.realm.RealmResults;
 
-public class ActivityVisitResult extends BasicActivity {
+public class ActivityVisitResult2 extends BasicActivity {
 
     private DatePickerDialog.OnDateSetListener listenerDateTglJanjiBayar;
 
@@ -75,20 +70,14 @@ public class ActivityVisitResult extends BasicActivity {
     @BindView(R.id.etTglJanjiBayar)
     EditText etTglJanjiBayar;
 
-//    @BindView(R.id.etPotensi)
-//    EditText etPotensi;
-
-    @BindView(R.id.spPotensi)
-    Spinner spPotensi;
+    @BindView(R.id.etPotensi)
+    EditText etPotensi;
 
     @BindView(R.id.etBertemuDengan)
     EditText etBertemuDengan;
 
-//    @BindView(R.id.etTindakSelanjutnya)
-//    EditText etTindakSelanjutnya;
-
-    @BindView(R.id.spTindakSelanjutnya)
-    Spinner spTindakSelanjutnya;
+    @BindView(R.id.etTindakSelanjutnya)
+    EditText etTindakSelanjutnya;
 
     @BindView(R.id.etJanjiBayar)
     EditText etJanjiBayar;
@@ -120,7 +109,7 @@ public class ActivityVisitResult extends BasicActivity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_visit_result);
+        setContentView(R.layout.activity_visit_result2);
 
         ButterKnife.bind(this);
 
@@ -175,17 +164,6 @@ public class ActivityVisitResult extends BasicActivity {
         hintKlasifikasi.setDescription(getString(R.string.spinner_please_select));
         adapterKlasifikasi.insert(hintKlasifikasi, 0);
         spKlasifikasi.setAdapter(adapterKlasifikasi);
-        spKlasifikasi.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
-            @Override
-            public void onItemSelected(AdapterView<?> adapterView, View view, int i, long l) {
-                updatePotensiList();
-            }
-
-            @Override
-            public void onNothingSelected(AdapterView<?> adapterView) {
-
-            }
-        });
 
         RealmResults<MstDelqReasons> rrAlasan = this.realm.where(MstDelqReasons.class).findAll();
         List<MstDelqReasons> lkpAlasan = this.realm.copyFromRealm(rrAlasan);
@@ -194,36 +172,6 @@ public class ActivityVisitResult extends BasicActivity {
         hintAlasan.setDescription(getString(R.string.spinner_please_select));
         adapterAlasan.insert(hintAlasan, 0);
         spAlasan.setAdapter(adapterAlasan);
-        spAlasan.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
-            @Override
-            public void onItemSelected(AdapterView<?> adapterView, View view, int i, long l) {
-                updatePotensiList();
-            }
-
-            @Override
-            public void onNothingSelected(AdapterView<?> adapterView) {
-
-            }
-        });
-
-        RealmResults<MstParam> rrTindakSelanjutnya = this.realm.where(MstParam.class).equalTo("moduleId", 10)
-                .findAll();
-        List<MstParam> listTindakSelanjutnya = this.realm.copyFromRealm(rrTindakSelanjutnya);
-        TindakSelanjutnyaAdapter adapterTindakSelanjutnya = new TindakSelanjutnyaAdapter(this, android.R.layout.simple_spinner_item, listTindakSelanjutnya);
-        MstParam hintTindakSelanjutnya = new MstParam();
-        hintTindakSelanjutnya.setNotes(getString(R.string.spinner_please_select));
-        adapterTindakSelanjutnya.insert(hintTindakSelanjutnya, 0);
-        spTindakSelanjutnya.setAdapter(adapterTindakSelanjutnya);
-        spTindakSelanjutnya.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
-            @Override
-            public void onItemSelected(AdapterView<?> adapterView, View view, int i, long l) {
-            }
-
-            @Override
-            public void onNothingSelected(AdapterView<?> adapterView) {
-
-            }
-        });
 
         listenerDateTglJanjiBayar = new DatePickerDialog.OnDateSetListener() {
             @Override
@@ -246,6 +194,7 @@ public class ActivityVisitResult extends BasicActivity {
 
 
             String classCode = trnLDVComments.getClassCode();
+
             for(int i = 0; i < adapterKlasifikasi.getCount(); i++) {
                 if(classCode.equals(adapterKlasifikasi.getItem(i).getClassCode())){
                     spKlasifikasi.setSelection(i);
@@ -267,27 +216,8 @@ public class ActivityVisitResult extends BasicActivity {
                 }
             });
               */
-
-            Long potensi = trnLDVComments.getPotensi();
-            PotensiAdapter adapterPotensi = (PotensiAdapter) spPotensi.getAdapter();
-            for(int i = 0; i < adapterPotensi.getCount(); i++) {
-                if(potensi.longValue() == adapterPotensi.getItem(i).getPotensi().longValue()){
-                    spPotensi.setSelection(i);
-                    break;
-                }
-            }
-
-            String actionPlanCode = trnLDVComments.getActionPlan();
-            for(int i = 0; i < adapterTindakSelanjutnya.getCount(); i++) {
-                if(actionPlanCode.equals(adapterTindakSelanjutnya.getItem(i).getValue())){
-                    spTindakSelanjutnya.setSelection(i);
-                    break;
-                }
-            }
-
-// TODO: check potensi validasi disini
-//            if (trnLDVComments.getPotensi() != null)
-//                etPotensi.setText(String.valueOf(trnLDVComments.getPotensi()));
+            if (trnLDVComments.getPotensi() != null)
+                etPotensi.setText(String.valueOf(trnLDVComments.getPotensi()));
 
             if (trnLDVComments.getPromiseDate() != null)
                 etTglJanjiBayar.setText(Utility.convertDateToString(trnLDVComments.getPromiseDate(), "d / M / yyyy"));
@@ -296,45 +226,11 @@ public class ActivityVisitResult extends BasicActivity {
                 etJanjiBayar.setText(String.valueOf(trnLDVComments.getPlanPayAmount()));
 
             etBertemuDengan.setText(trnLDVComments.getWhoMet());
-//            etTindakSelanjutnya.setText(trnLDVComments.getActionPlan());
+            etTindakSelanjutnya.setText(trnLDVComments.getActionPlan());
 
             etKomentar.setText(trnLDVComments.getLkpComments());
         }
 
-    }
-
-    // potensi tergantung value dari alasan dan klasifikasi
-    private void updatePotensiList() {
-
-        MstLDVClassifications klasifikasi = (MstLDVClassifications) spKlasifikasi.getSelectedItem();
-        MstDelqReasons alasan = (MstDelqReasons ) spAlasan.getSelectedItem();
-
-        spPotensi.setVisibility(View.INVISIBLE);
-
-        if (klasifikasi == null || alasan == null) {
-            spPotensi.setAdapter(null);
-            return;
-        }
-
-        if (TextUtils.isEmpty(klasifikasi.getClassCode())
-                || TextUtils.isEmpty(alasan.getDelqCode())) {
-            spPotensi.setAdapter(null);
-            return;
-        }
-
-        RealmResults<MstPotensi> listPotensiRR = this.realm.where(MstPotensi.class)
-                .equalTo("delqId", alasan.getDelqCode())
-                .equalTo("classCode", klasifikasi.getClassCode())
-                .findAllSorted("seqNo");
-
-        List<MstPotensi> listPotensi = this.realm.copyFromRealm(listPotensiRR);
-        PotensiAdapter adapterPotensi = new PotensiAdapter(this, android.R.layout.simple_spinner_item, listPotensi);
-        MstPotensi hintPotensi = new MstPotensi();
-        hintPotensi.setPotensiDesc(getString(R.string.spinner_please_select));
-        adapterPotensi.insert(hintPotensi, 0);
-        spPotensi.setAdapter(adapterPotensi);
-
-        spPotensi.setVisibility(View.VISIBLE);
     }
 
     @OnClick(R.id.etTglJanjiBayar)
@@ -348,11 +244,11 @@ public class ActivityVisitResult extends BasicActivity {
     }
 
     @OnClick(R.id.btnSave)
-    public void onClickSave(){
+    public void onClickSave() {
 
         // reset errors
-//        etPotensi.setError(null);
-//        etTindakSelanjutnya.setError(null);
+        etPotensi.setError(null);
+        etTindakSelanjutnya.setError(null);
         etContractNo.setError(null);
         etBertemuDengan.setError(null);
         etKomentar.setError(null);
@@ -362,7 +258,7 @@ public class ActivityVisitResult extends BasicActivity {
         boolean cancel = false;
         View focusView = null;
         final String contractNo = etContractNo.getText().toString();
-//        final String potensi = etPotensi.getText().toString();
+        final String potensi = etPotensi.getText().toString();
         final String komentar = etKomentar.getText().toString();
 
         String sLKPFlags = spLKPFlags.getSelectedItem().toString();
@@ -372,13 +268,9 @@ public class ActivityVisitResult extends BasicActivity {
         String sKlasifikasi = spKlasifikasi.getSelectedItem().toString();
         MstLDVClassifications ldvClassifications = realm.where(MstLDVClassifications.class).equalTo("description", sKlasifikasi).findFirst();
 
-        MstPotensi potensiObj = (MstPotensi) spPotensi.getSelectedItem();
-        MstParam tindakSelanjutnyaObj = (MstParam) spTindakSelanjutnya.getSelectedItem();
-
         final String lkpFlag = ldvParameters == null ? "" : ldvParameters.getLkpFlag();
         final String delqCode = delqReasons == null ? "" : delqReasons.getDelqCode();
         final String classCode = ldvClassifications == null ? "" : ldvClassifications.getClassCode();
-//        final String potensi = ldvClassifications == null ? "" : ldvClassifications.getClassCode();
 
         if (TextUtils.isEmpty(lkpFlag)) {
             Toast.makeText(this, "Please select LKP Flag", Toast.LENGTH_SHORT).show();
@@ -388,7 +280,6 @@ public class ActivityVisitResult extends BasicActivity {
         } else {
             if (ldvParameters.getLkpFlag().equals("PTP"))
                 if (TextUtils.isEmpty(etTglJanjiBayar.getText().toString())) {
-                    Toast.makeText(this, "Tgl Janji Bayar cannot empty", Toast.LENGTH_SHORT).show();
                     etTglJanjiBayar.setError(getString(R.string.error_field_required));
                     focusView = etTglJanjiBayar;
                     cancel = true;
@@ -397,58 +288,17 @@ public class ActivityVisitResult extends BasicActivity {
                     Date datePTP = Utility.convertStringToDate(etTglJanjiBayar.getText().toString(), "d / M / yyyy");
 
                     if (datePTP == null) {
-                        Toast.makeText(this, "Tgl Janji Bayar salah tanggal", Toast.LENGTH_SHORT).show();
                         etTglJanjiBayar.setError(getString(R.string.error_invalid_date));
                         focusView = etTglJanjiBayar;
                         cancel = true;
                     } else {
-                        // get sysdate without time to get diff date
-                        DateFormat formatter = new SimpleDateFormat("dd/MM/yyyy");
-                        Date today = new Date();
-                        Date todayWithZeroTime = null;
-                        try {
-                            todayWithZeroTime = formatter.parse(formatter.format(today));
-                        } catch (ParseException e) {
-                            e.printStackTrace();
-
-                            String s = Utility.convertDateToString(new Date(), Utility.DATE_DATA_PATTERN);
-                            todayWithZeroTime = Utility.convertStringToDate(s, Utility.DATE_DATA_PATTERN);
-                        }
-
-                        long dateDiff = Utility.getDateDiff(todayWithZeroTime, datePTP, TimeUnit.DAYS);
-//                            jarak Janji Bayar(JB) tidak boleh lebih dr 7 hari
-                        int maxPromiseDays = ldvParameters.getMaxPromiseDays().intValue();
-
-                        if (dateDiff < 1 || dateDiff > maxPromiseDays) {
+                        long dateDiff = Utility.getDateDiff(new Date(), datePTP, TimeUnit.DAYS);
+                        if (dateDiff < 0) {
                             Toast.makeText(this, getString(R.string.error_ptp_date), Toast.LENGTH_SHORT).show();
                             etTglJanjiBayar.setError(getString(R.string.error_ptp_date));
                             focusView = etTglJanjiBayar;
                             cancel = true;
-                        } else {
-
-//                            Date maxPTPDate = Utility.addDays(todayWithZeroTime, maxPromiseDays);
-                            // TODO: tidak boleh lewat bulan
-                            int monthDiff = Utility.getMonthDiff(todayWithZeroTime, datePTP);
-//                            int monthPTP = Utility.getMonth(datePTP)+1;
-//                            int monthMaxPTP = Utility.getMonth(maxPTPDate)+1;
-                            if (monthDiff > 0) {
-                                Toast.makeText(this, getString(R.string.error_ptp_date_range), Toast.LENGTH_SHORT).show();
-                                etTglJanjiBayar.setError(getString(R.string.error_ptp_date_range));
-                                focusView = etTglJanjiBayar;
-                                cancel = true;
-                            } else {
-
-                                // TODO: tdk boleh tgl akhr bulan (based on after maxPromiseDays on same month)
-                                int dayEndMonth = Utility.getDateEndOfMonth(todayWithZeroTime);
-                                if (Utility.getDate(datePTP) == dayEndMonth) {
-                                    Toast.makeText(this, getString(R.string.error_ptp_date_range), Toast.LENGTH_SHORT).show();
-                                    etTglJanjiBayar.setError(getString(R.string.error_ptp_date_range));
-                                    focusView = etTglJanjiBayar;
-                                    cancel = true;
-                                }
-                            }
                         }
-
                     }
                 }
         }
@@ -470,37 +320,20 @@ public class ActivityVisitResult extends BasicActivity {
             focusView = etBertemuDengan;
             cancel = true;
         }
-/*
+
         if (!TextUtils.isEmpty(etTindakSelanjutnya.getText()) && etTindakSelanjutnya.getText().length() > 500) {
             etTindakSelanjutnya.setError(getString(R.string.error_value_too_long));
             focusView = etTindakSelanjutnya;
             cancel = true;
         }
-*/
+
         if (!TextUtils.isEmpty(etKomentar.getText()) && etKomentar.getText().length() > 2000) {
             etKomentar.setError(getString(R.string.error_value_too_long));
             focusView = etKomentar;
             cancel = true;
         }
 
-        if (potensiObj == null || TextUtils.isEmpty(potensiObj.getClassCode())) {
-            Toast.makeText(this, "Please select Potensi", Toast.LENGTH_SHORT).show();
-            focusView = spPotensi;
-            cancel = true;
-
-        } else {
-
-        }
-
-        if (tindakSelanjutnyaObj == null || TextUtils.isEmpty(tindakSelanjutnyaObj.getValue())) {
-            Toast.makeText(this, "Please select Tindak Selanjutnya", Toast.LENGTH_SHORT).show();
-            focusView = spTindakSelanjutnya;
-            cancel = true;
-
-        } else {
-
-        }
-        /*if (!TextUtils.isEmpty(potensi)) {
+        if (!TextUtils.isEmpty(potensi)) {
             int potensiValue = Integer.parseInt(potensi);
             if (potensiValue < 0 || potensiValue > 100) {
                 etPotensi.setError(getString(R.string.error_amount_invalid));
@@ -511,7 +344,7 @@ public class ActivityVisitResult extends BasicActivity {
             etPotensi.setError(getString(R.string.error_field_required));
             focusView = etPotensi;
             cancel = true;
-        }*/
+        }
 
         if (TextUtils.isEmpty(komentar)) {
             etKomentar.setError(getString(R.string.error_field_required));
@@ -593,18 +426,15 @@ public class ActivityVisitResult extends BasicActivity {
 
                 trnLDVComments.setDelqCode(delqCode);
                 trnLDVComments.setLkpComments(etKomentar.getText().toString());
-
-//                trnLDVComments.setActionPlan(etTindakSelanjutnya.getText().toString());
-                trnLDVComments.setActionPlan(((MstParam) spTindakSelanjutnya.getSelectedItem()).getValue());
-                trnLDVComments.setApDescription(((MstParam) spTindakSelanjutnya.getSelectedItem()).getNotes());
-
+                trnLDVComments.setActionPlan(etTindakSelanjutnya.getText().toString());
                 trnLDVComments.setClassCode(classCode);
                 trnLDVComments.setFlagToEmrafin("N");
 
                 if (Utility.isNumeric(etJanjiBayar.getText().toString()))
                     trnLDVComments.setPlanPayAmount(Long.parseLong(etJanjiBayar.getText().toString()));
-//                if (Utility.isNumeric(potensi))
-                    trnLDVComments.setPotensi(((MstPotensi) spPotensi.getSelectedItem()).getPotensi());
+
+                if (Utility.isNumeric(potensi))
+                    trnLDVComments.setPotensi(Long.parseLong(etPotensi.getText().toString()));
 
                 trnLDVComments.setWhoMet(etBertemuDengan.getText().toString());
 
@@ -628,15 +458,14 @@ public class ActivityVisitResult extends BasicActivity {
         }, new Realm.Transaction.OnSuccess() {
             @Override
             public void onSuccess() {
-                Toast.makeText(ActivityVisitResult.this, "Data saved !", Toast.LENGTH_SHORT).show();
+                Toast.makeText(ActivityVisitResult2.this, "Data saved !", Toast.LENGTH_SHORT).show();
             }
         }, new Realm.Transaction.OnError() {
             @Override
             public void onError(Throwable error) {
                 StringBuffer message2 = new StringBuffer();
                 message2.append("contractNo=").append(contractNo)
-                        .append(",potensi=").append(((MstPotensi) spPotensi.getSelectedItem()).getPotensi())
-                        .append(",actionPlan=").append(((MstParam) spTindakSelanjutnya.getSelectedItem()).getValue())
+                        .append(",potensi=").append(potensi)
                         .append(",lkpFlag=").append(lkpFlag)
                         .append(",delqCode=").append(delqCode)
                         .append(",classCode=").append(classCode)
@@ -645,7 +474,7 @@ public class ActivityVisitResult extends BasicActivity {
                 ;
 
                 NetUtil.syncLogError(getBaseContext(), realm, collectorId, "VisitResult", error.getMessage(), message2.toString());
-                Toast.makeText(ActivityVisitResult.this, "Database Error !", Toast.LENGTH_LONG).show();
+                Toast.makeText(ActivityVisitResult2.this, "Database Error !", Toast.LENGTH_LONG).show();
                 Snackbar.make(activityVisitResult, error.getMessage(), Snackbar.LENGTH_LONG).show();
             }
         });
@@ -818,112 +647,6 @@ public class ActivityVisitResult extends BasicActivity {
             tv.setPadding(10,10,10,10);
             tv.setSingleLine(false);
             tv.setText(list.get(position).getDescription());
-            tv.setTextSize(TypedValue.COMPLEX_UNIT_DIP, 16);
-
-            return tv;
-        }
-
-        @Override
-        public long getItemId(int position) {
-            return position;
-        }
-    }
-
-    public class PotensiAdapter extends ArrayAdapter<MstPotensi> {
-        private Context ctx;
-        private List<MstPotensi> list;
-
-
-        public PotensiAdapter(Context context, int resource, List<MstPotensi> objects) {
-            super(context, resource, objects);
-            this.ctx = context;
-            this.list = objects;
-
-        }
-
-        @Override
-        public int getCount() {
-            return list.size();
-        }
-
-        @Override
-        public MstPotensi getItem(int position) {
-            return list.get(position);
-        }
-
-        @Override
-        public View getView(int position, View convertView, ViewGroup parent) {
-            TextView tv = new TextView(this.ctx);
-//            TextView tv = (TextView) convertView.findViewById(R.id.nama);
-            tv.setPadding(10,10,10,10);
-            tv.setTextColor(Color.BLACK);
-            tv.setSingleLine(false);
-            tv.setText(list.get(position).getPotensiDesc());
-            tv.setTextSize(TypedValue.COMPLEX_UNIT_DIP, 16);
-
-            return tv;
-        }
-
-        @Override
-        public View getDropDownView(int position, View convertView, ViewGroup parent) {
-            TextView tv = new TextView(this.ctx);
-//            label.setTextColor(Color.BLACK);
-            tv.setPadding(10,10,10,10);
-            tv.setSingleLine(false);
-            tv.setText(list.get(position).getPotensiDesc());
-            tv.setTextSize(TypedValue.COMPLEX_UNIT_DIP, 16);
-
-            return tv;
-        }
-
-        @Override
-        public long getItemId(int position) {
-            return position;
-        }
-    }
-
-    public class TindakSelanjutnyaAdapter extends ArrayAdapter<MstParam> {
-        private Context ctx;
-        private List<MstParam> list;
-
-
-        public TindakSelanjutnyaAdapter(Context context, int resource, List<MstParam> objects) {
-            super(context, resource, objects);
-            this.ctx = context;
-            this.list = objects;
-
-        }
-
-        @Override
-        public int getCount() {
-            return list.size();
-        }
-
-        @Override
-        public MstParam getItem(int position) {
-            return list.get(position);
-        }
-
-        @Override
-        public View getView(int position, View convertView, ViewGroup parent) {
-            TextView tv = new TextView(this.ctx);
-//            TextView tv = (TextView) convertView.findViewById(R.id.nama);
-            tv.setPadding(10,10,10,10);
-            tv.setTextColor(Color.BLACK);
-            tv.setSingleLine(false);
-            tv.setText(list.get(position).getNotes());
-            tv.setTextSize(TypedValue.COMPLEX_UNIT_DIP, 16);
-
-            return tv;
-        }
-
-        @Override
-        public View getDropDownView(int position, View convertView, ViewGroup parent) {
-            TextView tv = new TextView(this.ctx);
-//            label.setTextColor(Color.BLACK);
-            tv.setPadding(10,10,10,10);
-            tv.setSingleLine(false);
-            tv.setText(list.get(position).getNotes());
             tv.setTextSize(TypedValue.COMPLEX_UNIT_DIP, 16);
 
             return tv;

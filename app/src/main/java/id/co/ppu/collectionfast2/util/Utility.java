@@ -29,13 +29,23 @@ import okhttp3.HttpUrl;
 
 public class Utility {
 
-    public final static String DATE_EXPIRED_YYYYMMDD = "20161104";
+    public final static String DATE_EXPIRED_YYYYMMDD = "20161111";
     public final static String[][] servers = {
-//            {"local-server", "10.212.4.214", "8090"},
+//            {"local-server", "10.212.0.71", "8090"},
             {"local-server", "192.168.1.107", "8090"},
             {"fast-mobile", "cmobile.radanafinance.co.id", "7001"}
     };
     public final static boolean developerMode = true;
+
+    // for load balancing support
+    public final static String[][] ipServers4LB = {
+    {
+        "fast-mobile", "139.255.35.100", "7001"
+    },
+    {
+        "fast-mobile", "202.51.118.70", "7001"
+    }
+    };
 
     public final static int NETWORK_TIMEOUT_MINUTES = 4;
 
@@ -270,6 +280,13 @@ public class Utility {
         return cal.getTime();
     }
 
+    public static Date addDays(Date startFrom, int days) {
+        Calendar cal = Calendar.getInstance();
+        cal.setTime(startFrom);
+        cal.add(Calendar.DAY_OF_YEAR, days); // <--
+        return cal.getTime();
+    }
+
     /**
      * Usually used for sync location.
      * @param time between 8 AM to 5 PM
@@ -315,6 +332,38 @@ public class Utility {
     public static long getDateDiff(Date date1, Date date2, TimeUnit timeUnit) {
         long diffInMillies = date2.getTime() - date1.getTime();
         return timeUnit.convert(diffInMillies,TimeUnit.MILLISECONDS);
+    }
+
+    public static int getMonthDiff(Date s1, Date s2) {
+        final Calendar d1 = Calendar.getInstance();
+        d1.setTime(s1);
+        final Calendar d2 = Calendar.getInstance();
+        d2.setTime(s2);
+        int diff = (d2.get(Calendar.YEAR) - d1.get(Calendar.YEAR)) * 12 + d2.get(Calendar.MONTH) - d1.get(Calendar.MONTH);
+        return diff;    }
+
+    /**
+     *
+     * @param date
+     * @return zero based. ie 0 is january
+     */
+    public static int getDate(Date date) {
+        Calendar c = Calendar.getInstance();
+        c.setTime(date);
+        return c.get(Calendar.DAY_OF_MONTH);
+    }
+
+    public static int getMonth(Date date) {
+        Calendar c = Calendar.getInstance();
+        c.setTime(date);
+        return c.get(Calendar.MONTH);
+    }
+
+    public static int getDateEndOfMonth(Date date) {
+        Calendar c = Calendar.getInstance();
+        c.setTime(date);
+
+        return c.getActualMaximum(Calendar.DAY_OF_MONTH);
     }
 
     public static boolean isEmailValid(String email) {

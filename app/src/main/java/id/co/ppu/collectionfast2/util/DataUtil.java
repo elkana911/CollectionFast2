@@ -18,6 +18,7 @@ import id.co.ppu.collectionfast2.pojo.master.MstLDVParameters;
 import id.co.ppu.collectionfast2.pojo.master.MstLDVStatus;
 import id.co.ppu.collectionfast2.pojo.master.MstOffices;
 import id.co.ppu.collectionfast2.pojo.master.MstParam;
+import id.co.ppu.collectionfast2.pojo.master.MstPotensi;
 import id.co.ppu.collectionfast2.pojo.master.MstZip;
 import id.co.ppu.collectionfast2.pojo.sync.SyncTrnLDVComments;
 import id.co.ppu.collectionfast2.pojo.sync.SyncTrnRVColl;
@@ -156,6 +157,13 @@ public class DataUtil {
                                         bgRealm.delete(MstOffices.class);
                                     }
                                     bgRealm.copyToRealmOrUpdate(respGetMasterData.getData().getOffices());
+
+                                    // insert potensi
+                                    count = bgRealm.where(MstPotensi.class).count();
+                                    if (count > 0) {
+                                        bgRealm.delete(MstPotensi.class);
+                                    }
+                                    bgRealm.copyToRealmOrUpdate(respGetMasterData.getData().getPotensi());
 
                                 }
                             });

@@ -17,10 +17,13 @@ import id.co.ppu.collectionfast2.pojo.UserData;
 import id.co.ppu.collectionfast2.pojo.trn.TrnCollPos;
 import id.co.ppu.collectionfast2.pojo.trn.TrnErrorLog;
 import id.co.ppu.collectionfast2.pojo.trn.TrnPhoto;
+import id.co.ppu.collectionfast2.pojo.trn.TrnRVB;
 import id.co.ppu.collectionfast2.rest.ApiInterface;
 import id.co.ppu.collectionfast2.rest.ServiceGenerator;
 import id.co.ppu.collectionfast2.rest.request.RequestLogError;
+import id.co.ppu.collectionfast2.rest.request.RequestRVB;
 import id.co.ppu.collectionfast2.rest.request.RequestSyncLocation;
+import id.co.ppu.collectionfast2.rest.response.ResponseRVB;
 import io.realm.Realm;
 import io.realm.RealmResults;
 import okhttp3.MediaType;
@@ -46,6 +49,7 @@ public class NetUtil {
     /**
      * KOnsepnya kalo ada koneksi langsung kirim, kalo tidak ada, simpan dulu di lokal.
      * Kalo sukses terkirim clear out data
+     *
      * @param ctx
      * @param realm
      * @param collectorId
@@ -113,8 +117,84 @@ public class NetUtil {
 
     }
 
+    public static void refreshRVBFromServer(final Context ctx) {
+
+        if (!isConnected(ctx)) {
+            return;
+        }
+
+        final UserData userData = (UserData) Storage.getObjPreference(ctx, Storage.KEY_USER, UserData.class);
+
+        ApiInterface fastService =
+                ServiceGenerator.createService(ApiInterface.class, Utility.buildUrl(Storage.getPreferenceAsInt(ctx, Storage.KEY_SERVER_ID, 0)));
+
+        RequestRVB req = new RequestRVB();
+        req.setCollectorId(userData.getUserId());
+
+        Call<ResponseRVB> call = fastService.getRVB(req);
+        call.enqueue(new Callback<ResponseRVB>() {
+            @Override
+            public void onResponse(Call<ResponseRVB> call, Response<ResponseRVB> response) {
+                if (response.isSuccessful()) {
+
+                    final ResponseRVB respGetRVB = response.body();
+
+                    if (respGetRVB.getData() == null || respGetRVB.getData().size() < 1) {
+                        return;
+                    }
+
+                    final Realm r = Realm.getDefaultInstance();
+
+                    r.executeTransactionAsync(new Realm.Transaction() {
+                                                  @Override
+                                                  public void execute(Realm realm) {
+                                                      // delete yg OP
+                                                      boolean b = realm.where(TrnRVB.class)
+                                                              .equalTo("rvbStatus", "OP")
+                                                              .findAll().deleteAllFromRealm();
+
+                                                      for (TrnRVB obj : respGetRVB.getData()) {
+
+                                                          TrnRVB rvbNo = realm.where(TrnRVB.class)
+                                                                  .equalTo("rvbNo", obj.getRvbNo())
+                                                                  .findFirst();
+                                                          //kalo ada brarti CL, jgn diupdate
+                                                          if (rvbNo != null) {
+
+                                                          } else {
+                                                              realm.copyToRealm(obj);
+                                                          }
+
+                                                      }
+                                                      // isi ulang dgn list yg baru, kecuali yg udah kepake di lokal jgn di OP lagi
+
+                                                  }
+                                              }, new Realm.Transaction.OnSuccess() {
+                                                  @Override
+                                                  public void onSuccess() {
+                                                      r.close();
+                                                  }
+                                              }, new Realm.Transaction.OnError() {
+                                                  @Override
+                                                  public void onError(Throwable error) {
+                                                      r.close();
+                                                  }
+                                              }
+                    );
+                }
+            }
+
+            @Override
+            public void onFailure(Call<ResponseRVB> call, Throwable t) {
+
+            }
+        });
+
+    }
+
     /**
      * Make sure this method is run in background or asynctask
+     *
      * @param ctx
      */
     public static void syncLocation(final Context ctx, final double[] gps, boolean offline) {

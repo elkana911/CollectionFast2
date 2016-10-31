@@ -201,6 +201,11 @@ public class MainActivity extends SyncActivity
             if (miReset != null) {
                 miReset.setVisible(Utility.developerMode);
             }
+
+            MenuItem miSyncRVB = mn.findItem(R.id.nav_getRvb);
+            if (miSyncRVB != null) {
+                miSyncRVB.setVisible(Utility.developerMode);
+            }
         }
 
         View v = navigationView.getHeaderView(0);
@@ -272,7 +277,7 @@ public class MainActivity extends SyncActivity
 
         // re-get
         ServerInfo si = this.realm.where(ServerInfo.class).findFirst();
-        if (si == null) {
+        if (si == null || si.getServerDate() == null) {
             try {
                 DataUtil.retrieveServerInfo(this.realm, this, new OnPostRetrieveServerInfo() {
                     @Override
@@ -292,6 +297,8 @@ public class MainActivity extends SyncActivity
 
                                     userConfig.setDeviceId(Utility.getDeviceId(MainActivity.this));
 
+                                } else {
+                                    userConfig.setServerDate(serverInfo.getServerDate());
                                 }
 
                                 userConfig.setLastLogin(new Date());
@@ -396,7 +403,11 @@ public class MainActivity extends SyncActivity
     protected void onStop() {
 
         // Disconnecting the client invalidates it.
-        LocationServices.FusedLocationApi.removeLocationUpdates(mGoogleApiClient, this);
+        try {
+            LocationServices.FusedLocationApi.removeLocationUpdates(mGoogleApiClient, this);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
 
         // only stop if it's connected, otherwise we crash
         if (mGoogleApiClient != null) {
@@ -512,6 +523,11 @@ public class MainActivity extends SyncActivity
 
             Intent i = new Intent(this, ActivityDeveloper.class);
             startActivity(i);
+
+            return false;
+        } else if (id == R.id.nav_getRvb) {
+
+            NetUtil.refreshRVBFromServer(this);
 
             return false;
         } else if (id == R.id.nav_chats) {
@@ -1440,6 +1456,17 @@ public class MainActivity extends SyncActivity
             return;
         }
 
+        /* ga mungkin cek lagi krn bisa loop saat get LKP tp blm close batch yg kmrn
+        TrnLDVHeader trnLDVHeader = realm.where(TrnLDVHeader.class)
+                .equalTo("collCode", currentUser.getUserId())
+//                .equalTo("createdBy", createdBy) logikanya 1 collector 1 ldvheader
+                .findFirst();
+
+        if (trnLDVHeader == null) {
+            Utility.showDialog(MainActivity.this, "No Data", "Please Get LKP first");
+            return;
+        }
+        */
         // konfirm
         // header should not checked
         final SyncLdvDetails syncLdvDetails = new SyncLdvDetails(this.realm);
@@ -1620,7 +1647,9 @@ public class MainActivity extends SyncActivity
         }
 
         if (RootUtil.isDeviceRooted()) {
-            Utility.showDialog(this, "Rooted", "This device is rooted. Unable to open application.");
+            Toast.makeText(this, "This device is rooted. Unable to open application.", Toast.LENGTH_SHORT).show();
+            resetData();
+            backToLoginScreen();
             return;
         }
 

@@ -12,6 +12,7 @@ public class MasterData {
     private List<MstLDVClassifications> ldpClassifications;
     private List<MstDelqReasons> delqReasons;
     private List<MstOffices> offices;
+    private List<MstPotensi> potensi;
 
     public List<MstParam> getParams() {
         return params;
@@ -59,5 +60,13 @@ public class MasterData {
 
     public void setOffices(List<MstOffices> offices) {
         this.offices = offices;
+    }
+
+    public List<MstPotensi> getPotensi() {
+        return potensi;
+    }
+
+    public void setPotensi(List<MstPotensi> potensi) {
+        this.potensi = potensi;
     }
 }

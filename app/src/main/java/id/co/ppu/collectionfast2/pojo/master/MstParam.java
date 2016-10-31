@@ -114,16 +114,6 @@ public class MstParam extends RealmObject implements Serializable {
 
     @Override
     public String toString() {
-        return "MstParam{" +
-                "moduleId=" + moduleId +
-                ", key='" + key + '\'' +
-                ", value='" + value + '\'' +
-                ", notes='" + notes + '\'' +
-                ", startedTimestamp=" + startedTimestamp +
-                ", createdTimestamp=" + createdTimestamp +
-                ", createdBy='" + createdBy + '\'' +
-                ", lastupdateBy='" + lastupdateBy + '\'' +
-                ", lastupdateTimestamp=" + lastupdateTimestamp +
-                '}';
+        return notes;
     }
 }

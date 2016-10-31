@@ -35,6 +35,9 @@ public class MstLDVParameters extends RealmObject implements Serializable {
     @SerializedName("isActive")
     private String isActive;
 
+    @SerializedName("maxPromiseDays")
+    private Long maxPromiseDays;
+
     @SerializedName("startedTimestamp")
     private Date startedTimestamp;
 
@@ -144,6 +147,14 @@ public class MstLDVParameters extends RealmObject implements Serializable {
 
     public void setLastupdateTimestamp(Date lastupdateTimestamp) {
         this.lastupdateTimestamp = lastupdateTimestamp;
+    }
+
+    public Long getMaxPromiseDays() {
+        return maxPromiseDays;
+    }
+
+    public void setMaxPromiseDays(Long maxPromiseDays) {
+        this.maxPromiseDays = maxPromiseDays;
     }
 
     @Override

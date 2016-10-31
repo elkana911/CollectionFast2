@@ -43,9 +43,9 @@
                 android:orientation="horizontal">
 
                 <android.support.design.widget.TextInputLayout
+                    android:layout_weight="0.5"
                     android:layout_width="0dp"
                     android:layout_height="wrap_content"
-                    android:layout_weight="0.5"
                     android:textColorHint="@android:color/primary_text_dark">
 
                     <AutoCompleteTextView
@@ -62,9 +62,9 @@
                 </android.support.design.widget.TextInputLayout>
 
                 <android.support.design.widget.TextInputLayout
+                    android:layout_weight="0.5"
                     android:layout_width="0dp"
                     android:layout_height="wrap_content"
-                    android:layout_weight="0.5"
                     android:textColorHint="@android:color/primary_text_dark">
 
                     <AutoCompleteTextView
@@ -174,29 +174,9 @@
                         android:layout_height="wrap_content"
                         android:spinnerMode="dropdown" />
                 </TableRow>
-
-                <TableRow>
-
-                    <TextView
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:text="Potensi" />
-
-                    <TextView
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:text=":" />
-
-                    <Spinner
-                        android:id="@+id/spPotensi"
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:visibility="invisible"
-                        android:spinnerMode="dropdown" />
-                </TableRow>
             </TableLayout>
 
-            <!--android.support.design.widget.TextInputLayout
+            <android.support.design.widget.TextInputLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content">
 
@@ -208,7 +188,7 @@
                     android:inputType="number"
                     android:maxLines="1" />
 
-            </android.support.design.widget.TextInputLayout -->
+            </android.support.design.widget.TextInputLayout>
 
             <android.support.design.widget.TextInputLayout
                 android:layout_width="match_parent"
@@ -223,32 +203,7 @@
 
             </android.support.design.widget.TextInputLayout>
 
-            <TableLayout
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:stretchColumns="2">
-
-                <TableRow>
-
-                    <TextView
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:text="Tindak Selanjutnya" />
-
-                    <TextView
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:text=":" />
-
-                    <Spinner
-                        android:id="@+id/spTindakSelanjutnya"
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:spinnerMode="dropdown" />
-                </TableRow>
-            </TableLayout>
-
-            <!-- android.support.design.widget.TextInputLayout
+            <android.support.design.widget.TextInputLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content">
 
@@ -259,7 +214,7 @@
                     android:hint="Tindak Selanjutnya"
                     android:maxLines="1" />
 
-            </android.support.design.widget.TextInputLayout -->
+            </android.support.design.widget.TextInputLayout>
 
             <android.support.design.widget.TextInputLayout
                 android:layout_width="match_parent"

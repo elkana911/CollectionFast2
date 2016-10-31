@@ -216,6 +216,19 @@ public class ActivityPaymentReceive extends BasicActivity {
                 .equalTo("rvbNo", rvbNo)
                 .findFirst();
 
+        if (selectedRVB == null) {
+            Toast.makeText(this, "Please select No RV !", Toast.LENGTH_SHORT).show();
+            focusView = spNoRVB;
+            cancel = true;
+        } else {
+            // cek dulu apakah TrnRVBnya udah CL atau masih OP ?
+            if (!editMode && selectedRVB.getRvbStatus().equals("CL")) {
+                Toast.makeText(this, "The selected No RV is already used.\nPlease select another !", Toast.LENGTH_SHORT).show();
+                focusView = spNoRVB;
+                cancel = true;
+            }
+        }
+
         final String createdBy = "JOB" + Utility.convertDateToString(lkpDate, Utility.DATE_DATA_PATTERN);
 
         TrnLDVDetails dtl = this.realm.where(TrnLDVDetails.class)
@@ -367,18 +380,6 @@ public class ActivityPaymentReceive extends BasicActivity {
             }
         }
 
-        if (selectedRVB == null) {
-            Toast.makeText(this, "Please select No RV !", Toast.LENGTH_SHORT).show();
-            focusView = spNoRVB;
-            cancel = true;
-        } else {
-            // cek dulu apakah TrnRVBnya udah CL atau masih OP ?
-            if (!editMode && selectedRVB.getRvbStatus().equals("CL")) {
-                Toast.makeText(this, "The selected No RV is already used.\nPlease select another !", Toast.LENGTH_SHORT).show();
-                focusView = spNoRVB;
-                cancel = true;
-            }
-        }
 
         if (!Utility.isValidMoney(penerimaan)) {
             etPenerimaan.setError(getString(R.string.error_amount_invalid));

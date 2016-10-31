@@ -21,6 +21,7 @@ import id.co.ppu.collectionfast2.R;
 import id.co.ppu.collectionfast2.component.BasicActivity;
 import id.co.ppu.collectionfast2.payment.entry.ActivityPaymentEntri;
 import id.co.ppu.collectionfast2.payment.receive.ActivityPaymentReceive;
+import id.co.ppu.collectionfast2.pojo.ServerInfo;
 import id.co.ppu.collectionfast2.pojo.UserData;
 import id.co.ppu.collectionfast2.pojo.master.MstUser;
 import id.co.ppu.collectionfast2.pojo.trn.TrnCollectAddr;
@@ -145,7 +146,7 @@ public class ActivityScrollingLKPDetails extends BasicActivity {
         this.lkpDate = new Date(extras.getLong(PARAM_LKP_DATE));
 
         if (this.collectorId == null || this.contractNo == null) {
-            throw new RuntimeException("collectorId cannot null");
+            throw new RuntimeException("collectorId / contractNo cannot null");
         }
 
         try {
@@ -186,10 +187,25 @@ public class ActivityScrollingLKPDetails extends BasicActivity {
     }
 
     private void updateButtonsVisibility(TrnLDVDetails dtl) {
+
         Button btnPaymentReceive = ButterKnife.findById(this, R.id.btnPaymentReceive);
         Button btnVisitResultEntry = ButterKnife.findById(this, R.id.btnVisitResultEntry);
         Button btnRepoEntry = ButterKnife.findById(this, R.id.btnRepoEntry);
         Button btnChangeAddr = ButterKnife.findById(this, R.id.btnChangeAddr);
+
+        Date serverDate = this.realm.where(ServerInfo.class).findFirst().getServerDate();
+//        UserConfig userConfig = this.realm.where(UserConfig.class).findFirst();
+
+        if (!Utility.isSameDay(new Date(), serverDate)) {
+            btnPaymentReceive.setEnabled(false);
+            btnVisitResultEntry.setEnabled(false);
+            btnRepoEntry.setEnabled(false);
+            btnChangeAddr.setEnabled(false);
+
+            Snackbar.make(activityScrollingLkpdtl, "Date changed, Please do Close Batch first", Snackbar.LENGTH_SHORT).show();
+            return;
+        }
+
         if (isLKPInquiry) {
             btnPaymentReceive.setText("PAYMENT ENTRY");
 

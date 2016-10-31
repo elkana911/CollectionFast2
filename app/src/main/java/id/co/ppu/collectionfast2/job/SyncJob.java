@@ -20,6 +20,8 @@ public class SyncJob extends BroadcastReceiver{
 
         final double[] gps = Location.getGPS(context);
         NetUtil.syncLocation(context, gps, false);
+        NetUtil.refreshRVBFromServer(context);
+
         /*
         try {
 

@@ -63,6 +63,13 @@ public class TrnLDVComments extends RealmObject implements Serializable {
     @SerializedName("dateDone")
     private Date dateDone;
 
+    @SerializedName("status")
+    private String status;
+
+    @SerializedName("apDescription")
+    private String apDescription;
+
+
     @SerializedName("startedTimestamp")
     private Date startedTimestamp;
 
@@ -254,6 +261,22 @@ public class TrnLDVComments extends RealmObject implements Serializable {
         this.dateDone = dateDone;
     }
 
+    public String getStatus() {
+        return status;
+    }
+
+    public void setStatus(String status) {
+        this.status = status;
+    }
+
+    public String getApDescription() {
+        return apDescription;
+    }
+
+    public void setApDescription(String apDescription) {
+        this.apDescription = apDescription;
+    }
+
     @Override
     public String toString() {
         return "TrnLDVComments{" +
@@ -274,6 +297,8 @@ public class TrnLDVComments extends RealmObject implements Serializable {
                 ", dateToEmrafin=" + dateToEmrafin +
                 ", flagDone='" + flagDone + '\'' +
                 ", dateDone=" + dateDone +
+                ", status='" + status + '\'' +
+                ", apDescription='" + apDescription + '\'' +
                 ", startedTimestamp=" + startedTimestamp +
                 ", createdTimestamp=" + createdTimestamp +
                 ", createdBy='" + createdBy + '\'' +
