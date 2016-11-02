@@ -43,28 +43,28 @@ public class Storage {
         editor.commit();
     }
 */
-    public static void savePreference(Context ctx, String key, String value) {
+    public static synchronized void savePreference(Context ctx, String key, String value) {
         SharedPreferences objPrefs = ctx.getSharedPreferences(PREF_APP, 0); // 0 - for private mode
         SharedPreferences.Editor prefsEditor = objPrefs.edit();
         prefsEditor.putString(key, value);
         prefsEditor.apply(); //asynkron
     }
 
-    public static void savePreferenceAsInt(Context ctx, String key, int value) {
+    public static synchronized void savePreferenceAsInt(Context ctx, String key, int value) {
         SharedPreferences objPrefs = ctx.getSharedPreferences(PREF_APP, 0); // 0 - for private mode
         SharedPreferences.Editor prefsEditor = objPrefs.edit();
         prefsEditor.putInt(key, value);
         prefsEditor.apply(); //asynkron
     }
 
-    public static void savePreferenceAsBoolean(Context ctx, String key, boolean value) {
+    public static synchronized void savePreferenceAsBoolean(Context ctx, String key, boolean value) {
         SharedPreferences objPrefs = ctx.getSharedPreferences(PREF_APP, 0); // 0 - for private mode
         SharedPreferences.Editor prefsEditor = objPrefs.edit();
         prefsEditor.putBoolean(key, value);
         prefsEditor.apply(); //asynkron
     }
 
-    public static void saveObjPreference(Context ctx, String key, Object value) {
+    public static synchronized void saveObjPreference(Context ctx, String key, Object value) {
 
         if (value == null) return;
 
@@ -77,13 +77,13 @@ public class Storage {
     }
 
     public static Object getObjPreference(Context ctx, String key, Class cls) {
-        String val = null;
+//        String val = null;
 
         try {
             //Get Reg Token on shared pref
             SharedPreferences userPrefs = ctx.getSharedPreferences(PREF_APP, 0); // 0 - for private mode
 
-            Gson gson = new Gson();
+//            Gson gson = new Gson();
             String json = userPrefs.getString(key, "");
 
             return new Gson().fromJson(json, cls);

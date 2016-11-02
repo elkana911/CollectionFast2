@@ -77,6 +77,9 @@ public class TrnRVColl extends RealmObject implements Serializable {
     @SerializedName("danaSosial")
     private Long danaSosial;
 
+    @SerializedName("closeBatch")
+    private String closeBatch;
+
     @SerializedName("createdTimestamp")
     private Date createdTimestamp;
 
@@ -297,6 +300,14 @@ public class TrnRVColl extends RealmObject implements Serializable {
         this.danaSosial = danaSosial;
     }
 
+    public String getCloseBatch() {
+        return closeBatch;
+    }
+
+    public void setCloseBatch(String closeBatch) {
+        this.closeBatch = closeBatch;
+    }
+
     @Override
     public String toString() {
         return "TrnRVColl{" +
@@ -322,6 +333,7 @@ public class TrnRVColl extends RealmObject implements Serializable {
                 ", daysIntrAc=" + daysIntrAc +
                 ", platform='" + platform + '\'' +
                 ", danaSosial=" + danaSosial +
+                ", closeBatch='" + closeBatch + '\'' +
                 ", createdTimestamp=" + createdTimestamp +
                 ", createdBy='" + createdBy + '\'' +
                 ", lastupdateBy='" + lastupdateBy + '\'' +

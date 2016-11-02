@@ -199,7 +199,7 @@ public class MainActivity extends SyncActivity
 
             MenuItem miReset = mn.findItem(R.id.nav_reset);
             if (miReset != null) {
-                miReset.setVisible(Utility.developerMode);
+//                miReset.setVisible(Utility.developerMode);
             }
 
             MenuItem miSyncRVB = mn.findItem(R.id.nav_getRvb);
@@ -295,7 +295,11 @@ public class MainActivity extends SyncActivity
 
                                     userConfig.setServerDate(serverInfo.getServerDate());
 
-                                    userConfig.setDeviceId(Utility.getDeviceId(MainActivity.this));
+                                    try {
+                                        userConfig.setDeviceId(Utility.getDeviceId(MainActivity.this));
+                                    } catch (Exception e) {
+                                        e.printStackTrace();
+                                    }
 
                                 } else {
                                     userConfig.setServerDate(serverInfo.getServerDate());
@@ -352,7 +356,11 @@ public class MainActivity extends SyncActivity
 
                         userConfig.setServerDate(serverDate);
 
-                        userConfig.setDeviceId(Utility.getDeviceId(MainActivity.this));
+                        try {
+                            userConfig.setDeviceId(Utility.getDeviceId(MainActivity.this));
+                        } catch (Exception e) {
+                            e.printStackTrace();
+                        }
 
                     }
 
@@ -382,10 +390,14 @@ public class MainActivity extends SyncActivity
             });
         }
 // Create the location client to start receiving updates
-        mGoogleApiClient = new GoogleApiClient.Builder(this)
-                .addApi(LocationServices.API)
-                .addConnectionCallbacks(this)
-                .addOnConnectionFailedListener(this).build();
+        try {
+            mGoogleApiClient = new GoogleApiClient.Builder(this)
+                    .addApi(LocationServices.API)
+                    .addConnectionCallbacks(this)
+                    .addOnConnectionFailedListener(this).build();
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
 
     }
 
@@ -395,7 +407,11 @@ public class MainActivity extends SyncActivity
         stopJob();
         startJob();
 
-        mGoogleApiClient.connect();
+        try {
+            mGoogleApiClient.connect();
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
 
     }
 
@@ -411,7 +427,11 @@ public class MainActivity extends SyncActivity
 
         // only stop if it's connected, otherwise we crash
         if (mGoogleApiClient != null) {
-            mGoogleApiClient.disconnect();
+            try {
+                mGoogleApiClient.disconnect();
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
         }
         stopJob();
 
@@ -1897,7 +1917,8 @@ public class MainActivity extends SyncActivity
 //                        getSupportFragmentManager().findFragmentById(R.id.content_frame);
 
                 if (frag != null && frag instanceof FragmentLKPList) {
-                    ((FragmentLKPList)frag).loadCurrentLKP();
+                    ((FragmentLKPList)frag).loadCurrentLKP(); // masih terkadang ga mau update
+//                    ((FragmentLKPList) frag).refresh(); ga mau update
 //                    frag.refresh();
                 }
 
@@ -2044,9 +2065,6 @@ public class MainActivity extends SyncActivity
 
     @Override
     public boolean onPrepareOptionsMenu(Menu menu) {
-
-
-
         return super.onPrepareOptionsMenu(menu);
     }
 }

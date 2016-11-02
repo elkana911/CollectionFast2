@@ -233,4 +233,6 @@
     <string name="title_activity_chats">Chats</string>
     <string name="error_ptp_max_month">PTP Date cannot next month</string>
     <string name="error_ptp_end_month">PTP Date cannot the end of the month</string>
+
+    <string name="error_expired_warning">This application will be expired within days.\nPlease contact Administrator for any updates.</string>
 </resources>

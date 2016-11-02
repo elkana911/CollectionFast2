@@ -23,7 +23,6 @@ import id.co.ppu.collectionfast2.payment.entry.ActivityPaymentEntri;
 import id.co.ppu.collectionfast2.payment.receive.ActivityPaymentReceive;
 import id.co.ppu.collectionfast2.pojo.ServerInfo;
 import id.co.ppu.collectionfast2.pojo.UserData;
-import id.co.ppu.collectionfast2.pojo.master.MstUser;
 import id.co.ppu.collectionfast2.pojo.trn.TrnCollectAddr;
 import id.co.ppu.collectionfast2.pojo.trn.TrnContractBuckets;
 import id.co.ppu.collectionfast2.pojo.trn.TrnLDVComments;
@@ -405,10 +404,11 @@ public class ActivityScrollingLKPDetails extends BasicActivity {
         // dibedain based on RPC job (Professional Kolektor)
         UserData currentUser = (UserData) Storage.getObjPreference(getApplicationContext(), Storage.KEY_USER, UserData.class);
 
-        MstUser user = currentUser.getUser().get(0);
+//        MstUser user = currentUser.getUser().get(0);
 
         Intent i;
-        if (user.getCollectorType().equalsIgnoreCase("RPC")) {
+        if (currentUser.getCollectorType().equalsIgnoreCase("RPC")) {
+//        if (user.getCollectorType().equalsIgnoreCase("RPC")) {
             i = new Intent(this, ActivityVisitResultRPC.class);
         } else {
             i = new Intent(this, ActivityVisitResult.class);

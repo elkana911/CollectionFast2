@@ -584,8 +584,8 @@ public class LoginActivity extends AppCompatActivity {
                                             if (count > 0) {
                                                 realm.delete(MstSecUser.class);
                                             }
-                                            realm.copyToRealm(respLogin.getData().getUser());
-                                            realm.copyToRealm(respLogin.getData().getSecUser());
+//                                            realm.copyToRealm(respLogin.getData().getUser());
+//                                            realm.copyToRealm(respLogin.getData().getSecUser());
 
                                         }
                                     }, new Realm.Transaction.OnSuccess() {

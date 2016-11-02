@@ -635,8 +635,10 @@ public class ActivityPaymentEntri extends BasicActivity implements FragmentActiv
 
                 trnRVColl.setPaymentFlag(2L);
 
-                trnRVColl.setCollId(userData.getUser().get(0).getUserId());
-                trnRVColl.setOfficeCode(userData.getUser().get(0).getBranchId());
+                trnRVColl.setCollId(userData.getUserId());
+                trnRVColl.setOfficeCode(userData.getBranchId());
+//                trnRVColl.setCollId(userData.getUser().get(0).getUserId());
+//                trnRVColl.setOfficeCode(userData.getUser().get(0).getBranchId());
                 trnRVColl.setInstNo(Long.parseLong(etAngsuranKe.getText().toString()));
                 trnRVColl.setFlagDone("Y");
                 trnRVColl.setTransDate(serverDate);

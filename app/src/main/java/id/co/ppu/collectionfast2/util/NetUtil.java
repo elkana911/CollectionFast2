@@ -16,6 +16,7 @@ import id.co.ppu.collectionfast2.listener.OnSuccessError;
 import id.co.ppu.collectionfast2.pojo.UserData;
 import id.co.ppu.collectionfast2.pojo.trn.TrnCollPos;
 import id.co.ppu.collectionfast2.pojo.trn.TrnErrorLog;
+import id.co.ppu.collectionfast2.pojo.trn.TrnLDVHeader;
 import id.co.ppu.collectionfast2.pojo.trn.TrnPhoto;
 import id.co.ppu.collectionfast2.pojo.trn.TrnRVB;
 import id.co.ppu.collectionfast2.rest.ApiInterface;
@@ -123,7 +124,24 @@ public class NetUtil {
             return;
         }
 
-        final UserData userData = (UserData) Storage.getObjPreference(ctx, Storage.KEY_USER, UserData.class);
+        // dan hanya kalo ada header saja
+        Realm r1 = Realm.getDefaultInstance();
+        try {
+            if (r1.where(TrnLDVHeader.class).count() < 1) {
+                return;
+            }
+        }finally {
+            if (r1 != null) {
+                r1.close();
+            }
+        }
+
+
+        final UserData userData = (UserData) Storage.getObjPreference(ctx.getApplicationContext(), Storage.KEY_USER, UserData.class);
+
+        if (userData == null) {
+            return;
+        }
 
         ApiInterface fastService =
                 ServiceGenerator.createService(ApiInterface.class, Utility.buildUrl(Storage.getPreferenceAsInt(ctx, Storage.KEY_SERVER_ID, 0)));
@@ -205,7 +223,11 @@ public class NetUtil {
             Log.i("eric.gps", "lat=" + String.valueOf(gps[0]) + ",lng=" + String.valueOf(gps[1]));
 //            final Date twoDaysAgo = Utility.getTwoDaysAgo(new Date());
 
-            final UserData userData = (UserData) Storage.getObjPreference(ctx, Storage.KEY_USER, UserData.class);
+            final UserData userData = (UserData) Storage.getObjPreference(ctx.getApplicationContext(), Storage.KEY_USER, UserData.class);
+
+            if (userData == null) {
+                return;
+            }
 
             realm.executeTransaction(new Realm.Transaction() {
                 @Override
@@ -277,6 +299,8 @@ public class NetUtil {
         } catch (Exception e) {
             e.printStackTrace();
         } finally {
+
+            if (realm != null)
             realm.close();
         }
 

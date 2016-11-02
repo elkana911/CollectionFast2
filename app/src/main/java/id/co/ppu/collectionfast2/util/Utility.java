@@ -29,15 +29,16 @@ import okhttp3.HttpUrl;
 
 public class Utility {
 
-    public final static String DATE_EXPIRED_YYYYMMDD = "20161111";
+    public final static String DATE_EXPIRED_YYYYMMDD = "20211231";
     public final static String[][] servers = {
-//            {"local-server", "10.212.0.71", "8090"},
-            {"local-server", "192.168.1.107", "8090"},
-            {"fast-mobile", "cmobile.radanafinance.co.id", "7001"}
+            {"local-server", "10.212.0.71", "8090"}
+//            {"local-server", "192.168.1.102", "8090"}
+            ,{"fast-mobile", "cmobile.radanafinance.co.id", "7001"}
+            ,{"fast-mobile2", "c1mobile.radanafinance.co.id", "7001"}
     };
     public final static boolean developerMode = true;
-
-    // for load balancing support
+/*
+    // for load balancing support, cancelled.
     public final static String[][] ipServers4LB = {
     {
         "fast-mobile", "139.255.35.100", "7001"
@@ -46,8 +47,8 @@ public class Utility {
         "fast-mobile", "202.51.118.70", "7001"
     }
     };
-
-    public final static int NETWORK_TIMEOUT_MINUTES = 4;
+*/
+    public final static int NETWORK_TIMEOUT_MINUTES = 2;
 
 //    public final static String[][] servers = {{"local-server", "10.100.100.77", "8090"}
 //            ,{"fast-mobile", "cmobile.radanafinance.co.id", "7001"}

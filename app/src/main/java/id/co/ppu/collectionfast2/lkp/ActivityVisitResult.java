@@ -327,6 +327,8 @@ public class ActivityVisitResult extends BasicActivity {
                 .equalTo("classCode", klasifikasi.getClassCode())
                 .findAllSorted("seqNo");
 
+        // TODO: bisa slow disini karena ga ada primarykey. jumlah row 420. need progressbar
+
         List<MstPotensi> listPotensi = this.realm.copyFromRealm(listPotensiRR);
         PotensiAdapter adapterPotensi = new PotensiAdapter(this, android.R.layout.simple_spinner_item, listPotensi);
         MstPotensi hintPotensi = new MstPotensi();
