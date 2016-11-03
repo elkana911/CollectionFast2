@@ -543,15 +543,20 @@ public class ActivityVisitResult extends BasicActivity {
 //            return;
 
             // bisa ambil dr trnCollPos
-            TrnCollPos lastCollPos = realm.where(TrnCollPos.class)
-                    .equalTo("collectorId", collectorId)
-                    .findAllSorted("lastupdateTimestamp", Sort.DESCENDING)
-                    .first();
 
-            if (lastCollPos != null) {
-                latitude = lastCollPos.getLatitude();
-                longitude = lastCollPos.getLongitude();
+            RealmResults<TrnCollPos> allSorted = realm.where(TrnCollPos.class)
+                    .equalTo("collectorId", collectorId)
+                    .findAllSorted("lastupdateTimestamp", Sort.DESCENDING);
+
+            if (allSorted.size() > 0) {
+
+                TrnCollPos lastCollPos = allSorted.first();
+                if (lastCollPos != null) {
+                    latitude = lastCollPos.getLatitude();
+                    longitude = lastCollPos.getLongitude();
+                }
             }
+
         }
 
         final Date serverDate = realm.where(ServerInfo.class).findFirst().getServerDate();
