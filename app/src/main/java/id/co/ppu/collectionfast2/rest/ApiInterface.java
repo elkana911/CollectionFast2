@@ -95,4 +95,9 @@ public interface ApiInterface {
 
     @POST("fast/get_any_lkp_user")
     Call<ResponseUserPwd> getAnyLKPUser();
+
+    @GET("fast/get_app_version")
+    Call<ResponseBody> getAppVersion(@Query("version") String version);
+
+
 }

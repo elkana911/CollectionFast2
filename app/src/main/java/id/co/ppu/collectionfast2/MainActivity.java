@@ -525,6 +525,33 @@ public class MainActivity extends SyncActivity
             startActivityForResult(new Intent(this, SettingsActivity.class), 999);
             return true;
         }
+        else if (id == R.id.action_reset) {
+            AlertDialog.Builder alertDialogBuilder = new AlertDialog.Builder(this);
+            alertDialogBuilder.setTitle("Reset Data");
+            alertDialogBuilder.setMessage("This will Logout Application.\nAre you sure?");
+            //null should be your on click listener
+            alertDialogBuilder.setPositiveButton("Yes", new DialogInterface.OnClickListener() {
+
+                @Override
+                public void onClick(DialogInterface dialog, int which) {
+
+                    resetData();
+                    backToLoginScreen();
+
+                }
+            });
+
+            alertDialogBuilder.setNegativeButton("No", new DialogInterface.OnClickListener() {
+
+                @Override
+                public void onClick(DialogInterface dialog, int which) {
+                    dialog.dismiss();
+                }
+            });
+
+            alertDialogBuilder.show();
+            return true;
+        }
 
         return super.onOptionsItemSelected(item);
     }
@@ -761,11 +788,6 @@ public class MainActivity extends SyncActivity
         });
 
         alertDialogBuilder.show();
-    }
-
-    private void resetData() {
-        // TODO: clear cookie
-        DataUtil.resetData(realm);
     }
 
     @OnClick(R.id.fab)

@@ -1,19 +1,19 @@
 <?xml version="1.0" encoding="utf-8"?>
 <menu xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto">
-    <item android:id="@+id/action_search"
+    <item
+        android:id="@+id/action_search"
+        android:icon="@android:drawable/ic_menu_search"
         android:orderInCategory="5"
         android:title="Search"
-        android:icon="@android:drawable/ic_menu_search"
         android:visible="false"
-        app:showAsAction="ifRoom|collapseActionView"
-        app:actionViewClass="android.support.v7.widget.SearchView" />
+        app:actionViewClass="android.support.v7.widget.SearchView"
+        app:showAsAction="ifRoom|collapseActionView" />
     <item
         android:id="@+id/action_settings"
         android:orderInCategory="100"
         android:title="@string/action_settings"
-        app:showAsAction="never">
-        </item>
+        app:showAsAction="never"></item>
     <item
         android:orderInCategory="101"
         android:title="@string/action_general_info"
@@ -33,12 +33,20 @@
                 android:id="@+id/nav_nearlyPayment"
                 android:icon="@drawable/ic_looks_3_black_24dp"
                 android:title="Nearly Payment Point"
-                app:showAsAction="never"/>
+                app:showAsAction="never" />
             <item
                 android:id="@+id/nav_radanaOffice"
                 android:icon="@drawable/ic_looks_4_black_24dp"
                 android:title="Radana Office Address"
-                app:showAsAction="never"/>
+                app:showAsAction="never" />
         </menu>
-        </item>
+    </item>
+    <item
+        android:id="@+id/action_reset"
+        android:orderInCategory="101"
+        android:icon="@drawable/ic_phonelink_erase_black_24dp"
+        android:title="Reset Local Data"
+        app:showAsAction="never">
+    </item>
+
 </menu>

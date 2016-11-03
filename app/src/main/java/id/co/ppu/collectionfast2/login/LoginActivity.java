@@ -27,6 +27,7 @@ import android.widget.EditText;
 import android.widget.ImageView;
 import android.widget.Spinner;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import com.google.android.gms.appindexing.Action;
 import com.google.android.gms.appindexing.AppIndex;
@@ -41,9 +42,12 @@ import java.util.List;
 import butterknife.BindView;
 import butterknife.ButterKnife;
 import butterknife.OnClick;
+import id.co.ppu.collectionfast2.BuildConfig;
 import id.co.ppu.collectionfast2.MainActivity;
 import id.co.ppu.collectionfast2.R;
+import id.co.ppu.collectionfast2.exceptions.ExpiredException;
 import id.co.ppu.collectionfast2.listener.OnPostRetrieveServerInfo;
+import id.co.ppu.collectionfast2.listener.OnSuccessError;
 import id.co.ppu.collectionfast2.pojo.ServerInfo;
 import id.co.ppu.collectionfast2.pojo.UserData;
 import id.co.ppu.collectionfast2.pojo.master.MstSecUser;
@@ -70,6 +74,9 @@ import retrofit2.Response;
  */
 public class LoginActivity extends AppCompatActivity {
 
+    private static final String TAG = "login";
+
+
     // UI references.
     @BindView(R.id.username)
     AutoCompleteTextView mUserNameView;
@@ -89,6 +96,9 @@ public class LoginActivity extends AppCompatActivity {
     @BindView(R.id.btnGetLKPUser)
     Button btnGetLKPUser;
 
+    @BindView(R.id.tvVersion)
+    TextView tvVersion;
+
     private Realm realm;
     /**
      * ATTENTION: This was auto-generated to implement the App Indexing API.
@@ -103,6 +113,12 @@ public class LoginActivity extends AppCompatActivity {
 
         ButterKnife.bind(this);
 
+        int versionCode = BuildConfig.VERSION_CODE;
+        String versionName = BuildConfig.VERSION_NAME;
+
+        tvVersion.setText("v" + versionName);
+
+
         if (getResources().getConfiguration().orientation
                 == Configuration.ORIENTATION_LANDSCAPE) {
             imageLogo.setVisibility(View.GONE);
@@ -115,7 +131,34 @@ public class LoginActivity extends AppCompatActivity {
             public boolean onEditorAction(TextView textView, int id, KeyEvent keyEvent) {
                 if (id == R.id.login || id == EditorInfo.IME_NULL) {
                     try {
-                        attemptLogin();
+
+                        isLatestVersion(new OnSuccessError() {
+                            @Override
+                            public void onSuccess(String msg) {
+                                try {
+                                    attemptLogin();
+                                } catch (Exception e) {
+                                    e.printStackTrace();
+                                }
+                            }
+
+                            @Override
+                            public void onFailure(Throwable throwable) {
+                                if (throwable == null)
+                                    return;
+
+                                if (throwable instanceof ExpiredException)
+                                    Utility.showDialog(LoginActivity.this, "Version Changed", throwable.getMessage());
+                                else
+                                    Toast.makeText(LoginActivity.this, throwable.getMessage(), Toast.LENGTH_SHORT).show();
+                            }
+
+                            @Override
+                            public void onSkip() {
+
+                            }
+                        });
+
                     } catch (Exception e) {
                         e.printStackTrace();
                     }
@@ -189,7 +232,9 @@ public class LoginActivity extends AppCompatActivity {
         for (int i = 0; i < Utility.servers.length; i++) {
 
             if (!Utility.developerMode) {
-                if (Utility.servers[i][0].startsWith("local"))
+                if (Utility.servers[i][0].startsWith("local")
+                        || Utility.servers[i][0].startsWith("dev-")
+                        )
                     continue;
             }
 
@@ -225,7 +270,33 @@ public class LoginActivity extends AppCompatActivity {
         }
 
         try {
-            attemptLogin();
+            isLatestVersion(new OnSuccessError() {
+                @Override
+                public void onSuccess(String msg) {
+                    try {
+                        attemptLogin();
+                    } catch (Exception e) {
+                        e.printStackTrace();
+                    }
+                }
+
+                @Override
+                public void onFailure(Throwable throwable) {
+                    if (throwable == null)
+                        return;
+
+                    if (throwable instanceof ExpiredException)
+                        Utility.showDialog(LoginActivity.this, "Version Changed", throwable.getMessage());
+                    else
+                        Toast.makeText(LoginActivity.this, throwable.getMessage(), Toast.LENGTH_SHORT).show();
+                }
+
+                @Override
+                public void onSkip() {
+
+                }
+            });
+
         } catch (Exception e) {
             e.printStackTrace();
         }
@@ -252,6 +323,7 @@ public class LoginActivity extends AppCompatActivity {
     }
 
     private void attemptLogin() throws Exception {
+
         Date sysDate = new Date();
         if (sysDate.after(Utility.convertStringToDate(Utility.DATE_EXPIRED_YYYYMMDD, "yyyyMMdd"))) {
             Utility.showDialog(this, "Expired App", "This application version is expired. Please update from the latest");
@@ -358,6 +430,83 @@ public class LoginActivity extends AppCompatActivity {
 
             }
         }
+
+    }
+
+    private void isLatestVersion(final OnSuccessError listener) {
+// TODO: ask wiwan ,kalo offline bisa pake app ?
+        int versionCode = BuildConfig.VERSION_CODE;
+        final String versionName = BuildConfig.VERSION_NAME;
+
+        ApiInterface fastService =
+                ServiceGenerator.createService(ApiInterface.class, Utility.buildUrl(Storage.getPreferenceAsInt(getApplicationContext(), Storage.KEY_SERVER_ID, 0)));
+
+        Call<ResponseBody> call = fastService.getAppVersion(versionName);
+
+//        if return same version then return true
+        call.enqueue(new Callback<ResponseBody>() {
+            @Override
+            public void onResponse(Call<ResponseBody> call, Response<ResponseBody> response) {
+                ResponseBody body1 = response.body();
+
+                if (response.isSuccessful()) {
+
+                    try {
+                        if (body1 != null) {
+                            String s = body1.string();
+
+                            Log.d(TAG, s);
+
+                            if (s.equals(versionName)) {
+                                if (listener != null) {
+                                    listener.onSuccess(s);
+                                }
+                            } else {
+                                if (listener != null) {
+                                    listener.onFailure(new ExpiredException("Please update app to latest version"));
+                                }
+
+                                Intent browser = new Intent(Intent.ACTION_VIEW, Uri.parse(s));
+                                startActivity(browser);
+                            }
+                        }
+                    } catch (IOException e) {
+                        e.printStackTrace();
+                    }
+
+                } else {
+                    try {
+                        if (body1 != null) {
+                            String s = body1.string();
+
+                            if (listener != null) {
+                                listener.onFailure(new RuntimeException(s));
+                            }
+
+                            Log.d(TAG, s);
+                        }
+                    } catch (IOException e) {
+                        e.printStackTrace();
+                        if (listener != null) {
+                            listener.onFailure(e);
+                        }
+                    }
+
+                    Toast.makeText(LoginActivity.this, "get version failed", Toast.LENGTH_SHORT).show();
+                }
+
+            }
+
+            @Override
+            public void onFailure(Call<ResponseBody> call, Throwable t) {
+                Toast.makeText(LoginActivity.this, t.getMessage(), Toast.LENGTH_SHORT).show();
+                t.printStackTrace();
+
+                if (listener != null) {
+                    listener.onFailure(t);
+                }
+            }
+        });
 
     }
 

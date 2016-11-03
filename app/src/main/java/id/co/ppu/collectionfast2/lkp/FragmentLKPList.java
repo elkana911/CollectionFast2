@@ -255,6 +255,11 @@ public class FragmentLKPList extends Fragment {
     public void retrieveLKP(OnLKPListListener listener, Date serverDate) {
         UserConfig userConfig = this.realm.where(UserConfig.class).findFirst();
 
+        if (userConfig == null) {
+            Utility.showDialog(getContext(), "Cannot Get LKP", "Unable to get initial data.\nPlease logout and login again.");
+            return;
+        }
+
         if (!Utility.isSameDay(userConfig.getLastLogin(), serverDate)) {
             Utility.showDialog(getContext(), "Close Batch", "Please do Close Batch first");
             return;

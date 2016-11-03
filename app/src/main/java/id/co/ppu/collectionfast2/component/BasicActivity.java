@@ -13,6 +13,7 @@ import id.co.ppu.collectionfast2.pojo.trn.TrnLDVComments;
 import id.co.ppu.collectionfast2.pojo.trn.TrnRVColl;
 import id.co.ppu.collectionfast2.pojo.trn.TrnRepo;
 import id.co.ppu.collectionfast2.settings.SettingsActivity;
+import id.co.ppu.collectionfast2.util.DataUtil;
 import id.co.ppu.collectionfast2.util.Utility;
 import io.realm.Realm;
 import io.realm.RealmQuery;
@@ -54,6 +55,10 @@ public class BasicActivity extends AppCompatActivity {
         }
 
         return super.onOptionsItemSelected(item);
+    }
+
+    protected void resetData() {
+        DataUtil.resetData(realm);
     }
 
 

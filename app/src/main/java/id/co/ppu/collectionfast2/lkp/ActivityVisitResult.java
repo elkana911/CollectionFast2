@@ -538,7 +538,7 @@ public class ActivityVisitResult extends BasicActivity {
 
         if (latitude.equals("0.0") && longitude.equals("0.0")) {
             Snackbar.make(activityVisitResult, "Unable to get location. Please turn on GPS.", Snackbar.LENGTH_LONG).show();
-            return;
+//            return;
         }
 
         final Date serverDate = realm.where(ServerInfo.class).findFirst().getServerDate();
