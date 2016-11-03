@@ -27,6 +27,7 @@ import id.co.ppu.collectionfast2.rest.request.RequestSyncLocation;
 import id.co.ppu.collectionfast2.rest.response.ResponseRVB;
 import io.realm.Realm;
 import io.realm.RealmResults;
+import io.realm.Sort;
 import okhttp3.MediaType;
 import okhttp3.MultipartBody;
 import okhttp3.RequestBody;
@@ -280,10 +281,23 @@ public class NetUtil {
                         r.executeTransactionAsync(new Realm.Transaction() {
                             @Override
                             public void execute(Realm realm) {
-                                // delete local data
-                                boolean b = realm.where(TrnCollPos.class)
+                                // delete local data, tapi sisain satu buat VisitResult
+                                TrnCollPos lastCollPos = realm.where(TrnCollPos.class)
                                         .equalTo("collectorId", userData.getUserId())
-                                        .findAll().deleteAllFromRealm();
+                                        .findAllSorted("lastupdateTimestamp", Sort.DESCENDING)
+                                        .first();
+
+                                if (lastCollPos != null) {
+                                    TrnCollPos firstCollPos = realm.copyFromRealm(lastCollPos);
+
+                                    boolean b = realm.where(TrnCollPos.class)
+                                            .equalTo("collectorId", userData.getUserId())
+                                            .findAll().deleteAllFromRealm();
+
+                                    // masukin lagi
+                                    realm.copyToRealm(firstCollPos);
+                                }
+
 
                             }
                         });

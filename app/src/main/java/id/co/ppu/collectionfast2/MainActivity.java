@@ -399,6 +399,7 @@ public class MainActivity extends SyncActivity
             e.printStackTrace();
         }
 
+        Storage.savePreference(getApplicationContext(), Storage.KEY_LOGIN_DATE,  new Date().toString());
     }
 
     @Override
@@ -754,6 +755,7 @@ public class MainActivity extends SyncActivity
         }
 
         // flag as clean logout
+        Storage.savePreference(getApplicationContext(), Storage.KEY_LOGIN_DATE,  null);
         Storage.savePreference(getApplicationContext(), Storage.KEY_LOGOUT_DATE,  new Date().toString());
 
         startActivity(intent);

@@ -28,6 +28,7 @@ public class Storage {
     public static final String KEY_PASSWORD_REMEMBER = "password.remember";
     public static final String KEY_PASSWORD_LAST = "password.last";
 
+    public static final String KEY_LOGIN_DATE = "login.date";
     public static final String KEY_LOGOUT_DATE = "logout.date";
 
     /*
@@ -74,6 +75,10 @@ public class Storage {
         String json = new Gson().toJson(value);
         prefsEditor.putString(key, json);
         prefsEditor.commit();   //synkron
+    }
+
+    public static SharedPreferences getSharedPreferences(Context ctx) {
+        return ctx.getSharedPreferences(PREF_APP, 0);
     }
 
     public static Object getObjPreference(Context ctx, String key, Class cls) {

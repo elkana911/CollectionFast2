@@ -13,12 +13,14 @@ import android.widget.TextView;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 import butterknife.BindView;
 import butterknife.ButterKnife;
 import id.co.ppu.collectionfast2.R;
 import id.co.ppu.collectionfast2.component.BasicActivity;
+import id.co.ppu.collectionfast2.util.Storage;
 import io.realm.Realm;
 import io.realm.RealmModel;
 
@@ -170,6 +172,16 @@ public class ActivityDeveloper extends BasicActivity {
                 displayRows(listTrn);
                 displayRows(listSync);
                 displayRows(listOthers);
+
+                List<Pair<String, String>> listPref = new ArrayList<>();
+                Map<String, ?> allEntries = Storage.getSharedPreferences(getApplicationContext()).getAll();
+                for (Map.Entry<String, ?> entry : allEntries.entrySet()) {
+                    Pair<String, String> p = Pair.create(entry.getKey(), "" + entry.getValue().toString());
+
+                    listPref.add(p);
+                }
+
+                displayRows(listPref);
 
                 if (mProgressDialog.isShowing()) {
                     mProgressDialog.dismiss();

@@ -40,6 +40,7 @@ import id.co.ppu.collectionfast2.pojo.master.MstLDVParameters;
 import id.co.ppu.collectionfast2.pojo.master.MstParam;
 import id.co.ppu.collectionfast2.pojo.master.MstPotensi;
 import id.co.ppu.collectionfast2.pojo.sync.SyncTrnLDVComments;
+import id.co.ppu.collectionfast2.pojo.trn.TrnCollPos;
 import id.co.ppu.collectionfast2.pojo.trn.TrnLDVComments;
 import id.co.ppu.collectionfast2.pojo.trn.TrnLDVCommentsPK;
 import id.co.ppu.collectionfast2.pojo.trn.TrnLDVDetails;
@@ -47,6 +48,7 @@ import id.co.ppu.collectionfast2.util.NetUtil;
 import id.co.ppu.collectionfast2.util.Utility;
 import io.realm.Realm;
 import io.realm.RealmResults;
+import io.realm.Sort;
 
 public class ActivityVisitResult extends BasicActivity {
 
@@ -533,16 +535,29 @@ public class ActivityVisitResult extends BasicActivity {
         }
 
         double[] gps = Location.getGPS(this);
-        final String latitude = String.valueOf(gps[0]);
-        final String longitude = String.valueOf(gps[1]);
+        String latitude = String.valueOf(gps[0]);
+        String longitude = String.valueOf(gps[1]);
 
         if (latitude.equals("0.0") && longitude.equals("0.0")) {
             Snackbar.make(activityVisitResult, "Unable to get location. Please turn on GPS.", Snackbar.LENGTH_LONG).show();
 //            return;
+
+            // bisa ambil dr trnCollPos
+            TrnCollPos lastCollPos = realm.where(TrnCollPos.class)
+                    .equalTo("collectorId", collectorId)
+                    .findAllSorted("lastupdateTimestamp", Sort.DESCENDING)
+                    .first();
+
+            if (lastCollPos != null) {
+                latitude = lastCollPos.getLatitude();
+                longitude = lastCollPos.getLongitude();
+            }
         }
 
         final Date serverDate = realm.where(ServerInfo.class).findFirst().getServerDate();
 //        final UserData userData = (UserData) Storage.getObjPreference(getApplicationContext(), Storage.KEY_USER, UserData.class);
+        final String finalLongitude = longitude;
+        final String finalLatitude = latitude;
         this.realm.executeTransactionAsync(new Realm.Transaction() {
             @Override
             public void execute(Realm realm) {
@@ -615,8 +630,8 @@ public class ActivityVisitResult extends BasicActivity {
                         trnLDVComments.setPromiseDate(Utility.convertStringToDate(etTglJanjiBayar.getText().toString(), "d / M / yyyy") );
                 }
 
-                trnLDVComments.setLatitude(latitude);
-                trnLDVComments.setLongitude(longitude);
+                trnLDVComments.setLatitude(finalLatitude);
+                trnLDVComments.setLongitude(finalLongitude);
                 /*
                 trnLDVComments.setOcptCode();
                 trnLDVComments.setOcptCodeSub();

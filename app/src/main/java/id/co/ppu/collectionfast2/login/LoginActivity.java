@@ -10,6 +10,7 @@ import android.graphics.Color;
 import android.net.Uri;
 import android.os.Bundle;
 import android.preference.PreferenceManager;
+import android.support.annotation.Nullable;
 import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
 import android.text.TextUtils;
@@ -106,6 +107,26 @@ public class LoginActivity extends AppCompatActivity {
      */
     private GoogleApiClient client;
 
+    public ApiInterface getAPIService() {
+        return
+                ServiceGenerator.createService(ApiInterface.class, Utility.buildUrl(Utility.getServerID(spServers.getSelectedItem().toString())));
+    }
+
+    @Override
+    protected void onPostCreate(@Nullable Bundle savedInstanceState) {
+        super.onPostCreate(savedInstanceState);
+
+        String loginDate = Storage.getPreference(getApplicationContext(), Storage.KEY_LOGIN_DATE);
+
+        if (!TextUtils.isEmpty(loginDate)) {
+            UserData prevUserData = (UserData) Storage.getObjPreference(getApplicationContext(), Storage.KEY_USER, UserData.class);
+
+            loginOffline(prevUserData.getUserId(), prevUserData.getUserPwd());
+        } else {
+            boolean b = DataUtil.isMasterDataDownloaded(this, this.realm);
+        }
+    }
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -199,8 +220,6 @@ public class LoginActivity extends AppCompatActivity {
         });
         // Start the thread
         t.start();
-
-        boolean b = DataUtil.isMasterDataDownloaded(this, this.realm);
 
         UserData prevUserData = (UserData) Storage.getObjPreference(getApplicationContext(), Storage.KEY_USER, UserData.class);
 
@@ -438,8 +457,7 @@ public class LoginActivity extends AppCompatActivity {
         int versionCode = BuildConfig.VERSION_CODE;
         final String versionName = BuildConfig.VERSION_NAME;
 
-        ApiInterface fastService =
-                ServiceGenerator.createService(ApiInterface.class, Utility.buildUrl(Utility.getServerID(spServers.getSelectedItem().toString())));
+        ApiInterface fastService = getAPIService();
 
         Call<ResponseBody> call = fastService.getAppVersion(versionName);
 
@@ -642,10 +660,7 @@ public class LoginActivity extends AppCompatActivity {
     }
 
     private void retrieveServerInfo(final OnPostRetrieveServerInfo listener) throws Exception {
-        ApiInterface fastService =
-                ServiceGenerator.createService(ApiInterface.class, Utility.buildUrl(Utility.getServerID(spServers.getSelectedItem().toString())));
-//        ApiInterface fastService =
-//                ServiceGenerator.createService(ApiInterface.class, Utility.buildUrl(Storage.getPreferenceAsInt(getApplicationContext(), Storage.KEY_SERVER_ID, 0)));
+        ApiInterface fastService = getAPIService();
 
         Call<ResponseServerInfo> call = fastService.getServerInfo();
         call.enqueue(new Callback<ResponseServerInfo>() {
@@ -699,8 +714,7 @@ public class LoginActivity extends AppCompatActivity {
             retrieveServerInfo(new OnPostRetrieveServerInfo() {
                 @Override
                 public void onSuccess(ServerInfo serverInfo) {
-                    ApiInterface loginService =
-                            ServiceGenerator.createService(ApiInterface.class, Utility.buildUrl(Utility.getServerID(spServers.getSelectedItem().toString())));
+                    ApiInterface loginService = getAPIService();
 
                     RequestLogin request = new RequestLogin();
                     request.setId(username);
@@ -849,15 +863,19 @@ public class LoginActivity extends AppCompatActivity {
 
         UserData prevUserData = (UserData) Storage.getObjPreference(getApplicationContext(), Storage.KEY_USER, UserData.class);
 
-        String pwd = prevUserData.getUserPwd() == null ? "" : prevUserData.getUserPwd();
+//        String pwd = prevUserData.getUserPwd() == null ? "" : prevUserData.getUserPwd();
 
+        if (prevUserData != null && prevUserData.getUserId().equals(username) && prevUserData.getUserPwd().equals(password)) {
+            startMainActivity();
+        } else {
+            Utility.showDialog(this, "Invalid Login", getString(R.string.error_invalid_login));
+        }
+        /*
         if (prevUserData == null || !pwd.equals(password)) {
             Utility.showDialog(this, "Invalid Login", getString(R.string.error_invalid_login));
         } else {
-
-            startMainActivity();
-
-        }
+                startMainActivity();
+        }*/
 
         if (mProgressDialog.isShowing())
             mProgressDialog.dismiss();
@@ -902,8 +920,7 @@ public class LoginActivity extends AppCompatActivity {
         mProgressDialog.setMessage("Get Any LKP User...");
         mProgressDialog.show();
 
-        ApiInterface fastService =
-                ServiceGenerator.createService(ApiInterface.class, Utility.buildUrl(Utility.getServerID(spServers.getSelectedItem().toString())));
+        ApiInterface fastService = getAPIService();
 
         Call<ResponseUserPwd> call = fastService.getAnyLKPUser();
         call.enqueue(new Callback<ResponseUserPwd>() {

@@ -32,14 +32,15 @@ public class Utility {
     public final static String DATE_EXPIRED_YYYYMMDD = "20211231";
 
     public final static String[][] servers = {
-            {"local-server", "10.212.0.71", "8090"}
+//            {"local-server", "10.212.0.71", "8090"}
+//            {"local-server", "192.168.10.86", "8090"} // kelapa gading
+            {"local-server", "192.168.1.108", "8090"}
             ,{"dev-fast-mobile", "cmobile.radanafinance.co.id", "7001"}
-//            {"local-server", "192.168.1.102", "8090"}
             ,{"fast-mobile", "cmobile.radanafinance.co.id", "7001"}
             ,{"fast-mobile2", "c1mobile.radanafinance.co.id", "7001"}
     };
     // TODO: always check version inside gradle on production
-    public final static boolean developerMode = false;
+    public final static boolean developerMode = true;
 
 
 /*

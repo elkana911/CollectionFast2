@@ -8,6 +8,7 @@ import android.util.Log;
 
 import java.io.IOException;
 import java.util.Date;
+import java.util.Set;
 
 import id.co.ppu.collectionfast2.listener.OnPostRetrieveServerInfo;
 import id.co.ppu.collectionfast2.pojo.ServerInfo;
@@ -31,6 +32,7 @@ import id.co.ppu.collectionfast2.rest.response.ResponseGetMasterData;
 import id.co.ppu.collectionfast2.rest.response.ResponseGetZipCode;
 import id.co.ppu.collectionfast2.rest.response.ResponseServerInfo;
 import io.realm.Realm;
+import io.realm.RealmModel;
 import io.realm.RealmResults;
 import okhttp3.ResponseBody;
 import retrofit2.Call;
@@ -58,15 +60,44 @@ public class DataUtil {
     }
     */
 
+    public static boolean isMasterTransactionTable(String tableName) {
+        return tableName.equalsIgnoreCase(MstDelqReasons.class.getSimpleName())
+                || tableName.equalsIgnoreCase(MstLDVClassifications.class.getSimpleName())
+                || tableName.equalsIgnoreCase(MstLDVParameters.class.getSimpleName())
+                || tableName.equalsIgnoreCase(MstLDVStatus.class.getSimpleName())
+                || tableName.equalsIgnoreCase(MstParam.class.getSimpleName())
+                || tableName.equalsIgnoreCase(MstPotensi.class.getSimpleName())
+                ;
+    }
+
     public static boolean isMasterDataDownloaded(Context ctx, Realm realm) {
 
         ServerInfo serverInfo = realm.where(ServerInfo.class).findFirst();
         UserConfig userConfig = realm.where(UserConfig.class).findFirst();
 
-        long count = realm.where(MstParam.class).count();
+        boolean masterIsEmpty = false;
+        Set<Class<? extends RealmModel>> tables = realm.getConfiguration().getRealmObjectClasses();
+        for (Class<? extends RealmModel> table : tables) {
+            String key = table.getSimpleName();
+            if (!key.toLowerCase().startsWith("mst"))
+                continue;
+
+            // skip juga yg bukan table master transaksi
+            if (!isMasterTransactionTable(key))
+                continue;
+
+            long count = realm.where(table).count();
+
+            if (count < 1) {
+                masterIsEmpty = true;
+                break;
+            }
+        }
+
+//        long count = realm.where(MstParam.class).count();
 
         if (serverInfo != null) {
-            if (count > 0 && Utility.isSameDay(new Date(), serverInfo.getServerDate())) {
+            if (!masterIsEmpty && Utility.isSameDay(new Date(), serverInfo.getServerDate())) {
                 return true;
             }
         }
@@ -74,7 +105,8 @@ public class DataUtil {
         // is master data complete  ?
 
         // skip master data
-        if (count > 0) {
+        if (!masterIsEmpty) {
+//        if (count > 0) {
             return true;
         }
 
@@ -293,7 +325,7 @@ public class DataUtil {
     public static String getRealPathFromUri(Context context, Uri contentUri) {
         Cursor cursor = null;
         try {
-            String[] proj = { MediaStore.Images.Media.DATA };
+            String[] proj = {MediaStore.Images.Media.DATA};
             cursor = context.getContentResolver().query(contentUri, proj, null, null, null);
             int column_index = cursor.getColumnIndexOrThrow(MediaStore.Images.Media.DATA);
             cursor.moveToFirst();
@@ -352,9 +384,9 @@ public class DataUtil {
 
     public static void resetData() {
         Realm r = Realm.getDefaultInstance();
-        try{
+        try {
             resetData(r);
-        }finally {
+        } finally {
             if (r != null) {
                 r.close();
             }

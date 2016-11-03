@@ -414,8 +414,12 @@ public class FragmentLKPList extends Fragment {
         long count = realm.where(DisplayTrnLDVDetails.class).count();
         String dateLabel = "Today";
 
-        if (!Utility.isSameDay(dateLKP, serverDate)) {
-            dateLabel = "Previous";
+        try {
+            if (!Utility.isSameDay(dateLKP, serverDate)) {
+                dateLabel = "Previous";
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
         }
 
         tvSeparator.setText(dateLabel + " Contracts: " + count);
