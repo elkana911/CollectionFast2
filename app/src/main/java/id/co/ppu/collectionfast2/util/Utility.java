@@ -38,7 +38,10 @@ public class Utility {
             ,{"fast-mobile", "cmobile.radanafinance.co.id", "7001"}
             ,{"fast-mobile2", "c1mobile.radanafinance.co.id", "7001"}
     };
-    public final static boolean developerMode = true;
+    // TODO: always check version inside gradle on production
+    public final static boolean developerMode = false;
+
+
 /*
     // for load balancing support, cancelled.
     public final static String[][] ipServers4LB = {

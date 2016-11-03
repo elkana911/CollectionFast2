@@ -439,7 +439,7 @@ public class LoginActivity extends AppCompatActivity {
         final String versionName = BuildConfig.VERSION_NAME;
 
         ApiInterface fastService =
-                ServiceGenerator.createService(ApiInterface.class, Utility.buildUrl(Storage.getPreferenceAsInt(getApplicationContext(), Storage.KEY_SERVER_ID, 0)));
+                ServiceGenerator.createService(ApiInterface.class, Utility.buildUrl(Utility.getServerID(spServers.getSelectedItem().toString())));
 
         Call<ResponseBody> call = fastService.getAppVersion(versionName);
 
@@ -643,7 +643,9 @@ public class LoginActivity extends AppCompatActivity {
 
     private void retrieveServerInfo(final OnPostRetrieveServerInfo listener) throws Exception {
         ApiInterface fastService =
-                ServiceGenerator.createService(ApiInterface.class, Utility.buildUrl(Storage.getPreferenceAsInt(getApplicationContext(), Storage.KEY_SERVER_ID, 0)));
+                ServiceGenerator.createService(ApiInterface.class, Utility.buildUrl(Utility.getServerID(spServers.getSelectedItem().toString())));
+//        ApiInterface fastService =
+//                ServiceGenerator.createService(ApiInterface.class, Utility.buildUrl(Storage.getPreferenceAsInt(getApplicationContext(), Storage.KEY_SERVER_ID, 0)));
 
         Call<ResponseServerInfo> call = fastService.getServerInfo();
         call.enqueue(new Callback<ResponseServerInfo>() {
