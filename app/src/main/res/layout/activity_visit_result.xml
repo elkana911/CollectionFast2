@@ -269,7 +269,7 @@
                     android:id="@+id/etJanjiBayar"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:hint="Janji Bayar"
+                    android:hint="Nilai Janji Bayar"
                     android:inputType="number"
                     android:maxLines="1" />
 

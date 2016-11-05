@@ -36,6 +36,9 @@ import com.google.android.gms.appindexing.Thing;
 import com.google.android.gms.common.api.GoogleApiClient;
 
 import java.io.IOException;
+import java.net.ConnectException;
+import java.net.SocketTimeoutException;
+import java.net.UnknownHostException;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
@@ -289,9 +292,24 @@ public class LoginActivity extends AppCompatActivity {
         }
 
         try {
+            if (!NetUtil.isConnected(this)) {
+                Utility.showDialog(this, getString(R.string.title_no_connection), getString(R.string.error_online_required));
+                return;
+            }
+
+            final ProgressDialog mProgressDialog = new ProgressDialog(this);
+            mProgressDialog.setIndeterminate(true);
+            mProgressDialog.setCancelable(false);
+            mProgressDialog.setMessage("Checking version...");
+            mProgressDialog.show();
+
             isLatestVersion(new OnSuccessError() {
                 @Override
                 public void onSuccess(String msg) {
+
+                    if (mProgressDialog.isShowing())
+                        mProgressDialog.dismiss();
+
                     try {
                         attemptLogin();
                     } catch (Exception e) {
@@ -301,11 +319,20 @@ public class LoginActivity extends AppCompatActivity {
 
                 @Override
                 public void onFailure(Throwable throwable) {
+                    if (mProgressDialog.isShowing())
+                        mProgressDialog.dismiss();
+
                     if (throwable == null)
                         return;
 
                     if (throwable instanceof ExpiredException)
                         Utility.showDialog(LoginActivity.this, "Version Changed", throwable.getMessage());
+                    else if (throwable instanceof UnknownHostException)
+                        Utility.showDialog(LoginActivity.this, getString(R.string.error_server_not_found), "Please try another server.\n" + throwable.getMessage());
+                    else if (throwable instanceof SocketTimeoutException)
+                        Utility.showDialog(LoginActivity.this, getString(R.string.error_server_timeout), "Please check your network.\n" + throwable.getMessage());
+                    else if (throwable instanceof ConnectException)
+                        Utility.showDialog(LoginActivity.this, getString(R.string.error_server_down), "Please contact administrator.\n" + throwable.getMessage());
                     else
                         Toast.makeText(LoginActivity.this, throwable.getMessage(), Toast.LENGTH_SHORT).show();
                 }
@@ -453,7 +480,6 @@ public class LoginActivity extends AppCompatActivity {
     }
 
     private void isLatestVersion(final OnSuccessError listener) {
-// TODO: ask wiwan ,kalo offline bisa pake app ?
         int versionCode = BuildConfig.VERSION_CODE;
         final String versionName = BuildConfig.VERSION_NAME;
 
@@ -673,6 +699,7 @@ public class LoginActivity extends AppCompatActivity {
                         LoginActivity.this.realm.executeTransaction(new Realm.Transaction() {
                             @Override
                             public void execute(Realm realm) {
+                                realm.delete(ServerInfo.class);
                                 realm.copyToRealm(responseServerInfo.getData());
 
                                 if (listener != null) {
@@ -842,6 +869,8 @@ public class LoginActivity extends AppCompatActivity {
 
         }
         startActivity(new Intent(getApplicationContext(), MainActivity.class));
+
+        finish();
     }
 
     private void loginOffline(String username, String password) {

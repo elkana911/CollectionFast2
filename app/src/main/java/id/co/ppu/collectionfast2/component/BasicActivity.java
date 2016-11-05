@@ -61,7 +61,6 @@ public class BasicActivity extends AppCompatActivity {
         DataUtil.resetData(realm);
     }
 
-
     protected RealmQuery<TrnLDVComments> getLDVComments(Realm realm, String ldvNo, String contractNo) {
         /*
         dont use global realm due to error: Realm access from incorrect thread. Realm objects can only be accessed on the thread they were created.

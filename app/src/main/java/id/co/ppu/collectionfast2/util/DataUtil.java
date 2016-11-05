@@ -5,6 +5,7 @@ import android.database.Cursor;
 import android.net.Uri;
 import android.provider.MediaStore;
 import android.util.Log;
+import android.widget.Toast;
 
 import java.io.IOException;
 import java.util.Date;
@@ -25,6 +26,7 @@ import id.co.ppu.collectionfast2.pojo.sync.SyncTrnLDVComments;
 import id.co.ppu.collectionfast2.pojo.sync.SyncTrnRVColl;
 import id.co.ppu.collectionfast2.pojo.sync.SyncTrnRepo;
 import id.co.ppu.collectionfast2.pojo.trn.TrnLDVDetails;
+import id.co.ppu.collectionfast2.pojo.trn.TrnLDVHeader;
 import id.co.ppu.collectionfast2.rest.ApiInterface;
 import id.co.ppu.collectionfast2.rest.ServiceGenerator;
 import id.co.ppu.collectionfast2.rest.request.RequestZipCode;
@@ -59,6 +61,25 @@ public class DataUtil {
                 .findFirst() != null;
     }
     */
+
+    public static boolean isLDVHeaderValid(Realm realm, String collCode) {
+        TrnLDVHeader ldvHeader = realm.where(TrnLDVHeader.class)
+                .equalTo("collCode", collCode)
+                .notEqualTo("closeBatch", "Y")
+                .or()
+                .isEmpty("closeBatch")
+                .findFirst();
+
+        if (ldvHeader != null) {
+            Date deviceDate = new Date();
+
+            if (!Utility.isSameDay(ldvHeader.getCreatedTimestamp(), deviceDate) && deviceDate.after(ldvHeader.getCreatedTimestamp())) {
+                return false;
+            }
+        }
+
+        return true;
+    }
 
     public static boolean isMasterTransactionTable(String tableName) {
         return tableName.equalsIgnoreCase(MstDelqReasons.class.getSimpleName())
@@ -284,7 +305,7 @@ public class DataUtil {
 
     }
 
-    public static void retrieveServerInfo(final Realm realm, Context ctx, final OnPostRetrieveServerInfo listener) throws Exception {
+    public static void retrieveServerInfo(final String collCode, final Realm realm, final Context ctx, final OnPostRetrieveServerInfo listener) throws Exception {
         ApiInterface fastService =
                 ServiceGenerator.createService(ApiInterface.class, Utility.buildUrl(Storage.getPreferenceAsInt(ctx, Storage.KEY_SERVER_ID, 0)));
 
@@ -296,16 +317,27 @@ public class DataUtil {
                     final ResponseServerInfo responseServerInfo = response.body();
 
                     if (responseServerInfo.getError() == null) {
-                        realm.executeTransaction(new Realm.Transaction() {
+                        realm.executeTransactionAsync(new Realm.Transaction() {
                             @Override
                             public void execute(Realm realm) {
+                                realm.delete(ServerInfo.class);
                                 realm.copyToRealm(responseServerInfo.getData());
-
+                            }
+                        }, new Realm.Transaction.OnSuccess() {
+                            @Override
+                            public void onSuccess() {
                                 if (listener != null)
                                     listener.onSuccess(responseServerInfo.getData());
                             }
-                        });
+                        }, new Realm.Transaction.OnError() {
+                            @Override
+                            public void onError(Throwable error) {
+                                if (error != null)
+                                    NetUtil.syncLogError(ctx, realm, collCode, "retrieveServerInfo", error.getMessage(), null);
 
+                                Toast.makeText(ctx, "Database Error", Toast.LENGTH_SHORT).show();
+                            }
+                        });
                     }
 
                 }

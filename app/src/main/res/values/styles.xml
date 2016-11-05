@@ -21,6 +21,10 @@
         <item name="android:textColor">?android:textColorPrimary</item>
         <item name="android:textSize">@dimen/abc_text_size_button_material</item>
         <item name="android:textStyle">bold</item>
+        <item name="android:typeface">normal</item>
         <item name="android:textAllCaps">true</item>
+        <item name="android:shadowColor">#000000</item>
+        <item name="android:shadowRadius">2</item>
+
     </style>
 </resources>

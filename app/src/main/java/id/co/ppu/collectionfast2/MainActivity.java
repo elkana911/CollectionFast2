@@ -32,10 +32,13 @@ import android.support.v7.app.AlertDialog;
 import android.support.v7.widget.AppCompatDrawableManager;
 import android.support.v7.widget.SearchView;
 import android.support.v7.widget.Toolbar;
+import android.text.TextUtils;
 import android.util.Log;
+import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
+import android.widget.EditText;
 import android.widget.ImageView;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -49,6 +52,8 @@ import com.google.android.gms.maps.model.LatLng;
 
 import java.io.IOException;
 import java.net.ConnectException;
+import java.net.SocketTimeoutException;
+import java.net.UnknownHostException;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.List;
@@ -57,10 +62,11 @@ import java.util.concurrent.TimeUnit;
 import butterknife.BindView;
 import butterknife.ButterKnife;
 import butterknife.OnClick;
+import butterknife.OnLongClick;
 import id.co.ppu.collectionfast2.chats.ActivityChats;
+import id.co.ppu.collectionfast2.exceptions.ExpiredException;
 import id.co.ppu.collectionfast2.fragments.HomeFragment;
 import id.co.ppu.collectionfast2.job.SyncJob;
-import id.co.ppu.collectionfast2.listener.OnLKPListListener;
 import id.co.ppu.collectionfast2.listener.OnPostRetrieveLKP;
 import id.co.ppu.collectionfast2.listener.OnPostRetrieveServerInfo;
 import id.co.ppu.collectionfast2.listener.OnSuccessError;
@@ -135,9 +141,10 @@ import static id.co.ppu.collectionfast2.location.LocationFused.UPDATE_INTERVAL;
 public class MainActivity extends SyncActivity
         implements GoogleApiClient.ConnectionCallbacks,
         GoogleApiClient.OnConnectionFailedListener,
-        LocationListener,NavigationView.OnNavigationItemSelectedListener, OnLKPListListener {
+        LocationListener, NavigationView.OnNavigationItemSelectedListener, FragmentLKPList.OnFragmentLKPListInteractionListener {
 
     public static final String SELECTED_NAV_MENU_KEY = "selected_nav_menu_key";
+    private static final String TAG = "Main";
 
     private final CharSequence[] menuItems = {
             "From Camera", "From Gallery", "Delete Photo"
@@ -279,7 +286,7 @@ public class MainActivity extends SyncActivity
         ServerInfo si = this.realm.where(ServerInfo.class).findFirst();
         if (si == null || si.getServerDate() == null) {
             try {
-                DataUtil.retrieveServerInfo(this.realm, this, new OnPostRetrieveServerInfo() {
+                DataUtil.retrieveServerInfo(currentUser.getUserId(), this.realm, this, new OnPostRetrieveServerInfo() {
                     @Override
                     public void onSuccess(final ServerInfo serverInfo) {
                         realm.executeTransactionAsync(new Realm.Transaction() {
@@ -317,7 +324,7 @@ public class MainActivity extends SyncActivity
                                 UserConfig userConfig = realm.where(UserConfig.class).findFirst();
 
                                 if (!Utility.isSameDay(userConfig.getLastLogin(), serverInfo.getServerDate())) {
-                                    Snackbar.make(coordinatorLayout, "Server date changed. Please Close Batch", Snackbar.LENGTH_SHORT).show();
+                                    showSnackBar(getString(R.string.warning_close_batch));
                                 }
 
                                 if (userConfig.getPhotoProfileUri() != null) {
@@ -366,6 +373,11 @@ public class MainActivity extends SyncActivity
 
                     userConfig.setLastLogin(new Date());
 
+                    // fix serverDate should not before lastLogin
+                    if (serverDate.before(userConfig.getLastLogin())) {
+                        userConfig.setServerDate(new Date());
+                    }
+
                     realm.copyToRealmOrUpdate(userConfig);
 
                 }
@@ -375,9 +387,13 @@ public class MainActivity extends SyncActivity
                     // check dates
                     UserConfig userConfig = realm.where(UserConfig.class).findFirst();
 
-                    if (!Utility.isSameDay(userConfig.getLastLogin(), serverDate)) {
-                        Snackbar.make(coordinatorLayout, "Server date changed. Please Close Batch.", Snackbar.LENGTH_SHORT).show();
+                    if (!DataUtil.isLDVHeaderValid(realm, currentUser.getUserId())) {
+                        showSnackBar(getString(R.string.warning_close_batch));
                     }
+
+//                    if (!Utility.isSameDay(userConfig.getLastLogin(), serverDate)) {
+//                        Snackbar.make(coordinatorLayout, "Server date changed. Please Close Batch.", Snackbar.LENGTH_SHORT).show();
+//                    }
 
                     if (userConfig.getPhotoProfileUri() != null) {
                         Uri uri;
@@ -399,7 +415,7 @@ public class MainActivity extends SyncActivity
             e.printStackTrace();
         }
 
-        Storage.savePreference(getApplicationContext(), Storage.KEY_LOGIN_DATE,  new Date().toString());
+        Storage.savePreference(getApplicationContext(), Storage.KEY_LOGIN_DATE, new Date().toString());
     }
 
     @Override
@@ -525,8 +541,7 @@ public class MainActivity extends SyncActivity
         if (id == R.id.action_settings) {
             startActivityForResult(new Intent(this, SettingsActivity.class), 999);
             return true;
-        }
-        else if (id == R.id.action_reset) {
+        } else if (id == R.id.action_reset) {
             AlertDialog.Builder alertDialogBuilder = new AlertDialog.Builder(this);
             alertDialogBuilder.setTitle("Reset Data");
             alertDialogBuilder.setMessage("This will Logout Application.\nAre you sure?");
@@ -536,8 +551,35 @@ public class MainActivity extends SyncActivity
                 @Override
                 public void onClick(DialogInterface dialog, int which) {
 
-                    resetData();
-                    backToLoginScreen();
+                    View promptsView = LayoutInflater.from(MainActivity.this).inflate(R.layout.dialog_pwd, null);
+                    final EditText input = ButterKnife.findById(promptsView, R.id.password);
+
+                    new AlertDialog.Builder(MainActivity.this)
+                            .setTitle("Type Your Password")
+                            .setView(promptsView)
+                            .setPositiveButton("Ok", new DialogInterface.OnClickListener() {
+                                @Override
+                                public void onClick(DialogInterface dialogInterface, int i) {
+                                    String value = input.getText().toString();
+
+                                    if (!value.equals(currentUser.getUserPwd())) {
+                                        Snackbar.make(coordinatorLayout, "Invalid password !", Snackbar.LENGTH_LONG).show();
+                                        return;
+                                    }
+
+                                    resetData();
+                                    backToLoginScreen();
+
+                                }
+                            })
+                            .setNegativeButton("Cancel", new DialogInterface.OnClickListener() {
+                                @Override
+                                public void onClick(DialogInterface dialogInterface, int i) {
+
+                                }
+                            })
+                            .show()
+                    ;
 
                 }
             });
@@ -619,13 +661,36 @@ public class MainActivity extends SyncActivity
         } else if (id == R.id.nav_closeBatch) {
             drawer.closeDrawers();
 
-            closeBatch();
+            attemptCloseBatch();
 
             return false;
         } else if (id == R.id.nav_manualSync) {
 
             drawer.closeDrawers();
 
+            syncTransaction(true, new OnSuccessError() {
+                @Override
+                public void onSuccess(String msg) {
+                    Fragment frag = getSupportFragmentManager().findFragmentById(R.id.content_frame);
+
+                    if (frag != null && frag instanceof FragmentLKPList) {
+                        ((FragmentLKPList) frag).loadCurrentLKP(); // masih terkadang ga mau update
+//                    ((FragmentLKPList) frag).refresh(); ga mau update
+//                    frag.refresh();
+                    }
+                }
+
+                @Override
+                public void onFailure(Throwable throwable) {
+
+                }
+
+                @Override
+                public void onSkip() {
+
+                }
+            });
+/*
             syncTransaction(false, true, new OnSuccessError() {
                 @Override
                 public void onSuccess(String msg) {
@@ -633,7 +698,7 @@ public class MainActivity extends SyncActivity
                     Fragment frag = getSupportFragmentManager().findFragmentById(R.id.content_frame);
 
                     if (frag != null && frag instanceof FragmentLKPList) {
-                        ((FragmentLKPList)frag).refresh();
+                        ((FragmentLKPList) frag).refresh();
 //                    frag.refresh();
                     }
 
@@ -652,7 +717,7 @@ public class MainActivity extends SyncActivity
 
                 }
             });
-
+*/
             return false;
         } else if (id == R.id.nav_clearSyncTables) {
             clearSyncTables();
@@ -679,13 +744,19 @@ public class MainActivity extends SyncActivity
 
         title = getString(R.string.app_name);
 
+
+        fab.setImageDrawable(AppCompatDrawableManager.get().getDrawable(MainActivity.this, R.drawable.ic_assignment_black_24dp));
+
         if (viewId == R.id.nav_home) {
+
             fragment = new HomeFragment();
 
             viewIsAtHome = true;
 
-            fab.show();
+//            fab.show();
         } else if (viewId == R.id.nav_loa) {
+            fab.setImageDrawable(AppCompatDrawableManager.get().getDrawable(MainActivity.this, R.drawable.ic_sync_black_24dp));
+
             fragment = new FragmentLKPList();
 
             Bundle bundle = new Bundle();
@@ -719,7 +790,7 @@ public class MainActivity extends SyncActivity
         }*/
 
         if (viewId != R.id.nav_home) {
-            fab.hide();
+//            fab.hide();
         }
 
         mSelectedNavMenuIndex = viewId;
@@ -755,8 +826,8 @@ public class MainActivity extends SyncActivity
         }
 
         // flag as clean logout
-        Storage.savePreference(getApplicationContext(), Storage.KEY_LOGIN_DATE,  null);
-        Storage.savePreference(getApplicationContext(), Storage.KEY_LOGOUT_DATE,  new Date().toString());
+        Storage.savePreference(getApplicationContext(), Storage.KEY_LOGIN_DATE, null);
+        Storage.savePreference(getApplicationContext(), Storage.KEY_LOGOUT_DATE, new Date().toString());
 
         startActivity(intent);
 //                moveTaskToBack(true);
@@ -775,7 +846,7 @@ public class MainActivity extends SyncActivity
             @Override
             public void onClick(DialogInterface dialog, int which) {
                 // TODO: clear cookie
-                Storage.savePreferenceAsBoolean(getApplicationContext(), "isLKPInquiry",  false);
+                Storage.savePreferenceAsBoolean(getApplicationContext(), "isLKPInquiry", false);
 
                 backToLoginScreen();
             }
@@ -794,7 +865,42 @@ public class MainActivity extends SyncActivity
 
     @OnClick(R.id.fab)
     public void onFabClick(View view) {
-        displayView(R.id.nav_loa);
+        Fragment frag = getSupportFragmentManager().findFragmentById(R.id.content_frame);
+
+        if (frag != null && frag instanceof FragmentLKPList) {
+            ((FragmentLKPList) frag).performClickSync();
+        } else
+            displayView(R.id.nav_loa);
+    }
+
+    @OnLongClick(R.id.fab)
+    public boolean onFabLongClick(View view) {
+        Fragment frag = getSupportFragmentManager().findFragmentById(R.id.content_frame);
+
+        if (frag != null && frag instanceof FragmentLKPList) {
+//            ((FragmentLKPList) frag).performClickSync();
+            if (!anyDataToSync()) {
+
+                new AlertDialog.Builder(this)
+                        .setIcon(android.R.drawable.ic_dialog_alert)
+                        .setTitle("Force refresh")
+                        .setMessage("Are you sure ?")
+                        .setPositiveButton("Yes", new DialogInterface.OnClickListener() {
+                            @Override
+                            public void onClick(DialogInterface dialog, int which) {
+                                clearLKPTables();
+                                clearSyncTables();
+
+                                attemptGetLKP(currentUser.getUserId(), getServerDate(realm), false, null);
+                            }
+
+                        })
+                        .setNegativeButton("No", null)
+                        .show();
+            }
+        }
+
+        return true;
     }
 
 
@@ -976,7 +1082,7 @@ public class MainActivity extends SyncActivity
                                     bgRealm.delete(DisplayTrnContractBuckets.class);
                                     for (TrnContractBuckets obj : respGetLKP.getData().getBuckets()) {
                                         boolean exist = false;
-                                        for (TrnLDVDetails _dtl :  respGetLKP.getData().getDetails()) {
+                                        for (TrnLDVDetails _dtl : respGetLKP.getData().getDetails()) {
                                             if (_dtl.getContractNo().equalsIgnoreCase(obj.getPk().getContractNo())) {
                                                 exist = true;
                                                 break;
@@ -1091,7 +1197,7 @@ public class MainActivity extends SyncActivity
                                             continue;
 
                                         if (_obj.getCreatedTimestamp() != null) {
-                                            SyncFileUpload  sync = bgRealm.where(SyncFileUpload.class)
+                                            SyncFileUpload sync = bgRealm.where(SyncFileUpload.class)
                                                     .equalTo("contractNo", _obj.getContractNo())
                                                     .equalTo("collectorId", _obj.getCollCode())
                                                     .equalTo("pictureId", _obj.getPhotoId())
@@ -1172,7 +1278,7 @@ public class MainActivity extends SyncActivity
 
     }
 
-    public void getLKP(final String collectorCode, final Date lkpDate, boolean useCache, final OnPostRetrieveLKP listener) {
+    public void attemptGetLKP(final String collectorCode, final Date lkpDate, boolean useCache, final OnPostRetrieveLKP listener) {
         if (currentUser == null) {
             return;
         }
@@ -1203,6 +1309,24 @@ public class MainActivity extends SyncActivity
         mProgressDialog.show();
 
         // must sync first
+        syncTransaction(false, new OnSuccessError() {
+            @Override
+            public void onSuccess(String msg) {
+                getLKPFromServer(mProgressDialog, collectorCode, lkpDate, createdBy, listener);
+            }
+
+            @Override
+            public void onFailure(Throwable throwable) {
+                if (mProgressDialog.isShowing())
+                    mProgressDialog.dismiss();
+            }
+
+            @Override
+            public void onSkip() {
+                getLKPFromServer(mProgressDialog, collectorCode, lkpDate, createdBy, listener);
+            }
+        });
+/*
         syncTransaction(false, false, new OnSuccessError() {
             @Override
             public void onSuccess(String msg) {
@@ -1221,11 +1345,16 @@ public class MainActivity extends SyncActivity
             }
 
         });
-
+*/
     }
 
     @Override
     public void onLKPSelected(DisplayTrnLDVDetails detail) {
+
+        if (!DataUtil.isLDVHeaderValid(realm, currentUser.getUserId())) {
+            showSnackBar(getString(R.string.warning_close_batch));
+            return;
+        }
 
         if (detail instanceof RealmObject) {
             DisplayTrnLDVDetails dtl = this.realm.copyFromRealm(detail);
@@ -1347,7 +1476,7 @@ public class MainActivity extends SyncActivity
                 Fragment frag = getSupportFragmentManager().findFragmentById(R.id.content_frame);
 
                 if (frag != null && frag instanceof FragmentLKPList) {
-                    ((FragmentLKPList)frag).refresh();
+                    ((FragmentLKPList) frag).refresh();
                 }
 
             }
@@ -1360,15 +1489,15 @@ public class MainActivity extends SyncActivity
         final Fragment frag = getSupportFragmentManager().findFragmentById(R.id.content_frame);
 
         if (frag != null && frag instanceof FragmentLKPList) {
-            getLKP(collectorCode, lkpDate, false, new OnPostRetrieveLKP() {
+            attemptGetLKP(collectorCode, lkpDate, false, new OnPostRetrieveLKP() {
                 @Override
                 public void onLoadFromLocal() {
-                    currentLDVNo = ((FragmentLKPList)frag).loadLKP(collectorCode, lkpDate);
+                    currentLDVNo = ((FragmentLKPList) frag).loadLKP(collectorCode, lkpDate);
                 }
 
                 @Override
                 public void onSuccess() {
-                    ((FragmentLKPList)frag).loadLKP(collectorCode, lkpDate);
+                    ((FragmentLKPList) frag).loadLKP(collectorCode, lkpDate);
                 }
 
                 @Override
@@ -1381,8 +1510,18 @@ public class MainActivity extends SyncActivity
 
     }
 
+    @Override
+    public boolean isAnyDataToSync() {
+        return anyDataToSync();
+    }
+
     public void openPaymentEntry() {
 //        UserData userData = (UserData) Storage.getObjPreference(getApplicationContext(), Storage.KEY_USER, UserData.class);
+
+        if (!DataUtil.isLDVHeaderValid(realm, currentUser.getUserId())) {
+            showSnackBar(getString(R.string.warning_close_batch));
+            return;
+        }
 
         String collectorId = currentUser.getUserId();
 
@@ -1493,14 +1632,458 @@ public class MainActivity extends SyncActivity
 
     }
 
-    protected void closeBatch() {
+    private void closeBatchYesterday(boolean showDialog, final OnSuccessError listener) {
+        final ProgressDialog mProgressDialog = new ProgressDialog(this);
 
-        if (!NetUtil.isConnected(this)) {
-            Snackbar.make(coordinatorLayout, getString(R.string.error_online_required), Snackbar.LENGTH_LONG).show();
+        if (showDialog) {
+            mProgressDialog.setIndeterminate(true);
+            mProgressDialog.setCancelable(false);
+            mProgressDialog.setMessage("Closing Yesterday transactions.\nPlease wait...");
+            mProgressDialog.show();
+        }
+
+        ApiInterface fastService =
+                ServiceGenerator.createService(ApiInterface.class, Utility.buildUrl(Storage.getPreferenceAsInt(getApplicationContext(), Storage.KEY_SERVER_ID, 0)));
+
+        Call<ResponseBody> cb = fastService.closeBatchYesterday(currentUser.getUserId());
+        cb.enqueue(new Callback<ResponseBody>() {
+            @Override
+            public void onResponse(Call<ResponseBody> call, Response<ResponseBody> response) {
+
+                if (mProgressDialog.isShowing()) {
+                    mProgressDialog.dismiss();
+                }
+
+                if (response.isSuccessful()) {
+
+                    if (listener != null) {
+                        listener.onSuccess(null);
+                    }
+
+                } else {
+
+                    if (listener != null) {
+                        try {
+                            listener.onFailure(new RuntimeException(response.errorBody().string()));
+                        } catch (IOException e) {
+                            e.printStackTrace();
+                        }
+                    }
+                }
+            }
+
+            @Override
+            public void onFailure(Call<ResponseBody> call, Throwable t) {
+                if (mProgressDialog.isShowing()) {
+                    mProgressDialog.dismiss();
+                }
+
+                if (listener != null) {
+                    listener.onFailure(new RuntimeException(t != null ? t.getMessage() : "Unknown error"));
+                }
+            }
+        });
+
+    }
+
+
+    private void closeBatchToday() {
+
+        if (currentUser == null) {
+            Utility.showDialog(MainActivity.this, "Login", "Please logout and login again.");
             return;
         }
 
-        /* ga mungkin cek lagi krn bisa loop saat get LKP tp blm close batch yg kmrn
+        if (TextUtils.isEmpty(currentLDVNo)) {
+            Utility.showDialog(MainActivity.this, "Invalid LKP", "Please try to Get LKP");
+            return;
+        }
+
+
+        this.realm.executeTransaction(new Realm.Transaction() {
+            @Override
+            public void execute(Realm realm) {
+
+                TrnLDVHeader trnLDVHeader = realm.where(TrnLDVHeader.class)
+                        .equalTo("ldvNo", currentLDVNo)
+                        .equalTo("collCode", currentUser.getUserId())
+                        .findFirst();
+
+                if (trnLDVHeader != null) {
+                    trnLDVHeader.setWorkFlag("C");
+                    trnLDVHeader.setCloseBatch("Y");
+                    trnLDVHeader.setLastupdateBy(Utility.LAST_UPDATE_BY);
+                    trnLDVHeader.setLastupdateTimestamp(new Date());
+                    realm.copyToRealmOrUpdate(trnLDVHeader); // hanya di update waktu close batch
+                }
+
+            }
+        });
+
+        final SyncLdvHeader syncLdvHeader = new SyncLdvHeader(this.realm);
+        if (syncLdvHeader.anyDataToSync()) {
+
+            final ProgressDialog mProgressDialog = new ProgressDialog(this);
+            mProgressDialog.setIndeterminate(true);
+            mProgressDialog.setCancelable(false);
+            mProgressDialog.setMessage(getString(R.string.message_please_wait));
+            mProgressDialog.show();
+
+            final RequestSyncLKP req = new RequestSyncLKP();
+            req.setLdvHeader(syncLdvHeader.getDataToSync());
+
+            ApiInterface fastService =
+                    ServiceGenerator.createService(ApiInterface.class, Utility.buildUrl(Storage.getPreferenceAsInt(getApplicationContext(), Storage.KEY_SERVER_ID, 0)));
+
+            Call<ResponseSync> call = fastService.syncLKP(req);
+            call.enqueue(new Callback<ResponseSync>() {
+                @Override
+                public void onResponse(Call<ResponseSync> call, Response<ResponseSync> response) {
+
+                    if (mProgressDialog.isShowing())
+                        mProgressDialog.dismiss();
+
+                    if (!response.isSuccessful()) {
+
+                        ResponseBody errorBody = response.errorBody();
+
+                        String msg = "";
+                        try {
+//                        Utility.showDialog(MainActivity.this, "Server Problem (" + statusCode + ")", errorBody.string());
+                            msg = response.message() + "(" + response.code() + ") " + errorBody.string();
+                            Snackbar.make(coordinatorLayout, msg, Snackbar.LENGTH_LONG).show();
+                        } catch (Exception e) {
+                            e.printStackTrace();
+                        }
+
+                        return;
+                    }
+
+                    final ResponseSync respSync = response.body();
+
+                    if (respSync == null || respSync.getError() != null) {
+                        if (respSync == null) {
+                            // Not found(404) berarti ada yg salah di json
+                            Snackbar.make(coordinatorLayout, response.message() + "(" + response.code() + ") ", Snackbar.LENGTH_LONG).show();
+                        } else {
+                            Toast.makeText(MainActivity.this, "Data Error (" + respSync.getError() + ")\n" + respSync.getError().getErrorDesc(), Toast.LENGTH_SHORT).show();
+                        }
+
+                    } else if (respSync.getData() != 1) {
+
+                    } else {
+                        if (req.getLdvHeader() != null && req.getLdvHeader().size() > 0) {
+                            syncLdvHeader.syncData();
+
+                            resetData();
+
+                            AlertDialog.Builder alertDialogBuilder = new AlertDialog.Builder(MainActivity.this);
+                            alertDialogBuilder.setTitle("");
+                            alertDialogBuilder.setMessage("Close Batch success.\nPlease relogin.");
+                            alertDialogBuilder.setPositiveButton("Ok", new DialogInterface.OnClickListener() {
+
+                                @Override
+                                public void onClick(DialogInterface dialog, int which) {
+                                    backToLoginScreen();
+                                }
+                            });
+
+                            alertDialogBuilder.show();
+                        }
+                    }
+                }
+
+                @Override
+                public void onFailure(Call<ResponseSync> call, Throwable t) {
+
+                    if (mProgressDialog.isShowing())
+                        mProgressDialog.dismiss();
+
+                    Log.e("eric.onFailure", t.getMessage(), t);
+                    if (t instanceof ConnectException) {
+                        if (Utility.developerMode)
+                            Utility.showDialog(MainActivity.this, "No Connection", t.getMessage());
+                        else
+                            Utility.showDialog(MainActivity.this, "No Connection", getString(R.string.error_contact_admin));
+                    }
+
+                    Snackbar.make(coordinatorLayout, "CloseBatch Failed\n" + t.getMessage(), Snackbar.LENGTH_LONG).show();
+                    // TODO: utk mencegah data di server udah sync, coba get lkp lagi
+                    if (t.getMessage() == null) {
+                        // should add delay to gave server a breath
+                        try {
+                            TimeUnit.SECONDS.sleep(10);
+                        } catch (InterruptedException e) {
+                            //Handle exception
+                        }
+
+                        clearLKPTables();
+                        clearSyncTables();
+
+                        attemptGetLKP(currentUser.getUserId(), getServerDate(realm), false, null);
+                    }
+                }
+            });
+        }
+
+    }
+
+    private void closeBatchOldData(boolean showDialog) {
+        if (currentUser == null) {
+            Utility.showDialog(MainActivity.this, "Login", "Please logout and login again.");
+            return;
+        }
+
+        this.realm.executeTransaction(new Realm.Transaction() {
+            @Override
+            public void execute(Realm realm) {
+                TrnLDVHeader trnLDVHeader = realm.where(TrnLDVHeader.class)
+                        .equalTo("collCode", currentUser.getUserId())
+                        .notEqualTo("closeBatch", "Y")
+                        .or()
+                        .isEmpty("closeBatch")
+                        .findFirst();
+
+                if (trnLDVHeader != null) {
+                    trnLDVHeader.setWorkFlag("C");
+                    trnLDVHeader.setCloseBatch("Y");
+                    trnLDVHeader.setLastupdateBy(Utility.LAST_UPDATE_BY);
+                    trnLDVHeader.setLastupdateTimestamp(new Date());
+                    realm.copyToRealmOrUpdate(trnLDVHeader); // hanya di update waktu close batch
+                }
+
+            }
+        });
+
+        final SyncLdvHeader syncLdvHeader = new SyncLdvHeader(this.realm);
+        if (syncLdvHeader.anyDataToSync()) {
+
+            final ProgressDialog mProgressDialog = new ProgressDialog(this);
+            if (showDialog) {
+                mProgressDialog.setIndeterminate(true);
+                mProgressDialog.setCancelable(false);
+                mProgressDialog.setMessage(getString(R.string.message_please_wait));
+                mProgressDialog.show();
+            }
+
+            final RequestSyncLKP req = new RequestSyncLKP();
+            req.setLdvHeader(syncLdvHeader.getDataToSync());
+
+            ApiInterface fastService =
+                    ServiceGenerator.createService(ApiInterface.class, Utility.buildUrl(Storage.getPreferenceAsInt(getApplicationContext(), Storage.KEY_SERVER_ID, 0)));
+
+            Call<ResponseSync> call = fastService.syncLKP(req);
+            call.enqueue(new Callback<ResponseSync>() {
+                @Override
+                public void onResponse(Call<ResponseSync> call, Response<ResponseSync> response) {
+                    if (mProgressDialog.isShowing())
+                        mProgressDialog.dismiss();
+
+                    if (!response.isSuccessful()) {
+
+                        ResponseBody errorBody = response.errorBody();
+
+                        String msg = "";
+                        try {
+//                        Utility.showDialog(MainActivity.this, "Server Problem (" + statusCode + ")", errorBody.string());
+                            msg = response.message() + "(" + response.code() + ") " + errorBody.string();
+                            Snackbar.make(coordinatorLayout, msg, Snackbar.LENGTH_LONG).show();
+                        } catch (Exception e) {
+                            e.printStackTrace();
+                        }
+
+                        return;
+                    }
+
+                    final ResponseSync respSync = response.body();
+
+                    if (respSync == null || respSync.getError() != null) {
+                        if (respSync == null) {
+                            // Not found(404) berarti ada yg salah di json
+                            Snackbar.make(coordinatorLayout, response.message() + "(" + response.code() + ") ", Snackbar.LENGTH_LONG).show();
+                        } else {
+                            Toast.makeText(MainActivity.this, "Data Error (" + respSync.getError() + ")\n" + respSync.getError().getErrorDesc(), Toast.LENGTH_SHORT).show();
+                        }
+
+                    } else if (respSync.getData() != 1) {
+
+                    } else {
+                        if (req.getLdvHeader() != null && req.getLdvHeader().size() > 0) {
+                            syncLdvHeader.syncData();
+
+                            resetData();
+
+                            AlertDialog.Builder alertDialogBuilder = new AlertDialog.Builder(MainActivity.this);
+                            alertDialogBuilder.setTitle("");
+                            alertDialogBuilder.setMessage("Close Batch success.\nPlease relogin.");
+                            alertDialogBuilder.setPositiveButton("Ok", new DialogInterface.OnClickListener() {
+
+                                @Override
+                                public void onClick(DialogInterface dialog, int which) {
+                                    backToLoginScreen();
+                                }
+                            });
+
+                            alertDialogBuilder.show();
+                        }
+                    }
+                }
+
+                @Override
+                public void onFailure(Call<ResponseSync> call, Throwable t) {
+
+                    if (mProgressDialog.isShowing())
+                        mProgressDialog.dismiss();
+
+                    Log.e("eric.onFailure", t.getMessage(), t);
+                    if (t instanceof ConnectException) {
+                        if (Utility.developerMode)
+                            Utility.showDialog(MainActivity.this, "No Connection", t.getMessage());
+                        else
+                            Utility.showDialog(MainActivity.this, "No Connection", getString(R.string.error_contact_admin));
+                    }
+
+                    Snackbar.make(coordinatorLayout, "CloseBatch Failed\n" + t.getMessage(), Snackbar.LENGTH_LONG).show();
+                    // TODO: utk mencegah data di server udah sync, coba get lkp lagi
+                    if (t.getMessage() == null) {
+                        // should add delay to gave server a breath
+                        try {
+                            TimeUnit.SECONDS.sleep(10);
+                        } catch (InterruptedException e) {
+                            //Handle exception
+                        }
+
+                        clearLKPTables();
+                        clearSyncTables();
+
+                        attemptGetLKP(currentUser.getUserId(), getServerDate(realm), false, null);
+                    }
+                }
+            });
+        }
+
+    }
+
+    /**
+     * WARNING ! make sure data transaction is synced before call this method
+     */
+    protected void closeBatch() {
+
+        try {
+            final ProgressDialog mProgressDialog = new ProgressDialog(this);
+            mProgressDialog.setIndeterminate(true);
+            mProgressDialog.setCancelable(false);
+            mProgressDialog.setMessage(getString(R.string.message_please_wait));
+            mProgressDialog.show();
+
+            // memastikan pengecekan closebatch menggunakan tanggal di server
+            DataUtil.retrieveServerInfo(currentUser.getUserId(), this.realm, this, new OnPostRetrieveServerInfo() {
+                @Override
+                public void onSuccess(ServerInfo serverInfo) {
+                    if (mProgressDialog.isShowing()) {
+                        mProgressDialog.dismiss();
+                    }
+
+                    final String createdBy = "JOB" + Utility.convertDateToString(serverInfo.getServerDate(), "yyyyMMdd");
+
+                    TrnLDVHeader trnLDVHeaderToday = realm.where(TrnLDVHeader.class)
+                            .equalTo("collCode", currentUser.getUserId())
+                            .equalTo("createdBy", createdBy)
+                            .findFirst();
+
+                    if (trnLDVHeaderToday == null) {
+
+                        // sapa tau ada data nyantol berhari2 (dengan syarat sudah tersync data transaksi)
+                        if (!DataUtil.isLDVHeaderValid(realm, currentUser.getUserId())) {
+                            closeBatchOldData(true);
+                        } else {
+
+                            closeBatchYesterday(true, new OnSuccessError() {
+                                @Override
+                                public void onSuccess(String msg) {
+                                    resetData();
+
+
+                                    AlertDialog.Builder alertDialogBuilder = new AlertDialog.Builder(MainActivity.this);
+                                    alertDialogBuilder.setTitle("");
+                                    alertDialogBuilder.setMessage("Close Batch success.\nPlease relogin.");
+                                    alertDialogBuilder.setPositiveButton("Ok", new DialogInterface.OnClickListener() {
+
+                                        @Override
+                                        public void onClick(DialogInterface dialog, int which) {
+                                            backToLoginScreen();
+                                        }
+                                    });
+
+                                    alertDialogBuilder.show();
+
+                                }
+
+                                @Override
+                                public void onFailure(Throwable t) {
+                                    Toast.makeText(MainActivity.this, t.getMessage(), Toast.LENGTH_SHORT).show();
+                                    t.printStackTrace();
+
+                                    if (t != null && currentUser != null && !TextUtils.isEmpty(t.getMessage()))
+                                        NetUtil.syncLogError(MainActivity.this, realm, currentUser.getUserId(), "CloseBatch", t.getMessage(), null);
+
+                                    Log.e("eric.onFailure", t.getMessage(), t);
+                                }
+
+                                @Override
+                                public void onSkip() {
+                                    Toast.makeText(MainActivity.this, "Close Batch skipped", Toast.LENGTH_SHORT).show();
+                                }
+                            });
+                        }
+
+                    } else {
+                        closeBatchToday();
+                    }
+
+                }
+
+                @Override
+                public void onFailure(Throwable throwable) {
+                    if (mProgressDialog.isShowing()) {
+                        mProgressDialog.dismiss();
+                    }
+
+                    if (throwable == null) {
+                        return;
+                    }
+
+                    if (throwable instanceof ExpiredException)
+                        Utility.showDialog(MainActivity.this, "Version Changed", throwable.getMessage());
+                    else if (throwable instanceof UnknownHostException)
+                        Utility.showDialog(MainActivity.this, getString(R.string.error_server_not_found), "Please try another server.\n" + throwable.getMessage());
+                    else if (throwable instanceof SocketTimeoutException)
+                        Utility.showDialog(MainActivity.this, getString(R.string.error_server_timeout), "Please check your network.\n" + throwable.getMessage());
+                    else if (throwable instanceof ConnectException) {
+                        Utility.showDialog(MainActivity.this, getString(R.string.error_server_down), "Please contact administrator.\n" + throwable.getMessage());
+                    } else {
+
+                        if (currentUser != null)
+                            NetUtil.syncLogError(MainActivity.this, realm, currentUser.getUserId(), "RetrieveServerInfo.CloseBatch", throwable.getMessage(), null);
+
+                        Toast.makeText(MainActivity.this, throwable.getMessage(), Toast.LENGTH_SHORT).show();
+                    }
+
+
+                    Log.e(TAG, throwable.getMessage());
+                }
+            });
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+
+
+    }
+
+    protected void attemptCloseBatch() {
+
+        // header memang bisa > 1 dan bisa kosong pertama kali utk menutup closebatch terakhir
+        /*
         TrnLDVHeader trnLDVHeader = realm.where(TrnLDVHeader.class)
                 .equalTo("collCode", currentUser.getUserId())
 //                .equalTo("createdBy", createdBy) logikanya 1 collector 1 ldvheader
@@ -1510,30 +2093,9 @@ public class MainActivity extends SyncActivity
             Utility.showDialog(MainActivity.this, "No Data", "Please Get LKP first");
             return;
         }
-        */
+*/
         // konfirm
         // header should not checked
-        final SyncLdvDetails syncLdvDetails = new SyncLdvDetails(this.realm);
-        final SyncLdvComments syncLdvComments = new SyncLdvComments(this.realm);
-        final SyncRvb syncRvb = new SyncRvb(this.realm);
-        final SyncRVColl syncRVColl = new SyncRVColl(this.realm);
-        final SyncBastbj syncBastbj = new SyncBastbj(this.realm);
-        final SyncRepo syncRepo = new SyncRepo(this.realm);
-        final SyncChangeAddr syncChangeAddr = new SyncChangeAddr(this.realm);
-
-        boolean anyDataToSync =
-                        syncLdvDetails.anyDataToSync()
-                        || syncLdvComments.anyDataToSync()
-                        || syncRvb.anyDataToSync()
-                        || syncRVColl.anyDataToSync()
-                        || syncBastbj.anyDataToSync()
-                        || syncRepo.anyDataToSync()
-                        || syncChangeAddr.anyDataToSync();
-
-        if (anyDataToSync) {
-            Utility.showDialog(this, "Need to sync", "Please sync data first");
-            return;
-        }
 
         AlertDialog.Builder alertDialogBuilder = new AlertDialog.Builder(this);
         alertDialogBuilder.setTitle("Close Batch");
@@ -1544,34 +2106,87 @@ public class MainActivity extends SyncActivity
 
             @Override
             public void onClick(DialogInterface dialog, int which) {
-                // TODO: clear cookie
-                syncTransaction(true, true, new OnSuccessError() {
-                    @Override
-                    public void onSuccess(String msg) {
-                        Utility.showDialog(MainActivity.this, "Close Batch", "Close Batch Success");
 
-                        clearLKPTables();
-                        clearSyncTables();
+                View promptsView = LayoutInflater.from(MainActivity.this).inflate(R.layout.dialog_pwd, null);
+                final EditText input = ButterKnife.findById(promptsView, R.id.password);
 
-                        Fragment frag = getSupportFragmentManager().findFragmentById(R.id.content_frame);
+                new AlertDialog.Builder(MainActivity.this)
+                        .setTitle("Type Your Password")
+                        .setView(promptsView)
+                        .setPositiveButton("Ok", new DialogInterface.OnClickListener() {
+                            @Override
+                            public void onClick(DialogInterface dialogInterface, int i) {
+                                String value = input.getText().toString();
 
-                        if (frag != null && frag instanceof FragmentLKPList) {
-                            ((FragmentLKPList)frag).clearTodayList();
-                        }
+                                if (!value.equals(currentUser.getUserPwd())) {
+                                    Snackbar.make(coordinatorLayout, "Invalid password !", Snackbar.LENGTH_LONG).show();
+                                    return;
+                                }
 
-                    }
+                                boolean anyDataToSync = anyDataToSync();
 
-                    @Override
-                    public void onFailure(Throwable throwable) {
+                                if (anyDataToSync) {
+                                    syncTransaction(false, new OnSuccessError() {
+                                        @Override
+                                        public void onSuccess(String msg) {
+                                            // close batch here
+                                            closeBatch();
 
-                    }
+                                        }
 
-                    @Override
-                    public void onSkip() {
+                                        @Override
+                                        public void onFailure(Throwable throwable) {
+                                        }
 
-                    }
-                });
+                                        @Override
+                                        public void onSkip() {
+                                        }
+                                    });
+                                    return;
+                                }
 
+                                // brarti ijo semua, close
+                                closeBatch();
+/*
+                                // TODO: clear cookie
+                                syncTransaction(true, true, new OnSuccessError() {
+                                    @Override
+                                    public void onSuccess(String msg) {
+                                        Utility.showDialog(MainActivity.this, "Close Batch", "Close Batch Success");
+
+                                        clearLKPTables();
+                                        clearSyncTables();
+
+                                        Fragment frag = getSupportFragmentManager().findFragmentById(R.id.content_frame);
+
+                                        if (frag != null && frag instanceof FragmentLKPList) {
+                                            ((FragmentLKPList) frag).clearTodayList();
+                                        }
+
+                                    }
+
+                                    @Override
+                                    public void onFailure(Throwable throwable) {
+
+                                    }
+
+                                    @Override
+                                    public void onSkip() {
+
+                                    }
+                                });
+                                */
+
+                            }
+                        })
+                        .setNegativeButton("Cancel", new DialogInterface.OnClickListener() {
+                            @Override
+                            public void onClick(DialogInterface dialogInterface, int i) {
+
+                            }
+                        })
+                        .show()
+                ;
             }
         });
 
@@ -1606,7 +2221,7 @@ public class MainActivity extends SyncActivity
 
             mProgressDialog.setIndeterminate(true);
             mProgressDialog.setCancelable(false);
-            mProgressDialog.setMessage("Please wait...");
+            mProgressDialog.setMessage(getString(R.string.message_please_wait));
             mProgressDialog.show();
 
         }
@@ -1678,7 +2293,329 @@ public class MainActivity extends SyncActivity
 
     }
 
-    public void syncTransaction(final boolean closeBatch, final boolean showDialog, final OnSuccessError listener) {
+    @Override
+    public void onConnected(@Nullable Bundle bundle) {
+        // Get last known recent location.
+        if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED && ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
+            // TODO: Consider calling
+            //    ActivityCompat#requestPermissions
+            // here to request the missing permissions, and then overriding
+            //   public void onRequestPermissionsResult(int requestCode, String[] permissions,
+            //                                          int[] grantResults)
+            // to handle the case where the user grants the permission. See the documentation
+            // for ActivityCompat#requestPermissions for more details.
+            return;
+        }
+        Location mCurrentLocation = LocationServices.FusedLocationApi.getLastLocation(mGoogleApiClient);
+        // Note that this can be NULL if last location isn't already known.
+        if (mCurrentLocation != null) {
+            // Print current location if not null
+            Log.d("DEBUG", "current location: " + mCurrentLocation.toString());
+            LatLng latLng = new LatLng(mCurrentLocation.getLatitude(), mCurrentLocation.getLongitude());
+        }
+        // Begin polling for new location updates.
+        startLocationUpdates();
+    }
+
+    @Override
+    public void onConnectionSuspended(int i) {
+
+    }
+
+    @Override
+    public void onConnectionFailed(@NonNull ConnectionResult connectionResult) {
+
+    }
+
+    // Trigger new location updates at interval
+    protected void startLocationUpdates() {
+        // Create the location request
+        LocationRequest mLocationRequest = LocationRequest.create()
+                .setPriority(LocationRequest.PRIORITY_LOW_POWER)
+//                .setPriority(LocationRequest.PRIORITY_HIGH_ACCURACY)
+                .setInterval(UPDATE_INTERVAL)
+                .setFastestInterval(FASTEST_INTERVAL);
+        // Request location updates
+        if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED && ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
+            // TODO: Consider calling
+            //    ActivityCompat#requestPermissions
+            // here to request the missing permissions, and then overriding
+            //   public void onRequestPermissionsResult(int requestCode, String[] permissions,
+            //                                          int[] grantResults)
+            // to handle the case where the user grants the permission. See the documentation
+            // for ActivityCompat#requestPermissions for more details.
+            return;
+        }
+        LocationServices.FusedLocationApi.requestLocationUpdates(mGoogleApiClient,
+                mLocationRequest, this);
+    }
+
+    @Override
+    public void onLocationChanged(Location location) {
+
+        if (!Utility.isWorkingHours())
+            return;
+
+        // New location has now been determined
+        String msg = "Updated Location: " +
+                Double.toString(location.getLatitude()) + "," +
+                Double.toString(location.getLongitude());
+//        Toast.makeText(this, msg, Toast.LENGTH_SHORT).show();
+        // You can now create a LatLng Object for use with maps
+        LatLng latLng = new LatLng(location.getLatitude(), location.getLongitude());
+
+        double[] gps = new double[2];
+        gps[0] = latLng.latitude;
+        gps[1] = latLng.longitude;
+
+        NetUtil.syncLocation(this, gps, true);
+//        updateLoc(latLng);
+    }
+
+    @Override
+    public void onRequestPermissionsResult(int requestCode, String[] permissions, int[] grantResults) {
+        switch (requestCode) {
+            case 108:
+                if (grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+                    //continueYourTask
+                }
+                break;
+            default:
+                super.onRequestPermissionsResult(requestCode, permissions, grantResults);
+        }
+    }
+
+    @Override
+    public boolean onPrepareOptionsMenu(Menu menu) {
+        return super.onPrepareOptionsMenu(menu);
+    }
+
+    public void syncTransaction(final boolean showDialog, final OnSuccessError listener) {
+        if (!NetUtil.isConnected(this)) {
+            Snackbar.make(coordinatorLayout, getString(R.string.error_online_required), Snackbar.LENGTH_LONG).show();
+            return;
+        }
+
+        if (currentUser == null) {
+            Snackbar.make(coordinatorLayout, "Please relogin", Snackbar.LENGTH_LONG).show();
+            return;
+        }
+
+        if (RootUtil.isDeviceRooted()) {
+            Toast.makeText(this, "Sorry, your device is rooted. Unable to open application.", Toast.LENGTH_SHORT).show();
+            resetData();
+            backToLoginScreen();
+            return;
+        }
+
+        final ProgressDialog mProgressDialog = new ProgressDialog(this);
+        mProgressDialog.setIndeterminate(true);
+        mProgressDialog.setCancelable(false);
+        mProgressDialog.setMessage(getString(R.string.message_please_wait));
+
+        if (showDialog) {
+            mProgressDialog.show();
+        }
+
+        final SyncLdvDetails syncLdvDetails = new SyncLdvDetails(realm);
+        final SyncLdvComments syncLdvComments = new SyncLdvComments(realm);
+        final SyncRvb syncRvb = new SyncRvb(realm);
+        final SyncRVColl syncRVColl = new SyncRVColl(realm);
+        final SyncBastbj syncBastbj = new SyncBastbj(realm);
+        final SyncRepo syncRepo = new SyncRepo(realm);
+        final SyncChangeAddr syncChangeAddr = new SyncChangeAddr(realm);
+
+        boolean anyDataToSync =
+                syncLdvDetails.anyDataToSync()
+                        || syncLdvComments.anyDataToSync()
+                        || syncRvb.anyDataToSync()
+                        || syncRVColl.anyDataToSync()
+                        || syncBastbj.anyDataToSync()
+                        || syncRepo.anyDataToSync()
+                        || syncChangeAddr.anyDataToSync();
+
+        if (!anyDataToSync) {
+
+            if (listener != null)
+                listener.onSkip();
+            return;
+        } else {
+        }
+
+        final RequestSyncLKP req = new RequestSyncLKP();
+
+        // TODO: you may test each of modules which data to sync. But dont forget to enable all on production
+        req.setRvb(syncRvb.getDataToSync());
+        req.setRvColl(syncRVColl.getDataToSync());
+        req.setLdvDetails(syncLdvDetails.getDataToSync());
+        req.setLdvComments(syncLdvComments.getDataToSync());
+        req.setBastbj(syncBastbj.getDataToSync());
+        req.setRepo(syncRepo.getDataToSync());
+        req.setChangeAddr(syncChangeAddr.getDataToSync());
+
+        Snackbar.make(coordinatorLayout, "Sync started", Snackbar.LENGTH_SHORT).show();
+
+        mProgressDialog.setMessage("Sync Data In Progress.\nPlease wait...");
+
+        if (showDialog) {
+            mProgressDialog.show();
+
+        }
+
+        // upload photo first
+        final SyncPhoto syncPhoto = new SyncPhoto(realm);
+        if (syncPhoto.anyDataToSync()) {
+            NetUtil.uploadPhotos(MainActivity.this, realm, new OnSuccessError() {
+                @Override
+                public void onSuccess(String msg) {
+
+                }
+
+                @Override
+                public void onFailure(Throwable throwable) {
+
+                }
+
+                @Override
+                public void onSkip() {
+
+                }
+            });
+        }
+
+
+        ApiInterface fastService =
+                ServiceGenerator.createService(ApiInterface.class, Utility.buildUrl(Storage.getPreferenceAsInt(getApplicationContext(), Storage.KEY_SERVER_ID, 0)));
+
+        Call<ResponseSync> call = fastService.syncLKP(req);
+        call.enqueue(new Callback<ResponseSync>() {
+            @Override
+            public void onResponse(Call<ResponseSync> call, Response<ResponseSync> response) {
+                if (!response.isSuccessful()) {
+
+                    ResponseBody errorBody = response.errorBody();
+
+                    String msg = "";
+                    try {
+//                        Utility.showDialog(MainActivity.this, "Server Problem (" + statusCode + ")", errorBody.string());
+                        msg = response.message() + "(" + response.code() + ") " + errorBody.string();
+                        Snackbar.make(coordinatorLayout, msg, Snackbar.LENGTH_LONG).show();
+                    } catch (Exception e) {
+                        e.printStackTrace();
+                    }
+
+                    if (listener != null)
+                        listener.onFailure(new RuntimeException(msg));
+
+                    if (showDialog) {
+                        if (mProgressDialog.isShowing())
+                            mProgressDialog.dismiss();
+                    }
+
+                    return;
+                }
+
+                // successful here
+                final ResponseSync respSync = response.body();
+
+                if (respSync == null || respSync.getError() != null) {
+                    if (listener != null)
+                        listener.onFailure(new RuntimeException("Sync Failed due to Server Error"));
+
+                    if (respSync == null) {
+                        // Not found(404) berarti ada yg salah di json
+                        Snackbar.make(coordinatorLayout, response.message() + "(" + response.code() + ") ", Snackbar.LENGTH_LONG).show();
+                    } else {
+                        Toast.makeText(MainActivity.this, "Data Error (" + respSync.getError() + ")\n" + respSync.getError().getErrorDesc(), Toast.LENGTH_SHORT).show();
+                    }
+
+                } else if (respSync.getData() != 1) {
+
+                    if (listener != null)
+                        listener.onSkip();
+
+                } else {
+
+                    if (req.getLdvDetails() != null && req.getLdvDetails().size() > 0)
+                        syncLdvDetails.syncData();
+
+                    if (req.getLdvComments() != null && req.getLdvComments().size() > 0)
+                        syncLdvComments.syncData();
+
+                    if (req.getRepo() != null && req.getRepo().size() > 0)
+                        syncRepo.syncData();
+
+                    if (req.getRvb() != null && req.getRvb().size() > 0)
+                        syncRvb.syncData();
+
+                    if (req.getRvColl() != null && req.getRvColl().size() > 0)
+                        syncRVColl.syncData();
+
+                    if (req.getChangeAddr() != null && req.getChangeAddr().size() > 0)
+                        syncChangeAddr.syncData();
+
+                    if (req.getBastbj() != null && req.getBastbj().size() > 0)
+                        syncBastbj.syncData();
+
+                    Fragment frag = getSupportFragmentManager().findFragmentById(R.id.content_frame);
+
+                    if (frag != null && frag instanceof FragmentLKPList) {
+                        ((FragmentLKPList) frag).loadCurrentLKP(); // masih terkadang ga mau update
+//                    ((FragmentLKPList) frag).refresh(); ga mau update
+//                    frag.refresh();
+                    }
+
+                    if (listener != null)
+                        listener.onSuccess(null);
+
+                }
+
+                if (showDialog) {
+                    if (mProgressDialog.isShowing())
+                        mProgressDialog.dismiss();
+                }
+
+                Snackbar.make(coordinatorLayout, "Sync success", Snackbar.LENGTH_SHORT).show();
+            }
+
+            @Override
+            public void onFailure(Call<ResponseSync> call, Throwable t) {
+                Log.e("eric.onFailure", t.getMessage(), t);
+
+                if (showDialog) {
+                    if (mProgressDialog.isShowing())
+                        mProgressDialog.dismiss();
+                }
+
+                if (t instanceof ConnectException) {
+                    if (Utility.developerMode)
+                        Utility.showDialog(MainActivity.this, "No Connection", t.getMessage());
+                    else
+                        Utility.showDialog(MainActivity.this, "No Connection", getString(R.string.error_contact_admin));
+                }
+
+                if (listener != null)
+                    listener.onFailure(t);
+
+                Snackbar.make(coordinatorLayout, "Sync Failed\n" + t.getMessage(), Snackbar.LENGTH_LONG).show();
+
+                // TODO: utk mencegah data di server udah sync, coba get lkp lagi
+                if (t.getMessage() == null) {
+                    // should add delay to gave server a breath
+                    try {
+                        TimeUnit.SECONDS.sleep(10);
+                    } catch (InterruptedException e) {
+                        //Handle exception
+                    }
+
+                    resetData();
+                    attemptGetLKP(currentUser.getUserId(), getServerDate(realm), false, null);
+                }
+            }
+        });
+    }
+
+    public void syncTransactionOld(final boolean closeBatch, final boolean showDialog, final OnSuccessError listener) {
 
         if (!NetUtil.isConnected(this)) {
             Snackbar.make(coordinatorLayout, getString(R.string.error_online_required), Snackbar.LENGTH_LONG).show();
@@ -1697,100 +2634,27 @@ public class MainActivity extends SyncActivity
             return;
         }
 
-        ApiInterface fastService =
-                ServiceGenerator.createService(ApiInterface.class, Utility.buildUrl(Storage.getPreferenceAsInt(getApplicationContext(), Storage.KEY_SERVER_ID, 0)));
-
         if (closeBatch) {
+            closeBatch();
+            /*
+            // bug, krn serverDate msh ada kemungkinan tidak update krn isi serverdate hanya diupdate wkt data reset/closebatch sukses
             Date serverDate = getServerDate(this.realm);
             final String createdBy = "JOB" + Utility.convertDateToString(serverDate, "yyyyMMdd");
 
             TrnLDVHeader trnLDVHeaderToday = this.realm.where(TrnLDVHeader.class)
-//                    .equalTo("ldvNo", currentLDVNo)
                     .equalTo("collCode", currentUser.getUserId())
                     .equalTo("createdBy", createdBy)
                     .findFirst();
 
-//            if ( TextUtils.isEmpty(currentLDVNo)) {
             if (trnLDVHeaderToday == null) {
 
-                // coba close LKP yg kmrn
-                final ProgressDialog mProgressDialog = new ProgressDialog(this);
-                mProgressDialog.setIndeterminate(true);
-                mProgressDialog.setCancelable(false);
-                mProgressDialog.setMessage("Please wait...");
-                mProgressDialog.show();
+                closeBatchYesterday();
 
-                Call<ResponseBody> cb = fastService.closeBatchYesterday(currentUser.getUserId());
-                cb.enqueue(new Callback<ResponseBody>() {
-                    @Override
-                    public void onResponse(Call<ResponseBody> call, Response<ResponseBody> response) {
-
-                        if (mProgressDialog.isShowing()) {
-                            mProgressDialog.dismiss();
-                        }
-                        if (response.isSuccessful()) {
-
-                            resetData();
-
-
-                            AlertDialog.Builder alertDialogBuilder = new AlertDialog.Builder(MainActivity.this);
-                            alertDialogBuilder.setTitle("");
-                            alertDialogBuilder.setMessage("Close Batch success. Please relogin.");
-                            alertDialogBuilder.setPositiveButton("Ok", new DialogInterface.OnClickListener() {
-
-                                @Override
-                                public void onClick(DialogInterface dialog, int which) {
-                                    backToLoginScreen();
-                                }
-                            });
-
-                            alertDialogBuilder.show();
-
-                        } else {
-
-                            try {
-                                Utility.showDialog(MainActivity.this, "Close Batch", response.errorBody().string());
-                            } catch (IOException e) {
-                                e.printStackTrace();
-                            }
-                        }
-                    }
-
-                    @Override
-                    public void onFailure(Call<ResponseBody> call, Throwable t) {
-                        if (mProgressDialog.isShowing()) {
-                            mProgressDialog.dismiss();
-                        }
-                        Toast.makeText(MainActivity.this, t.getMessage(), Toast.LENGTH_SHORT).show();
-                    }
-                });
-
-
-//                Utility.showDialog(this, "Error Close Batch", "LKP not loaded");
                 return;
             }
 
-            this.realm.executeTransaction(new Realm.Transaction() {
-                @Override
-                public void execute(Realm realm) {
-
-                    TrnLDVHeader trnLDVHeader = realm.where(TrnLDVHeader.class)
-                            .equalTo("ldvNo", currentLDVNo)
-                            .equalTo("collCode", currentUser.getUserId())
-//                    .equalTo("createdBy", createdBy)
-                            .findFirst();
-
-                    if (trnLDVHeader != null) {
-                        trnLDVHeader.setWorkFlag("C");
-                        trnLDVHeader.setCloseBatch("Y");
-                        trnLDVHeader.setLastupdateBy(Utility.LAST_UPDATE_BY);
-                        trnLDVHeader.setLastupdateTimestamp(new Date());
-                        realm.copyToRealmOrUpdate(trnLDVHeader); // hanya di update waktu close batch
-                    }
-
-                }
-            });
-
+            closeBatchToday();
+            */
         }
 
         final SyncLdvHeader syncLdvHeader = new SyncLdvHeader(this.realm);
@@ -1846,7 +2710,7 @@ public class MainActivity extends SyncActivity
 
             mProgressDialog.setIndeterminate(true);
             mProgressDialog.setCancelable(false);
-            mProgressDialog.setMessage("Please wait...");
+            mProgressDialog.setMessage("Sync Data In Progress.\nPlease wait...");
             mProgressDialog.show();
 
         }
@@ -1873,87 +2737,107 @@ public class MainActivity extends SyncActivity
         }
 
 
+        ApiInterface fastService =
+                ServiceGenerator.createService(ApiInterface.class, Utility.buildUrl(Storage.getPreferenceAsInt(getApplicationContext(), Storage.KEY_SERVER_ID, 0)));
+
         Call<ResponseSync> call = fastService.syncLKP(req);
         call.enqueue(new Callback<ResponseSync>() {
             @Override
             public void onResponse(Call<ResponseSync> call, Response<ResponseSync> response) {
-                final ResponseSync respSync = response.body();
 
-                if (respSync == null || respSync.getError() != null) {
+                if (!response.isSuccessful()) {
+
+                    ResponseBody errorBody = response.errorBody();
+
+                    String msg = "";
+                    try {
+//                        Utility.showDialog(MainActivity.this, "Server Problem (" + statusCode + ")", errorBody.string());
+                        msg = response.message() + "(" + response.code() + ") " + errorBody.string();
+                        Snackbar.make(coordinatorLayout, msg, Snackbar.LENGTH_LONG).show();
+                    } catch (Exception e) {
+                        e.printStackTrace();
+                    }
+
+                    if (listener != null)
+                        listener.onFailure(new RuntimeException(msg));
+
                     if (showDialog) {
                         if (mProgressDialog.isShowing())
                             mProgressDialog.dismiss();
                     }
 
+                    return;
+                }
+
+                // successful here
+                final ResponseSync respSync = response.body();
+
+                if (respSync == null || respSync.getError() != null) {
                     if (listener != null)
                         listener.onFailure(new RuntimeException("Sync Failed due to Server Error"));
 
                     if (respSync == null) {
-                        Snackbar.make(coordinatorLayout, response.message() + "(" + response.code() + ")", Snackbar.LENGTH_LONG).show();
+                        // Not found(404) berarti ada yg salah di json
+                        Snackbar.make(coordinatorLayout, response.message() + "(" + response.code() + ") ", Snackbar.LENGTH_LONG).show();
                     } else {
                         Toast.makeText(MainActivity.this, "Data Error (" + respSync.getError() + ")\n" + respSync.getError().getErrorDesc(), Toast.LENGTH_SHORT).show();
                     }
-                    return;
-                }
 
-                // TODO: tackle successful sync result here
-                if (respSync.getData() != 1) {
-                    if (showDialog) {
-                        if (mProgressDialog.isShowing())
-                            mProgressDialog.dismiss();
-                    }
+                } else if (respSync.getData() != 1) {
 
                     if (listener != null)
                         listener.onSkip();
 
-                    return;
-                }
-
-                if (closeBatch) {
-                    if (req.getLdvHeader() != null && req.getLdvHeader().size() > 0) {
-                        syncLdvHeader.syncData();
+                    if (showDialog) {
+                        if (mProgressDialog.isShowing())
+                            mProgressDialog.dismiss();
                     }
-                }
+                } else {
 
-                if (req.getLdvDetails() != null && req.getLdvDetails().size() > 0)
-                    syncLdvDetails.syncData();
+                    if (closeBatch) {
+                        if (req.getLdvHeader() != null && req.getLdvHeader().size() > 0) {
+                            syncLdvHeader.syncData();
+                        }
+                    }
 
-                if (req.getLdvComments() != null && req.getLdvComments().size() > 0)
-                    syncLdvComments.syncData();
+                    if (req.getLdvDetails() != null && req.getLdvDetails().size() > 0)
+                        syncLdvDetails.syncData();
 
-                if (req.getRepo() != null && req.getRepo().size() > 0)
-                    syncRepo.syncData();
+                    if (req.getLdvComments() != null && req.getLdvComments().size() > 0)
+                        syncLdvComments.syncData();
 
-                if (req.getRvb() != null && req.getRvb().size() > 0)
-                    syncRvb.syncData();
+                    if (req.getRepo() != null && req.getRepo().size() > 0)
+                        syncRepo.syncData();
 
-                if (req.getRvColl() != null && req.getRvColl().size() > 0)
-                    syncRVColl.syncData();
+                    if (req.getRvb() != null && req.getRvb().size() > 0)
+                        syncRvb.syncData();
 
-                if (req.getChangeAddr() != null && req.getChangeAddr().size() > 0)
-                    syncChangeAddr.syncData();
+                    if (req.getRvColl() != null && req.getRvColl().size() > 0)
+                        syncRVColl.syncData();
 
-                if (req.getBastbj() != null && req.getBastbj().size() > 0)
-                    syncBastbj.syncData();
+                    if (req.getChangeAddr() != null && req.getChangeAddr().size() > 0)
+                        syncChangeAddr.syncData();
 
-                Fragment frag = getSupportFragmentManager().findFragmentById(R.id.content_frame);
-//                final FragmentLKPList frag = (FragmentLKPList)
-//                        getSupportFragmentManager().findFragmentById(R.id.content_frame);
+                    if (req.getBastbj() != null && req.getBastbj().size() > 0)
+                        syncBastbj.syncData();
 
-                if (frag != null && frag instanceof FragmentLKPList) {
-                    ((FragmentLKPList)frag).loadCurrentLKP(); // masih terkadang ga mau update
+                    Fragment frag = getSupportFragmentManager().findFragmentById(R.id.content_frame);
+
+                    if (frag != null && frag instanceof FragmentLKPList) {
+                        ((FragmentLKPList) frag).loadCurrentLKP(); // masih terkadang ga mau update
 //                    ((FragmentLKPList) frag).refresh(); ga mau update
 //                    frag.refresh();
-                }
+                    }
 
-                if (listener != null)
-                    listener.onSuccess(null);
+                    if (listener != null)
+                        listener.onSuccess(null);
+
+                }
 
                 if (showDialog) {
                     if (mProgressDialog.isShowing())
                         mProgressDialog.dismiss();
                 }
-
 
                 Snackbar.make(coordinatorLayout, "Sync success", Snackbar.LENGTH_SHORT).show();
             }
@@ -1991,104 +2875,14 @@ public class MainActivity extends SyncActivity
                     }
 
                     resetData();
-                    getLKP(currentUser.getUserId(), getServerDate(realm), false, null);
+                    attemptGetLKP(currentUser.getUserId(), getServerDate(realm), false, null);
                 }
             }
         });
     }
 
-    @Override
-    public void onConnected(@Nullable Bundle bundle) {
-        // Get last known recent location.
-        if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED && ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
-            // TODO: Consider calling
-            //    ActivityCompat#requestPermissions
-            // here to request the missing permissions, and then overriding
-            //   public void onRequestPermissionsResult(int requestCode, String[] permissions,
-            //                                          int[] grantResults)
-            // to handle the case where the user grants the permission. See the documentation
-            // for ActivityCompat#requestPermissions for more details.
-            return;
-        }
-        Location mCurrentLocation = LocationServices.FusedLocationApi.getLastLocation(mGoogleApiClient);
-        // Note that this can be NULL if last location isn't already known.
-        if (mCurrentLocation != null) {
-            // Print current location if not null
-            Log.d("DEBUG", "current location: " + mCurrentLocation.toString());
-            LatLng latLng = new LatLng(mCurrentLocation.getLatitude(), mCurrentLocation.getLongitude());
-        }
-        // Begin polling for new location updates.
-        startLocationUpdates();
+    public void showSnackBar(String message) {
+        Snackbar.make(coordinatorLayout, message, Snackbar.LENGTH_SHORT).show();
     }
 
-    @Override
-    public void onConnectionSuspended(int i) {
-
-    }
-
-    @Override
-    public void onConnectionFailed(@NonNull ConnectionResult connectionResult) {
-
-    }
-    // Trigger new location updates at interval
-    protected void startLocationUpdates() {
-        // Create the location request
-        LocationRequest mLocationRequest = LocationRequest.create()
-                .setPriority(LocationRequest.PRIORITY_LOW_POWER)
-//                .setPriority(LocationRequest.PRIORITY_HIGH_ACCURACY)
-                .setInterval(UPDATE_INTERVAL)
-                .setFastestInterval(FASTEST_INTERVAL);
-        // Request location updates
-        if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED && ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
-            // TODO: Consider calling
-            //    ActivityCompat#requestPermissions
-            // here to request the missing permissions, and then overriding
-            //   public void onRequestPermissionsResult(int requestCode, String[] permissions,
-            //                                          int[] grantResults)
-            // to handle the case where the user grants the permission. See the documentation
-            // for ActivityCompat#requestPermissions for more details.
-            return;
-        }
-        LocationServices.FusedLocationApi.requestLocationUpdates(mGoogleApiClient,
-                mLocationRequest, this);
-    }
-
-    @Override
-    public void onLocationChanged(Location location) {
-
-        if (!Utility.isWorkingHours())
-            return;
-
-        // New location has now been determined
-        String msg = "Updated Location: " +
-                Double.toString(location.getLatitude()) + "," +
-                Double.toString(location.getLongitude());
-//        Toast.makeText(this, msg, Toast.LENGTH_SHORT).show();
-        // You can now create a LatLng Object for use with maps
-        LatLng latLng = new LatLng(location.getLatitude(), location.getLongitude());
-
-        double[] gps = new double[2];
-        gps[0] = latLng.latitude;
-        gps[1] = latLng.longitude;
-
-        NetUtil.syncLocation(this, gps, true);
-//        updateLoc(latLng);
-    }
-    @Override
-    public void onRequestPermissionsResult(int requestCode, String[] permissions, int[] grantResults) {
-        switch (requestCode) {
-            case 108:
-                if (grantResults[0] == PackageManager.PERMISSION_GRANTED) {
-                    //continueYourTask
-                }
-                break;
-            default:
-                super.onRequestPermissionsResult(requestCode, permissions, grantResults);
-        }
-    }
-
-    @Override
-    public boolean onPrepareOptionsMenu(Menu menu) {
-        return super.onPrepareOptionsMenu(menu);
-    }
 }

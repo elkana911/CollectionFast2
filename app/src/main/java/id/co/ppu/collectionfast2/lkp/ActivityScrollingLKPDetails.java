@@ -363,6 +363,9 @@ public class ActivityScrollingLKPDetails extends BasicActivity {
             i.putExtra(ActivityPaymentReceive.PARAM_LKP_DATE, this.lkpDate.getTime());
             i.putExtra(ActivityPaymentReceive.PARAM_COLLECTOR_ID, this.collectorId);
         } else {
+
+            // TODO: harusnya ga bisa cek detail krn asumsinya lkp kmrn udah close batch jd cuma bisa liat
+            // kalo mo entry konsumen yg kmrn mau janji bayar hari ini, harusnya masuk ke screen payment entri wkt get lkp hari ini
             RealmResults<TrnContractBuckets> trnContractBucketses = this.realm.where(TrnContractBuckets.class)
                     .equalTo("pk.contractNo", contractNo)
 //                .equalTo("createdBy", createdBy)

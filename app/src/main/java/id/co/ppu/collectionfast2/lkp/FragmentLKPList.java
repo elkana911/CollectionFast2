@@ -1,6 +1,7 @@
 package id.co.ppu.collectionfast2.lkp;
 
 import android.app.DatePickerDialog;
+import android.app.ProgressDialog;
 import android.content.Context;
 import android.content.Intent;
 import android.graphics.Color;
@@ -8,7 +9,6 @@ import android.os.Build;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
-import android.support.design.widget.FloatingActionButton;
 import android.support.v4.app.Fragment;
 import android.support.v4.content.ContextCompat;
 import android.support.v7.widget.LinearLayoutManager;
@@ -39,7 +39,6 @@ import id.co.ppu.collectionfast2.MainActivity;
 import id.co.ppu.collectionfast2.R;
 import id.co.ppu.collectionfast2.component.DividerItemDecoration;
 import id.co.ppu.collectionfast2.component.RealmSearchView;
-import id.co.ppu.collectionfast2.listener.OnLKPListListener;
 import id.co.ppu.collectionfast2.listener.OnPostRetrieveServerInfo;
 import id.co.ppu.collectionfast2.pojo.DisplayTrnLDVDetails;
 import id.co.ppu.collectionfast2.pojo.ServerInfo;
@@ -57,7 +56,7 @@ import io.realm.RealmResults;
  * <p/>
  * A simple {@link Fragment} subclass.
  * Activities that contain this fragment must implement the
- * {@link OnLKPListListener} interface
+ * {@link OnFragmentLKPListInteractionListener} interface
  * to handle interaction events.
  */
 public class FragmentLKPList extends Fragment {
@@ -87,12 +86,9 @@ public class FragmentLKPList extends Fragment {
     @BindView(R.id.etTglLKP)
     EditText etTglLKP;
 
-    @BindView(R.id.fab)
-    FloatingActionButton fab;
-
 //    private LKPListAdapter mAdapter;
 
-    private OnLKPListListener mListener;
+    private OnFragmentLKPListInteractionListener mListener;
 
     private DatePickerDialog.OnDateSetListener listenerDateTglLKP = new DatePickerDialog.OnDateSetListener() {
         @Override
@@ -192,67 +188,102 @@ public class FragmentLKPList extends Fragment {
         return view;
     }
 
-    @OnClick(R.id.fab)
-    public void onClickFab() {
+    public void performClickSync() {
+        Date dateLKP = TextUtils.isEmpty(etTglLKP.getText().toString())
+                ? new Date()
+                : Utility.convertStringToDate(etTglLKP.getText().toString(), Utility.DATE_DISPLAY_PATTERN);
+
+        retrieveLKP((OnFragmentLKPListInteractionListener) getActivity(), dateLKP);
+
+    }
+
+    public void retrieveLKP(final OnFragmentLKPListInteractionListener implementor, final Date lkpDate) {
 
         if (!NetUtil.isConnected(getContext())) {
             Utility.showDialog(getContext(), getString(R.string.title_no_connection), getString(R.string.error_online_required));
             return;
         }
 
-        if (getContext() instanceof OnLKPListListener) {
-
-            ServerInfo _si = this.realm.where(ServerInfo.class).findFirst();
-            if (_si == null) {
-                try {
-                    DataUtil.retrieveServerInfo(this.realm, getContext(), new OnPostRetrieveServerInfo() {
-
-                        @Override
-                        public void onSuccess(ServerInfo serverInfo) {
-                            Date serverDate = serverInfo.getServerDate();
-
-                            retrieveLKP((OnLKPListListener) getContext(), serverDate);
-                        }
-
-                        @Override
-                        public void onFailure(Throwable throwable) {
-
-                        }
-                    });
-                } catch (Exception e) {
-                    e.printStackTrace();
-                    Toast.makeText(getContext(), e.getMessage(), Toast.LENGTH_SHORT).show();
-                }
-            } else {
-
-                Date serverDate = _si.getServerDate();
-                retrieveLKP((OnLKPListListener) getContext(), serverDate);
-/*
-                if (!Utility.isSameDay(userConfig.getLastLogin(), serverDate)) {
-                    Utility.showDialog(getContext(), "Close Batch", "Please do Close Batch first");
-                    return;
-                }
-                Date dateLKP = TextUtils.isEmpty(etTglLKP.getText().toString()) ? serverDate : Utility.convertStringToDate(etTglLKP.getText().toString(), Utility.DATE_DISPLAY_PATTERN);
-                final String createdBy = "JOB" + Utility.convertDateToString(dateLKP, "yyyyMMdd");
-
-                TrnLDVHeader header = this.realm.where(TrnLDVHeader.class)
-                        .equalTo("collCode", collectorCode)
-                        .equalTo("createdBy", createdBy)
-                        .findFirst();
-
-                if (header != null) {
-                    ((MainActivity)getActivity()).syncTransaction(false, true, null);
-                    return;
-                }
-
-                ((OnLKPListListener)getContext()).onLKPInquiry(this.collectorCode, dateLKP);
-                */
-            }
-
+        if (implementor == null) {
+            Toast.makeText(getContext(), "No implementor for FragmentLKPList", Toast.LENGTH_SHORT).show();
+            return;
         }
+
+        if (!DataUtil.isLDVHeaderValid(realm, collectorCode)) {
+            ((MainActivity)getActivity()).showSnackBar(getString(R.string.warning_close_batch));
+            return;
+        }
+
+        // be careful, kalo retrieve lkpinquiry ya header bisa > 1
+        // tembok utama, cant retrieve lkp if header > 1
+        /*
+        long headerCount = realm.where(TrnLDVHeader.class)
+                .equalTo("collCode", collectorCode).count();
+
+        if (headerCount > 1) {
+            Utility.showDialog(getContext(), "Invalid header", "Cant retrieve LKP.\nMultiple LKP found !");
+            return;
+        }
+        */
+
+        final ProgressDialog mProgressDialog = new ProgressDialog(getContext());
+        mProgressDialog.setIndeterminate(true);
+        mProgressDialog.setCancelable(false);
+        mProgressDialog.setMessage("Please wait...");
+        mProgressDialog.show();
+
+        try {
+            DataUtil.retrieveServerInfo(collectorCode, this.realm, getContext(), new OnPostRetrieveServerInfo() {
+                @Override
+                public void onSuccess(ServerInfo serverInfo) {
+
+                    if (mProgressDialog.isShowing()) {
+                        mProgressDialog.dismiss();
+                    }
+//                    boolean pleaseCloseBatch = false;
+
+                    // tembok pertama, jika tgl server berubah, must sync !
+                    if (!Utility.isSameDay(new Date(), serverInfo.getServerDate())) {
+                        if (implementor.isAnyDataToSync())
+//                            pleaseCloseBatch = true;
+                            // sync transaction
+                            ((MainActivity)getActivity()).syncTransaction(true, null);
+                    }
+
+//                    if (pleaseCloseBatch) {
+                        // proses close batch yg akan melakukan sync lokal if any
+//                        Utility.showDialog(getContext(), "Close Batch", "Server Date has changed.\nPlease do Close Batch first");
+//                        return;
+//                    }
+
+                    if (Utility.isSameDay(lkpDate, serverInfo.getServerDate()) && implementor.isAnyDataToSync()) {
+                        // sync transaction
+                        ((MainActivity)getActivity()).syncTransaction(true, null);
+                    } else {
+                        implementor.onLKPInquiry(collectorCode, lkpDate);
+                    }
+
+                }
+
+                @Override
+                public void onFailure(Throwable throwable) {
+                    if (mProgressDialog.isShowing()) {
+                        mProgressDialog.dismiss();
+                    }
+
+                    Toast.makeText(getContext(), throwable.getMessage(), Toast.LENGTH_LONG).show();
+//                    Utility.showDialog(getContext(), "Server Error", "Fail to communicate with server");
+
+                }
+            });
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+
     }
 
-    public void retrieveLKP(OnLKPListListener listener, Date serverDate) {
+    @Deprecated
+    public void retrieveLKPOld(OnFragmentLKPListInteractionListener listener, Date serverDate) {
         UserConfig userConfig = this.realm.where(UserConfig.class).findFirst();
 
         if (userConfig == null) {
@@ -274,7 +305,8 @@ public class FragmentLKPList extends Fragment {
                 .findFirst();
 
         if (header != null) {
-            ((MainActivity)getActivity()).syncTransaction(false, true, null);
+            ((MainActivity)getActivity()).syncTransaction(true, null);
+//            ((MainActivity)getActivity()).syncTransaction(false, true, null);
             return;
         }
 
@@ -291,7 +323,8 @@ public class FragmentLKPList extends Fragment {
                 etTglLKP.performClick();
 
         } else {
-
+            // reset ke hari ini
+            etTglLKP.setText(Utility.convertDateToString(new Date(), Utility.DATE_DISPLAY_PATTERN));
         }
     }
 
@@ -307,11 +340,11 @@ public class FragmentLKPList extends Fragment {
     @Override
     public void onAttach(Context context) {
         super.onAttach(context);
-        if (context instanceof OnLKPListListener) {
-            mListener = (OnLKPListListener) context;
+        if (context instanceof OnFragmentLKPListInteractionListener) {
+            mListener = (OnFragmentLKPListInteractionListener) context;
         } else {
             throw new RuntimeException(context.toString()
-                    + " must implement OnFragmentInteractionListener");
+                    + " must implement OnFragmentLKPListInteractionListener");
         }
     }
 
@@ -527,8 +560,8 @@ public class FragmentLKPList extends Fragment {
             dataViewHolder.llRowLKP.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View view) {
-                    if (getContext() instanceof OnLKPListListener) {
-                        ((OnLKPListListener)getContext()).onLKPSelected(detail);
+                    if (getContext() instanceof OnFragmentLKPListInteractionListener) {
+                        ((OnFragmentLKPListInteractionListener)getContext()).onLKPSelected(detail);
                     }
 
                 }
@@ -537,8 +570,8 @@ public class FragmentLKPList extends Fragment {
             dataViewHolder.ivCancelSync.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View view) {
-                    if (getContext() instanceof OnLKPListListener) {
-                        ((OnLKPListListener)getContext()).onLKPCancelSync(detail);
+                    if (getContext() instanceof OnFragmentLKPListInteractionListener) {
+                        ((OnFragmentLKPListInteractionListener)getContext()).onLKPCancelSync(detail);
                     }
 
                 }
@@ -608,4 +641,14 @@ public class FragmentLKPList extends Fragment {
             }
         }
     }
+
+    public interface OnFragmentLKPListInteractionListener {
+        void onLKPSelected(DisplayTrnLDVDetails detail);
+        void onLKPCancelSync(DisplayTrnLDVDetails detail);
+
+        void onLKPInquiry(String collectorCode, Date lkpDate);
+
+        boolean isAnyDataToSync();
+    }
+
 }

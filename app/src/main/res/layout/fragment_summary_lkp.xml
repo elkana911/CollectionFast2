@@ -130,7 +130,6 @@
                         android:clickable="false"
                         android:focusable="false"
                         android:focusableInTouchMode="false"
-                        android:hint="AR Staff"
                         android:maxLines="1" />
 
                     <EditText
@@ -140,7 +139,6 @@
                         android:clickable="false"
                         android:focusable="false"
                         android:focusableInTouchMode="false"
-                        android:hint="AR Staff"
                         android:maxLines="1" />
                 </TableRow>
 
@@ -155,7 +153,6 @@
                         android:clickable="false"
                         android:focusable="false"
                         android:focusableInTouchMode="false"
-                        android:hint="AR Staff"
                         android:maxLines="1" />
 
                     <EditText
@@ -165,7 +162,6 @@
                         android:clickable="false"
                         android:focusable="false"
                         android:focusableInTouchMode="false"
-                        android:hint="AR Staff"
                         android:maxLines="1" />
                 </TableRow>
 
@@ -253,16 +249,6 @@
                     android:layout_width="0dp"
                     android:layout_height="wrap_content"
                     android:layout_weight="0.5">
-                    <TextView
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:text=""/>
-                </android.support.design.widget.TextInputLayout>
-
-                <android.support.design.widget.TextInputLayout
-                    android:layout_width="0dp"
-                    android:layout_height="wrap_content"
-                    android:layout_weight="0.5">
 
                     <EditText
                         android:id="@+id/etTotalTertagih"
@@ -271,10 +257,20 @@
                         android:clickable="false"
                         android:focusable="false"
                         android:focusableInTouchMode="false"
-                        android:gravity="end"
                         android:hint="Total Tertagih"
                         android:maxLines="1"
                         android:textStyle="bold" />
+                </android.support.design.widget.TextInputLayout>
+
+                <android.support.design.widget.TextInputLayout
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="0.5">
+                    <TextView
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:gravity="end"
+                        android:text=""/>
                 </android.support.design.widget.TextInputLayout>
             </LinearLayout>
         </LinearLayout>

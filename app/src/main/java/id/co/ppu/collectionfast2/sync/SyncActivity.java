@@ -64,8 +64,8 @@ public class SyncActivity extends BasicActivity {
             return list;
         }
     */
-    private boolean anyDataToSync() {
-        final SyncLdvHeader syncLdvHeader = new SyncLdvHeader(this.realm);
+    protected boolean anyDataToSync() {
+//        final SyncLdvHeader syncLdvHeader = new SyncLdvHeader(this.realm);
         final SyncLdvDetails syncLdvDetails = new SyncLdvDetails(this.realm);
         final SyncLdvComments syncLdvComments = new SyncLdvComments(this.realm);
         final SyncRvb syncRvb = new SyncRvb(this.realm);
