@@ -40,7 +40,7 @@ public class Utility {
             ,{"fast-mobile2", "c1mobile.radanafinance.co.id", "7001"}
     };
     // TODO: always check version inside gradle on production
-    public final static boolean developerMode = true;
+    public final static boolean developerMode = false;
     public final static int NETWORK_TIMEOUT_MINUTES = developerMode ? 1 : 3 ;
 
 

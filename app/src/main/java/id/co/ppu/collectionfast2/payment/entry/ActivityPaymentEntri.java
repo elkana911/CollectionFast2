@@ -561,10 +561,11 @@ public class ActivityPaymentEntri extends BasicActivity implements FragmentActiv
                 .equalTo("pk.ldvNo", ldvNo)
                 .equalTo("contractNo", etContractNo.getText().toString())
                 .equalTo("createdBy", createdBy)
-                .notEqualTo("workStatus", "V")
+                .notEqualTo("workStatus", "W")
                 .findAll();
 
         if (lkpDtls.size() > 0) {
+            focusView = etContractNo;
             Toast.makeText(this, "Please use LKP List screen to entri payment", Toast.LENGTH_SHORT).show();
             cancel = true;
         }

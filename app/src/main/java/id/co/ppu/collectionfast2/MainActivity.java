@@ -1409,7 +1409,17 @@ public class MainActivity extends SyncActivity
         }
     }
 
-    public void cancelSync(Realm realm, final String ldvNo, final String contractNo) {
+    public boolean cancelSync(Realm realm, final String ldvNo, final String contractNo) {
+
+        // TODO: harusnya hanya cancel yg statusnya V
+        TrnLDVDetails ada = realm.where(TrnLDVDetails.class)
+                .equalTo("workStatus", "V")
+                .findFirst();
+
+        if (ada == null) {
+            return false;
+        }
+
 
         realm.executeTransaction(new Realm.Transaction() {
             @Override
@@ -1565,6 +1575,8 @@ public class MainActivity extends SyncActivity
             }
         });
         */
+
+        return true;
     }
 
     @Override
@@ -2487,6 +2499,13 @@ public class MainActivity extends SyncActivity
      */
     public void checkPaidLKP(final boolean showDialog, final OnSuccessError listener) {
 
+        // kata wiwan jgn dulu
+        if (listener != null)
+            listener.onSuccess(null);
+
+        if (true)
+            return;
+
         if (!NetUtil.isConnected(this)) {
             Snackbar.make(coordinatorLayout, getString(R.string.error_online_required), Snackbar.LENGTH_LONG).show();
             return;
@@ -2595,10 +2614,12 @@ public class MainActivity extends SyncActivity
                             // 1. update ldvdetails tertentu saja
                             for (TrnLDVDetails ldvDetails : respGetLKP.getData().getDetails()) {
 
+                                // hanya tg statusnya A bisa dioverwrite ke W
                                 TrnLDVDetails first = realm.where(TrnLDVDetails.class)
                                         .equalTo("contractNo", ldvDetails.getContractNo())
                                         .equalTo(Utility.COLUMN_CREATED_BY, ldvDetails.getCreatedBy())
-                                        .notEqualTo("workStatus", "W")
+                                        .equalTo("workStatus", "A")
+//                                        .notEqualTo("workStatus", "W")
                                         .findFirst();
 
                                 if (first == null)
