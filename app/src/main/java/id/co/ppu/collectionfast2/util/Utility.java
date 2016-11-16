@@ -40,7 +40,7 @@ public class Utility {
             ,{"fast-mobile2", "c1mobile.radanafinance.co.id", "7001"}
     };
     // TODO: always check version inside gradle on production
-    public final static boolean developerMode = false;
+    public final static boolean developerMode = true;
     public final static int NETWORK_TIMEOUT_MINUTES = developerMode ? 1 : 3 ;
 
 
@@ -335,6 +335,16 @@ public class Utility {
         // will reset data on next day
         SimpleDateFormat fmt = new SimpleDateFormat("yyyyMMdd");
         return fmt.format(date1).equals(fmt.format(date2));
+    }
+
+    public static Date getDateWithoutTime(Date date) {
+        Calendar cal = Calendar.getInstance();
+        cal.setTime(date);
+        cal.set(Calendar.HOUR_OF_DAY, 0);
+        cal.set(Calendar.MINUTE, 0);
+        cal.set(Calendar.SECOND, 0);
+        cal.set(Calendar.MILLISECOND, 0);
+        return cal.getTime();
     }
 
     public static long getDateDiff(Date date1, Date date2, TimeUnit timeUnit) {

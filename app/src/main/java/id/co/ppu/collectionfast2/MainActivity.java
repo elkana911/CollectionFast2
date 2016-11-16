@@ -387,7 +387,7 @@ public class MainActivity extends SyncActivity
                     // check dates
                     UserConfig userConfig = realm.where(UserConfig.class).findFirst();
 
-                    if (!DataUtil.isLDVHeaderValid(realm, currentUser.getUserId())) {
+                    if (DataUtil.isLDVHeaderValid(realm, currentUser.getUserId()) != null) {
                         showSnackBar(getString(R.string.warning_close_batch));
                     }
 
@@ -562,7 +562,7 @@ public class MainActivity extends SyncActivity
                                 public void onClick(DialogInterface dialogInterface, int i) {
                                     String value = input.getText().toString();
 
-                                    if (!Utility.developerMode && !value.equals(currentUser.getUserPwd())) {
+                                    if (!value.equals(currentUser.getUserPwd())) {
                                         Snackbar.make(coordinatorLayout, "Invalid password !", Snackbar.LENGTH_LONG).show();
                                         return;
                                     }
@@ -797,6 +797,7 @@ public class MainActivity extends SyncActivity
 
         if (fragment != null) {
             FragmentTransaction ft = getSupportFragmentManager().beginTransaction();
+            ft.setCustomAnimations(android.R.anim.fade_in, android.R.anim.fade_out);
             ft.replace(R.id.content_frame, fragment);
             ft.commit();
         }
@@ -1354,11 +1355,19 @@ public class MainActivity extends SyncActivity
     @Override
     public void onLKPSelected(DisplayTrnLDVDetails detail) {
 
-        if (!DataUtil.isLDVHeaderValid(realm, currentUser.getUserId())) {
+        if (DataUtil.isLDVHeaderValid(realm, currentUser.getUserId()) != null) {
+            // di method ini terkadang penggunaan getString bisa ga ketemu lho, mungkin krn listener bisa beda context
             showSnackBar(getString(R.string.warning_close_batch));
+//            showSnackBar("Server date changed. Please Close Batch.");
             return;
         }
-
+/*
+        // cek lagi apa headernya ternyata closed
+        if (DataUtil.isLDVHeaderClosed(realm, currentUser.getUserId(), detail.getLkpDate())) {
+            showSnackBar("Sorry, this LKP already closed.");
+            return;
+        }
+*/
         if (detail instanceof RealmObject) {
             DisplayTrnLDVDetails dtl = this.realm.copyFromRealm(detail);
 
@@ -1383,6 +1392,12 @@ public class MainActivity extends SyncActivity
 
     @Override
     public void onLKPCancelSync(DisplayTrnLDVDetails detail) {
+
+        if (DataUtil.isLDVHeaderValid(realm, currentUser.getUserId()) != null) {
+            showSnackBar(getString(R.string.warning_close_batch));
+            return;
+        }
+
         if (detail instanceof RealmObject) {
             final DisplayTrnLDVDetails dtl = this.realm.copyFromRealm(detail);
 
@@ -1614,7 +1629,7 @@ public class MainActivity extends SyncActivity
     public void openPaymentEntry() {
 //        UserData userData = (UserData) Storage.getObjPreference(getApplicationContext(), Storage.KEY_USER, UserData.class);
 
-        if (!DataUtil.isLDVHeaderValid(realm, currentUser.getUserId())) {
+        if (DataUtil.isLDVHeaderValid(realm, currentUser.getUserId()) != null) {
             showSnackBar(getString(R.string.warning_close_batch));
             return;
         }
@@ -2096,7 +2111,7 @@ public class MainActivity extends SyncActivity
                     if (trnLDVHeaderToday == null) {
 
                         // sapa tau ada data nyantol berhari2 (dengan syarat sudah tersync data transaksi)
-                        if (!DataUtil.isLDVHeaderValid(realm, currentUser.getUserId())) {
+                        if (DataUtil.isLDVHeaderValid(realm, currentUser.getUserId()) != null) {
                             closeBatchOldData(true);
                         } else {
 
@@ -2220,7 +2235,7 @@ public class MainActivity extends SyncActivity
                             public void onClick(DialogInterface dialogInterface, int i) {
                                 String value = input.getText().toString();
 
-                                if (!Utility.developerMode && !value.equals(currentUser.getUserPwd())) {
+                                if (!value.equals(currentUser.getUserPwd())) {
                                     Snackbar.make(coordinatorLayout, "Invalid password !", Snackbar.LENGTH_LONG).show();
                                     return;
                                 }
@@ -2602,7 +2617,8 @@ public class MainActivity extends SyncActivity
                 if (respGetLKP.getData().getDetails() != null && respGetLKP.getData().getDetails().size() > 0) {
                     // cancel first to avoid realm clash
                     for (TrnLDVDetails ldvDetails : respGetLKP.getData().getDetails()) {
-                        cancelSync(realm, ldvDetails.getPk().getLdvNo(), ldvDetails.getContractNo());
+                        // kata wiwan jangan krn menghindari collector terima duit 2x
+                        //cancelSync(realm, ldvDetails.getPk().getLdvNo(), ldvDetails.getContractNo());
                     }
 
 

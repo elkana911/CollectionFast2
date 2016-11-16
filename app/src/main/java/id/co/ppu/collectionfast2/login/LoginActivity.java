@@ -554,6 +554,10 @@ public class LoginActivity extends AppCompatActivity {
                             }
 
                             Log.d(TAG, s);
+                        } else {
+                            if (listener != null) {
+                                listener.onFailure(new RuntimeException("Get Version failed"));
+                            }
                         }
                     } catch (IOException e) {
                         e.printStackTrace();
@@ -562,7 +566,6 @@ public class LoginActivity extends AppCompatActivity {
                         }
                     }
 
-                    Toast.makeText(LoginActivity.this, "get version failed", Toast.LENGTH_SHORT).show();
                 }
 
             }

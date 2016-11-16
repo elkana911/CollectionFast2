@@ -62,7 +62,26 @@ public class DataUtil {
     }
     */
 
-    public static boolean isLDVHeaderValid(Realm realm, String collCode) {
+
+    public static boolean isLDVHeaderClosed(Realm realm, String collCode, Date lkpDate) {
+        final String createdBy = "JOB" + Utility.convertDateToString(lkpDate, "yyyyMMdd");
+
+        TrnLDVHeader ldvHeader = realm.where(TrnLDVHeader.class)
+                .equalTo("collCode", collCode)
+                .equalTo("createdBy", createdBy)
+                .equalTo("closeBatch", "Y")
+                .findFirst();
+
+        return ldvHeader != null;
+    }
+
+    /**
+     *
+     * @param realm
+     * @param collCode
+     * @return null jika valid
+     */
+    public static TrnLDVHeader isLDVHeaderValid(Realm realm, String collCode) {
         TrnLDVHeader ldvHeader = realm.where(TrnLDVHeader.class)
                 .equalTo("collCode", collCode)
                 .notEqualTo("closeBatch", "Y")
@@ -74,11 +93,11 @@ public class DataUtil {
             Date deviceDate = new Date();
 
             if (!Utility.isSameDay(ldvHeader.getCreatedTimestamp(), deviceDate) && deviceDate.after(ldvHeader.getCreatedTimestamp())) {
-                return false;
+                return ldvHeader;
             }
         }
 
-        return true;
+        return null;
     }
 
     public static boolean isMasterTransactionTable(String tableName) {
@@ -424,4 +443,5 @@ public class DataUtil {
             }
         }
     }
+
 }

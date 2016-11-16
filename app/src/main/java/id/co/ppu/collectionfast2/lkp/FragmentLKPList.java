@@ -17,8 +17,9 @@ import android.text.TextUtils;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.view.animation.Animation;
+import android.view.animation.AnimationUtils;
 import android.widget.CheckBox;
-import android.widget.CompoundButton;
 import android.widget.DatePicker;
 import android.widget.EditText;
 import android.widget.FrameLayout;
@@ -29,6 +30,7 @@ import android.widget.Toast;
 
 import java.util.Calendar;
 import java.util.Date;
+import java.util.concurrent.TimeUnit;
 
 import butterknife.BindView;
 import butterknife.ButterKnife;
@@ -95,12 +97,14 @@ public class FragmentLKPList extends Fragment {
         public void onDateSet(DatePicker datePicker, int year, int month, int day) {
             Calendar cal = Calendar.getInstance();
             cal.set(year, month, day);
-            etTglLKP.setText(Utility.convertDateToString(cal.getTime(), Utility.DATE_DISPLAY_PATTERN));
 
-//            fab.show();
-//            fab.setVisibility(View.VISIBLE);
-            search_view.setVisibility(View.INVISIBLE);
-            tvSeparator.setText("No Contracts found" );
+            long deltaDays = Utility.getDateDiff(Utility.getDateWithoutTime(new Date()), Utility.getDateWithoutTime(cal.getTime()), TimeUnit.DAYS);
+            if (deltaDays < -1) {
+                Utility.showDialog(getContext(), "Invalid Date", "Please pick yesterday date.");
+                return;
+            }
+
+            etTglLKP.setText(Utility.convertDateToString(cal.getTime(), Utility.DATE_DISPLAY_PATTERN));
 
             // load cache
             final String createdBy = "JOB" + Utility.convertDateToString(cal.getTime(), "yyyyMMdd");
@@ -154,6 +158,7 @@ public class FragmentLKPList extends Fragment {
 
         ButterKnife.bind(this, view);
 
+        /*
         cbLKPInquiry.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
             @Override
             public void onCheckedChanged(CompoundButton compoundButton, boolean b) {
@@ -165,7 +170,9 @@ public class FragmentLKPList extends Fragment {
                 }
             }
         });
+        */
 
+        /*
         etTglLKP.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
@@ -181,7 +188,7 @@ public class FragmentLKPList extends Fragment {
 
                 new DatePickerDialog(getContext(), listenerDateTglLKP, year, month, day).show();
             }
-        });
+        });*/
 
         search_view.getSearchBar().setVisibility(View.GONE);
         search_view.getRealmRecyclerView().addItemDecoration(new DividerItemDecoration(getContext(), LinearLayoutManager.VERTICAL));
@@ -215,7 +222,11 @@ public class FragmentLKPList extends Fragment {
             return;
         }
 
-        if (!DataUtil.isLDVHeaderValid(realm, collectorCode)) {
+        TrnLDVHeader invalidHeader = DataUtil.isLDVHeaderValid(realm, collectorCode);
+        if (invalidHeader != null) {
+            // tampilkan lkp di lokal
+            etTglLKP.setText(Utility.convertDateToString(invalidHeader.getCreatedTimestamp(), Utility.DATE_DISPLAY_PATTERN));
+            loadLKP(collectorCode, invalidHeader.getCreatedTimestamp());
             ((MainActivity)getActivity()).showSnackBar(getString(R.string.warning_close_batch));
             return;
         }
@@ -325,9 +336,11 @@ public class FragmentLKPList extends Fragment {
     public void onClickLkpInquiry() {
 
         if (cbLKPInquiry.isChecked()) {
-            if (TextUtils.isEmpty(etTglLKP.getText().toString()))
-                etTglLKP.performClick();
-            else
+
+
+//            if (TextUtils.isEmpty(etTglLKP.getText().toString()))
+//                etTglLKP.performClick();
+//            else
                 // pilih tanggal kemarin
                 etTglLKP.setText(Utility.convertDateToString(Utility.getYesterday(new Date()), Utility.DATE_DISPLAY_PATTERN));
 
@@ -335,10 +348,12 @@ public class FragmentLKPList extends Fragment {
             // reset ke hari ini
             etTglLKP.setText(Utility.convertDateToString(new Date(), Utility.DATE_DISPLAY_PATTERN));
         }
+
+        loadCurrentLKP();
     }
 
     @OnClick(R.id.etNoLKP)
-    public void onClickNoLKP() {
+    public void NoLKP() {
         Intent i = new Intent(getActivity(), ActivityDetailsLKPSummary.class);
         i.putExtra(ActivityDetailsLKPSummary.PARAM_COLLECTOR_ID, this.collectorCode);
 
@@ -392,7 +407,11 @@ public class FragmentLKPList extends Fragment {
      */
     public String loadLKP(final String collectorCode, final Date dateLKP) {
 
+        search_view.setVisibility(View.INVISIBLE);
+
         search_view.setAdapter(null);
+
+        tvSeparator.setText("No Contracts found" );
 
         final String createdBy = "JOB" + Utility.convertDateToString(dateLKP, "yyyyMMdd");
 
@@ -466,6 +485,13 @@ public class FragmentLKPList extends Fragment {
 
         tvSeparator.setText(dateLabel + " Contracts: " + count);
 
+        /* entah knp ga mau
+        etNoLKP.setHint("No LKP");
+        if (DataUtil.isLDVHeaderClosed(realm, collectorCode, dateLKP)) {
+            etNoLKP.setHint("No LKP (CLOSED)");
+        }
+        */
+
         if (count < 1) {
             search_view.setVisibility(View.INVISIBLE);
         } else {
@@ -518,7 +544,7 @@ public class FragmentLKPList extends Fragment {
 
         return ldvNo;
     }
-
+/*
     public void clearTodayList() {
 
         if (tvSeparator.getText().toString().toLowerCase().startsWith("today"))
@@ -529,6 +555,7 @@ public class FragmentLKPList extends Fragment {
 
         search_view.setVisibility(View.INVISIBLE);
     }
+    */
 
     public void refresh() {
         mAdapter.notifyDataSetChanged();
@@ -536,12 +563,13 @@ public class FragmentLKPList extends Fragment {
 //        search_view.invalidate();
     }
 
-    public String getCurrentLKPValue() {
-        return etNoLKP.getText().toString().trim();
-    }
+//    public String getCurrentLKPValue() {
+//        return etNoLKP.getText().toString().trim();
+//    }
 
     public class LKPListAdapter extends RealmSearchAdapter<DisplayTrnLDVDetails, LKPListAdapter.DataViewHolder> {
 
+        private int lastPosition = -1;
         public LKPListAdapter(@NonNull Context context, @NonNull Realm realm, @NonNull String filterKey) {
             super(context, realm, filterKey);
         }
@@ -616,6 +644,20 @@ public class FragmentLKPList extends Fragment {
             if (detail.getAddress() != null) {
                 tvKelKec.setText("Kel/Kec: " +detail.getAddress().getCollKel() + "/" + detail.getAddress().getCollKec());
             }
+
+
+            Animation animation = AnimationUtils.loadAnimation(getContext(),
+                    (position > lastPosition) ? R.anim.up_from_bottom
+                            : R.anim.down_from_top);
+            dataViewHolder.itemView.startAnimation(animation);
+            lastPosition = position;
+            /*
+            if (position > lastPosition) {
+                Animation anim = AnimationUtils.loadAnimation(getContext(), R.anim.up_from_bottom);
+                dataViewHolder.itemView.startAnimation(anim);
+                lastPosition = position;
+            }
+            */
         }
 
         public class DataViewHolder extends RealmSearchViewHolder {

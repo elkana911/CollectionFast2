@@ -280,6 +280,15 @@ public class ActivityScrollingLKPDetails extends BasicActivity {
             else
                 btnVisitResultEntry.setVisibility(View.GONE);
         }
+        // cek lagi apa headernya ternyata closed
+        if (DataUtil.isLDVHeaderClosed(this.realm, this.collectorId, this.lkpDate)) {
+            btnPaymentReceive.setVisibility(View.GONE);
+            btnVisitResultEntry.setVisibility(View.GONE);
+            btnRepoEntry.setVisibility(View.GONE);
+            btnChangeAddr.setVisibility(View.GONE);
+
+            Snackbar.make(activityScrollingLkpdtl, "Sorry, this LKP was Closed.", Snackbar.LENGTH_LONG).show();
+        }
 
     }
 
@@ -307,10 +316,10 @@ public class ActivityScrollingLKPDetails extends BasicActivity {
 
         if (dtl.getLastPaidDate() != null) {
             etTglAkhirByr.setText(Utility.convertDateToString(dtl.getLastPaidDate(), Utility.DATE_DISPLAY_PATTERN));
-        }else
+        } else
             etTglAkhirByr.setText("Belum Bayar");
 
-        long noAngsuranBayar = (dtl.getInstNo() == null ? 0 : dtl.getInstNo()) ;
+        long noAngsuranBayar = (dtl.getInstNo() == null ? 0 : dtl.getInstNo());
         etNoAngsuranBayar.setText(String.valueOf(noAngsuranBayar));
 
         etLamaHari.setText(String.valueOf(dtl.getDpd()));
@@ -328,10 +337,10 @@ public class ActivityScrollingLKPDetails extends BasicActivity {
         long dendaBerjalan = dtl.getDaysIntrAmbc() == null ? 0 : dtl.getDaysIntrAmbc();
         etDendaBerjalan.setText(Utility.convertLongToRupiah(dendaBerjalan));
 
-        long biayaTagih = (dtl.getCollectionFee() == null ? 0 : dtl.getCollectionFee()) ;
+        long biayaTagih = (dtl.getCollectionFee() == null ? 0 : dtl.getCollectionFee());
         etBiayaTagih.setText(Utility.convertLongToRupiah(biayaTagih));
 
-        long danaSosial = (dtl.getDanaSosial() == null ? 0 : dtl.getDanaSosial()) ;
+        long danaSosial = (dtl.getDanaSosial() == null ? 0 : dtl.getDanaSosial());
         etDanaSosial.setText(Utility.convertLongToRupiah(danaSosial));
 
         return dtl;
@@ -423,6 +432,7 @@ public class ActivityScrollingLKPDetails extends BasicActivity {
 
         startActivityForResult(i, REQUESTCODE_VISITRESULT);
     }
+
     @OnClick(R.id.btnRepoEntry)
     public void onClickRepoEntry() {
 
@@ -465,6 +475,7 @@ public class ActivityScrollingLKPDetails extends BasicActivity {
         i.putExtra(ActivityPaymentHistory.PARAM_LKP_DATE, this.lkpDate.getTime());
         startActivity(i);
     }
+
     @OnClick(R.id.btnChangeAddr)
     public void onClickChangeAddr() {
         Intent i = new Intent(this, ActivityChangeAddress.class);

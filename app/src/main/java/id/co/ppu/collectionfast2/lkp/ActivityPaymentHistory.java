@@ -163,6 +163,7 @@ public class ActivityPaymentHistory extends BasicActivity {
 
     }
 
+
     private void loadTable() {
         final ProgressDialog mProgressDialog = new ProgressDialog(this);
         mProgressDialog.setIndeterminate(true);
