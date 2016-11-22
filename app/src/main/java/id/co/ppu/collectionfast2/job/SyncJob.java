@@ -4,6 +4,8 @@ import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 
+import java.util.Date;
+
 import id.co.ppu.collectionfast2.location.Location;
 import id.co.ppu.collectionfast2.util.NetUtil;
 import id.co.ppu.collectionfast2.util.Utility;
@@ -15,12 +17,23 @@ public class SyncJob extends BroadcastReceiver{
     @Override
     public void onReceive(final Context context, Intent intent) {
 
-        if (!Utility.isWorkingHours())
-            return;
+        if (Utility.isWorkingHours(new Date(), 7, 22)) {
+            try {
+                final double[] gps = Location.getGPS(context);
+                NetUtil.syncLocation(context, gps, false);
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+        }
 
-        final double[] gps = Location.getGPS(context);
-        NetUtil.syncLocation(context, gps, false);
-        NetUtil.refreshRVBFromServer(context);
+        if (Utility.isWorkingHours()) {
+            try {
+                NetUtil.refreshRVBFromServer(context);
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+        }
+
 
         /*
         try {

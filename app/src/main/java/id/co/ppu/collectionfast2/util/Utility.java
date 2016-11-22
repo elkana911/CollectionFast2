@@ -32,15 +32,15 @@ public class Utility {
     public final static String DATE_EXPIRED_YYYYMMDD = "20211231";
 
     public final static String[][] servers = {
-//            {"local-server", "10.212.0.71", "8090"}
+            {"local-server", "10.212.0.71", "8090"}
 //            {"local-server", "192.168.10.86", "8090"} // kelapa gading
-            {"local-server", "192.168.1.108", "8090"}
+//            {"local-server", "192.168.1.108", "8090"}
             ,{"dev-fast-mobile", "cmobile.radanafinance.co.id", "7001"}
             ,{"fast-mobile", "cmobile.radanafinance.co.id", "7001"}
             ,{"fast-mobile2", "c1mobile.radanafinance.co.id", "7001"}
     };
     // TODO: always check version inside gradle on production
-    public final static boolean developerMode = false;
+    public final static boolean developerMode = true;
     public final static int NETWORK_TIMEOUT_MINUTES = developerMode ? 1 : 3 ;
 
 
@@ -304,8 +304,15 @@ public class Utility {
         Calendar cal = Calendar.getInstance(); //Create Calendar-Object
         cal.setTime(time);               //Set the Calendar to now
         int hour = cal.get(Calendar.HOUR_OF_DAY); //Get the hour from the calendar
-        return hour <= 17 && hour >= 8;
+        return hour <= 18 && hour >= 8;
 
+    }
+
+    public static boolean isWorkingHours(Date time, int hourStart, int hourEnd) {
+        Calendar cal = Calendar.getInstance(); //Create Calendar-Object
+        cal.setTime(time);               //Set the Calendar to now
+        int hour = cal.get(Calendar.HOUR_OF_DAY); //Get the hour from the calendar
+        return hour <= hourEnd && hour >= hourStart;
     }
 
     public static boolean isWorkingHours() {
