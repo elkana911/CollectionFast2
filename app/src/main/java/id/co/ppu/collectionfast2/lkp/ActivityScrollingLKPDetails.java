@@ -29,6 +29,7 @@ import id.co.ppu.collectionfast2.pojo.trn.TrnLDVComments;
 import id.co.ppu.collectionfast2.pojo.trn.TrnLDVDetails;
 import id.co.ppu.collectionfast2.pojo.trn.TrnRVColl;
 import id.co.ppu.collectionfast2.pojo.trn.TrnRepo;
+import id.co.ppu.collectionfast2.pojo.trn.TrnVehicleInfo;
 import id.co.ppu.collectionfast2.util.DataUtil;
 import id.co.ppu.collectionfast2.util.Storage;
 import id.co.ppu.collectionfast2.util.Utility;
@@ -167,7 +168,7 @@ public class ActivityScrollingLKPDetails extends BasicActivity {
         TrnCollectAddr trnCollectAddr = this.realm.where(TrnCollectAddr.class)
                 .equalTo("pk.contractNo", this.contractNo)
                 .equalTo("pk.seqNo", 1)
-                .equalTo("createdBy", createdBy)
+//                .equalTo("createdBy", createdBy)
                 .findFirst();
 
         etAddress.setText(trnCollectAddr == null ? "" : trnCollectAddr.getCollAddr());
@@ -179,7 +180,7 @@ public class ActivityScrollingLKPDetails extends BasicActivity {
         TrnCollectAddr trnCollectAddr = this.realm.where(TrnCollectAddr.class)
                 .equalTo("pk.contractNo", this.contractNo)
                 .equalTo("pk.seqNo", 2)
-                .equalTo("createdBy", createdBy)
+//                .equalTo("createdBy", createdBy)
                 .findFirst();
 
         etAddress.setText(trnCollectAddr == null ? "-" : trnCollectAddr.getCollAddr());
@@ -462,6 +463,16 @@ public class ActivityScrollingLKPDetails extends BasicActivity {
 
     @OnClick(R.id.btnVehicleInfo)
     public void onClickVehicleInfo() {
+
+        TrnVehicleInfo trnVehicleInfo = this.realm.where(TrnVehicleInfo.class)
+                .equalTo("contractNo", etContractNo.getText().toString())
+                .findFirst();
+
+        if (trnVehicleInfo == null) {
+            Snackbar.make(activityScrollingLkpdtl, "Sorry, No Vehicle Data found.", Snackbar.LENGTH_SHORT).show();
+            return;
+        }
+
         Intent i = new Intent(this, ActivityVehicleInfo.class);
         i.putExtra(ActivityVehicleInfo.PARAM_CONTRACT_NO, etContractNo.getText().toString());
         startActivity(i);

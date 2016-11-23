@@ -993,7 +993,7 @@ public class LoginActivity extends AppCompatActivity {
 
                 final ResponseUserPwd resp = response.body();
 
-                if (resp.getError() == null) {
+                if (resp != null && resp.getError() == null) {
                     if (resp.getData() != null) {
                         mUserNameView.setText(resp.getData()[0]);
                         mPasswordView.setText(resp.getData()[1]);

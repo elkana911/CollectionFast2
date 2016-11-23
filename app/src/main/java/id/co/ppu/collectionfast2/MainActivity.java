@@ -1426,7 +1426,7 @@ public class MainActivity extends SyncActivity
 
     public boolean cancelSync(Realm realm, final String ldvNo, final String contractNo) {
 
-        // TODO: harusnya hanya cancel yg statusnya V
+        // hanya cancel yg statusnya V
         TrnLDVDetails ada = realm.where(TrnLDVDetails.class)
                 .equalTo("workStatus", "V")
                 .findFirst();
