@@ -81,6 +81,20 @@ public class DataUtil {
 
     }
 
+    public static boolean isLDVHeaderAnyOpen(Realm realm, String collCode) {
+
+        TrnLDVHeader ldvHeader = realm.where(TrnLDVHeader.class)
+                .equalTo("collCode", collCode)
+                .equalTo("closeBatch", "N")
+                .or()
+                .isNull("closeBatch")
+                .findFirst();
+
+        // kalo belum closebatch brarti ada ldvheader yg masih open !
+        return ldvHeader != null;
+
+    }
+
     public static boolean isLDVHeaderClosed(Realm realm, String collCode, Date lkpDate) {
         final String createdBy = "JOB" + Utility.convertDateToString(lkpDate, "yyyyMMdd");
 

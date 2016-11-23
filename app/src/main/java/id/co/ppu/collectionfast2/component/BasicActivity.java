@@ -9,11 +9,14 @@ import java.util.Date;
 
 import id.co.ppu.collectionfast2.R;
 import id.co.ppu.collectionfast2.pojo.ServerInfo;
+import id.co.ppu.collectionfast2.pojo.UserData;
 import id.co.ppu.collectionfast2.pojo.trn.TrnLDVComments;
 import id.co.ppu.collectionfast2.pojo.trn.TrnRVColl;
 import id.co.ppu.collectionfast2.pojo.trn.TrnRepo;
+import id.co.ppu.collectionfast2.rest.request.RequestBasic;
 import id.co.ppu.collectionfast2.settings.SettingsActivity;
 import id.co.ppu.collectionfast2.util.DataUtil;
+import id.co.ppu.collectionfast2.util.Storage;
 import id.co.ppu.collectionfast2.util.Utility;
 import io.realm.Realm;
 import io.realm.RealmQuery;
@@ -91,4 +94,32 @@ public class BasicActivity extends AppCompatActivity {
 
     }
 
+    protected String getCurrentUserId() {
+        UserData currentUser = (UserData) Storage.getObjPreference(getApplicationContext(), Storage.KEY_USER, UserData.class);
+        if (currentUser == null)
+            return null;
+
+        return currentUser.getUserId();
+    }
+
+    protected void fillRequest(String actionName, RequestBasic req) {
+        try {
+            double[] gps = id.co.ppu.collectionfast2.location.Location.getGPS(this);
+            String latitude = String.valueOf(gps[0]);
+            String longitude = String.valueOf(gps[1]);
+            req.setLatitude(latitude);
+            req.setLongitude(longitude);
+        } catch (Exception e) {
+            e.printStackTrace();
+
+            req.setLatitude("0.0");
+            req.setLongitude("0.0");
+        }
+
+        req.setActionName(actionName);
+        req.setUserId(getCurrentUserId());
+        req.setSysInfo(Utility.buildSysInfoAsCsv(this));
+
+
+    }
 }

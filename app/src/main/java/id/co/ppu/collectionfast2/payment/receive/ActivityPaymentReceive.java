@@ -18,11 +18,13 @@ import butterknife.OnClick;
 import id.co.ppu.collectionfast2.R;
 import id.co.ppu.collectionfast2.component.BasicActivity;
 import id.co.ppu.collectionfast2.component.RVBAdapter;
+import id.co.ppu.collectionfast2.location.Location;
 import id.co.ppu.collectionfast2.pojo.ServerInfo;
 import id.co.ppu.collectionfast2.pojo.UserConfig;
 import id.co.ppu.collectionfast2.pojo.UserData;
 import id.co.ppu.collectionfast2.pojo.master.MstParam;
 import id.co.ppu.collectionfast2.pojo.sync.SyncTrnRVColl;
+import id.co.ppu.collectionfast2.pojo.trn.TrnCollPos;
 import id.co.ppu.collectionfast2.pojo.trn.TrnLDVDetails;
 import id.co.ppu.collectionfast2.pojo.trn.TrnRVB;
 import id.co.ppu.collectionfast2.pojo.trn.TrnRVColl;
@@ -32,6 +34,7 @@ import id.co.ppu.collectionfast2.util.Storage;
 import id.co.ppu.collectionfast2.util.Utility;
 import io.realm.Realm;
 import io.realm.RealmResults;
+import io.realm.Sort;
 
 public class ActivityPaymentReceive extends BasicActivity {
 
@@ -394,6 +397,36 @@ public class ActivityPaymentReceive extends BasicActivity {
             return;
         }
 
+        double[] gps = Location.getGPS(this);
+        String latitude = String.valueOf(gps[0]);
+        String longitude = String.valueOf(gps[1]);
+
+        if (latitude.equals("0.0") && longitude.equals("0.0")) {
+
+//            Location.turnOnGPS(this);
+
+            Snackbar.make(activityPaymentReceive, "Unable to get location. Please turn on GPS.", Snackbar.LENGTH_LONG).show();
+//            return;
+
+            // bisa ambil dr trnCollPos
+
+            RealmResults<TrnCollPos> allSorted = realm.where(TrnCollPos.class)
+                    .equalTo("collectorId", collectorId)
+                    .greaterThanOrEqualTo("lastupdateTimestamp", Utility.getDateWithoutTime(new Date()))
+                    .findAllSorted("lastupdateTimestamp", Sort.DESCENDING);
+
+            if (allSorted.size() > 0) {
+
+                TrnCollPos lastCollPos = allSorted.first();
+                if (lastCollPos != null) {
+                    latitude = lastCollPos.getLatitude();
+                    longitude = lastCollPos.getLongitude();
+                }
+            }
+
+        }
+
+
         final Date serverDate = realm.where(ServerInfo.class).findFirst().getServerDate();
         final UserData userData = (UserData) Storage.getObjPreference(getApplicationContext(), Storage.KEY_USER, UserData.class);
 
@@ -402,6 +435,8 @@ public class ActivityPaymentReceive extends BasicActivity {
             return;
         }
         // better use async so you can throw and automatic canceltransaction
+        final String finalLatitude = latitude;
+        final String finalLongitude = longitude;
         this.realm.executeTransactionAsync(new Realm.Transaction() {
             @Override
             public void execute(Realm realm) {
@@ -492,6 +527,9 @@ public class ActivityPaymentReceive extends BasicActivity {
                 trnRVColl.setCollFeeAc(Long.parseLong(biayaTagih));
 
                 trnRVColl.setLdvNo(trnLDVDetails.getPk().getLdvNo());
+
+                trnRVColl.setLatitude(finalLatitude);
+                trnRVColl.setLongitude(finalLongitude);
 
                 trnRVColl.setContractNo(contractNo);
                 trnRVColl.setNotes(etCatatan.getText().toString());

@@ -35,14 +35,23 @@ import retrofit2.http.Query;
  * Created by Eric on 19-Aug-16.
  */
 public interface ApiInterface {
+
     @POST("fast/login")
     Call<ResponseLogin> login(@Body RequestLogin request);
 
-    @POST("fast/users")
-    Call<ResponseGetUsers> getUsers();
-
     @POST("fast/lkp_date")
     Call<ResponseGetLKP> getLKPByDate(@Body RequestLKPByDate request);
+
+    @POST("fast/sync_lkp")
+    Call<ResponseSync> syncLKP(@Body RequestSyncLKP req);
+
+    /*
+    @POST("fast/lkp_date_ex")
+    Call<ResponseGetLKP> getLKPByDateEx(@Body RequestLKPByDateEx request);
+*/
+
+    @POST("fast/users")
+    Call<ResponseGetUsers> getUsers();
 
     @POST("fast/get_lkp_paid")
     Call<ResponseGetLKP> getLKPPaidByDate(@Body RequestLKPByDate request);
@@ -67,9 +76,6 @@ public interface ApiInterface {
 
     @POST("fast/rvb")
     Call<ResponseRVB> getRVB(@Body RequestRVB req);
-
-    @POST("fast/sync_lkp")
-    Call<ResponseSync> syncLKP(@Body RequestSyncLKP req);
 
     @GET("fast/close_batch_yesterday")
     Call<ResponseBody> closeBatchYesterday(@Query("collector_code") String collectorCode);

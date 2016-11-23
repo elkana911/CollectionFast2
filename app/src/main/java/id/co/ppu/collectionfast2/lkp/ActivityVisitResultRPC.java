@@ -60,7 +60,7 @@ public class ActivityVisitResultRPC extends BasicActivity {
             this.ldvNo = extras.getString(PARAM_LDV_NO);
         }
 
-        TrnLDVDetails dtl = this.realm.where(TrnLDVDetails.class).equalTo("contractNo", contractNo).findFirst();
+        TrnLDVDetails dtl = this.realm.where(TrnLDVDetails.class).equalTo("contractNo", this.contractNo).findFirst();
 
         if (getSupportActionBar() != null) {
             getSupportActionBar().setTitle(R.string.title_activity_visit_result);
@@ -72,6 +72,13 @@ public class ActivityVisitResultRPC extends BasicActivity {
         etContractNo.setText(dtl.getContractNo());
 //        etTglTransaksi.setText(dtl.getContractNo());
 //        etKomentar.setText(dtl.getContractNo());
+
+        // load last save
+        TrnLDVComments trnLDVComments = this.getLDVComments(realm, this.ldvNo, this.contractNo).findFirst();
+
+        if (trnLDVComments != null) {
+            etKomentar.setText(trnLDVComments.getLkpComments());
+        }
 
     }
 

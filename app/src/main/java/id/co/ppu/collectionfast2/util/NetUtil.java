@@ -232,7 +232,7 @@ public class NetUtil {
             }
 
             // hanya kalo masih open saja
-            if (!DataUtil.isLDVHeaderTodayOpen(realm, userData.getUserId()))
+            if (!DataUtil.isLDVHeaderAnyOpen(realm, userData.getUserId()))
                 return;
 
 

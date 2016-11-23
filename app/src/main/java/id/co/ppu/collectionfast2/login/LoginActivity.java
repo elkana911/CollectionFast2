@@ -12,7 +12,6 @@ import android.os.Bundle;
 import android.preference.PreferenceManager;
 import android.support.annotation.Nullable;
 import android.support.v7.app.AlertDialog;
-import android.support.v7.app.AppCompatActivity;
 import android.text.TextUtils;
 import android.util.Log;
 import android.util.TypedValue;
@@ -49,6 +48,7 @@ import butterknife.OnClick;
 import id.co.ppu.collectionfast2.BuildConfig;
 import id.co.ppu.collectionfast2.MainActivity;
 import id.co.ppu.collectionfast2.R;
+import id.co.ppu.collectionfast2.component.BasicActivity;
 import id.co.ppu.collectionfast2.exceptions.ExpiredException;
 import id.co.ppu.collectionfast2.listener.OnPostRetrieveServerInfo;
 import id.co.ppu.collectionfast2.listener.OnSuccessError;
@@ -56,6 +56,7 @@ import id.co.ppu.collectionfast2.pojo.ServerInfo;
 import id.co.ppu.collectionfast2.pojo.UserData;
 import id.co.ppu.collectionfast2.pojo.master.MstSecUser;
 import id.co.ppu.collectionfast2.pojo.master.MstUser;
+import id.co.ppu.collectionfast2.pojo.trn.TrnLDVHeader;
 import id.co.ppu.collectionfast2.rest.ApiInterface;
 import id.co.ppu.collectionfast2.rest.ServiceGenerator;
 import id.co.ppu.collectionfast2.rest.request.RequestLogin;
@@ -76,7 +77,7 @@ import retrofit2.Response;
 /**
  * A login screen that offers login via email/password.
  */
-public class LoginActivity extends AppCompatActivity {
+public class LoginActivity extends BasicActivity {
 
     private static final String TAG = "login";
 
@@ -103,7 +104,6 @@ public class LoginActivity extends AppCompatActivity {
     @BindView(R.id.tvVersion)
     TextView tvVersion;
 
-    private Realm realm;
     /**
      * ATTENTION: This was auto-generated to implement the App Indexing API.
      * See https://g.co/AppIndexing/AndroidStudio for more information.
@@ -147,8 +147,6 @@ public class LoginActivity extends AppCompatActivity {
                 == Configuration.ORIENTATION_LANDSCAPE) {
             imageLogo.setVisibility(View.GONE);
         }
-
-        this.realm = Realm.getDefaultInstance();
 
         mPasswordView.setOnEditorActionListener(new TextView.OnEditorActionListener() {
             @Override
@@ -279,13 +277,6 @@ public class LoginActivity extends AppCompatActivity {
         }
     }
 
-    @Override
-    protected void onDestroy() {
-        super.onDestroy();
-        this.realm.close();
-        this.realm = null;
-    }
-
     @OnClick(R.id.sign_in_button)
     public void onSignInClick() {
 
@@ -366,19 +357,6 @@ public class LoginActivity extends AppCompatActivity {
     @OnClick(R.id.sign_up_button)
     public void onSignUpClick() {
 //        startActivity(new Intent(LoginActivity.this, RegisterActivity.class));
-    }
-
-    private void resetData() {
-        if (realm == null)
-            return;
-
-        realm.executeTransactionAsync(new Realm.Transaction() {
-            @Override
-            public void execute(Realm realm) {
-                realm.deleteAll();
-            }
-        });
-
     }
 
     private void attemptLogin() throws Exception {
@@ -532,12 +510,29 @@ public class LoginActivity extends AppCompatActivity {
                                     listener.onSuccess(s);
                                 }
                             } else {
-                                if (listener != null) {
-                                    listener.onFailure(new ExpiredException("Please update app to latest version"));
+
+                                // krn update aplikasi bisa mengakibatkan data transaksi hilang, maka dianggap sukses jika ada transaksi
+                                TrnLDVHeader ldvHeader = realm.where(TrnLDVHeader.class)
+                                        .equalTo("closeBatch", "N")
+                                        .or()
+                                        .isNull("closeBatch")
+                                        .findFirst();
+                                if (ldvHeader != null) {
+
+                                    if (listener != null) {
+                                        listener.onSkip();
+                                    }
+
+                                } else {
+
+                                    if (listener != null) {
+                                        listener.onFailure(new ExpiredException("Please update app to latest version"));
+                                    }
+
+                                    Intent browser = new Intent(Intent.ACTION_VIEW, Uri.parse(s));
+                                    startActivity(browser);
                                 }
 
-                                Intent browser = new Intent(Intent.ACTION_VIEW, Uri.parse(s));
-                                startActivity(browser);
                             }
                         }
                     } catch (IOException e) {
@@ -778,6 +773,8 @@ public class LoginActivity extends AppCompatActivity {
                     RequestLogin request = new RequestLogin();
                     request.setId(username);
                     request.setPwd(password);
+
+                    fillRequest(Utility.ACTION_LOGIN, request);
 
                     Call<ResponseLogin> call = loginService.login(request);
                     call.enqueue(new Callback<ResponseLogin>() {

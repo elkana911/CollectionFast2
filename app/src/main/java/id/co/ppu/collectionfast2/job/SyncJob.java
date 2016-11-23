@@ -17,14 +17,14 @@ public class SyncJob extends BroadcastReceiver{
     @Override
     public void onReceive(final Context context, Intent intent) {
 
-        if (Utility.isWorkingHours(new Date(), 7, 22)) {
+//        if (Utility.isWorkingHours(new Date(), 7, 22)) {
             try {
                 final double[] gps = Location.getGPS(context);
                 NetUtil.syncLocation(context, gps, false);
             } catch (Exception e) {
                 e.printStackTrace();
             }
-        }
+//        }
 
         if (Utility.isWorkingHours(new Date(), 8, 17)) {
             try {

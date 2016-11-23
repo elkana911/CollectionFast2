@@ -7,6 +7,7 @@ import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.content.res.Configuration;
+import android.location.LocationManager;
 import android.provider.Settings;
 import android.telephony.TelephonyManager;
 import android.text.TextUtils;
@@ -24,6 +25,7 @@ import java.util.Calendar;
 import java.util.Date;
 import java.util.concurrent.TimeUnit;
 
+import id.co.ppu.collectionfast2.BuildConfig;
 import id.co.ppu.collectionfast2.R;
 import okhttp3.HttpUrl;
 
@@ -32,9 +34,10 @@ public class Utility {
     public final static String DATE_EXPIRED_YYYYMMDD = "20211231";
 
     public final static String[][] servers = {
-            {"local-server", "10.212.0.71", "8090"}
+//            {"local-server", "10.212.0.71", "8090"}
 //            {"local-server", "192.168.10.86", "8090"} // kelapa gading
-//            {"local-server", "192.168.1.108", "8090"}
+//            {"local-server", "192.168.1.102", "8090"}
+            {"local-server", "192.168.0.8", "8090"} //faraday
             ,{"dev-fast-mobile", "cmobile.radanafinance.co.id", "7001"}
             ,{"fast-mobile", "cmobile.radanafinance.co.id", "7001"}
             ,{"fast-mobile2", "c1mobile.radanafinance.co.id", "7001"}
@@ -71,6 +74,15 @@ public class Utility {
 
     public static final int MAX_MONEY_DIGITS = 10;
     public static final int MAX_MONEY_LIMIT = 99999999;
+
+    public static final String ACTION_LOGIN = "LOGIN";
+    public static final String ACTION_GET_LKP = "GETLKP";
+    public static final String ACTION_CLOSEBATCH = "CLOSEBATCH";
+    public static final String ACTION_CLOSEBATCH_PREVIOUS = "CLOSEBATCHPREV";
+//    public static final String ACTION_LOGOUT = "LOGOUT";
+    public static final String ACTION_SYNC_LKP = "SYNCLKP";
+    public static final String ACTION_CHECK_PAID_LKP = "CHECKPAIDLKP";
+    public static final String ACTION_SYNC_LOCATION = "SYNCLOCATION";
 
     public static String getServerName(int serverId) {
         String[] s = servers[serverId];
@@ -445,6 +457,51 @@ public class Utility {
             return 0;
         else
             return value.longValue();
+    }
+
+    public static String buildSysInfoAsCsv(Context ctx) {
+        //date, version app, version os, imei, is location enabled etc in csv format
+        StringBuffer sb = new StringBuffer("date=" + convertDateToString(new Date(), "yyyyMMddHHmmss"));
+
+        int versionCode = BuildConfig.VERSION_CODE;
+        String versionName = BuildConfig.VERSION_NAME;
+
+        sb.append(",").append("dev=").append(developerMode);
+        sb.append(",").append("versionCode=").append(versionCode);
+        sb.append(",").append("versionName=").append(versionName);
+        sb.append(",").append("versionAPI=").append(android.os.Build.VERSION.SDK_INT);
+
+        try {
+            if (ctx != null) {
+                sb.append(",").append("server=").append(Utility.buildUrl(Storage.getPreferenceAsInt(ctx.getApplicationContext(), Storage.KEY_SERVER_ID, 0)));
+
+                // single sim non dual
+                TelephonyManager mngr = (TelephonyManager)ctx.getSystemService(Context.TELEPHONY_SERVICE);
+
+                sb.append(",").append("imei=").append(mngr.getDeviceId());
+
+                LocationManager lm = (LocationManager)ctx.getSystemService(Context.LOCATION_SERVICE);
+                boolean gps_enabled = false;
+                boolean network_enabled = false;
+
+                try {
+                    gps_enabled = lm.isProviderEnabled(LocationManager.GPS_PROVIDER);
+                } catch(Exception ex) {}
+
+                try {
+                    network_enabled = lm.isProviderEnabled(LocationManager.NETWORK_PROVIDER);
+                } catch(Exception ex) {}
+
+                sb.append(",").append("gpsEnabled=").append(gps_enabled);
+                sb.append(",").append("networkEnabled=").append(network_enabled);
+            }
+
+
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+
+        return sb.toString();
     }
 /*
     public static String getAndroidID(Context ctx){

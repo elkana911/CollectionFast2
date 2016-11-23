@@ -617,7 +617,14 @@ public class MainActivity extends SyncActivity
             return false;
         } else if (id == R.id.nav_getRvb) {
 
-            NetUtil.refreshRVBFromServer(this);
+            try {
+                NetUtil.refreshRVBFromServer(this);
+            } catch (Exception e) {
+                e.printStackTrace();
+
+                if (currentUser != null)
+                    NetUtil.syncLogError(MainActivity.this, realm, currentUser.getUserId(), "refreshRVBFromServer", e.getMessage(), null);
+            }
 
             return false;
         } else if (id == R.id.nav_chats) {
@@ -661,7 +668,14 @@ public class MainActivity extends SyncActivity
         } else if (id == R.id.nav_closeBatch) {
             drawer.closeDrawers();
 
-            attemptCloseBatch();
+            try {
+                attemptCloseBatch();
+            } catch (Exception e) {
+                e.printStackTrace();
+
+                if (currentUser != null)
+                    NetUtil.syncLogError(MainActivity.this, realm, currentUser.getUserId(), "CloseBatch", e.getMessage(), null);
+            }
 
             return false;
         } else if (id == R.id.nav_manualSync) {
@@ -913,6 +927,8 @@ public class MainActivity extends SyncActivity
         RequestLKPByDate requestLKP = new RequestLKPByDate();
         requestLKP.setCollectorCode(collectorCode);
         requestLKP.setYyyyMMdd(Utility.convertDateToString(lkpDate, "yyyyMMdd"));
+
+        fillRequest(Utility.ACTION_GET_LKP, requestLKP);
 
         Call<ResponseGetLKP> call = fastService.getLKPByDate(requestLKP);
         call.enqueue(new Callback<ResponseGetLKP>() {
@@ -1849,6 +1865,8 @@ public class MainActivity extends SyncActivity
             final RequestSyncLKP req = new RequestSyncLKP();
             req.setLdvHeader(syncLdvHeader.getDataToSync());
 
+            fillRequest(Utility.ACTION_CLOSEBATCH, req);
+
             ApiInterface fastService =
                     ServiceGenerator.createService(ApiInterface.class, Utility.buildUrl(Storage.getPreferenceAsInt(getApplicationContext(), Storage.KEY_SERVER_ID, 0)));
 
@@ -1985,6 +2003,8 @@ public class MainActivity extends SyncActivity
 
             final RequestSyncLKP req = new RequestSyncLKP();
             req.setLdvHeader(syncLdvHeader.getDataToSync());
+
+            fillRequest(Utility.ACTION_CLOSEBATCH_PREVIOUS, req);
 
             ApiInterface fastService =
                     ServiceGenerator.createService(ApiInterface.class, Utility.buildUrl(Storage.getPreferenceAsInt(getApplicationContext(), Storage.KEY_SERVER_ID, 0)));
@@ -2332,6 +2352,8 @@ public class MainActivity extends SyncActivity
         RequestSyncLocation req = new RequestSyncLocation();
         req.setList(list);
 
+        fillRequest(Utility.ACTION_SYNC_LOCATION, req);
+
         final ProgressDialog mProgressDialog = new ProgressDialog(this);
 
         if (showDialog) {
@@ -2490,7 +2512,6 @@ public class MainActivity extends SyncActivity
         gps[1] = latLng.longitude;
 
         NetUtil.syncLocation(this, gps, true);
-//        updateLoc(latLng);
     }
 
     @Override
@@ -2571,6 +2592,8 @@ public class MainActivity extends SyncActivity
         RequestLKPByDate requestLKP = new RequestLKPByDate();
         requestLKP.setCollectorCode(collCode);
         requestLKP.setYyyyMMdd(Utility.convertDateToString(lkpDate, "yyyyMMdd"));
+
+        fillRequest(Utility.ACTION_CHECK_PAID_LKP, requestLKP);
 
         Call<ResponseGetLKP> call = fastService.getLKPPaidByDate(requestLKP);
         call.enqueue(new Callback<ResponseGetLKP>() {
@@ -2760,6 +2783,8 @@ public class MainActivity extends SyncActivity
                 req.setBastbj(syncBastbj.getDataToSync());
                 req.setRepo(syncRepo.getDataToSync());
                 req.setChangeAddr(syncChangeAddr.getDataToSync());
+
+                fillRequest(Utility.ACTION_SYNC_LKP, req);
 
                 Snackbar.make(coordinatorLayout, "Sync started", Snackbar.LENGTH_SHORT).show();
 
@@ -3009,6 +3034,12 @@ public class MainActivity extends SyncActivity
         }
 
         final RequestSyncLKP req = new RequestSyncLKP();
+
+        double[] gps = id.co.ppu.collectionfast2.location.Location.getGPS(this);
+        String latitude = String.valueOf(gps[0]);
+        String longitude = String.valueOf(gps[1]);
+        req.setLatitude(latitude);
+        req.setLongitude(longitude);
 
         if (closeBatch) {
             req.setLdvHeader(syncLdvHeader.getDataToSync());

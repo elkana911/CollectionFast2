@@ -15,7 +15,7 @@ import id.co.ppu.collectionfast2.pojo.trn.TrnRepo;
  * Created by Eric on 25-Sep-16.
  */
 
-public class RequestSyncLKP {
+public class RequestSyncLKP extends RequestBasic{
 
     private List<TrnLDVHeader> ldvHeader;
     private List<TrnLDVDetails> ldvDetails;

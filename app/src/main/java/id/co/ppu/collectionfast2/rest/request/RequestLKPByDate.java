@@ -4,7 +4,7 @@ package id.co.ppu.collectionfast2.rest.request;
  * Created by Eric on 22-Sep-16.
  */
 
-public class RequestLKPByDate {
+public class RequestLKPByDate extends RequestBasic {
     private String collectorCode;
     private String yyyyMMdd;
 

@@ -539,6 +539,9 @@ public class ActivityVisitResult extends BasicActivity {
         String longitude = String.valueOf(gps[1]);
 
         if (latitude.equals("0.0") && longitude.equals("0.0")) {
+
+//            Location.turnOnGPS(this);
+
             Snackbar.make(activityVisitResult, "Unable to get location. Please turn on GPS.", Snackbar.LENGTH_LONG).show();
 //            return;
 
@@ -546,6 +549,7 @@ public class ActivityVisitResult extends BasicActivity {
 
             RealmResults<TrnCollPos> allSorted = realm.where(TrnCollPos.class)
                     .equalTo("collectorId", collectorId)
+                    .greaterThanOrEqualTo("lastupdateTimestamp", Utility.getDateWithoutTime(new Date()))
                     .findAllSorted("lastupdateTimestamp", Sort.DESCENDING);
 
             if (allSorted.size() > 0) {

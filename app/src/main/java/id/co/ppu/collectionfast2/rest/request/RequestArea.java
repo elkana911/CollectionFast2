@@ -3,7 +3,7 @@ package id.co.ppu.collectionfast2.rest.request;
 /**
  * Created by Eric on 20-Sep-16.
  */
-public class RequestArea {
+public class RequestArea extends RequestBasic{
     private String kelurahan;
     private String zipCode;
 

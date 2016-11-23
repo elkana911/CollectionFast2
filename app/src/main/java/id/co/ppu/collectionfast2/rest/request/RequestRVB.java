@@ -4,7 +4,7 @@ package id.co.ppu.collectionfast2.rest.request;
  * Created by Eric on 26-Sep-16.
  */
 
-public class RequestRVB {
+public class RequestRVB extends RequestBasic{
     private String collectorId;
 
     public String getCollectorId() {
