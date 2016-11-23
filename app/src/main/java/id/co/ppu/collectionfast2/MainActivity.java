@@ -2470,8 +2470,12 @@ public class MainActivity extends SyncActivity
     @Override
     public void onLocationChanged(Location location) {
 
-        if (!Utility.isWorkingHours())
+        if (this.currentUser == null)
             return;
+
+        // jangan dibatasi by jam kerja, karena bisa malem2
+//        if (!Utility.isWorkingHours())
+//            return;
 
         // New location has now been determined
         String msg = "Updated Location: " +

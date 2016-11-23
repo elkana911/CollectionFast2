@@ -26,7 +26,7 @@ public class SyncJob extends BroadcastReceiver{
             }
         }
 
-        if (Utility.isWorkingHours()) {
+        if (Utility.isWorkingHours(new Date(), 8, 17)) {
             try {
                 NetUtil.refreshRVBFromServer(context);
             } catch (Exception e) {

@@ -131,7 +131,7 @@ public class NetUtil {
             if (r1.where(TrnLDVHeader.class).count() < 1) {
                 return;
             }
-        }finally {
+        } finally {
             if (r1 != null) {
                 r1.close();
             }
@@ -215,6 +215,7 @@ public class NetUtil {
      * Make sure this method is run in background or asynctask
      *
      * @param ctx
+     * @param offline if true will only store to local without syncing data to server
      */
     public static void syncLocation(final Context ctx, final double[] gps, boolean offline) {
         Realm realm = Realm.getDefaultInstance();
@@ -229,6 +230,11 @@ public class NetUtil {
             if (userData == null) {
                 return;
             }
+
+            // hanya kalo masih open saja
+            if (!DataUtil.isLDVHeaderTodayOpen(realm, userData.getUserId()))
+                return;
+
 
             realm.executeTransaction(new Realm.Transaction() {
                 @Override
@@ -315,7 +321,7 @@ public class NetUtil {
         } finally {
 
             if (realm != null)
-            realm.close();
+                realm.close();
         }
 
     }

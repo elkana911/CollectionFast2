@@ -297,7 +297,7 @@ public class Utility {
 
     /**
      * Usually used for sync location.
-     * @param time between 8 AM to 5 PM
+     * @param time between 8 AM to 6 PM
      * @return
      */
     public static boolean isWorkingHours(Date time) {

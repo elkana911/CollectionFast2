@@ -63,6 +63,24 @@ public class DataUtil {
     */
 
 
+    public static boolean isLDVHeaderTodayOpen(Realm realm, String collCode) {
+        final String createdBy = "JOB" + Utility.convertDateToString(new Date(), "yyyyMMdd");
+
+        TrnLDVHeader ldvHeader = realm.where(TrnLDVHeader.class)
+                .equalTo("collCode", collCode)
+                .equalTo("createdBy", createdBy)
+                .findFirst();
+
+        //1. kalo kosong brarti belum ketarik
+        if (ldvHeader == null) {
+            return false;
+        }
+
+        //2. kalo belum closebatch brarti dinyatakan masih open
+        return ldvHeader.getCloseBatch() == null || ldvHeader.getCloseBatch().equals("N");
+
+    }
+
     public static boolean isLDVHeaderClosed(Realm realm, String collCode, Date lkpDate) {
         final String createdBy = "JOB" + Utility.convertDateToString(lkpDate, "yyyyMMdd");
 
