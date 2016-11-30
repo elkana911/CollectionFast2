@@ -94,7 +94,34 @@ public class Location {
         return gps;
     }
 
+    public static boolean isGPSOn(Context ctx) {
+        LocationManager lm = (LocationManager)ctx.getSystemService(Context.LOCATION_SERVICE);
+        boolean gps_enabled = false;
+
+        try {
+            gps_enabled = lm.isProviderEnabled(LocationManager.GPS_PROVIDER);
+        } catch(Exception ex) {}
+
+        return gps_enabled;
+
+    }
+
     public static void turnOnGPS(Context ctx) {
         ctx.startActivity(new Intent(Settings.ACTION_LOCATION_SOURCE_SETTINGS));
+    }
+
+    public static void pleaseTurnOnGPS(Context ctx) {
+
+        double[] gps = getGPS(ctx);
+        String latitude = String.valueOf(gps[0]);
+        String longitude = String.valueOf(gps[1]);
+
+        if (latitude.equals("0.0") && longitude.equals("0.0")) {
+
+            if (!isGPSOn(ctx)) {
+                turnOnGPS(ctx);
+            }
+        }
+
     }
 }

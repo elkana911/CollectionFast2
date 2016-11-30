@@ -10,6 +10,7 @@ import java.util.Date;
 import id.co.ppu.collectionfast2.R;
 import id.co.ppu.collectionfast2.pojo.ServerInfo;
 import id.co.ppu.collectionfast2.pojo.UserData;
+import id.co.ppu.collectionfast2.pojo.master.MstMobileSetup;
 import id.co.ppu.collectionfast2.pojo.trn.TrnLDVComments;
 import id.co.ppu.collectionfast2.pojo.trn.TrnRVColl;
 import id.co.ppu.collectionfast2.pojo.trn.TrnRepo;
@@ -121,5 +122,18 @@ public class BasicActivity extends AppCompatActivity {
         req.setSysInfo(Utility.buildSysInfoAsCsv(this));
 
 
+    }
+
+    protected boolean isGPSMandatory(Realm realm) {
+
+        MstMobileSetup mobileSetup = realm.where(MstMobileSetup.class)
+                .equalTo("key", "DISABLE_GPS_MDTRY")
+                .findFirst();
+
+        // default should be true
+        if (mobileSetup == null)
+            return true;
+
+        return !mobileSetup.getValue1().equals("1");
     }
 }

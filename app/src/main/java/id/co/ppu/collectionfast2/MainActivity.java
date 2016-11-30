@@ -107,6 +107,7 @@ import id.co.ppu.collectionfast2.rest.request.RequestLKPByDate;
 import id.co.ppu.collectionfast2.rest.request.RequestSyncLKP;
 import id.co.ppu.collectionfast2.rest.request.RequestSyncLocation;
 import id.co.ppu.collectionfast2.rest.response.ResponseGetLKP;
+import id.co.ppu.collectionfast2.rest.response.ResponseGetMobileConfig;
 import id.co.ppu.collectionfast2.rest.response.ResponseSync;
 import id.co.ppu.collectionfast2.settings.SettingsActivity;
 import id.co.ppu.collectionfast2.sync.SyncActivity;
@@ -171,6 +172,70 @@ public class MainActivity extends SyncActivity
     public String currentLDVNo = null;
 
     private GoogleApiClient mGoogleApiClient;
+
+    @Override
+    protected void onPostCreate(@Nullable Bundle savedInstanceState) {
+        super.onPostCreate(savedInstanceState);
+
+        // handle mobile setup
+        final ProgressDialog mProgressDialog = new ProgressDialog(this);
+        mProgressDialog.setIndeterminate(true);
+        mProgressDialog.setCancelable(true); // WARNING: rarely true
+        mProgressDialog.setMessage("Please wait...");
+        mProgressDialog.show();
+
+        ApiInterface fastService =
+                ServiceGenerator.createService(ApiInterface.class, Utility.buildUrl(Storage.getPreferenceAsInt(getApplicationContext(), Storage.KEY_SERVER_ID, 0)));
+
+        Call<ResponseGetMobileConfig> call = fastService.getMobileConfig();
+        call.enqueue(new Callback<ResponseGetMobileConfig>() {
+            @Override
+            public void onResponse(Call<ResponseGetMobileConfig> call, Response<ResponseGetMobileConfig> response) {
+                if (mProgressDialog.isShowing())
+                    mProgressDialog.dismiss();
+
+                if (response.isSuccessful()) {
+                    final ResponseGetMobileConfig respGetMobileCfg = response.body();
+
+                    if (respGetMobileCfg == null) {
+                        // silent
+                        return;
+                    }
+
+                    if (respGetMobileCfg.getError() != null) {
+                        // silent
+                    } else {
+
+                        if (respGetMobileCfg.getData() == null) {
+                            // silent
+                        } else {
+                            realm.executeTransaction(new Realm.Transaction() {
+                                @Override
+                                public void execute(Realm realm) {
+                                    realm.copyToRealmOrUpdate(respGetMobileCfg.getData());
+                                }
+                            });
+
+                            if (isGPSMandatory(realm)) {
+                                id.co.ppu.collectionfast2.location.Location.pleaseTurnOnGPS(MainActivity.this);
+                            }
+                        }
+                    }
+                } else {
+                    // silent
+                }
+            }
+
+            @Override
+            public void onFailure(Call<ResponseGetMobileConfig> call, Throwable t) {
+                if (mProgressDialog.isShowing())
+                    mProgressDialog.dismiss();
+
+            }
+        });
+
+
+    }
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -704,34 +769,7 @@ public class MainActivity extends SyncActivity
 
                 }
             });
-/*
-            syncTransaction(false, true, new OnSuccessError() {
-                @Override
-                public void onSuccess(String msg) {
 
-                    Fragment frag = getSupportFragmentManager().findFragmentById(R.id.content_frame);
-
-                    if (frag != null && frag instanceof FragmentLKPList) {
-                        ((FragmentLKPList) frag).refresh();
-//                    frag.refresh();
-                    }
-
-                    Date serverDate = realm.where(ServerInfo.class).findFirst().getServerDate();
-//                    getLKP(currentUser.getUser().get(0).getUserId(), serverDate, true, null);
-
-                }
-
-                @Override
-                public void onFailure(Throwable throwable) {
-
-                }
-
-                @Override
-                public void onSkip() {
-
-                }
-            });
-*/
             return false;
         } else if (id == R.id.nav_clearSyncTables) {
             clearSyncTables();
@@ -1645,6 +1683,10 @@ public class MainActivity extends SyncActivity
     public void openPaymentEntry() {
 //        UserData userData = (UserData) Storage.getObjPreference(getApplicationContext(), Storage.KEY_USER, UserData.class);
 
+        if (isGPSMandatory(this.realm)) {
+            id.co.ppu.collectionfast2.location.Location.pleaseTurnOnGPS(this);
+        }
+
         if (DataUtil.isLDVHeaderValid(realm, currentUser.getUserId()) != null) {
             showSnackBar(getString(R.string.warning_close_batch));
             return;
@@ -2466,11 +2508,12 @@ public class MainActivity extends SyncActivity
 
     }
 
-    // Trigger new location updates at interval
+    // Trigger new location updates at interval, with battery check
     protected void startLocationUpdates() {
         // Create the location request
         LocationRequest mLocationRequest = LocationRequest.create()
-                .setPriority(LocationRequest.PRIORITY_LOW_POWER)
+                .setPriority(LocationRequest.PRIORITY_BALANCED_POWER_ACCURACY)
+//                .setPriority(LocationRequest.PRIORITY_LOW_POWER)
 //                .setPriority(LocationRequest.PRIORITY_HIGH_ACCURACY)
                 .setInterval(UPDATE_INTERVAL)
                 .setFastestInterval(FASTEST_INTERVAL);
@@ -2534,6 +2577,7 @@ public class MainActivity extends SyncActivity
 
     /**
      * Hanya jalan bila sebelumnya udah get lkp
+     *
      * @param showDialog
      * @param listener
      */

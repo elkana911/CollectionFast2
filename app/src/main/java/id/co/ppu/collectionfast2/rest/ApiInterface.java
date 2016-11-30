@@ -13,6 +13,7 @@ import id.co.ppu.collectionfast2.rest.response.ResponseAreaList;
 import id.co.ppu.collectionfast2.rest.response.ResponseGetLKP;
 import id.co.ppu.collectionfast2.rest.response.ResponseGetMasterArea;
 import id.co.ppu.collectionfast2.rest.response.ResponseGetMasterData;
+import id.co.ppu.collectionfast2.rest.response.ResponseGetMobileConfig;
 import id.co.ppu.collectionfast2.rest.response.ResponseGetUsers;
 import id.co.ppu.collectionfast2.rest.response.ResponseGetZipCode;
 import id.co.ppu.collectionfast2.rest.response.ResponseLogin;
@@ -108,5 +109,7 @@ public interface ApiInterface {
     @GET("fast/get_app_version")
     Call<ResponseBody> getAppVersion(@Query("version") String version);
 
+    @POST("fast/mobile_cfg")
+    Call<ResponseGetMobileConfig> getMobileConfig();
 
 }

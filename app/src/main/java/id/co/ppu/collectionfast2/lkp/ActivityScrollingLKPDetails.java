@@ -350,6 +350,10 @@ public class ActivityScrollingLKPDetails extends BasicActivity {
     @OnClick(R.id.btnPaymentReceive)
     public void onClickPaymentReceive() {
 
+        if (isGPSMandatory(this.realm)) {
+            id.co.ppu.collectionfast2.location.Location.pleaseTurnOnGPS(this);
+        }
+
         // should disable when user already do visit result/repo entri
         RealmResults<TrnRepo> trnRepos = this.getRepo(realm, contractNo).findAll();
 
@@ -399,6 +403,10 @@ public class ActivityScrollingLKPDetails extends BasicActivity {
     @OnClick(R.id.btnVisitResultEntry)
     public void onClickVisitResultEntry() {
 
+        if (isGPSMandatory(this.realm)) {
+            id.co.ppu.collectionfast2.location.Location.pleaseTurnOnGPS(this);
+        }
+
         // should disable when user already do payment/repo entri
         RealmResults<TrnRepo> trnRepos = this.getRepo(realm, contractNo).findAll();
 
@@ -436,6 +444,10 @@ public class ActivityScrollingLKPDetails extends BasicActivity {
 
     @OnClick(R.id.btnRepoEntry)
     public void onClickRepoEntry() {
+
+        if (isGPSMandatory(this.realm)) {
+            id.co.ppu.collectionfast2.location.Location.pleaseTurnOnGPS(this);
+        }
 
         // should disable when user already do payment/visit result
         // cek by createdby MOBCOL

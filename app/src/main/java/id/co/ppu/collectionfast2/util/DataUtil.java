@@ -142,6 +142,13 @@ public class DataUtil {
                 ;
     }
 
+    /**
+     * Memastikan hanya table master utk transaksi yang akan ditarik
+     * @see #isMasterTransactionTable(String)
+     * @param ctx
+     * @param realm
+     * @return
+     */
     public static boolean isMasterDataDownloaded(Context ctx, Realm realm) {
 
         ServerInfo serverInfo = realm.where(ServerInfo.class).findFirst();
@@ -154,7 +161,7 @@ public class DataUtil {
             if (!key.toLowerCase().startsWith("mst"))
                 continue;
 
-            // skip juga yg bukan table master transaksi
+            // skip juga yg bukan table master transaksi, jk bukan tdk akan ditarik
             if (!isMasterTransactionTable(key))
                 continue;
 
