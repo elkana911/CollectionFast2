@@ -217,7 +217,10 @@ public class MainActivity extends SyncActivity
                             });
 
                             if (isGPSMandatory(realm)) {
-                                id.co.ppu.collectionfast2.location.Location.pleaseTurnOnGPS(MainActivity.this);
+                                if (!id.co.ppu.collectionfast2.location.Location.isLocationDetected(MainActivity.this)) {
+                                    showSnackBar(getString(R.string.message_no_gps));
+                                    id.co.ppu.collectionfast2.location.Location.pleaseTurnOnGPS(MainActivity.this);
+                                }
                             }
                         }
                     }
@@ -1683,10 +1686,6 @@ public class MainActivity extends SyncActivity
     public void openPaymentEntry() {
 //        UserData userData = (UserData) Storage.getObjPreference(getApplicationContext(), Storage.KEY_USER, UserData.class);
 
-        if (isGPSMandatory(this.realm)) {
-            id.co.ppu.collectionfast2.location.Location.pleaseTurnOnGPS(this);
-        }
-
         if (DataUtil.isLDVHeaderValid(realm, currentUser.getUserId()) != null) {
             showSnackBar(getString(R.string.warning_close_batch));
             return;
@@ -1718,6 +1717,13 @@ public class MainActivity extends SyncActivity
         if (count < 1) {
             Utility.showDialog(MainActivity.this, "No Data", "No Contracts found !");
             return;
+        }
+
+        if (isGPSMandatory(this.realm)) {
+            if (!id.co.ppu.collectionfast2.location.Location.isLocationDetected(this)) {
+                showSnackBar(getString(R.string.message_no_gps));
+                id.co.ppu.collectionfast2.location.Location.pleaseTurnOnGPS(this);
+            }
         }
 
         Intent i = new Intent(this, ActivityPaymentEntri.class);

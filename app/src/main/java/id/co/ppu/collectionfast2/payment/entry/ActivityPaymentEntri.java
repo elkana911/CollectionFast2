@@ -600,7 +600,7 @@ public class ActivityPaymentEntri extends BasicActivity implements FragmentActiv
 
 //            Location.turnOnGPS(this);
 
-            Snackbar.make(activityPaymentEntri, "Unable to get location. Please turn on GPS.", Snackbar.LENGTH_LONG).show();
+            Snackbar.make(activityPaymentEntri, getString(R.string.message_no_gps), Snackbar.LENGTH_LONG).show();
 //            return;
 
             // bisa ambil dr trnCollPos

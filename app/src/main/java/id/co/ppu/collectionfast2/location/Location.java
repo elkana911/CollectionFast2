@@ -50,9 +50,9 @@ public class Location {
 
         };/* End of Class MyLocationListener */
 
-        if ( Build.VERSION.SDK_INT >= 23 &&
-                ContextCompat.checkSelfPermission( ctx, android.Manifest.permission.ACCESS_FINE_LOCATION ) != PackageManager.PERMISSION_GRANTED &&
-                ContextCompat.checkSelfPermission( ctx, android.Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
+        if (Build.VERSION.SDK_INT >= 23 &&
+                ContextCompat.checkSelfPermission(ctx, android.Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED &&
+                ContextCompat.checkSelfPermission(ctx, android.Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
         }
 
         boolean isGPSEnabled = lm.isProviderEnabled(LocationManager.GPS_PROVIDER);
@@ -71,7 +71,7 @@ public class Location {
         List<String> providers = lm.getProviders(true);
 
 		/*
-		 * Loop over the array backwards, and if you get an accurate location,
+         * Loop over the array backwards, and if you get an accurate location,
 		 * then break out the loop
 		 */
         android.location.Location l = null;
@@ -95,12 +95,13 @@ public class Location {
     }
 
     public static boolean isGPSOn(Context ctx) {
-        LocationManager lm = (LocationManager)ctx.getSystemService(Context.LOCATION_SERVICE);
+        LocationManager lm = (LocationManager) ctx.getSystemService(Context.LOCATION_SERVICE);
         boolean gps_enabled = false;
 
         try {
             gps_enabled = lm.isProviderEnabled(LocationManager.GPS_PROVIDER);
-        } catch(Exception ex) {}
+        } catch (Exception ex) {
+        }
 
         return gps_enabled;
 
@@ -110,18 +111,24 @@ public class Location {
         ctx.startActivity(new Intent(Settings.ACTION_LOCATION_SOURCE_SETTINGS));
     }
 
-    public static void pleaseTurnOnGPS(Context ctx) {
+    public static boolean isLocationDetected(Context ctx) {
+        try {
+            double[] gps = getGPS(ctx);
+            String latitude = String.valueOf(gps[0]);
+            String longitude = String.valueOf(gps[1]);
 
-        double[] gps = getGPS(ctx);
-        String latitude = String.valueOf(gps[0]);
-        String longitude = String.valueOf(gps[1]);
+            return !(latitude.equals("0.0") && longitude.equals("0.0"));
 
-        if (latitude.equals("0.0") && longitude.equals("0.0")) {
-
-            if (!isGPSOn(ctx)) {
-                turnOnGPS(ctx);
-            }
+        } catch (Exception e) {
+            e.printStackTrace();
         }
 
+        return false;
+    }
+
+    public static void pleaseTurnOnGPS(Context ctx) {
+        if (!isGPSOn(ctx)) {
+            turnOnGPS(ctx);
+        }
     }
 }

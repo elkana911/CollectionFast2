@@ -2,6 +2,7 @@ package id.co.ppu.collectionfast2.lkp;
 
 import android.content.Intent;
 import android.os.Bundle;
+import android.support.annotation.Nullable;
 import android.support.design.widget.CollapsingToolbarLayout;
 import android.support.design.widget.Snackbar;
 import android.support.v7.widget.Toolbar;
@@ -116,6 +117,11 @@ public class ActivityScrollingLKPDetails extends BasicActivity {
     RadioButton radioOffice;
 
     @Override
+    protected void onPostCreate(@Nullable Bundle savedInstanceState) {
+        super.onPostCreate(savedInstanceState);
+    }
+
+    @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_scrolling_lkpdetails);
@@ -202,7 +208,7 @@ public class ActivityScrollingLKPDetails extends BasicActivity {
             btnRepoEntry.setEnabled(false);
             btnChangeAddr.setEnabled(false);
 
-            Snackbar.make(activityScrollingLkpdtl, "Date changed, Please do Close Batch first", Snackbar.LENGTH_SHORT).show();
+            showSnackBar("Date changed, Please do Close Batch first");
             return;
         }
 
@@ -350,23 +356,26 @@ public class ActivityScrollingLKPDetails extends BasicActivity {
     @OnClick(R.id.btnPaymentReceive)
     public void onClickPaymentReceive() {
 
-        if (isGPSMandatory(this.realm)) {
-            id.co.ppu.collectionfast2.location.Location.pleaseTurnOnGPS(this);
-        }
-
         // should disable when user already do visit result/repo entri
         RealmResults<TrnRepo> trnRepos = this.getRepo(realm, contractNo).findAll();
 
         if (trnRepos.size() > 0) {
-            Snackbar.make(activityScrollingLkpdtl, "This contract available via Repo Entri only", Snackbar.LENGTH_SHORT).show();
+            showSnackBar("This contract available via Repo Entri only");
             return;
         }
 
         RealmResults<TrnLDVComments> trnLDVCommentses = this.getLDVComments(realm, ldvNo, contractNo).findAll();
 
         if (trnLDVCommentses.size() > 0) {
-            Snackbar.make(activityScrollingLkpdtl, "This contract available via Visit Result only", Snackbar.LENGTH_SHORT).show();
+            showSnackBar("This contract available via Visit Result only");
             return;
+        }
+
+        if (isGPSMandatory(this.realm)) {
+            if (!id.co.ppu.collectionfast2.location.Location.isLocationDetected(this)) {
+                showSnackBar(getString(R.string.message_no_gps));
+                id.co.ppu.collectionfast2.location.Location.pleaseTurnOnGPS(this);
+            }
         }
 
         Intent i = null;
@@ -403,23 +412,26 @@ public class ActivityScrollingLKPDetails extends BasicActivity {
     @OnClick(R.id.btnVisitResultEntry)
     public void onClickVisitResultEntry() {
 
-        if (isGPSMandatory(this.realm)) {
-            id.co.ppu.collectionfast2.location.Location.pleaseTurnOnGPS(this);
-        }
-
         // should disable when user already do payment/repo entri
         RealmResults<TrnRepo> trnRepos = this.getRepo(realm, contractNo).findAll();
 
         if (trnRepos.size() > 0) {
-            Snackbar.make(activityScrollingLkpdtl, "This contract available via Repo Entri only", Snackbar.LENGTH_SHORT).show();
+            showSnackBar("This contract available via Repo Entri only");
             return;
         }
 
         RealmResults<TrnRVColl> trnRVColls = this.getRVColl(realm, contractNo).findAll();
 
         if (trnRVColls.size() > 0) {
-            Snackbar.make(activityScrollingLkpdtl, "This contract available via Payment only", Snackbar.LENGTH_SHORT).show();
+            showSnackBar("This contract available via Payment only");
             return;
+        }
+
+        if (isGPSMandatory(this.realm)) {
+            if (!id.co.ppu.collectionfast2.location.Location.isLocationDetected(this)) {
+                showSnackBar(getString(R.string.message_no_gps));
+                id.co.ppu.collectionfast2.location.Location.pleaseTurnOnGPS(this);
+            }
         }
 
         // dibedain based on RPC job (Professional Kolektor)
@@ -445,24 +457,27 @@ public class ActivityScrollingLKPDetails extends BasicActivity {
     @OnClick(R.id.btnRepoEntry)
     public void onClickRepoEntry() {
 
-        if (isGPSMandatory(this.realm)) {
-            id.co.ppu.collectionfast2.location.Location.pleaseTurnOnGPS(this);
-        }
-
         // should disable when user already do payment/visit result
         // cek by createdby MOBCOL
         RealmResults<TrnLDVComments> trnLDVCommentses = this.getLDVComments(realm, ldvNo, contractNo).findAll();
 
         if (trnLDVCommentses.size() > 0) {
-            Snackbar.make(activityScrollingLkpdtl, "This contract available via Visit Result only", Snackbar.LENGTH_SHORT).show();
+            showSnackBar("This contract available via Visit Result only");
             return;
         }
 
         RealmResults<TrnRVColl> trnRVColls = this.getRVColl(realm, contractNo).findAll();
 
         if (trnRVColls.size() > 0) {
-            Snackbar.make(activityScrollingLkpdtl, "This contract available via Payment only", Snackbar.LENGTH_SHORT).show();
+            showSnackBar("This contract available via Payment only");
             return;
+        }
+
+        if (isGPSMandatory(this.realm)) {
+            if (!id.co.ppu.collectionfast2.location.Location.isLocationDetected(this)) {
+                showSnackBar(getString(R.string.message_no_gps));
+                id.co.ppu.collectionfast2.location.Location.pleaseTurnOnGPS(this);
+            }
         }
 
         Intent i = new Intent(this, ActivityRepoEntry.class);
@@ -481,7 +496,7 @@ public class ActivityScrollingLKPDetails extends BasicActivity {
                 .findFirst();
 
         if (trnVehicleInfo == null) {
-            Snackbar.make(activityScrollingLkpdtl, "Sorry, No Vehicle Data found.", Snackbar.LENGTH_SHORT).show();
+            showSnackBar("Sorry, No Vehicle Data found.");
             return;
         }
 
@@ -528,5 +543,9 @@ public class ActivityScrollingLKPDetails extends BasicActivity {
                 .findFirst();
 
         updateButtonsVisibility(dtl);
+    }
+
+    public void showSnackBar(String message) {
+        Snackbar.make(activityScrollingLkpdtl, message, Snackbar.LENGTH_SHORT).show();
     }
 }

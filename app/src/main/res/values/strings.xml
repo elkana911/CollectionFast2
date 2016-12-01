@@ -241,6 +241,6 @@
     <string name="error_ptp_end_month">PTP Date cannot the end of the month</string>
 
     <string name="message_please_wait">Please wait...</string>
-
+    <string name="message_no_gps">Unable to get location. Please turn on GPS.</string>
     <string name="error_expired_warning">This application will be expired within days.\nPlease contact Administrator for any updates.</string>
 </resources>

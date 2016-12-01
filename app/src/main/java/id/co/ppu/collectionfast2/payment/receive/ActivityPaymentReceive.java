@@ -405,7 +405,7 @@ public class ActivityPaymentReceive extends BasicActivity {
 
 //            Location.turnOnGPS(this);
 
-            Snackbar.make(activityPaymentReceive, "Unable to get location. Please turn on GPS.", Snackbar.LENGTH_LONG).show();
+            Snackbar.make(activityPaymentReceive, getString(R.string.message_no_gps), Snackbar.LENGTH_LONG).show();
 //            return;
 
             // bisa ambil dr trnCollPos

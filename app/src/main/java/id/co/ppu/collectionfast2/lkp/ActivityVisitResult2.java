@@ -368,7 +368,7 @@ public class ActivityVisitResult2 extends BasicActivity {
         final String longitude = String.valueOf(gps[1]);
 
         if (latitude.equals("0.0") && longitude.equals("0.0")) {
-            Snackbar.make(activityVisitResult, "Unable to get location. Please turn on GPS.", Snackbar.LENGTH_LONG).show();
+            Snackbar.make(activityVisitResult, getString(R.string.message_no_gps), Snackbar.LENGTH_LONG).show();
             return;
         }
 
