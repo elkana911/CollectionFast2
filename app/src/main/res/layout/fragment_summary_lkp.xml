@@ -39,6 +39,7 @@
                     android:clickable="false"
                     android:focusable="false"
                     android:focusableInTouchMode="false"
+                    android:fontFamily="monospace"
                     android:hint="No LKP"
                     android:maxLines="1"
                     android:textColor="@android:color/tertiary_text_dark" />

@@ -29,6 +29,7 @@
                 android:focusable="false"
                 android:focusableInTouchMode="false"
                 android:gravity="end"
+                android:fontFamily="monospace"
                 android:hint="No LKP"
                 android:maxLines="1"
                 android:textColor="@android:color/primary_text_dark" />

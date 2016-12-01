@@ -18,6 +18,8 @@ import android.util.TypedValue;
 import android.view.KeyEvent;
 import android.view.View;
 import android.view.ViewGroup;
+import android.view.animation.Animation;
+import android.view.animation.AnimationUtils;
 import android.view.inputmethod.EditorInfo;
 import android.widget.ArrayAdapter;
 import android.widget.AutoCompleteTextView;
@@ -83,6 +85,12 @@ public class LoginActivity extends BasicActivity {
 
 
     // UI references.
+    @BindView(R.id.tilUsername)
+    View tilUsername;
+
+    @BindView(R.id.tilPassword)
+    View tilPassword;
+
     @BindView(R.id.username)
     AutoCompleteTextView mUserNameView;
 
@@ -128,6 +136,13 @@ public class LoginActivity extends BasicActivity {
         } else {
             boolean b = DataUtil.isMasterDataDownloaded(this, this.realm);
         }
+
+        Animation animZoomIn = AnimationUtils.loadAnimation(this, R.anim.zoom_in);
+        imageLogo.startAnimation(animZoomIn);
+
+        tilUsername.startAnimation(AnimationUtils.loadAnimation(this, R.anim.slide_in_left));
+        tilPassword.startAnimation(AnimationUtils.loadAnimation(this, R.anim.slide_in_right));
+
     }
 
     @Override
