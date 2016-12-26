@@ -3,7 +3,7 @@ apply plugin: 'realm-android'
 apply plugin: 'android-apt'
 
 android {
-    compileSdkVersion 24
+    compileSdkVersion 25
     buildToolsVersion "24.0.2"
 
     dexOptions {
@@ -13,10 +13,11 @@ android {
     defaultConfig {
         applicationId "id.co.ppu.collectionfast2"
         minSdkVersion 17
-        targetSdkVersion 24
-        versionCode 2
-        versionName "1.1"
+        targetSdkVersion 25
+        versionCode 3
+        versionName "1.2"
         vectorDrawables.useSupportLibrary = true
+        multiDexEnabled true
     }
     buildTypes {
         release {
@@ -29,9 +30,10 @@ android {
 dependencies {
     compile fileTree(dir: 'libs', include: ['*.jar'])
 
-    compile 'com.android.support:appcompat-v7:24.2.1'
-    compile 'com.android.support:design:24.2.1'
-    compile 'com.android.support:support-v4:24.2.1'
+    compile 'com.android.support:appcompat-v7:25.0.1'
+    compile 'com.android.support:design:25.0.1'
+    compile 'com.android.support:support-v4:25.0.1'
+    compile 'com.android.support:cardview-v7:25.0.1'
     compile 'com.github.thorbenprimke:realm-searchview:0.9.6'
     compile 'com.jakewharton:butterknife:8.2.1'
     compile 'com.jakewharton.picasso:picasso2-okhttp3-downloader:1.0.2'
@@ -42,8 +44,10 @@ dependencies {
     compile 'com.github.douglasjunior.BetterSpinner:library-material:bugfix-1.1.0-2'
     testCompile 'junit:junit:4.12'
     apt 'com.jakewharton:butterknife-compiler:8.2.1'
-    compile 'com.google.android.gms:play-services-appindexing:9.6.1'
-    compile 'com.google.android.gms:play-services-maps:9.6.1'
-    compile 'com.google.android.gms:play-services-location:9.6.1'
-
+    compile 'com.google.firebase:firebase-appindexing:10.0.1'
+    compile 'com.google.android.gms:play-services-maps:10.0.1'
+    compile 'com.google.android.gms:play-services-location:10.0.1'
+    compile 'com.google.firebase:firebase-messaging:10.0.1'
 }
+
+apply plugin: 'com.google.gms.google-services'

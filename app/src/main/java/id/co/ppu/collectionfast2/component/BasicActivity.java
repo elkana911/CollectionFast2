@@ -3,7 +3,10 @@ package id.co.ppu.collectionfast2.component;
 import android.content.Intent;
 import android.os.Bundle;
 import android.support.v7.app.AppCompatActivity;
+import android.text.TextUtils;
 import android.view.MenuItem;
+
+import com.google.firebase.iid.FirebaseInstanceId;
 
 import java.util.Date;
 
@@ -14,6 +17,8 @@ import id.co.ppu.collectionfast2.pojo.master.MstMobileSetup;
 import id.co.ppu.collectionfast2.pojo.trn.TrnLDVComments;
 import id.co.ppu.collectionfast2.pojo.trn.TrnRVColl;
 import id.co.ppu.collectionfast2.pojo.trn.TrnRepo;
+import id.co.ppu.collectionfast2.rest.ApiInterface;
+import id.co.ppu.collectionfast2.rest.ServiceGenerator;
 import id.co.ppu.collectionfast2.rest.request.RequestBasic;
 import id.co.ppu.collectionfast2.settings.SettingsActivity;
 import id.co.ppu.collectionfast2.util.DataUtil;
@@ -135,5 +140,19 @@ public class BasicActivity extends AppCompatActivity {
             return true;
 
         return !mobileSetup.getValue1().equals("1");
+    }
+
+    protected ApiInterface getAPIService() {
+        return ServiceGenerator.createService(ApiInterface.class, Utility.buildUrl(Storage.getPreferenceAsInt(getApplicationContext(), Storage.KEY_SERVER_ID, 0)));
+
+    }
+
+    protected String getAndroidToken() {
+        String androidId = Storage.getPreference(getApplicationContext(), Storage.KEY_ANDROID_ID);
+        if (TextUtils.isEmpty(androidId)) {
+            androidId = FirebaseInstanceId.getInstance().getToken();
+        }
+
+        return androidId;
     }
 }

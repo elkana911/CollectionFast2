@@ -8,6 +8,10 @@ import id.co.ppu.collectionfast2.rest.request.RequestRVB;
 import id.co.ppu.collectionfast2.rest.request.RequestSyncLKP;
 import id.co.ppu.collectionfast2.rest.request.RequestSyncLocation;
 import id.co.ppu.collectionfast2.rest.request.RequestZipCode;
+import id.co.ppu.collectionfast2.rest.request.chat.RequestChatContacts;
+import id.co.ppu.collectionfast2.rest.request.chat.RequestChatMsg;
+import id.co.ppu.collectionfast2.rest.request.chat.RequestChatStatus;
+import id.co.ppu.collectionfast2.rest.request.chat.RequestGetChatHistory;
 import id.co.ppu.collectionfast2.rest.response.ResponseArea;
 import id.co.ppu.collectionfast2.rest.response.ResponseAreaList;
 import id.co.ppu.collectionfast2.rest.response.ResponseGetLKP;
@@ -21,6 +25,8 @@ import id.co.ppu.collectionfast2.rest.response.ResponseRVB;
 import id.co.ppu.collectionfast2.rest.response.ResponseServerInfo;
 import id.co.ppu.collectionfast2.rest.response.ResponseSync;
 import id.co.ppu.collectionfast2.rest.response.ResponseUserPwd;
+import id.co.ppu.collectionfast2.rest.response.chat.ResponseGetChatHistory;
+import id.co.ppu.collectionfast2.rest.response.chat.ResponseGetOnlineContacts;
 import okhttp3.MultipartBody;
 import okhttp3.RequestBody;
 import okhttp3.ResponseBody;
@@ -112,4 +118,34 @@ public interface ApiInterface {
     @POST("fast/mobile_cfg")
     Call<ResponseGetMobileConfig> getMobileConfig();
 
+    ///////////////////////////////  CHAT FUNCTIONS  ////////////////////////////////////////
+    @POST("fastchat/send")
+    Call<ResponseBody> sendMessage(@Body RequestChatMsg msg);
+
+    @POST("fastchat/status")
+    Call<ResponseBody> sendStatus(@Body RequestChatStatus status);
+
+    @GET("fastchat/update_msg_status")
+    Call<ResponseBody> updateMessageStatus(@Query("uid") String uid, @Query("status") String status);
+
+    @GET("fastchat/get_msg")
+    Call<ResponseGetChatHistory> getMessage(@Query("uid") String uid);
+
+    @POST("fastchat/status_check")
+    Call<ResponseBody> checkStatus(@Body RequestChatStatus req);
+
+//    @POST("fastchat/online_contacts")
+//    Call<ResponseGetOnlineContacts> getGroupContacts();
+
+    @POST("fastchat/online_contacts_by")
+    Call<ResponseGetOnlineContacts> getOnlineContacts(@Body RequestChatStatus req);
+
+    @POST("fastchat/chat_contacts")
+    Call<ResponseGetOnlineContacts> getChatContacts(@Body RequestChatContacts req);
+
+    @POST("fastchat/group_contacts_by")
+    Call<ResponseGetOnlineContacts> getGroupContacts(@Body RequestChatStatus req);
+
+    @POST("fastchat/chat_hist")
+    Call<ResponseGetChatHistory> getChatHistory(@Body RequestGetChatHistory req);
 }

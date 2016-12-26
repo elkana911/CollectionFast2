@@ -5,9 +5,13 @@ import android.app.AlertDialog;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
 import android.content.res.Configuration;
 import android.location.LocationManager;
+import android.os.Build;
+import android.os.PowerManager;
+import android.preference.PreferenceManager;
 import android.provider.Settings;
 import android.telephony.TelephonyManager;
 import android.text.TextUtils;
@@ -31,21 +35,23 @@ import okhttp3.HttpUrl;
 
 public class Utility {
 
-    public final static String DATE_EXPIRED_YYYYMMDD = "20211231";
+    // TODO: always check version inside gradle on production
+    public final static boolean developerMode = true;
+
+    public final static String DATE_EXPIRED_YYYYMMDD = developerMode ? "20201231" : "20361231"; // 20 years
 
     public final static String[][] servers = {
 //            {"local-server", "10.212.0.71", "8090"}
-//            {"local-server", "192.168.10.86", "8090"} // kelapa gading
+//            {"local-server", "192.168.43.125", "8090"} // kelapa gading
             {"local-server", "192.168.1.105", "8090"}
 //            {"local-server", "192.168.0.9", "8090"} //faraday
             ,{"dev-fast-mobile", "cmobile.radanafinance.co.id", "7001"}
             ,{"fast-mobile", "cmobile.radanafinance.co.id", "7001"}
             ,{"fast-mobile2", "c1mobile.radanafinance.co.id", "7001"}
     };
-    // TODO: always check version inside gradle on production
-    public final static boolean developerMode = true;
     public final static int NETWORK_TIMEOUT_MINUTES = developerMode ? 1 : 3 ;
 
+    public final static int CYCLE_CHAT_STATUS_MILLISEC = (developerMode ? 3 : 15) * 60 * 1000;
 
 /*
     // for load balancing support, cancelled.
@@ -494,6 +500,11 @@ public class Utility {
 
                 sb.append(",").append("gpsEnabled=").append(gps_enabled);
                 sb.append(",").append("networkEnabled=").append(network_enabled);
+
+                SharedPreferences sharedPrefs = PreferenceManager.getDefaultSharedPreferences(ctx);
+                String langId = sharedPrefs.getString("language", "x"); //id / en
+                sb.append(",").append("language=").append(langId);
+
             }
 
 
@@ -516,4 +527,12 @@ public class Utility {
     }
 */
 
+
+    public static boolean isScreenOff(Context ctx) {
+        PowerManager pm = (PowerManager) ctx.getSystemService(Context.POWER_SERVICE);
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT_WATCH) {
+            return !pm.isInteractive();
+        } else
+            return !pm.isScreenOn();
+    }
 }

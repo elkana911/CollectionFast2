@@ -1,6 +1,7 @@
 package id.co.ppu.collectionfast2;
 
 import android.app.Application;
+import android.util.Log;
 
 import io.realm.Realm;
 import io.realm.RealmConfiguration;
@@ -23,6 +24,7 @@ public class MyApplication extends Application{
 
     @Override
     public void onTerminate() {
+        Log.e("CollectionFast2", "onTerminate");
         super.onTerminate();
     }
 }

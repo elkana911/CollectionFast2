@@ -11,9 +11,12 @@ import com.google.gson.GsonBuilder;
 import java.io.File;
 import java.io.IOException;
 import java.util.Date;
+import java.util.List;
 
 import id.co.ppu.collectionfast2.listener.OnSuccessError;
 import id.co.ppu.collectionfast2.pojo.UserData;
+import id.co.ppu.collectionfast2.pojo.chat.TrnChatContact;
+import id.co.ppu.collectionfast2.pojo.chat.TrnChatMsg;
 import id.co.ppu.collectionfast2.pojo.trn.TrnCollPos;
 import id.co.ppu.collectionfast2.pojo.trn.TrnErrorLog;
 import id.co.ppu.collectionfast2.pojo.trn.TrnLDVHeader;
@@ -24,7 +27,10 @@ import id.co.ppu.collectionfast2.rest.ServiceGenerator;
 import id.co.ppu.collectionfast2.rest.request.RequestLogError;
 import id.co.ppu.collectionfast2.rest.request.RequestRVB;
 import id.co.ppu.collectionfast2.rest.request.RequestSyncLocation;
+import id.co.ppu.collectionfast2.rest.request.chat.RequestChatContacts;
+import id.co.ppu.collectionfast2.rest.request.chat.RequestChatStatus;
 import id.co.ppu.collectionfast2.rest.response.ResponseRVB;
+import id.co.ppu.collectionfast2.rest.response.chat.ResponseGetOnlineContacts;
 import io.realm.Realm;
 import io.realm.RealmResults;
 import io.realm.Sort;
@@ -462,4 +468,341 @@ public class NetUtil {
 
         return true;
     }
+
+    public static void chatLogOn(Context ctx, String collCode, final OnSuccessError listener) {
+        // send to server that current contact is online
+        if (!isConnected(ctx)) {
+            return;
+        }
+
+        String androidId = Storage.getAndroidToken(ctx);
+        String userStatus = ChatStatus.FLAG_ONLINE;
+        String userMsg = "Available";
+
+        RequestChatStatus req = new RequestChatStatus();
+        req.setCollCode(collCode);
+        req.setStatus(userStatus);
+        req.setMessage(userMsg);
+        req.setAndroidId(androidId);
+
+        Call<ResponseBody> call = Storage.getAPIService(ctx).sendStatus(req);
+        call.enqueue(new Callback<ResponseBody>() {
+            @Override
+            public void onResponse(Call<ResponseBody> call, Response<ResponseBody> response) {
+                // update display status here
+                if (!response.isSuccessful()) {
+
+                    ResponseBody errorBody = response.errorBody();
+
+                    try {
+                        if (listener != null) {
+                            listener.onFailure(new RuntimeException(errorBody.string()));
+                        }
+                    } catch (IOException e) {
+                        e.printStackTrace();
+                    }
+
+                    return;
+                }
+
+                if (listener != null)
+                    listener.onSuccess(null);
+            }
+
+            @Override
+            public void onFailure(Call<ResponseBody> call, Throwable t) {
+                if (listener != null)
+                    listener.onFailure(t);
+            }
+        });
+
+    }
+
+    public static void chatLogOff(Context ctx, String collCode, final OnSuccessError listener) {
+        if (!isConnected(ctx)) {
+            return;
+        }
+
+        String androidId = Storage.getAndroidToken(ctx);
+        String userStatus = ChatStatus.FLAG_OFFLINE;
+        String userMsg = "Offline";
+
+        RequestChatStatus req = new RequestChatStatus();
+        req.setCollCode(collCode);
+        req.setStatus(userStatus);
+        req.setMessage(userMsg);
+        req.setAndroidId(androidId);
+
+        Call<ResponseBody> call = Storage.getAPIService(ctx).sendStatus(req);
+        call.enqueue(new Callback<ResponseBody>() {
+            @Override
+            public void onResponse(Call<ResponseBody> call, Response<ResponseBody> response) {
+                // update display status here
+                if (!response.isSuccessful()) {
+
+                    ResponseBody errorBody = response.errorBody();
+
+                    try {
+                        if (listener != null) {
+                            listener.onFailure(new RuntimeException(errorBody.string()));
+                        }
+                    } catch (IOException e) {
+                        e.printStackTrace();
+                    }
+
+                    return;
+                }
+
+                Realm r = Realm.getDefaultInstance();
+                try {
+                    r.beginTransaction();
+                    r.delete(TrnChatContact.class);
+                    r.delete(TrnChatMsg.class);
+                    r.commitTransaction();
+                } finally {
+                    if (r != null)
+                        r.close();
+                }
+
+                if (listener != null)
+                    listener.onSuccess(null);
+            }
+
+            @Override
+            public void onFailure(Call<ResponseBody> call, Throwable t) {
+                if (listener != null)
+                    listener.onFailure(t);
+            }
+        });
+
+    }
+
+    public static void chatUpdateContacts(Context ctx, String collCode, final OnSuccessError listener) {
+        if (!isConnected(ctx)) {
+            return;
+        }
+
+        RequestChatStatus req = new RequestChatStatus();
+        req.setCollCode(collCode);
+        req.setStatus(null);
+        req.setMessage(null);
+
+        Call<ResponseGetOnlineContacts> call = Storage.getAPIService(ctx).getOnlineContacts(req);
+        call.enqueue(new Callback<ResponseGetOnlineContacts>() {
+            @Override
+            public void onResponse(Call<ResponseGetOnlineContacts> call, Response<ResponseGetOnlineContacts> response) {
+
+                if (!response.isSuccessful()) {
+                    int statusCode = response.code();
+
+                    // handle request errors yourself
+                    ResponseBody errorBody = response.errorBody();
+
+                    if (listener != null) {
+                        listener.onFailure(null);
+                    }
+
+                    return;
+                }
+
+                final ResponseGetOnlineContacts resp = response.body();
+
+                if (resp == null || resp.getData() == null) {
+//                    Utility.showDialog(MainChatActivity.this, "No Contacts found", "You have empty List.\nPlease try again.");
+                    return;
+                }
+
+                if (resp.getError() != null) {
+                    if (listener != null) {
+                        String msg = "Error (" + resp.getError().getErrorCode() + ")\n" + resp.getError().getErrorDesc();
+                        listener.onFailure(new RuntimeException(msg));
+                    }
+
+                    return;
+                }
+
+                Realm r = Realm.getDefaultInstance();
+
+                r.executeTransaction(new Realm.Transaction() {
+                    @Override
+                    public void execute(Realm realm) {
+                        realm.delete(TrnChatContact.class);
+
+                        realm.copyToRealm(resp.getData());
+                    }
+                });
+
+                final int size = resp.getData().size();
+
+                r.close();
+
+                if (listener != null) {
+
+                    listener.onSuccess("" + size + " CONTACTS");
+                }
+            }
+
+            @Override
+            public void onFailure(Call<ResponseGetOnlineContacts> call, Throwable t) {
+                if (listener != null)
+                    listener.onFailure(t);
+
+            }
+        });
+
+    }
+
+    public static void chatGetGroupContacts(Context ctx, String collCode, final OnSuccessError listener) {
+
+        if (!isConnected(ctx)) {
+            return;
+        }
+
+        RequestChatStatus req = new RequestChatStatus();
+        req.setCollCode(collCode);
+        req.setStatus(null);
+        req.setMessage(null);
+
+        Call<ResponseGetOnlineContacts> call = Storage.getAPIService(ctx).getGroupContacts(req);
+        call.enqueue(new Callback<ResponseGetOnlineContacts>() {
+            @Override
+            public void onResponse(Call<ResponseGetOnlineContacts> call, Response<ResponseGetOnlineContacts> response) {
+
+                if (!response.isSuccessful()) {
+                    int statusCode = response.code();
+
+                    // handle request errors yourself
+                    ResponseBody errorBody = response.errorBody();
+
+                    if (listener != null) {
+                        listener.onFailure(null);
+                    }
+
+                    return;
+                }
+
+                final ResponseGetOnlineContacts resp = response.body();
+
+                if (resp == null || resp.getData() == null) {
+//                    Utility.showDialog(MainChatActivity.this, "No Contacts found", "You have empty List.\nPlease try again.");
+                    return;
+                }
+
+                if (resp.getError() != null) {
+                    if (listener != null) {
+                        String msg = "Error (" + resp.getError().getErrorCode() + ")\n" + resp.getError().getErrorDesc();
+                        listener.onFailure(new RuntimeException(msg));
+                    }
+
+                    return;
+                }
+
+                Realm r = Realm.getDefaultInstance();
+
+                r.executeTransaction(new Realm.Transaction() {
+                    @Override
+                    public void execute(Realm realm) {
+                        realm.delete(TrnChatContact.class);
+
+                        realm.copyToRealmOrUpdate(resp.getData());
+                    }
+                });
+
+                final int size = resp.getData().size();
+
+                r.close();
+
+                if (listener != null) {
+
+                    listener.onSuccess("" + size + " CONTACTS");
+                }
+            }
+
+            @Override
+            public void onFailure(Call<ResponseGetOnlineContacts> call, Throwable t) {
+                if (listener != null)
+                    listener.onFailure(t);
+
+            }
+        });
+
+    }
+
+    public static void chatGetContacts(Context ctx, final List<String> collectorsCode, final OnSuccessError listener) {
+
+        if (!isConnected(ctx)) {
+            return;
+        }
+
+        RequestChatContacts req = new RequestChatContacts();
+        req.setCollsCode(collectorsCode);
+
+        Call<ResponseGetOnlineContacts> call = Storage.getAPIService(ctx).getChatContacts(req);
+        call.enqueue(new Callback<ResponseGetOnlineContacts>() {
+            @Override
+            public void onResponse(Call<ResponseGetOnlineContacts> call, Response<ResponseGetOnlineContacts> response) {
+
+                if (!response.isSuccessful()) {
+                    int statusCode = response.code();
+
+                    // handle request errors yourself
+                    ResponseBody errorBody = response.errorBody();
+
+                    if (listener != null) {
+                        listener.onFailure(null);
+                    }
+
+                    return;
+                }
+
+                final ResponseGetOnlineContacts resp = response.body();
+
+                if (resp == null || resp.getData() == null) {
+//                    Utility.showDialog(MainChatActivity.this, "No Contacts found", "You have empty List.\nPlease try again.");
+                    return;
+                }
+
+                if (resp.getError() != null) {
+                    if (listener != null) {
+                        String msg = "Error (" + resp.getError().getErrorCode() + ")\n" + resp.getError().getErrorDesc();
+                        listener.onFailure(new RuntimeException(msg));
+                    }
+
+                    return;
+                }
+
+                Realm r = Realm.getDefaultInstance();
+
+                r.executeTransaction(new Realm.Transaction() {
+                    @Override
+                    public void execute(Realm realm) {
+                        RealmResults<TrnChatContact> all = realm.where(TrnChatContact.class)
+                                .in("collCode", collectorsCode.toArray((new String[collectorsCode.size()])))
+                                .findAll();
+
+                        all.deleteAllFromRealm();
+
+                        realm.copyToRealmOrUpdate(resp.getData());
+                    }
+                });
+
+                final int size = resp.getData().size();
+
+                r.close();
+
+                if (listener != null) {
+                    listener.onSuccess("");
+                }
+            }
+
+            @Override
+            public void onFailure(Call<ResponseGetOnlineContacts> call, Throwable t) {
+                if (listener != null)
+                    listener.onFailure(t);
+
+            }
+        });
+
+    }
+
 }

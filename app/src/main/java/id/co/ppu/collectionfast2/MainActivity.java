@@ -4,15 +4,18 @@ import android.Manifest;
 import android.app.AlarmManager;
 import android.app.PendingIntent;
 import android.app.ProgressDialog;
+import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
+import android.content.IntentFilter;
 import android.content.pm.PackageManager;
 import android.graphics.drawable.Drawable;
 import android.location.Location;
 import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
+import android.os.Handler;
 import android.provider.MediaStore;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
@@ -21,9 +24,11 @@ import android.support.design.widget.NavigationView;
 import android.support.design.widget.Snackbar;
 import android.support.graphics.drawable.VectorDrawableCompat;
 import android.support.v4.app.ActivityCompat;
+import android.support.v4.app.DialogFragment;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentTransaction;
 import android.support.v4.content.ContextCompat;
+import android.support.v4.content.LocalBroadcastManager;
 import android.support.v4.view.GravityCompat;
 import android.support.v4.view.MenuItemCompat;
 import android.support.v4.widget.DrawerLayout;
@@ -54,6 +59,7 @@ import java.io.IOException;
 import java.net.ConnectException;
 import java.net.SocketTimeoutException;
 import java.net.UnknownHostException;
+import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.List;
@@ -63,8 +69,10 @@ import butterknife.BindView;
 import butterknife.ButterKnife;
 import butterknife.OnClick;
 import butterknife.OnLongClick;
-import id.co.ppu.collectionfast2.chats.ActivityChats;
 import id.co.ppu.collectionfast2.exceptions.ExpiredException;
+import id.co.ppu.collectionfast2.fragments.FragmentChatActiveContacts;
+import id.co.ppu.collectionfast2.fragments.FragmentChatAllContacts;
+import id.co.ppu.collectionfast2.fragments.FragmentChatWith;
 import id.co.ppu.collectionfast2.fragments.HomeFragment;
 import id.co.ppu.collectionfast2.job.SyncJob;
 import id.co.ppu.collectionfast2.listener.OnPostRetrieveLKP;
@@ -80,6 +88,8 @@ import id.co.ppu.collectionfast2.pojo.DisplayTrnLDVDetails;
 import id.co.ppu.collectionfast2.pojo.ServerInfo;
 import id.co.ppu.collectionfast2.pojo.UserConfig;
 import id.co.ppu.collectionfast2.pojo.UserData;
+import id.co.ppu.collectionfast2.pojo.chat.TrnChatContact;
+import id.co.ppu.collectionfast2.pojo.chat.TrnChatMsg;
 import id.co.ppu.collectionfast2.pojo.sync.SyncFileUpload;
 import id.co.ppu.collectionfast2.pojo.sync.SyncTrnBastbj;
 import id.co.ppu.collectionfast2.pojo.sync.SyncTrnLDVComments;
@@ -106,9 +116,13 @@ import id.co.ppu.collectionfast2.rest.ServiceGenerator;
 import id.co.ppu.collectionfast2.rest.request.RequestLKPByDate;
 import id.co.ppu.collectionfast2.rest.request.RequestSyncLKP;
 import id.co.ppu.collectionfast2.rest.request.RequestSyncLocation;
+import id.co.ppu.collectionfast2.rest.request.chat.RequestChatMsg;
+import id.co.ppu.collectionfast2.rest.request.chat.RequestChatStatus;
+import id.co.ppu.collectionfast2.rest.request.chat.RequestGetChatHistory;
 import id.co.ppu.collectionfast2.rest.response.ResponseGetLKP;
 import id.co.ppu.collectionfast2.rest.response.ResponseGetMobileConfig;
 import id.co.ppu.collectionfast2.rest.response.ResponseSync;
+import id.co.ppu.collectionfast2.rest.response.chat.ResponseGetChatHistory;
 import id.co.ppu.collectionfast2.settings.SettingsActivity;
 import id.co.ppu.collectionfast2.sync.SyncActivity;
 import id.co.ppu.collectionfast2.sync.SyncBastbj;
@@ -121,8 +135,10 @@ import id.co.ppu.collectionfast2.sync.SyncRVColl;
 import id.co.ppu.collectionfast2.sync.SyncRepo;
 import id.co.ppu.collectionfast2.sync.SyncRvb;
 import id.co.ppu.collectionfast2.test.ActivityDeveloper;
+import id.co.ppu.collectionfast2.util.ConstChat;
 import id.co.ppu.collectionfast2.util.DataUtil;
 import id.co.ppu.collectionfast2.util.NetUtil;
+import id.co.ppu.collectionfast2.util.NotificationUtils;
 import id.co.ppu.collectionfast2.util.RootUtil;
 import id.co.ppu.collectionfast2.util.Storage;
 import id.co.ppu.collectionfast2.util.Utility;
@@ -130,6 +146,7 @@ import io.realm.Realm;
 import io.realm.RealmAsyncTask;
 import io.realm.RealmObject;
 import io.realm.RealmResults;
+import io.realm.Sort;
 import okhttp3.ResponseBody;
 import retrofit2.Call;
 import retrofit2.Callback;
@@ -142,10 +159,17 @@ import static id.co.ppu.collectionfast2.location.LocationFused.UPDATE_INTERVAL;
 public class MainActivity extends SyncActivity
         implements GoogleApiClient.ConnectionCallbacks,
         GoogleApiClient.OnConnectionFailedListener,
-        LocationListener, NavigationView.OnNavigationItemSelectedListener, FragmentLKPList.OnFragmentLKPListInteractionListener {
+        LocationListener, NavigationView.OnNavigationItemSelectedListener
+        , FragmentLKPList.OnFragmentLKPListInteractionListener
+        , FragmentChatActiveContacts.OnChatContactsListener
+        , FragmentChatWith.OnChatWithListener
+        , FragmentChatAllContacts.OnContactSelectedListener {
 
     public static final String SELECTED_NAV_MENU_KEY = "selected_nav_menu_key";
-    private static final String TAG = "Main";
+    private static final String TAG = "MainActivity";
+
+    Handler handlerChatStatus = new Handler();
+    private BroadcastReceiver broadcastReceiver;
 
     private final CharSequence[] menuItems = {
             "From Camera", "From Gallery", "Delete Photo"
@@ -172,6 +196,38 @@ public class MainActivity extends SyncActivity
     public String currentLDVNo = null;
 
     private GoogleApiClient mGoogleApiClient;
+
+    // Define the code block to be executed
+    private Runnable runnableCode = new Runnable() {
+        @Override
+        public void run() {
+            // Do something here on the main thread
+            Log.d("handlerChatStatus", "Update Chat Log On status");
+
+            NetUtil.chatLogOn(MainActivity.this, getCurrentUserId(), new OnSuccessError() {
+                @Override
+                public void onSuccess(String msg) {
+                    //yg mana offline ?
+                    NetUtil.chatUpdateContacts(MainActivity.this, getCurrentUserId(), null);
+                }
+
+                @Override
+                public void onFailure(Throwable throwable) {
+
+                }
+
+                @Override
+                public void onSkip() {
+                    //yg mana offline ?
+                    NetUtil.chatUpdateContacts(MainActivity.this, getCurrentUserId(), null);
+                }
+            });
+
+            // Repeat this the same runnable code block again another 2 seconds
+            handlerChatStatus.postDelayed(runnableCode, Utility.CYCLE_CHAT_STATUS_MILLISEC);
+        }
+    };
+
 
     @Override
     protected void onPostCreate(@Nullable Bundle savedInstanceState) {
@@ -237,15 +293,396 @@ public class MainActivity extends SyncActivity
             }
         });
 
+        String androidId = getAndroidToken();
 
+//        handleNotification(getIntent());
+        handleIntent(getIntent());
+
+        NetUtil.chatLogOn(this, getCurrentUserId(), null);
+
+        // Start the initial runnable task by posting through the handler
+        handlerChatStatus.post(runnableCode);
     }
 
+    private void handleIntent(Intent intent) {
+        if (intent == null)
+            return;
+
+        Bundle extras = intent.getExtras();
+        if (extras == null) {
+            Log.e(TAG, "No extras found");
+            return;
+        }
+
+        String key_from = intent.getStringExtra(ConstChat.KEY_FROM);
+        String key_uid = intent.getStringExtra(ConstChat.KEY_UID);
+        String key_msg = intent.getStringExtra(ConstChat.KEY_MESSAGE);
+        String key_status = intent.getStringExtra(ConstChat.KEY_STATUS);
+        String key_seqno = intent.getStringExtra(ConstChat.KEY_SEQNO);
+        String key_timestamp = intent.getStringExtra(ConstChat.KEY_TIMESTAMP);
+
+        Log.e(TAG, "chatFrom:" + key_from + "\nchatMessage:" + key_msg);
+    }
+
+    @Override
+    protected void onNewIntent(Intent intent) {
+        // biasa dipanggil saat user click notification bar
+        super.onNewIntent(intent);
+
+//        setIntent(intent);
+
+        // jika user click notificationsnya
+//        Intent intent = this.getIntent();
+        if (intent.getExtras() != null) {
+            final String key_from = intent.getStringExtra(ConstChat.KEY_FROM);
+            final String key_uid = intent.getStringExtra(ConstChat.KEY_UID);
+            final String key_msg = intent.getStringExtra(ConstChat.KEY_MESSAGE);
+            final String key_seqno = intent.getStringExtra(ConstChat.KEY_SEQNO);
+            final String key_timestamp = intent.getStringExtra(ConstChat.KEY_TIMESTAMP);
+            final String key_status = intent.getStringExtra(ConstChat.KEY_STATUS);
+
+            if (!TextUtils.isEmpty(key_uid)) {
+
+                if (mSelectedNavMenuIndex != R.id.nav_chats) {
+
+                    // harusnya open chat fragment
+                    displayView(R.id.nav_chats);
+
+                    // BE CAREFUL ! http://stackoverflow.com/questions/18640922/why-findfragmentbyid-returns-the-old-fragment-was-in-before-the-call-to-replace
+                    // fragment still assigned as HomeFragment, so need to executePendingTransactions
+                    getSupportFragmentManager().executePendingTransactions();
+
+                }
+
+                if (!TextUtils.isEmpty(key_status)) {
+                    // jika key_status = 1 maka update ke server kalo udah diterima dan dibuka
+                    if (key_status.equalsIgnoreCase(ConstChat.MESSAGE_STATUS_SERVER_RECEIVED)) {
+                        // tell sender your message has been open and read, tp masalahnya layar mati jg kesini
+
+                        Call<ResponseBody> call = getAPIService().updateMessageStatus(key_uid, Utility.isScreenOff(this) ? ConstChat.MESSAGE_STATUS_DELIVERED : ConstChat.MESSAGE_STATUS_READ_AND_OPENED);
+                        call.enqueue(new Callback<ResponseBody>() {
+                            @Override
+                            public void onResponse(Call<ResponseBody> call, Response<ResponseBody> response) {
+                                if (response.isSuccessful()) {
+// write status as 3
+                                }
+                            }
+
+                            @Override
+                            public void onFailure(Call<ResponseBody> call, Throwable t) {
+
+                            }
+                        });
+                    } else if (key_status.equalsIgnoreCase(ConstChat.MESSAGE_STATUS_READ_AND_OPENED)) {
+                        // update db
+                        final TrnChatMsg trnChatMsg = this.realm.where(TrnChatMsg.class)
+                                .equalTo("uid", key_uid)
+                                .findFirst();
+
+                        if (trnChatMsg != null) {
+
+                            this.realm.executeTransaction(new Realm.Transaction() {
+                                @Override
+                                public void execute(Realm realm) {
+                                    trnChatMsg.setMessageStatus(key_status);
+                                    realm.copyToRealmOrUpdate(trnChatMsg);
+                                }
+                            });
+                        } else {
+                            Call<ResponseGetChatHistory> call = getAPIService().getMessage(key_uid);
+                            call.enqueue(new Callback<ResponseGetChatHistory>() {
+                                @Override
+                                public void onResponse(Call<ResponseGetChatHistory> call, Response<ResponseGetChatHistory> response) {
+                                    if (response.isSuccessful()) {
+                                        final ResponseGetChatHistory body = response.body();
+
+                                        if (body != null) {
+
+                                            realm.executeTransaction(new Realm.Transaction() {
+                                                @Override
+                                                public void execute(Realm realm) {
+                                                    realm.copyToRealm(body.getData());
+                                                }
+                                            });
+                                        }
+                                    }
+                                }
+
+                                @Override
+                                public void onFailure(Call<ResponseGetChatHistory> call, Throwable t) {
+
+                                }
+                            });
+
+                        }
+                    } else if (key_status.equalsIgnoreCase(ConstChat.MESSAGE_STATUS_ALL_READ_AND_OPENED)) {
+                        this.realm.executeTransaction(new Realm.Transaction() {
+                            @Override
+                            public void execute(Realm realm) {
+                                RealmResults<TrnChatMsg> unreadMessages = realm.where(TrnChatMsg.class)
+                                        .equalTo("fromCollCode", currentUser.getUserId())
+                                        .equalTo("toCollCode", key_from)
+                                        .notEqualTo("messageStatus", ConstChat.MESSAGE_STATUS_READ_AND_OPENED)
+                                        .findAll();
+
+                                if (unreadMessages.size() < 1)
+                                    return;
+
+                                for (TrnChatMsg msg : unreadMessages) {
+                                    msg.setMessageStatus(ConstChat.MESSAGE_STATUS_READ_AND_OPENED);
+                                    realm.copyToRealmOrUpdate(msg);
+                                }
+
+                            }
+                        });
+
+                    }
+
+                }
+
+                final Fragment frag = getSupportFragmentManager().findFragmentById(R.id.content_frame);
+
+                if (frag != null && frag instanceof FragmentChatActiveContacts) {
+                    TrnChatContact contact = this.realm.where(TrnChatContact.class)
+                            .equalTo("collCode", key_from)
+                            .findFirst();
+
+                    if (contact == null) {
+                        List<String> collsCode = new ArrayList<>();
+                        collsCode.add(currentUser.getUserId());
+                        collsCode.add(key_from);
+
+                        NetUtil.chatGetContacts(MainActivity.this, collsCode, new OnSuccessError() {
+                            @Override
+                            public void onSuccess(String msg) {
+                                TrnChatContact contact = realm.where(TrnChatContact.class)
+                                        .equalTo("collCode", key_from)
+                                        .findFirst();
+
+                                String val1 = currentUser.getUserId();
+                                String val2 = contact.getCollCode();
+
+                                onContactSelected(contact);
+
+                            }
+
+                            @Override
+                            public void onFailure(Throwable throwable) {
+
+                            }
+
+                            @Override
+                            public void onSkip() {
+
+                            }
+                        });
+                    } else {
+                        onContactSelected(contact);
+                    }
+                } else if (frag instanceof FragmentChatWith) {
+
+                    NotificationUtils.clearNotifications(this);
+
+                    if (!TextUtils.isEmpty(key_uid))
+                        this.realm.executeTransaction(new Realm.Transaction() {
+                            @Override
+                            public void execute(Realm realm) {
+                                TrnChatMsg msg = realm.where(TrnChatMsg.class)
+                                        .equalTo("uid", key_uid)
+                                        .findFirst();
+
+                                if (msg == null) {
+                                    msg = new TrnChatMsg();
+                                    msg.setUid(key_uid);
+                                    msg.setSeqNo(Long.parseLong(key_seqno));
+                                    msg.setFromCollCode(((FragmentChatWith) frag).userCode2);
+                                    msg.setToCollCode(((FragmentChatWith) frag).userCode1);
+                                    msg.setMessage(key_msg);
+                                    msg.setMessageType(ConstChat.MESSAGE_TYPE_COMMON);
+                                    msg.setCreatedTimestamp(Utility.convertStringToDate(key_timestamp, "yyyyMMddHHmmss"));
+
+                                } else {
+                                }
+                                msg.setMessageStatus(ConstChat.MESSAGE_STATUS_READ_AND_OPENED);
+                                realm.copyToRealmOrUpdate(msg);
+
+                            }
+                        });
+
+                    ((FragmentChatWith) frag).listAdapter.notifyDataSetChanged();
+                    ((FragmentChatWith) frag).scrollToLast();
+
+//            chats.scrollToPosition(listAdapter.getItemCount());
+                }
+            }
+
+
+            /*
+            Intent i = new Intent(this, MainActivity.class);
+//            i.putExtra(MainActivity.PARAM_USER_CODE, currentUser.getUserId());
+            i.putExtras(intent);
+//            i.putExtra(ActivitySummaryLKP.PARAM_LKP_DATE, this.lkpDate.getTime());
+            startActivity(i);
+                */
+        }
+
+        NotificationUtils.clearNotifications(this);
+    }
+
+    /*
+        private void handleNotification(Intent intent) {
+            if (intent == null)
+                return;
+
+            Bundle extras = intent.getExtras();
+            if (extras == null) {
+                Log.e(TAG, "No extras found");
+                return;
+            }
+
+            final String key_from = intent.getStringExtra(ConstChat.KEY_FROM);
+            String key_uid = intent.getStringExtra(ConstChat.KEY_UID);
+            String key_msg = intent.getStringExtra(ConstChat.KEY_MESSAGE);
+            String key_seqno = intent.getStringExtra(ConstChat.KEY_SEQNO);
+            String key_timestamp = intent.getStringExtra(ConstChat.KEY_TIMESTAMP);
+            final String key_status = intent.getStringExtra(ConstChat.KEY_STATUS);
+
+            Log.e(TAG, "chatFrom:" + key_from + "\nchatMessage:" + key_msg);
+
+            // jika key_status = 1 maka update ke server kalo udah diterima dan dibuka
+            if (TextUtils.isEmpty(key_status)) {
+                return;
+            }
+
+            if (key_status.equalsIgnoreCase(ConstChat.MESSAGE_STATUS_SERVER_RECEIVED)) {
+                // tell sender your message has been open and read
+                Call<ResponseBody> call = getAPIService().updateMessageStatus(key_uid, ConstChat.MESSAGE_STATUS_READ_AND_OPENED);
+                call.enqueue(new Callback<ResponseBody>() {
+                    @Override
+                    public void onResponse(Call<ResponseBody> call, Response<ResponseBody> response) {
+                        if (response.isSuccessful()) {
+
+                        }
+                    }
+
+                    @Override
+                    public void onFailure(Call<ResponseBody> call, Throwable t) {
+
+                    }
+                });
+            } else if (key_status.equalsIgnoreCase(ConstChat.MESSAGE_STATUS_READ_AND_OPENED)) {
+                // update db
+                final TrnChatMsg trnChatMsg = this.realm.where(TrnChatMsg.class)
+                        .equalTo("uid", key_uid)
+                        .findFirst();
+
+                if (trnChatMsg != null) {
+                    this.realm.executeTransaction(new Realm.Transaction() {
+                        @Override
+                        public void execute(Realm realm) {
+                            trnChatMsg.setMessageStatus(key_status);
+                            realm.copyToRealmOrUpdate(trnChatMsg);
+                        }
+                    });
+                } else {
+                    Call<ResponseGetChatHistory> call = getAPIService().getMessage(key_uid);
+                    call.enqueue(new Callback<ResponseGetChatHistory>() {
+                        @Override
+                        public void onResponse(Call<ResponseGetChatHistory> call, Response<ResponseGetChatHistory> response) {
+                            if (response.isSuccessful()) {
+                                final ResponseGetChatHistory body = response.body();
+
+                                if (body != null) {
+
+                                    realm.executeTransaction(new Realm.Transaction() {
+                                        @Override
+                                        public void execute(Realm realm) {
+                                            realm.copyToRealm(body.getData());
+                                        }
+                                    });
+                                }
+                            }
+                        }
+
+                        @Override
+                        public void onFailure(Call<ResponseGetChatHistory> call, Throwable t) {
+
+                        }
+                    });
+
+                }
+            }
+
+        }
+    */
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
         ButterKnife.bind(this);
+
+        broadcastReceiver = new BroadcastReceiver() {
+            @Override
+            public void onReceive(Context context, Intent intent) {
+                // to test push notification via fcm
+                // use https://console.firebase.google.com/project/concise-clock-149708/notification
+
+                // checking for type intent filter
+                /*
+                if (intent.getAction().equals(Config.REGISTRATION_COMPLETE)) {
+                    // gcm successfully registered
+                    // now subscribe to `global` topic to receive app wide notifications
+                    FirebaseMessaging.getInstance().subscribeToTopic(Config.TOPIC_GLOBAL);
+
+                    displayFirebaseRegId();
+
+                } else */
+                if (intent.getAction().equals(ConstChat.PUSH_NOTIFICATION)) {
+                    // new push notification is received
+//                    handleNotification(intent);
+                    Bundle extras = intent.getExtras();
+                    if (extras == null) {
+                        Log.e(TAG, "No extras found");
+                        return;
+                    }
+
+                    String key_from = intent.getStringExtra(ConstChat.KEY_FROM);
+                    String key_uid = intent.getStringExtra(ConstChat.KEY_UID);
+                    String key_msg = intent.getStringExtra(ConstChat.KEY_MESSAGE);
+                    String key_status = intent.getStringExtra(ConstChat.KEY_STATUS);
+                    String key_seqno = intent.getStringExtra(ConstChat.KEY_SEQNO);
+                    String key_timestamp = intent.getStringExtra(ConstChat.KEY_TIMESTAMP);
+
+                    Log.e(TAG, "chatFrom:" + key_from + "\nchatMessage:" + key_msg + "\nchatUid: " + key_uid);
+
+                    boolean appInBg = NotificationUtils.isAppIsInBackground(getApplicationContext());
+
+                    // kalo key_from null, dan body ada isinya brarti cuma pesan aja ga perlu start new intent
+
+                    if (key_uid == null) {
+                        String body = intent.getStringExtra("body");
+                        NotificationUtils.showNotificationMessage(MainActivity.this, key_from, body, "", intent);
+                    } else {
+                    /*
+                    di MainActivity memang semua broadcast message pasti ditaruh di notificationbar sehingga harus new intent
+                    */
+
+                        if (mSelectedNavMenuIndex == R.id.nav_chats ) {
+                            onNewIntent(intent);
+                        } else {
+//                    di MainActivity memang semua broadcast message pasti ditaruh di notificationbar sehingga harus new intent, onCreate tdk akan terbaca melainkan ke onNewIntent
+                            Intent resultIntent = new Intent(getApplicationContext(), MainActivity.class);
+                            //must redefine supaya dieksekusi dari notificationbar
+                            resultIntent.putExtras(extras);
+                            intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
+                            NotificationUtils.showNotificationMessage(MainActivity.this, key_from, key_msg, "", resultIntent);
+                        }
+
+                    }
+                }
+            }
+        };
 
         Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
 //        toolbar.setBackgroundColor(); bar.setBackgroundDrawable(new ColorDrawable(Color.parseColor("#0000ff")));
@@ -483,7 +920,37 @@ public class MainActivity extends SyncActivity
             e.printStackTrace();
         }
 
+        // register new push message receiver
+        // by doing this, the activity will be notified each time a new message arrives
+        LocalBroadcastManager.getInstance(this).registerReceiver(broadcastReceiver,
+                new IntentFilter(ConstChat.PUSH_NOTIFICATION));
+
         Storage.savePreference(getApplicationContext(), Storage.KEY_LOGIN_DATE, new Date().toString());
+    }
+
+    @Override
+    protected void onPause() {
+        super.onPause();
+
+//        LocalBroadcastManager.getInstance(this).unregisterReceiver(broadcastReceiver);
+    }
+
+    @Override
+    protected void onResume() {
+        super.onResume();
+
+        // register GCM registration complete receiver
+//        LocalBroadcastManager.getInstance(this).registerReceiver(mRegistrationBroadcastReceiver,
+//                new IntentFilter(Config.REGISTRATION_COMPLETE));
+
+        // register new push message receiver
+        // by doing this, the activity will be notified each time a new message arrives
+//        LocalBroadcastManager.getInstance(this).registerReceiver(broadcastReceiver,
+//                new IntentFilter(ConstChat.PUSH_NOTIFICATION));
+
+        // clear the notification area when the app is opened
+        NotificationUtils.clearNotifications(getApplicationContext());
+
     }
 
     @Override
@@ -528,6 +995,10 @@ public class MainActivity extends SyncActivity
     protected void onDestroy() {
         super.onDestroy();
 
+        LocalBroadcastManager.getInstance(this).unregisterReceiver(broadcastReceiver);
+
+        // Removes pending code execution
+        handlerChatStatus.removeCallbacks(runnableCode);
     }
 
 
@@ -545,16 +1016,15 @@ public class MainActivity extends SyncActivity
         } else {
 //            super.onBackPressed();
 
-            if (!viewIsAtHome) {
-                int x = getSupportFragmentManager().getBackStackEntryCount();
+            int x = getSupportFragmentManager().getBackStackEntryCount();
 
-                if (x > 1) {
+            if (!viewIsAtHome) {
+                if (x > 0) {
                     getSupportFragmentManager().popBackStackImmediate();
                 } else
                     displayView(R.id.nav_home);
             } else {
                 //display logout dialog
-//                moveTaskToBack(true);
                 logout();
             }
         }
@@ -695,13 +1165,13 @@ public class MainActivity extends SyncActivity
             }
 
             return false;
-        } else if (id == R.id.nav_chats) {
+        }/* else if (id == R.id.nav_chats) {
 
             Intent i = new Intent(this, ActivityChats.class);
             startActivity(i);
 
             return false;
-        } else if (id == R.id.nav_reset) {
+        }*/ else if (id == R.id.nav_reset) {
             AlertDialog.Builder alertDialogBuilder = new AlertDialog.Builder(this);
             alertDialogBuilder.setTitle("Reset Data");
             alertDialogBuilder.setMessage("This will Logout Application.\nAre you sure?");
@@ -785,6 +1255,11 @@ public class MainActivity extends SyncActivity
     }
 
     private void displayView(int viewId) {
+
+        if (mSelectedNavMenuIndex == viewId) {
+            return;
+        }
+
         Fragment fragment = null;
         String title = null;
         viewIsAtHome = false;
@@ -828,6 +1303,17 @@ public class MainActivity extends SyncActivity
             fragment.setArguments(bundle);
 
             title = "Summary LKP";
+        } else if (viewId == R.id.nav_chats) {
+            fab.setImageDrawable(AppCompatDrawableManager.get().getDrawable(MainActivity.this, R.drawable.ic_send_black_24dp));
+
+            fragment = new FragmentChatActiveContacts();
+
+            Bundle bundle = new Bundle();
+            bundle.putString(FragmentChatActiveContacts.PARAM_USERCODE, currentUser.getUserId());
+//            bundle.putString(FragmentLKPList.ARG_PARAM1, currentUser.getSecUser().get(0).getUserName());
+            fragment.setArguments(bundle);
+
+            title = "Chats";
         }
 
         /* else if (viewId == R.id.nav_paymentEntry) {
@@ -851,15 +1337,26 @@ public class MainActivity extends SyncActivity
         mSelectedNavMenuIndex = viewId;
 
         if (fragment != null) {
+
+            int x = getSupportFragmentManager().getBackStackEntryCount();
+
+            if (x > 0)
+                getSupportFragmentManager().popBackStackImmediate();
+
             FragmentTransaction ft = getSupportFragmentManager().beginTransaction();
             ft.setCustomAnimations(android.R.anim.fade_in, android.R.anim.fade_out);
             ft.replace(R.id.content_frame, fragment);
+
+//            if (viewId != R.id.nav_home)
+//                ft.addToBackStack(title);
+
             ft.commit();
         }
 
+
         if (getSupportActionBar() != null) {
             getSupportActionBar().setTitle(title);
-//            getSupportActionBar().setSubtitle(getString(R.string.title_mob_coll));
+            getSupportActionBar().setSubtitle(currentUser.getFullName());
             getSupportActionBar().setDisplayUseLogoEnabled(true);
             getSupportActionBar().setDisplayShowHomeEnabled(true);
         }
@@ -884,6 +1381,8 @@ public class MainActivity extends SyncActivity
         // flag as clean logout
         Storage.savePreference(getApplicationContext(), Storage.KEY_LOGIN_DATE, null);
         Storage.savePreference(getApplicationContext(), Storage.KEY_LOGOUT_DATE, new Date().toString());
+
+        NetUtil.chatLogOff(this, getCurrentUserId(), null);
 
         startActivity(intent);
 //                moveTaskToBack(true);
@@ -921,10 +1420,129 @@ public class MainActivity extends SyncActivity
 
     @OnClick(R.id.fab)
     public void onFabClick(View view) {
-        Fragment frag = getSupportFragmentManager().findFragmentById(R.id.content_frame);
+        final Fragment frag = getSupportFragmentManager().findFragmentById(R.id.content_frame);
 
         if (frag != null && frag instanceof FragmentLKPList) {
             ((FragmentLKPList) frag).performClickSync();
+        } else if (frag != null && frag instanceof FragmentChatActiveContacts) {
+            DialogFragment d = new FragmentChatAllContacts();
+            Bundle bundle = new Bundle();
+            bundle.putString(FragmentChatAllContacts.PARAM_USERCODE, currentUser.getUserId());
+            d.setArguments(bundle);
+
+            d.show(getSupportFragmentManager(), "dialog");
+
+
+        } else if (frag instanceof FragmentChatWith) {
+
+            final EditText etMsg = ((FragmentChatWith) frag).etMsg;
+
+            etMsg.setError(null);
+
+            if (TextUtils.isEmpty(etMsg.getText())) {
+                etMsg.setError(getString(R.string.error_field_required));
+                return;
+            }
+
+            if (etMsg.getText().length() >= 256) {
+                etMsg.setError(getString(R.string.error_value_too_long));
+                return;
+            }
+
+            final RequestChatMsg req = new RequestChatMsg();
+
+            final TrnChatMsg msg = new TrnChatMsg();
+            msg.setUid(java.util.UUID.randomUUID().toString());
+
+            Realm r = Realm.getDefaultInstance();
+            try {
+                Number max = r.where(TrnChatMsg.class).max("seqNo");
+
+                long maxL = 0;
+                if (max != null)
+                    maxL = max.longValue() + 10L;
+
+                msg.setSeqNo(maxL);
+            } finally {
+                if (r != null)
+                    r.close();
+            }
+
+            msg.setFromCollCode(((FragmentChatWith) frag).userCode1);
+            msg.setToCollCode(((FragmentChatWith) frag).userCode2);
+            msg.setMessage(etMsg.getText().toString());
+            msg.setMessageType(ConstChat.MESSAGE_TYPE_COMMON);
+            msg.setMessageStatus(ConstChat.MESSAGE_STATUS_UNOPENED_OR_FIRSTTIME);
+            msg.setCreatedTimestamp(new Date());
+
+            req.setMsg(msg);
+
+            Call<ResponseBody> call = getAPIService().sendMessage(req);
+            call.enqueue(new Callback<ResponseBody>() {
+                @Override
+                public void onResponse(Call<ResponseBody> call, Response<ResponseBody> response) {
+                    if (!response.isSuccessful()) {
+                        return;
+                    }
+
+                    Realm r = Realm.getDefaultInstance();
+
+                    try {
+
+                        r.executeTransaction(new Realm.Transaction() {
+                            @Override
+                            public void execute(Realm realm) {
+                                /*
+                                TrnChatMsg msg = new TrnChatMsg();
+
+                                msg.setCreatedTimestamp(req.getTimestamp());
+                                msg.setMessage(req.getMessage());
+                                msg.setToCollCode(req.getToCollCode());
+                                msg.setFromCollCode(req.getFromCollCode());
+                                msg.setUid(req.getUid());
+                                msg.setMessageType("0");*/
+
+                                if (msg.getFromCollCode().equals(msg.getToCollCode())) {
+                                    msg.setMessageStatus(ConstChat.MESSAGE_STATUS_READ_AND_OPENED);
+
+                                    // send back to server kalo sudah dibaca
+                                    RequestChatMsg req2 = new RequestChatMsg();
+                                    req2.setMsg(msg);
+                                    Call<ResponseBody> call2 = getAPIService().sendMessage(req2);
+                                    call2.enqueue(new retrofit2.Callback<ResponseBody>() {
+                                        @Override
+                                        public void onResponse(Call<ResponseBody> call, Response<ResponseBody> response) {
+                                            // delivered /
+                                        }
+
+                                        @Override
+                                        public void onFailure(Call<ResponseBody> call, Throwable t) {
+                                            // ignore
+                                        }
+                                    });
+
+                                } else {
+                                    msg.setMessageStatus(ConstChat.MESSAGE_STATUS_SERVER_RECEIVED);
+                                }
+
+                                realm.copyToRealm(msg);
+
+                            }
+                        });
+                    } finally {
+                        r.close();
+                    }
+
+                    ((FragmentChatWith) frag).afterAddMsg();
+                }
+
+                @Override
+                public void onFailure(Call<ResponseBody> call, Throwable t) {
+
+                }
+            });
+
+
         } else
             displayView(R.id.nav_loa);
     }
@@ -3287,4 +3905,255 @@ public class MainActivity extends SyncActivity
         Snackbar.make(coordinatorLayout, message, Snackbar.LENGTH_SHORT).show();
     }
 
+    @Override
+    public void onGetGroupContacts(OnSuccessError listener) {
+        NetUtil.chatGetGroupContacts(this, currentUser.getUserId(), listener);
+    }
+
+    @Override
+    public void onGetOnlineContacts(final OnSuccessError listener) {
+        NetUtil.chatUpdateContacts(this, currentUser.getUserId(), listener);
+    }
+
+    @Override
+    public void onContactSelected(TrnChatContact contact) {
+        fab.setImageDrawable(AppCompatDrawableManager.get().getDrawable(MainActivity.this, R.drawable.ic_send_black_24dp));
+
+        FragmentChatWith fr = new FragmentChatWith();
+
+        Bundle bundle = new Bundle();
+        bundle.putString(FragmentChatWith.PARAM_USERCODE1, currentUser.getUserId());
+        bundle.putString(FragmentChatWith.PARAM_USERCODE2, contact.getCollCode());
+        fr.setArguments(bundle);
+
+        FragmentTransaction ft = getSupportFragmentManager().beginTransaction();
+        ft.replace(R.id.content_frame, fr);
+        ft.addToBackStack("chat_with"); //jangan null
+        ft.commit();
+
+        if (getSupportActionBar() != null) {
+//            getSupportActionBar().setTitle(title);
+//            getSupportActionBar().setSubtitle(currentUser.getFullName());
+            getSupportActionBar().setSubtitle(contact.getNickName());
+        }
+
+
+    }
+
+    @Override
+    public void onContactClearChats(TrnChatContact contact) {
+        // why ?
+    }
+
+    @Override
+    public void onLogon(String collCode, final OnSuccessError listener) {
+        NetUtil.chatLogOn(this, collCode, listener);
+    }
+
+    @Override
+    public void onLogoff(String collCode, final OnSuccessError listener) {
+        NetUtil.chatLogOff(this, collCode, listener);
+    }
+
+    @Override
+    public void isOffline(String collCode, final OnSuccessError listener) {
+        if (!NetUtil.isConnected(this)) {
+            return;
+        }
+
+        RequestChatStatus req = new RequestChatStatus();
+        req.setCollCode(collCode);
+        req.setStatus(null);
+        req.setMessage(null);
+
+        Call<ResponseBody> call = getAPIService().checkStatus(req);
+        call.enqueue(new Callback<ResponseBody>() {
+            @Override
+            public void onResponse(Call<ResponseBody> call, Response<ResponseBody> response) {
+                // update display status here
+                if (!response.isSuccessful()) {
+
+                    ResponseBody errorBody = response.errorBody();
+
+                    try {
+                        if (listener != null) {
+                            listener.onFailure(new RuntimeException(errorBody.string()));
+                        }
+                    } catch (IOException e) {
+                        e.printStackTrace();
+                    }
+
+                    return;
+                }
+
+                final ResponseBody resp = response.body();
+
+                try {
+                    String s = resp.string();
+
+                    if (s != null) {
+                        int statusCode = Integer.parseInt(s);
+
+                        final Fragment frag = getSupportFragmentManager().findFragmentById(R.id.content_frame);
+
+                        if (frag != null)
+                            if (frag instanceof FragmentChatActiveContacts) {
+                                if (statusCode == 0)
+                                    ((FragmentChatActiveContacts) frag).sendStatusOffline();
+                                else if (statusCode == 1)
+                                    ((FragmentChatActiveContacts) frag).sendStatusOnline();
+                            }
+                    }
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+                /*
+                Realm r = Realm.getDefaultInstance();
+                try {
+                    r.beginTransaction();
+                    r.delete(TrnChatContact.class);
+                    r.commitTransaction();
+                } finally {
+                    if (r != null)
+                        r.close();
+                }
+*/
+                if (listener != null)
+                    listener.onSuccess(null);
+            }
+
+            @Override
+            public void onFailure(Call<ResponseBody> call, Throwable t) {
+                if (listener != null)
+                    listener.onFailure(t);
+            }
+        });
+
+    }
+
+    @Override
+    public void onGetChatHistory(String collCode1, String collCode2) {
+        if (!NetUtil.isConnected(this)) {
+            return;
+        }
+
+        Realm r = Realm.getDefaultInstance();
+        try {
+
+            RealmResults<TrnChatMsg> sorted = r.where(TrnChatMsg.class)
+                    .equalTo("fromCollCode", collCode1)
+                    .equalTo("toCollCode", collCode2)
+                    .findAllSorted("createdTimestamp", Sort.ASCENDING);
+
+            if (sorted.size() > 0) {
+//                return;
+            }
+        } finally {
+            r.close();
+        }
+
+        RequestGetChatHistory req = new RequestGetChatHistory();
+        req.setFromCollCode(collCode1);
+        req.setToCollCode(collCode2);
+        req.setYyyyMMdd("");
+
+        Call<ResponseGetChatHistory> call = getAPIService().getChatHistory(req);
+        call.enqueue(new Callback<ResponseGetChatHistory>() {
+            @Override
+            public void onResponse(Call<ResponseGetChatHistory> call, Response<ResponseGetChatHistory> response) {
+                if (!response.isSuccessful()) {
+                    return;
+                }
+
+                final ResponseGetChatHistory resp = response.body();
+
+                if (resp == null || resp.getData() == null) {
+//                    Utility.showDialog(MainChatActivity.this, "No Contacts found", "You have empty List.\nPlease try again.");
+                    return;
+                }
+
+                if (resp.getError() != null) {
+                    Utility.showDialog(MainActivity.this, "Error (" + resp.getError().getErrorCode() + ")", resp.getError().getErrorDesc());
+                    return;
+                }
+
+                // MANIPULASI DATA
+                // berhubung aq ingin menampilkan tanggal BEDA HARI sebagai header, maka dilakukan insert row tambahan sebagai
+                // penanda di recylerview sebagai header. ciri khasnya jika seqNo biasanya kelipatan 10 maka ada ditengah2nya
+                Realm _r = Realm.getDefaultInstance();
+
+                _r.executeTransaction(new Realm.Transaction() {
+                    @Override
+                    public void execute(Realm realm) {
+//                        realm.where(TrnChatMsg.class)
+//                        .equalTo("fromCollCode", collCode1)
+//                        .equalTo("toCollCode", collCode2)
+//                            ;
+                        List<TrnChatMsg> list = new ArrayList<TrnChatMsg>();
+
+                        Date lastDate = null;
+                        for (TrnChatMsg obj : resp.getData()) {
+
+                            if (lastDate == null) {
+                                lastDate = obj.getCreatedTimestamp();
+
+                                TrnChatMsg header = new TrnChatMsg();
+
+                                header.setUid(java.util.UUID.randomUUID().toString());
+                                header.setFromCollCode(obj.getFromCollCode());
+                                header.setToCollCode(obj.getToCollCode());
+                                header.setCreatedTimestamp(obj.getCreatedTimestamp());
+                                header.setMessageType(ConstChat.MESSAGE_TYPE_TIMESTAMP);
+                                header.setMessageStatus(ConstChat.MESSAGE_STATUS_READ_AND_OPENED);
+
+                                header.setSeqNo(obj.getSeqNo() - 5L);
+                                header.setMessage(Utility.convertDateToString(lastDate, "EEE, d MMM yyyy"));
+
+                                list.add(header);
+                                list.add(obj);
+
+                                continue;
+                            }
+                            if (!Utility.isSameDay(lastDate, obj.getCreatedTimestamp())) {
+                                lastDate = obj.getCreatedTimestamp();
+
+                                TrnChatMsg header = new TrnChatMsg();
+
+                                header.setUid(java.util.UUID.randomUUID().toString());
+                                header.setFromCollCode(obj.getFromCollCode());
+                                header.setToCollCode(obj.getToCollCode());
+                                header.setCreatedTimestamp(obj.getCreatedTimestamp());
+                                header.setMessageType(ConstChat.MESSAGE_TYPE_TIMESTAMP);
+                                header.setMessageStatus(ConstChat.MESSAGE_STATUS_READ_AND_OPENED);
+
+                                header.setSeqNo(obj.getSeqNo() - 5L);
+                                header.setMessage(Utility.convertDateToString(lastDate, "EEE, d MMM yyyy"));
+
+                                list.add(header);
+                                list.add(obj);
+
+                            } else
+                                list.add(obj);
+                        }
+
+                        realm.copyToRealmOrUpdate(list);
+                    }
+                });
+
+                _r.close();
+
+                final Fragment frag = getSupportFragmentManager().findFragmentById(R.id.content_frame);
+                if (frag instanceof FragmentChatWith) {
+                    ((FragmentChatWith) frag).listAdapter.notifyDataSetChanged();
+                    ((FragmentChatWith) frag).scrollToLast();
+                }
+            }
+
+            @Override
+            public void onFailure(Call<ResponseGetChatHistory> call, Throwable t) {
+
+            }
+        });
+
+    }
 }
