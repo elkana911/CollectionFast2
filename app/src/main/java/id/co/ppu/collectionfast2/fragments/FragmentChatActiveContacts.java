@@ -17,6 +17,8 @@ import android.widget.FrameLayout;
 import android.widget.LinearLayout;
 import android.widget.TextView;
 
+import java.util.List;
+
 import butterknife.BindView;
 import butterknife.ButterKnife;
 import butterknife.OnClick;
@@ -24,9 +26,11 @@ import co.moonmonkeylabs.realmsearchview.RealmSearchAdapter;
 import co.moonmonkeylabs.realmsearchview.RealmSearchViewHolder;
 import id.co.ppu.collectionfast2.R;
 import id.co.ppu.collectionfast2.component.RealmSearchView;
+import id.co.ppu.collectionfast2.listener.OnGetChatContactListener;
 import id.co.ppu.collectionfast2.listener.OnSuccessError;
 import id.co.ppu.collectionfast2.pojo.chat.TrnChatContact;
 import io.realm.Realm;
+import io.realm.RealmChangeListener;
 
 public class FragmentChatActiveContacts extends Fragment {
 
@@ -78,14 +82,25 @@ public class FragmentChatActiveContacts extends Fragment {
         if (caller == null)
             return;
 
-        caller.onGetGroupContacts(new OnSuccessError() {
-            @Override
-            public void onSuccess(String msg) {
-                if (listAdapter != null) {
-                    listAdapter.notifyDataSetChanged();
-                }
+        caller.onGetGroupContacts(new OnGetChatContactListener() {
 
-                tvSeparator.setText(msg);
+            @Override
+            public void onSuccess(final List<TrnChatContact> list) {
+
+                if (list != null) {
+                    realm.executeTransaction(new Realm.Transaction() {
+                        @Override
+                        public void execute(Realm realm) {
+                            realm.delete(TrnChatContact.class);
+
+                            realm.copyToRealmOrUpdate(list);
+                        }
+                    });
+
+                    tvSeparator.setText(list.size() + " CONTACTS");
+                } else
+                    tvSeparator.setText("NO CONTACTS");
+
             }
 
             @Override
@@ -197,6 +212,14 @@ public class FragmentChatActiveContacts extends Fragment {
 
         this.realm = Realm.getDefaultInstance();
 
+        this.realm.addChangeListener(new RealmChangeListener<Realm>() {
+            @Override
+            public void onChange(Realm element) {
+                if (listAdapter != null)
+                    listAdapter.notifyDataSetChanged();
+            }
+        });
+
         if (listAdapter == null) {
             listAdapter = new ContactListAdapter(
                     getContext(),
@@ -212,57 +235,6 @@ public class FragmentChatActiveContacts extends Fragment {
         checkStatusOffline();
     }
 
-    /*
-        private void buildDummyActiveContacts() {
-
-            this.realm.executeTransaction(new Realm.Transaction() {
-                @Override
-                public void execute(Realm realm) {
-                    realm.where(TrnChatContact.class)
-                            .equalTo("contactType", "BOT")
-                            .findAll().deleteAllFromRealm();
-
-                    for (int i = 0; i < 10; i++) {
-
-                        TrnChatContact newContact = realm.createObject(TrnChatContact.class);
-
-                        newContact.setUid(Utility.generateUUID());
-                        newContact.setCollCode("1234" + i);
-                        newContact.setNickName("BOT #" + (i+1));
-                        newContact.setContactType("BOT");
-
-                        realm.copyToRealm(newContact);
-                    }
-                }
-            });
-        }
-    */
-    /*
-    private void loadRecentContactsFromLocal() {
-        contacts.setAdapter(null);
-
-        RealmResults<TrnChatContact> contacts = this.realm.where(TrnChatContact.class)
-                .findAll();
-
-        if (contacts.size() < 1) {
-            this.contacts.setVisibility(View.INVISIBLE);
-        } else {
-            this.contacts.setVisibility(View.VISIBLE);
-        }
-
-        // due to the limitations of realmsearchview, searchable column has been disabled
-        // because when sort by seqNo, i cant search by custname
-        mAdapter = new ContactListAdapter(
-                getContext(),
-                this.realm,
-                "nickName"
-        );
-
-        this.contacts.setAdapter(mAdapter);
-        this.contacts.getRealmRecyclerView().invalidate();
-
-    }
-*/
     @Override
     public void onStop() {
         super.onStop();
@@ -313,6 +285,10 @@ public class FragmentChatActiveContacts extends Fragment {
         @Override
         public void onBindRealmViewHolder(DataViewHolder dataViewHolder, int position) {
             final TrnChatContact detail = realmResults.get(position);
+
+            if (!detail.isValid()) {
+                return;
+            }
 
             dataViewHolder.llRowContact.setOnClickListener(new View.OnClickListener() {
                 @Override
@@ -375,8 +351,8 @@ public class FragmentChatActiveContacts extends Fragment {
     }
 
     public interface OnChatContactsListener {
-        void onGetGroupContacts(OnSuccessError listener);
-        void onGetOnlineContacts(OnSuccessError listener);
+        void onGetGroupContacts(OnGetChatContactListener listener);
+        void onGetOnlineContacts(OnGetChatContactListener listener);
 
         void onContactSelected(TrnChatContact contact);
 

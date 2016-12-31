@@ -7,6 +7,7 @@ import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.v4.app.Fragment;
 import android.support.v4.content.ContextCompat;
+import android.util.Log;
 import android.view.Gravity;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -25,6 +26,7 @@ import id.co.ppu.collectionfast2.util.ConstChat;
 import id.co.ppu.collectionfast2.util.Utility;
 import io.realm.Realm;
 import io.realm.RealmBasedRecyclerViewAdapter;
+import io.realm.RealmChangeListener;
 import io.realm.RealmResults;
 import io.realm.RealmViewHolder;
 
@@ -102,27 +104,42 @@ public class FragmentChatWith extends Fragment {
 
         this.realm = Realm.getDefaultInstance();
 
+        // hapus soalnya mau getchathistory
+        this.realm.beginTransaction();
+        this.realm.where(TrnChatMsg.class)
+                .equalTo("messageType", ConstChat.MESSAGE_TYPE_TIMESTAMP)
+                .findAll().deleteAllFromRealm();
+        this.realm.commitTransaction();
+
+        if (caller != null) {
+            caller.onGetChatHistory(this.userCode1, this.userCode2);
+        }
+
         if (listAdapter == null) {
-            // delete cache
-            realm.executeTransaction(new Realm.Transaction() {
-                @Override
-                public void execute(Realm realm) {
-                    realm.delete(TrnChatMsg.class);
-                }
-            });
 
             RealmResults<TrnChatMsg> realmResults =
                     realm.where(TrnChatMsg.class)
                             .beginGroup()
-                                .equalTo("fromCollCode", this.userCode1)
-                                .equalTo("toCollCode", this.userCode2)
+                            .equalTo("fromCollCode", this.userCode1)
+                            .equalTo("toCollCode", this.userCode2)
                             .endGroup()
                             .or()
                             .beginGroup()
-                                .equalTo("fromCollCode", this.userCode2)
-                                .equalTo("toCollCode", this.userCode1)
+                            .equalTo("fromCollCode", this.userCode2)
+                            .equalTo("toCollCode", this.userCode1)
                             .endGroup()
                             .findAllSorted("seqNo");
+
+            // dibutuhkan listener ini spy kalo sudah terkirim ke server langsung update tampilan
+            realmResults.addChangeListener(new RealmChangeListener<RealmResults<TrnChatMsg>>() {
+                @Override
+                public void onChange(RealmResults<TrnChatMsg> element) {
+                    Log.e("FragmentChatWith", "change");
+
+                    if (listAdapter != null)
+                        listAdapter.notifyDataSetChanged();
+                }
+            });
 
             listAdapter = new ChatListAdapter(
                     getContext(),
@@ -132,11 +149,10 @@ public class FragmentChatWith extends Fragment {
 
         chats.setAdapter(listAdapter);
 
-        if (caller != null) {
-            caller.onGetChatHistory(this.userCode1, this.userCode2);
-        }
-
-        chats.scrollToPosition(listAdapter.getItemCount());
+        // ternyata masih 0 disini
+//        int lastRow = listAdapter.getItemCount();
+//        chats.scrollToPosition(lastRow);
+//        chats.scrollToPosition(listAdapter.getItemCount());
 
         etMsg.requestFocus();
     }
@@ -156,7 +172,7 @@ public class FragmentChatWith extends Fragment {
     public void afterAddMsg() {
         etMsg.setText(null);
 
-        listAdapter.notifyDataSetChanged();
+//        listAdapter.notifyDataSetChanged();
 
         scrollToLast();
 
@@ -178,6 +194,7 @@ public class FragmentChatWith extends Fragment {
 
         int rows = realmResults.size() -1;
 //        int rows = listAdapter.getItemCount();
+//        int rows3 = listAdapter.getRealmResults().size();
 
         if (rows > 0)
             chats.scrollToPosition(rows);
@@ -231,6 +248,10 @@ public class FragmentChatWith extends Fragment {
         public void onBindRealmViewHolder(RealmViewHolder rvHolder, int position) {
             final TrnChatMsg detail = realmResults.get(position);
 
+            if (!detail.isValid()) {
+                return;
+            }
+
             if (rvHolder instanceof VHHeader) {
                 VHHeader holder = (VHHeader) rvHolder;
 //                holder.txtTitle.setText(Utility.convertDateToString(detail.getCreatedTimestamp(), "EEE, d MMM yyyy"));
@@ -261,16 +282,20 @@ public class FragmentChatWith extends Fragment {
                 TextView tvStatus = dataViewHolder.tvStatus;
                 tvStatus.setText(null);
 //                tvStatus.setText(detail.getMessageStatus());
+                tvStatus.setCompoundDrawablesWithIntrinsicBounds(null, null, null, null);
 
-                if (detail.getFromCollCode().equals(userCode1)) {
+                if (Utility.developerMode && detail.getFromCollCode().equals(userCode1)) {
 
                     int idIcon;
-                    if (detail.getMessageStatus().equals(ConstChat.MESSAGE_STATUS_UNOPENED_OR_FIRSTTIME))
+                    if (detail.getMessageStatus().equals(ConstChat.MESSAGE_STATUS_UNOPENED_OR_FIRSTTIME)
+                        || detail.getMessageStatus().equals(ConstChat.MESSAGE_STATUS_TRANSMITTING))
                         idIcon = R.mipmap.chat0;
                     else if (detail.getMessageStatus().equals(ConstChat.MESSAGE_STATUS_SERVER_RECEIVED))
                         idIcon = R.mipmap.chat1;
                     else if (detail.getMessageStatus().equals(ConstChat.MESSAGE_STATUS_DELIVERED))
                         idIcon = R.mipmap.chat2;
+                    else if (detail.getMessageStatus().equals(ConstChat.MESSAGE_STATUS_FAILED))
+                        idIcon = R.mipmap.chatfailed;
                     else // if (detail.getMessageStatus().equals(ConstChat.MESSAGE_STATUS_READ_AND_OPENED))
                         idIcon = R.mipmap.chat3;
 

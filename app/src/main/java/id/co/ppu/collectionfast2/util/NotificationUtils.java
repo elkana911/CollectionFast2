@@ -44,7 +44,7 @@ public class NotificationUtils {
                         context,
                         0,
                         intent,
-                        PendingIntent.FLAG_CANCEL_CURRENT
+                        0
                 );
 
         final NotificationCompat.Builder mBuilder = new NotificationCompat.Builder(

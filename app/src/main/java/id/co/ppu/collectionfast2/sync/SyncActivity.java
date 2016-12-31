@@ -2,7 +2,7 @@ package id.co.ppu.collectionfast2.sync;
 
 import java.util.Set;
 
-import id.co.ppu.collectionfast2.component.BasicActivity;
+import id.co.ppu.collectionfast2.MainbaseActivity;
 import id.co.ppu.collectionfast2.pojo.DisplayTrnContractBuckets;
 import id.co.ppu.collectionfast2.pojo.DisplayTrnLDVDetails;
 import id.co.ppu.collectionfast2.pojo.UploadPicture;
@@ -15,7 +15,7 @@ import io.realm.RealmModel;
  * Created by Eric on 28-Sep-16.
  */
 
-public class SyncActivity extends BasicActivity {
+public abstract class SyncActivity extends MainbaseActivity {
     /**
      * Untuk menghindari kesalahan voucher fisik dengan data di gadget
      */

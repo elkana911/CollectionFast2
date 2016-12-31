@@ -33,6 +33,11 @@ import io.realm.RealmQuery;
 public class BasicActivity extends AppCompatActivity {
 
     protected Realm realm;
+    protected int mSelectedNavMenuIndex = 0;
+
+    protected UserData currentUser;
+
+    public String currentLDVNo = null;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {

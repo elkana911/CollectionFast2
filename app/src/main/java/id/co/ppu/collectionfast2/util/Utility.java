@@ -20,7 +20,11 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.view.WindowManager;
 import android.widget.Spinner;
+import android.widget.Toast;
 
+import java.net.ConnectException;
+import java.net.SocketTimeoutException;
+import java.net.UnknownHostException;
 import java.text.DecimalFormat;
 import java.text.DecimalFormatSymbols;
 import java.text.ParseException;
@@ -31,6 +35,7 @@ import java.util.concurrent.TimeUnit;
 
 import id.co.ppu.collectionfast2.BuildConfig;
 import id.co.ppu.collectionfast2.R;
+import id.co.ppu.collectionfast2.exceptions.ExpiredException;
 import okhttp3.HttpUrl;
 
 public class Utility {
@@ -42,9 +47,9 @@ public class Utility {
 
     public final static String[][] servers = {
 //            {"local-server", "10.212.0.71", "8090"}
-//            {"local-server", "192.168.43.125", "8090"} // kelapa gading
-            {"local-server", "192.168.1.105", "8090"}
-//            {"local-server", "192.168.0.9", "8090"} //faraday
+//            {"local-server", "192.168.10.109", "8090"} // kelapa gading
+            {"local-server", "192.168.1.103", "8090"}
+//            {"local-server", "192.168.0.7", "8090"} //faraday
             ,{"dev-fast-mobile", "cmobile.radanafinance.co.id", "7001"}
             ,{"fast-mobile", "cmobile.radanafinance.co.id", "7001"}
             ,{"fast-mobile2", "c1mobile.radanafinance.co.id", "7001"}
@@ -52,7 +57,7 @@ public class Utility {
     public final static int NETWORK_TIMEOUT_MINUTES = developerMode ? 1 : 3 ;
 
     public final static int CYCLE_CHAT_STATUS_MILLISEC = (developerMode ? 3 : 15) * 60 * 1000;
-
+    public final static int CYCLE_CHAT_QUEUE_MILLISEC = (developerMode ? 2 : 3) * 1000;
 /*
     // for load balancing support, cancelled.
     public final static String[][] ipServers4LB = {
@@ -211,6 +216,39 @@ public class Utility {
         return userData;
     }
 */
+
+    public static void throwableHandler(Context ctx, Throwable throwable, boolean dialog) {
+        if (throwable == null)
+            return;
+
+        if (throwable instanceof ExpiredException) {
+            if (dialog)
+                Utility.showDialog(ctx, "Version Changed", throwable.getMessage());
+            else
+                Toast.makeText(ctx, throwable.getMessage(), Toast.LENGTH_LONG).show();
+        } else if (throwable instanceof UnknownHostException) {
+            if (dialog)
+                Utility.showDialog(ctx, ctx.getString(R.string.error_server_not_found), "Please try another server.\n" + throwable.getMessage());
+            else
+                Toast.makeText(ctx, "Server not found", Toast.LENGTH_LONG).show();
+        } else if (throwable instanceof SocketTimeoutException) {
+            if (dialog)
+                Utility.showDialog(ctx, ctx.getString(R.string.error_server_timeout), "Please check your network.\n" + throwable.getMessage());
+            else
+                Toast.makeText(ctx, "Server timout", Toast.LENGTH_LONG).show();
+        } else if (throwable instanceof ConnectException) {
+            if (dialog)
+                Utility.showDialog(ctx, ctx.getString(R.string.error_server_down), "Please contact administrator.\n" + throwable.getMessage());
+            else
+                Toast.makeText(ctx, "Server Down", Toast.LENGTH_LONG).show();
+        } else {
+            if (dialog)
+                Utility.showDialog(ctx, "Server Problem", throwable.getMessage());
+            else
+                Toast.makeText(ctx, throwable.getMessage(), Toast.LENGTH_LONG).show();
+        }
+
+    }
     /**
      * Check that all given permissions have been granted by verifying that each entry in the
      * given array is of the value {@link PackageManager#PERMISSION_GRANTED}.
@@ -375,6 +413,15 @@ public class Utility {
     public static long getDateDiff(Date date1, Date date2, TimeUnit timeUnit) {
         long diffInMillies = date2.getTime() - date1.getTime();
         return timeUnit.convert(diffInMillies,TimeUnit.MILLISECONDS);
+    }
+
+    public static long getMinutesDiff(Date date1, Date date2) {
+        long diffInMillies = date2.getTime() - date1.getTime();
+        long diffInSec = diffInMillies / 1000;
+        long min = diffInSec / 60;
+        long sec = diffInSec % 60;
+
+        return min;
     }
 
     public static int getMonthDiff(Date s1, Date s2) {
