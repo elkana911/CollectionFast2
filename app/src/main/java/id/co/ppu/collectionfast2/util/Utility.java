@@ -48,7 +48,7 @@ public class Utility {
     public final static String[][] servers = {
 //            {"local-server", "10.212.0.71", "8090"}
 //            {"local-server", "192.168.10.109", "8090"} // kelapa gading
-            {"local-server", "192.168.1.103", "8090"}
+            {"local-server", "192.168.1.107", "8090"}
 //            {"local-server", "192.168.0.7", "8090"} //faraday
             ,{"dev-fast-mobile", "cmobile.radanafinance.co.id", "7001"}
             ,{"fast-mobile", "cmobile.radanafinance.co.id", "7001"}

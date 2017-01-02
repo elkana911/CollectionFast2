@@ -62,6 +62,7 @@ import butterknife.OnLongClick;
 import id.co.ppu.collectionfast2.chats.ChatActivity;
 import id.co.ppu.collectionfast2.exceptions.ExpiredException;
 import id.co.ppu.collectionfast2.fragments.FragmentChatActiveContacts;
+import id.co.ppu.collectionfast2.fragments.FragmentChatWith;
 import id.co.ppu.collectionfast2.fragments.HomeFragment;
 import id.co.ppu.collectionfast2.job.SyncJob;
 import id.co.ppu.collectionfast2.listener.OnPostRetrieveLKP;
@@ -593,7 +594,18 @@ public class MainActivity extends ChatActivity
         return true;
     }
 
-    @Override
+            @Override
+            protected boolean onPrepareOptionsPanel(View view, Menu menu) {
+
+                Fragment frag = getSupportFragmentManager().findFragmentById(R.id.content_frame);
+
+                MenuItem chatClearItem = menu.findItem(R.id.action_clear_chats);
+                chatClearItem.setVisible(frag instanceof FragmentChatWith);
+
+                return super.onPrepareOptionsPanel(view, menu);
+            }
+
+            @Override
     public boolean onOptionsItemSelected(MenuItem item) {
         // Handle action bar item clicks here. The action bar will
         // automatically handle clicks on the Home/Up button, so long
@@ -604,6 +616,12 @@ public class MainActivity extends ChatActivity
         if (id == R.id.action_settings) {
             startActivityForResult(new Intent(this, SettingsActivity.class), 999);
             return true;
+        } else if (id == R.id.action_clear_chats) {
+            Fragment frag = getSupportFragmentManager().findFragmentById(R.id.content_frame);
+            if (frag instanceof FragmentChatWith) {
+                ((FragmentChatWith)frag).clearChat();
+            }
+
         } else if (id == R.id.action_reset) {
             AlertDialog.Builder alertDialogBuilder = new AlertDialog.Builder(this);
             alertDialogBuilder.setTitle("Reset Data");

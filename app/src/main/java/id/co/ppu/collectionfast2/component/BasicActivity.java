@@ -25,6 +25,7 @@ import id.co.ppu.collectionfast2.util.DataUtil;
 import id.co.ppu.collectionfast2.util.Storage;
 import id.co.ppu.collectionfast2.util.Utility;
 import io.realm.Realm;
+import io.realm.RealmChangeListener;
 import io.realm.RealmQuery;
 
 /**
@@ -39,11 +40,20 @@ public class BasicActivity extends AppCompatActivity {
 
     public String currentLDVNo = null;
 
+
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
         this.realm = Realm.getDefaultInstance();
+
+        this.realm.addChangeListener(new RealmChangeListener<Realm>() {
+            @Override
+            public void onChange(Realm element) {
+                onRealmChangeListener();
+            }
+        });
 
     }
 
@@ -73,6 +83,10 @@ public class BasicActivity extends AppCompatActivity {
 
     protected void resetData() {
         DataUtil.resetData(realm);
+    }
+
+    protected void onRealmChangeListener() {
+
     }
 
     protected RealmQuery<TrnLDVComments> getLDVComments(Realm realm, String ldvNo, String contractNo) {

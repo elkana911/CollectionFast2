@@ -42,8 +42,15 @@
         </menu>
     </item>
     <item
+        android:id="@+id/action_clear_chats"
+        android:orderInCategory="102"
+        android:icon="@drawable/ic_delete_black_24dp"
+        android:title="Clear Chats"
+        app:showAsAction="never">
+    </item>
+    <item
         android:id="@+id/action_reset"
-        android:orderInCategory="101"
+        android:orderInCategory="103"
         android:icon="@drawable/ic_phonelink_erase_black_24dp"
         android:title="Reset Local Data"
         app:showAsAction="never">
