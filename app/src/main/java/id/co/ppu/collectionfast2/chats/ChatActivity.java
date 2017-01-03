@@ -294,7 +294,7 @@ public abstract class ChatActivity extends SyncActivity implements FragmentChatA
                     String key_uid = intent.getStringExtra(ConstChat.KEY_UID);
                     String key_msg = intent.getStringExtra(ConstChat.KEY_MESSAGE);
                     String key_status = intent.getStringExtra(ConstChat.KEY_STATUS);
-                    String key_seqno = intent.getStringExtra(ConstChat.KEY_SEQNO);
+//                    String key_seqno = intent.getStringExtra(ConstChat.KEY_SEQNO);
                     String key_timestamp = intent.getStringExtra(ConstChat.KEY_TIMESTAMP);
 
                     Log.e(TAG, "chatFrom:" + key_from + "\nchatMessage:" + key_msg + "\nchatUid: " + key_uid);
@@ -400,7 +400,7 @@ public abstract class ChatActivity extends SyncActivity implements FragmentChatA
             final String key_from = intent.getStringExtra(ConstChat.KEY_FROM);
             final String key_uid = intent.getStringExtra(ConstChat.KEY_UID);
             final String key_msg = intent.getStringExtra(ConstChat.KEY_MESSAGE);
-            final String key_seqno = intent.getStringExtra(ConstChat.KEY_SEQNO);
+//            final String key_seqno = intent.getStringExtra(ConstChat.KEY_SEQNO);
             final String key_timestamp = intent.getStringExtra(ConstChat.KEY_TIMESTAMP);
             final String key_status = intent.getStringExtra(ConstChat.KEY_STATUS);
 
@@ -433,7 +433,7 @@ public abstract class ChatActivity extends SyncActivity implements FragmentChatA
                                     if (msg == null) {
                                         msg = new TrnChatMsg();
                                         msg.setUid(key_uid);
-                                        msg.setSeqNo(Long.parseLong(key_seqno));
+//                                        msg.setSeqNo(Long.parseLong(key_seqno));
 
                                         msg.setFromCollCode(key_from);
                                         msg.setToCollCode(currentUser.getUserId());
@@ -610,7 +610,7 @@ public abstract class ChatActivity extends SyncActivity implements FragmentChatA
         String key_uid = intent.getStringExtra(ConstChat.KEY_UID);
         String key_msg = intent.getStringExtra(ConstChat.KEY_MESSAGE);
         String key_status = intent.getStringExtra(ConstChat.KEY_STATUS);
-        String key_seqno = intent.getStringExtra(ConstChat.KEY_SEQNO);
+//        String key_seqno = intent.getStringExtra(ConstChat.KEY_SEQNO);
         String key_timestamp = intent.getStringExtra(ConstChat.KEY_TIMESTAMP);
 
         Log.e(TAG, "chatFrom:" + key_from + "\nchatMessage:" + key_msg);
@@ -643,14 +643,26 @@ public abstract class ChatActivity extends SyncActivity implements FragmentChatA
 
         Realm r = Realm.getDefaultInstance();
         try {
-            Number max = r.where(TrnChatMsg.class).max("seqNo");
+
+            RealmQuery<TrnChatMsg> group = r.where(TrnChatMsg.class)
+                    .beginGroup()
+                    .equalTo("fromCollCode", fragment.userCode1)
+                    .equalTo("toCollCode", fragment.userCode2)
+                    .endGroup()
+                    .or()
+                    .beginGroup()
+                    .equalTo("fromCollCode", fragment.userCode2)
+                    .equalTo("toCollCode", fragment.userCode1)
+                    .endGroup();
+/*
+            Number max = group.max("seqNo");
 
             long maxL = 0;
             if (max != null)
                 maxL = max.longValue() + 10L;
 
             msg.setSeqNo(maxL);
-
+*/
             r.beginTransaction();
             r.copyToRealm(msg);
             r.commitTransaction();
@@ -882,7 +894,11 @@ public abstract class ChatActivity extends SyncActivity implements FragmentChatA
 
 
 
-        TrnChatMsg lastMsg = group.findAllSorted("seqNo").last();
+        TrnChatMsg lastMsg = null;
+
+        if (group.findAll().size() > 0) {
+            lastMsg = group.findAllSorted("createdTimestamp").last();
+        }
 
         // 2. get last message
         RequestGetChatHistory req = new RequestGetChatHistory();
@@ -942,7 +958,7 @@ public abstract class ChatActivity extends SyncActivity implements FragmentChatA
                                 header.setMessageType(ConstChat.MESSAGE_TYPE_TIMESTAMP);
                                 header.setMessageStatus(ConstChat.MESSAGE_STATUS_READ_AND_OPENED);
 
-                                header.setSeqNo(obj.getSeqNo() - 5L);
+//                                header.setSeqNo(obj.getSeqNo() - 5L);
                                 header.setMessage(Utility.convertDateToString(lastDate, "EEE, d MMM yyyy"));
 
                                 list.add(header);
@@ -962,7 +978,7 @@ public abstract class ChatActivity extends SyncActivity implements FragmentChatA
                                 header.setMessageType(ConstChat.MESSAGE_TYPE_TIMESTAMP);
                                 header.setMessageStatus(ConstChat.MESSAGE_STATUS_READ_AND_OPENED);
 
-                                header.setSeqNo(obj.getSeqNo() - 5L);
+//                                header.setSeqNo(obj.getSeqNo() - 5L);
                                 header.setMessage(Utility.convertDateToString(lastDate, "EEE, d MMM yyyy"));
 
                                 list.add(header);

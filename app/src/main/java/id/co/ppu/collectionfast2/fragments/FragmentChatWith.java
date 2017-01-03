@@ -131,7 +131,7 @@ public class FragmentChatWith extends Fragment {
                             .equalTo("fromCollCode", this.userCode2)
                             .equalTo("toCollCode", this.userCode1)
                             .endGroup()
-                            .findAllSorted("seqNo");
+                            .findAllSorted("createdTimestamp");
 
             // dibutuhkan listener ini spy kalo sudah terkirim ke server langsung update tampilan
             realmResults.addChangeListener(new RealmChangeListener<RealmResults<TrnChatMsg>>() {
@@ -196,7 +196,7 @@ public class FragmentChatWith extends Fragment {
                         .equalTo("fromCollCode", this.userCode2)
                         .equalTo("toCollCode", this.userCode1)
                         .endGroup()
-                        .findAllSorted("seqNo");
+                        .findAllSorted("createdTimestamp");
 
         int rows = realmResults.size() -1;
 //        int rows = listAdapter.getItemCount();

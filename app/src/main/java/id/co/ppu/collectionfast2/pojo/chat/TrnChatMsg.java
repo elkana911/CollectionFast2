@@ -20,8 +20,8 @@ public class TrnChatMsg extends RealmObject implements Serializable {
 
     // increment by 10, so someone may insert between it
     // maybe duplicates. be careful
-    @SerializedName("seqNo")
-    private Long seqNo;
+//    @SerializedName("seqNo")
+//    private Long seqNo;
 
     @SerializedName("fromCollCode")
     private String fromCollCode;
@@ -49,14 +49,6 @@ public class TrnChatMsg extends RealmObject implements Serializable {
 
     public void setUid(String uid) {
         this.uid = uid;
-    }
-
-    public Long getSeqNo() {
-        return seqNo;
-    }
-
-    public void setSeqNo(Long seqNo) {
-        this.seqNo = seqNo;
     }
 
     public String getFromCollCode() {
@@ -111,7 +103,6 @@ public class TrnChatMsg extends RealmObject implements Serializable {
     public String toString() {
         return "TrnChatMsg{" +
                 "uid='" + uid + '\'' +
-                ", seqNo=" + seqNo +
                 ", fromCollCode='" + fromCollCode + '\'' +
                 ", toCollCode='" + toCollCode + '\'' +
                 ", message='" + message + '\'' +

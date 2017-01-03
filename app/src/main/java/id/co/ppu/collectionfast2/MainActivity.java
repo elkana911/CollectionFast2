@@ -23,6 +23,7 @@ import android.support.v4.app.ActivityCompat;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentTransaction;
 import android.support.v4.content.ContextCompat;
+import android.support.v4.graphics.drawable.DrawableCompat;
 import android.support.v4.view.GravityCompat;
 import android.support.v4.view.MenuItemCompat;
 import android.support.v7.app.ActionBarDrawerToggle;
@@ -591,6 +592,11 @@ public class MainActivity extends ChatActivity
             }
         });
 
+        Drawable drawableTaskLog = menu.findItem(R.id.action_clear_chats).getIcon();
+        drawableTaskLog = DrawableCompat.wrap(drawableTaskLog);
+        DrawableCompat.setTint(drawableTaskLog, ContextCompat.getColor(this, android.R.color.white));
+        menu.findItem(R.id.action_clear_chats).setIcon(drawableTaskLog);
+
         return true;
     }
 
@@ -858,6 +864,7 @@ public class MainActivity extends ChatActivity
             fragment.setArguments(bundle);
 
             title = "Chats";
+
         }
 
         /* else if (viewId == R.id.nav_paymentEntry) {
@@ -888,7 +895,7 @@ public class MainActivity extends ChatActivity
                 getSupportFragmentManager().popBackStackImmediate();
 
             FragmentTransaction ft = getSupportFragmentManager().beginTransaction();
-            ft.setCustomAnimations(android.R.anim.fade_in, android.R.anim.fade_out);
+//            ft.setCustomAnimations(android.R.anim.fade_in, android.R.anim.fade_out);
             ft.replace(R.id.content_frame, fragment);
 
 //            if (viewId != R.id.nav_home)
