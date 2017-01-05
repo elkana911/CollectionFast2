@@ -1,6 +1,8 @@
 package id.co.ppu.collectionfast2.component;
 
 import android.content.Intent;
+import android.content.res.Configuration;
+import android.content.res.Resources;
 import android.os.Bundle;
 import android.support.v7.app.AppCompatActivity;
 import android.text.TextUtils;
@@ -9,6 +11,7 @@ import android.view.MenuItem;
 import com.google.firebase.iid.FirebaseInstanceId;
 
 import java.util.Date;
+import java.util.Locale;
 
 import id.co.ppu.collectionfast2.R;
 import id.co.ppu.collectionfast2.pojo.ServerInfo;
@@ -55,6 +58,7 @@ public class BasicActivity extends AppCompatActivity {
             }
         });
 
+        changeLocale(Storage.getLanguageId(this));
     }
 
     @Override
@@ -174,4 +178,20 @@ public class BasicActivity extends AppCompatActivity {
 
         return androidId;
     }
+
+    //http://www.sureshjoshi.com/mobile/changing-android-locale-programmatically/
+    protected boolean changeLocale(String language) {
+        Locale locale = new Locale(language);
+        Locale.setDefault(locale);
+
+        Resources resources = getResources();
+
+        Configuration configuration = resources.getConfiguration();
+        configuration.locale = locale;
+
+        resources.updateConfiguration(configuration, resources.getDisplayMetrics());
+
+        return true;
+    }
+
 }

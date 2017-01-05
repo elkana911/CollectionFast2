@@ -1,5 +1,10 @@
 <resources>
+
+    <string name="prompt_quit">Yakin keluar aplikasi ?</string>
+
     <!-- Strings related to login -->
+    <string name="action_sign_in_short">Masuk</string>
+
     <string name="error_invalid_login">User atau Password salah</string>
     <string name="error_invalid_email">Alamat email salah</string>
     <string name="error_invalid_password">Password terlalu pendek</string>
@@ -10,6 +15,9 @@
     <string name="error_server_not_found">Server tidak ditemukan</string>
     <string name="error_ptp_date">Tanggal Janji bayar harus lebih dari hari ini maks 7 hari</string>
     <string name="error_ptp_date_range">Tanggal Janji bayar tidak bisa akhir bulan atau bulan berikutnya</string>
+
+    <!-- Strings related to Settings -->
+    <string name="language">Bahasa</string>
 
     <!-- Example settings for Data & Sync -->
     <string name="pref_header_data_sync">Data &amp; sync</string>

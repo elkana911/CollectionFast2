@@ -148,6 +148,7 @@ public class LoginActivity extends BasicActivity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+
         setContentView(R.layout.activity_login);
 
         ButterKnife.bind(this);
@@ -375,13 +376,13 @@ public class LoginActivity extends BasicActivity {
     }
 
     private void attemptLogin() throws Exception {
-
+/*
         Date sysDate = new Date();
         if (sysDate.after(Utility.convertStringToDate(Utility.DATE_EXPIRED_YYYYMMDD, "yyyyMMdd"))) {
-            Utility.showDialog(this, "Expired App", "This application version is expired. Please update from the latest");
+//            Utility.showDialog(this, "Expired App", "This application version is expired. Please update from the latest");
 //            return;
         }
-
+*/
         // Reset errors.
         mUserNameView.setError(null);
         mPasswordView.setError(null);

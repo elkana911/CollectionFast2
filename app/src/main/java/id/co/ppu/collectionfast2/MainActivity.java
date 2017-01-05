@@ -241,6 +241,7 @@ public class MainActivity extends ChatActivity
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+
         setContentView(R.layout.activity_main);
 
         ButterKnife.bind(this);
@@ -945,7 +946,7 @@ public class MainActivity extends ChatActivity
 
         AlertDialog.Builder alertDialogBuilder = new AlertDialog.Builder(this);
         alertDialogBuilder.setTitle("Log Out");
-        alertDialogBuilder.setMessage("Are you sure?");
+        alertDialogBuilder.setMessage(getString(R.string.prompt_quit));
         //null should be your on click listener
         alertDialogBuilder.setPositiveButton("Yes", new DialogInterface.OnClickListener() {
 

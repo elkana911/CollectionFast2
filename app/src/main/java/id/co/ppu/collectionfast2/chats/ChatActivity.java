@@ -954,7 +954,8 @@ public abstract class ChatActivity extends SyncActivity implements FragmentChatA
                                 header.setUid(java.util.UUID.randomUUID().toString());
                                 header.setFromCollCode(obj.getFromCollCode());
                                 header.setToCollCode(obj.getToCollCode());
-                                header.setCreatedTimestamp(obj.getCreatedTimestamp());
+                                // kurangi 1 ms supaya bisa disort sebelumnya
+                                header.setCreatedTimestamp(Utility.addMilliseconds(obj.getCreatedTimestamp(), -1));
                                 header.setMessageType(ConstChat.MESSAGE_TYPE_TIMESTAMP);
                                 header.setMessageStatus(ConstChat.MESSAGE_STATUS_READ_AND_OPENED);
 

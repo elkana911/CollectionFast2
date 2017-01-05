@@ -5,13 +5,11 @@ import android.app.AlertDialog;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
-import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
 import android.content.res.Configuration;
 import android.location.LocationManager;
 import android.os.Build;
 import android.os.PowerManager;
-import android.preference.PreferenceManager;
 import android.provider.Settings;
 import android.telephony.TelephonyManager;
 import android.text.TextUtils;
@@ -351,6 +349,13 @@ public class Utility {
         return cal.getTime();
     }
 
+    public static Date addMilliseconds(Date startFrom, int ms) {
+        Calendar cal = Calendar.getInstance();
+        cal.setTime(startFrom);
+        cal.add(Calendar.MILLISECOND, ms); // <--
+        return cal.getTime();
+    }
+
     /**
      * Usually used for sync location.
      * @param time between 8 AM to 6 PM
@@ -548,9 +553,7 @@ public class Utility {
                 sb.append(",").append("gpsEnabled=").append(gps_enabled);
                 sb.append(",").append("networkEnabled=").append(network_enabled);
 
-                SharedPreferences sharedPrefs = PreferenceManager.getDefaultSharedPreferences(ctx);
-                String langId = sharedPrefs.getString("language", "x"); //id / en
-                sb.append(",").append("language=").append(langId);
+                sb.append(",").append("language=").append(Storage.getLanguageId(ctx) );
 
             }
 
