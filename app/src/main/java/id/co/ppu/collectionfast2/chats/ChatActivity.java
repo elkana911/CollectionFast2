@@ -39,6 +39,7 @@ import id.co.ppu.collectionfast2.rest.request.chat.RequestGetChatHistory;
 import id.co.ppu.collectionfast2.rest.response.chat.ResponseGetChatHistory;
 import id.co.ppu.collectionfast2.sync.SyncActivity;
 import id.co.ppu.collectionfast2.util.ConstChat;
+import id.co.ppu.collectionfast2.util.DataUtil;
 import id.co.ppu.collectionfast2.util.NetUtil;
 import id.co.ppu.collectionfast2.util.NotificationUtils;
 import id.co.ppu.collectionfast2.util.Utility;
@@ -644,16 +645,8 @@ public abstract class ChatActivity extends SyncActivity implements FragmentChatA
         Realm r = Realm.getDefaultInstance();
         try {
 
-            RealmQuery<TrnChatMsg> group = r.where(TrnChatMsg.class)
-                    .beginGroup()
-                    .equalTo("fromCollCode", fragment.userCode1)
-                    .equalTo("toCollCode", fragment.userCode2)
-                    .endGroup()
-                    .or()
-                    .beginGroup()
-                    .equalTo("fromCollCode", fragment.userCode2)
-                    .equalTo("toCollCode", fragment.userCode1)
-                    .endGroup();
+            RealmQuery<TrnChatMsg> group = DataUtil.queryChatMsg(r, fragment.userCode1, fragment.userCode2);
+
 /*
             Number max = group.max("seqNo");
 
@@ -829,21 +822,12 @@ public abstract class ChatActivity extends SyncActivity implements FragmentChatA
     }
 
     @Override
-    public void onGetChatHistory(String collCode1, String collCode2) {
+    public void onGetChatHistory(final String collCode1, final String collCode2) {
         if (!NetUtil.isConnected(this)) {
             return;
         }
 
-        RealmQuery<TrnChatMsg> group = this.realm.where(TrnChatMsg.class)
-                .beginGroup()
-                .equalTo("fromCollCode", collCode1)
-                .equalTo("toCollCode", collCode2)
-                .endGroup()
-                .or()
-                .beginGroup()
-                .equalTo("fromCollCode", collCode2)
-                .equalTo("toCollCode", collCode1)
-                .endGroup();
+        RealmQuery<TrnChatMsg> group = DataUtil.queryChatMsg(this.realm, collCode1, collCode2);
 
         // 1. check / refresh last MESSAGE_STATUS_SERVER_RECEIVED chats
         final RealmResults<TrnChatMsg> legacyChats = group.equalTo("messageStatus", ConstChat.MESSAGE_STATUS_SERVER_RECEIVED).findAll();
@@ -975,7 +959,8 @@ public abstract class ChatActivity extends SyncActivity implements FragmentChatA
                                 header.setUid(java.util.UUID.randomUUID().toString());
                                 header.setFromCollCode(obj.getFromCollCode());
                                 header.setToCollCode(obj.getToCollCode());
-                                header.setCreatedTimestamp(obj.getCreatedTimestamp());
+                                // kurangi 1 ms supaya bisa disort sebelumnya
+                                header.setCreatedTimestamp(Utility.addMilliseconds(obj.getCreatedTimestamp(), -1));
                                 header.setMessageType(ConstChat.MESSAGE_TYPE_TIMESTAMP);
                                 header.setMessageStatus(ConstChat.MESSAGE_STATUS_READ_AND_OPENED);
 
@@ -988,6 +973,8 @@ public abstract class ChatActivity extends SyncActivity implements FragmentChatA
                             } else
                                 list.add(obj);
                         }
+
+                        DataUtil.queryChatMsg(realm, collCode1, collCode2).findAll().deleteAllFromRealm();
 
                         realm.copyToRealmOrUpdate(list);
                     }
@@ -1012,17 +999,7 @@ public abstract class ChatActivity extends SyncActivity implements FragmentChatA
 
     @Override
     public int onClearChatHistory(String collCode1, String collCode2) {
-        RealmResults<TrnChatMsg> all = this.realm.where(TrnChatMsg.class)
-                .beginGroup()
-                .equalTo("fromCollCode", collCode1)
-                .equalTo("toCollCode", collCode2)
-                .endGroup()
-                .or()
-                .beginGroup()
-                .equalTo("fromCollCode", collCode2)
-                .equalTo("toCollCode", collCode1)
-                .endGroup()
-                .findAll();
+        RealmResults<TrnChatMsg> all = DataUtil.queryChatMsg(this.realm, collCode1, collCode2).findAll();
 
         int rows = all.size();
 

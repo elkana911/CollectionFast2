@@ -15,18 +15,18 @@ import android.support.v7.app.AlertDialog;
 import android.text.TextUtils;
 import android.util.Log;
 import android.util.TypedValue;
-import android.view.KeyEvent;
 import android.view.View;
 import android.view.ViewGroup;
 import android.view.animation.Animation;
 import android.view.animation.AnimationUtils;
-import android.view.inputmethod.EditorInfo;
+import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.AutoCompleteTextView;
 import android.widget.Button;
 import android.widget.CheckBox;
 import android.widget.EditText;
 import android.widget.ImageView;
+import android.widget.LinearLayout;
 import android.widget.Spinner;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -103,11 +103,20 @@ public class LoginActivity extends BasicActivity {
     @BindView(R.id.spServers)
     Spinner spServers;
 
+    @BindView(R.id.llServerDev)
+    LinearLayout llServerDev;
+
     @BindView(R.id.imageLogo)
     ImageView imageLogo;
 
     @BindView(R.id.btnGetLKPUser)
     Button btnGetLKPUser;
+
+    @BindView(R.id.etServerDevIP)
+    EditText etServerDevIP;
+
+    @BindView(R.id.etServerDevPort)
+    EditText etServerDevPort;
 
     @BindView(R.id.tvVersion)
     TextView tvVersion;
@@ -163,7 +172,7 @@ public class LoginActivity extends BasicActivity {
                 == Configuration.ORIENTATION_LANDSCAPE) {
             imageLogo.setVisibility(View.GONE);
         }
-
+/*
         mPasswordView.setOnEditorActionListener(new TextView.OnEditorActionListener() {
             @Override
             public boolean onEditorAction(TextView textView, int id, KeyEvent keyEvent) {
@@ -209,7 +218,7 @@ public class LoginActivity extends BasicActivity {
                 return false;
             }
         });
-
+*/
         //  Declare a new thread to do a preference check
         Thread t = new Thread(new Runnable() {
             @Override
@@ -268,6 +277,18 @@ public class LoginActivity extends BasicActivity {
         // See https://g.co/AppIndexing/AndroidStudio for more information.
         client = new GoogleApiClient.Builder(this).addApi(AppIndex.API).build();
 
+        String ipDev = Storage.getPreference(getApplicationContext(), Storage.KEY_SERVER_DEV_IP);
+        String portDev = Storage.getPreference(getApplicationContext(), Storage.KEY_SERVER_DEV_PORT);
+
+        if (TextUtils.isEmpty(ipDev))
+            ipDev = Utility.SERVER_DEV_IP; // Utility.servers[Utility.getServerID(Utility.SERVER_DEV_NAME)][1];
+
+        if (TextUtils.isEmpty(portDev))
+            portDev = Utility.SERVER_DEV_PORT; // servers[Utility.getServerID(Utility.SERVER_DEV_NAME)][2];
+
+        etServerDevIP.setText(ipDev);
+        etServerDevPort.setText(portDev);
+
         List<String> servers = new ArrayList<>();
         for (int i = 0; i < Utility.servers.length; i++) {
 
@@ -283,6 +304,23 @@ public class LoginActivity extends BasicActivity {
 
         ServerAdapter arrayAdapter = new ServerAdapter(this, android.R.layout.simple_spinner_item, servers);
         spServers.setAdapter(arrayAdapter);
+        spServers.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
+            @Override
+            public void onItemSelected(AdapterView<?> adapterView, View view, int i, long l) {
+
+                String itemAtPosition = (String) adapterView.getItemAtPosition(i);
+
+                if (itemAtPosition.startsWith("dev")) {
+                    llServerDev.setVisibility(View.VISIBLE);
+                }else
+                    llServerDev.setVisibility(View.GONE);
+            }
+
+            @Override
+            public void onNothingSelected(AdapterView<?> adapterView) {
+
+            }
+        });
 
         int x = Storage.getPreferenceAsInt(getApplicationContext(), Storage.KEY_SERVER_ID, 0);
         Utility.setSpinnerAsString(spServers, Utility.getServerName(x));
@@ -309,6 +347,13 @@ public class LoginActivity extends BasicActivity {
                 return;
             }
             */
+
+            String selectedServer = Utility.getServerName(spServers.getSelectedItemPosition());
+            if (selectedServer.startsWith("dev")) {
+                int id = Utility.getServerID(selectedServer);
+                Utility.servers[id][1] = etServerDevIP.getText().toString();
+                Utility.servers[id][2] = etServerDevPort.getText().toString();
+            }
 
             final ProgressDialog mProgressDialog = new ProgressDialog(this);
             mProgressDialog.setIndeterminate(true);
@@ -902,6 +947,12 @@ public class LoginActivity extends BasicActivity {
     }
 
     private void startMainActivity() {
+        String ipDev = etServerDevIP.getText().toString();
+        String portDev = etServerDevPort.getText().toString();
+
+        Storage.savePreference(getApplicationContext(), Storage.KEY_SERVER_DEV_IP, ipDev);
+        Storage.savePreference(getApplicationContext(), Storage.KEY_SERVER_DEV_PORT, portDev);
+
 //        final String username = mUserNameView.getText().toString();
 //        Storage.savePreference(getApplicationContext(), Storage.KEY_USER_NAME_LAST,  username);
         if (cbRememberPwd.isChecked()) {
