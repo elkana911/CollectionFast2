@@ -37,9 +37,6 @@ import com.google.android.gms.appindexing.Thing;
 import com.google.android.gms.common.api.GoogleApiClient;
 
 import java.io.IOException;
-import java.net.ConnectException;
-import java.net.SocketTimeoutException;
-import java.net.UnknownHostException;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
@@ -66,9 +63,11 @@ import id.co.ppu.collectionfast2.rest.response.ResponseLogin;
 import id.co.ppu.collectionfast2.rest.response.ResponseServerInfo;
 import id.co.ppu.collectionfast2.rest.response.ResponseUserPwd;
 import id.co.ppu.collectionfast2.util.DataUtil;
+import id.co.ppu.collectionfast2.util.DemoUtil;
 import id.co.ppu.collectionfast2.util.NetUtil;
 import id.co.ppu.collectionfast2.util.RootUtil;
 import id.co.ppu.collectionfast2.util.Storage;
+import id.co.ppu.collectionfast2.util.UserUtil;
 import id.co.ppu.collectionfast2.util.Utility;
 import io.realm.Realm;
 import okhttp3.ResponseBody;
@@ -172,53 +171,7 @@ public class LoginActivity extends BasicActivity {
                 == Configuration.ORIENTATION_LANDSCAPE) {
             imageLogo.setVisibility(View.GONE);
         }
-/*
-        mPasswordView.setOnEditorActionListener(new TextView.OnEditorActionListener() {
-            @Override
-            public boolean onEditorAction(TextView textView, int id, KeyEvent keyEvent) {
-                if (id == R.id.login || id == EditorInfo.IME_NULL) {
-                    try {
 
-                        isLatestVersion(new OnSuccessError() {
-                            @Override
-                            public void onSuccess(String msg) {
-                                try {
-                                    attemptLogin();
-                                } catch (Exception e) {
-                                    e.printStackTrace();
-                                }
-                            }
-
-                            @Override
-                            public void onFailure(Throwable throwable) {
-                                if (throwable == null)
-                                    return;
-
-                                if (throwable instanceof ExpiredException)
-                                    Utility.showDialog(LoginActivity.this, "Version Changed", throwable.getMessage());
-                                else
-                                    Toast.makeText(LoginActivity.this, throwable.getMessage(), Toast.LENGTH_SHORT).show();
-                            }
-
-                            @Override
-                            public void onSkip() {
-                                try {
-                                    attemptLogin();
-                                } catch (Exception e) {
-                                    e.printStackTrace();
-                                }
-                            }
-                        });
-
-                    } catch (Exception e) {
-                        e.printStackTrace();
-                    }
-                    return true;
-                }
-                return false;
-            }
-        });
-*/
         //  Declare a new thread to do a preference check
         Thread t = new Thread(new Runnable() {
             @Override
@@ -341,12 +294,6 @@ public class LoginActivity extends BasicActivity {
         }
 
         try {
-            /*
-            if (!NetUtil.isConnected(this)) {
-                Utility.showDialog(this, getString(R.string.title_no_connection), getString(R.string.error_online_required));
-                return;
-            }
-            */
 
             String selectedServer = Utility.getServerName(spServers.getSelectedItemPosition());
             if (selectedServer.startsWith("dev")) {
@@ -355,18 +302,13 @@ public class LoginActivity extends BasicActivity {
                 Utility.servers[id][2] = etServerDevPort.getText().toString();
             }
 
-            final ProgressDialog mProgressDialog = new ProgressDialog(this);
-            mProgressDialog.setIndeterminate(true);
-            mProgressDialog.setCancelable(false);
-            mProgressDialog.setMessage("Checking version...");
-            mProgressDialog.show();
+            final ProgressDialog mProgressDialog = Utility.createAndShowProgressDialog(this, "Checking version...");
 
             isLatestVersion(new OnSuccessError() {
                 @Override
                 public void onSuccess(String msg) {
 
-                    if (mProgressDialog.isShowing())
-                        mProgressDialog.dismiss();
+                    Utility.dismissDialog(mProgressDialog);
 
                     try {
                         attemptLogin();
@@ -377,28 +319,15 @@ public class LoginActivity extends BasicActivity {
 
                 @Override
                 public void onFailure(Throwable throwable) {
-                    if (mProgressDialog.isShowing())
-                        mProgressDialog.dismiss();
+                    Utility.dismissDialog(mProgressDialog);
 
-                    if (throwable == null)
-                        return;
+                    Utility.throwableHandler(LoginActivity.this, throwable, true);
 
-                    if (throwable instanceof ExpiredException)
-                        Utility.showDialog(LoginActivity.this, "Version Changed", throwable.getMessage());
-                    else if (throwable instanceof UnknownHostException)
-                        Utility.showDialog(LoginActivity.this, getString(R.string.error_server_not_found), "Please try another server.\n" + throwable.getMessage());
-                    else if (throwable instanceof SocketTimeoutException)
-                        Utility.showDialog(LoginActivity.this, getString(R.string.error_server_timeout), "Please check your network.\n" + throwable.getMessage());
-                    else if (throwable instanceof ConnectException)
-                        Utility.showDialog(LoginActivity.this, getString(R.string.error_server_down), "Please contact administrator.\n" + throwable.getMessage());
-                    else
-                        Toast.makeText(LoginActivity.this, throwable.getMessage(), Toast.LENGTH_SHORT).show();
                 }
 
                 @Override
                 public void onSkip() {
-                    if (mProgressDialog.isShowing())
-                        mProgressDialog.dismiss();
+                    Utility.dismissDialog(mProgressDialog);
 
                     try {
                         attemptLogin();
@@ -411,7 +340,6 @@ public class LoginActivity extends BasicActivity {
         } catch (Exception e) {
             e.printStackTrace();
         }
-//        startActivity(new Intent(this, MainActivity.class));
 
     }
 
@@ -422,9 +350,10 @@ public class LoginActivity extends BasicActivity {
 
     private void attemptLogin() throws Exception {
 /*
+        disabled due to complaints
         Date sysDate = new Date();
         if (sysDate.after(Utility.convertStringToDate(Utility.DATE_EXPIRED_YYYYMMDD, "yyyyMMdd"))) {
-//            Utility.showDialog(this, "Expired App", "This application version is expired. Please update from the latest");
+//            Utility.createAndShowProgressDialog(this, "Expired App", "This application version is expired. Please update from the latest");
 //            return;
         }
 */
@@ -462,20 +391,12 @@ public class LoginActivity extends BasicActivity {
 
         Storage.savePreferenceAsInt(getApplicationContext(), Storage.KEY_SERVER_ID, Utility.getServerID(spServers.getSelectedItem().toString()));
 
-//        String lastUsername = Storage.getPreference(getApplicationContext(), Storage.KEY_USER_NAME_LAST);
-
         UserData prevUserData = (UserData) Storage.getObjPreference(getApplicationContext(), Storage.KEY_USER, UserData.class);
 
-//        RealmResults<MstSecUser> all = this.realm.where(MstSecUser.class).findAll();
-
         if (prevUserData == null) {
-            boolean isOnline = NetUtil.isConnected(this);
 
-            if (isOnline) {
-                loginOnline(username, password);
-            } else {
-                Utility.showDialog(this, "Offline", getString(R.string.error_offline));
-            }
+            loginOnline(username, password);
+
         } else {
             if (!username.equalsIgnoreCase(prevUserData.getUserId())) {
 
@@ -639,138 +560,13 @@ public class LoginActivity extends BasicActivity {
 
     }
 
-    /**
-     * Attempts to sign in or register the account specified by the login form.
-     * If there are form errors (invalid email, missing fields, etc.), the
-     * errors are presented and no actual login attempt is made.
-     */
-    private void attemptLogin2() throws Exception {
-
-        Date sysDate = new Date();
-        if (sysDate.after(Utility.convertStringToDate(Utility.DATE_EXPIRED_YYYYMMDD, "yyyyMMdd"))) {
-            Utility.showDialog(this, "Expired App", "This application version is expired. Please update from the latest");
-            return;
-        }
-
-
-        // Reset errors.
-        mUserNameView.setError(null);
-        mPasswordView.setError(null);
-
-        // Store values at the time of the login attempt.
-        final String username = mUserNameView.getText().toString();
-        final String password = mPasswordView.getText().toString();
-
-        boolean cancel = false;
-        View focusView = null;
-
-        // Check for a valid password, if the user entered one.
-        if (!TextUtils.isEmpty(password) && !isPasswordValid(password)) {
-            mPasswordView.setError(getString(R.string.error_invalid_password));
-            focusView = mPasswordView;
-            cancel = true;
-        }
-
-        // Check for a valid email address.
-        if (TextUtils.isEmpty(username)) {
-            mUserNameView.setError(getString(R.string.error_field_required));
-            focusView = mUserNameView;
-            cancel = true;
-        }
-
-        if (cancel) {
-            // There was an error; don't attempt login and focus the first
-            // form field with an error.
-            focusView.requestFocus();
-            return;
-        }
-
-        Storage.savePreferenceAsInt(getApplicationContext(), Storage.KEY_SERVER_ID, Utility.getServerID(spServers.getSelectedItem().toString()));
-
-        //check db local apakah usernya ada ?
-        long countUser = this.realm.where(MstSecUser.class).equalTo("userName", username).count();
-
-        if (countUser < 1) {
-            boolean isOnline = NetUtil.isConnected(this);
-
-            if (isOnline) {
-                loginOnline(username, password);
-            } else {
-                Utility.showDialog(this, "Offline", getString(R.string.error_offline));
-            }
-        } else {
-/*
-            String lastUsername = Storage.getPreference(getApplicationContext(), Storage.KEY_USER_NAME_LAST);
-
-            if (!username.equalsIgnoreCase(lastUsername)) {
-
-                AlertDialog.Builder alertDialogBuilder = new AlertDialog.Builder(this);
-                alertDialogBuilder.setTitle("Reset Data");
-                alertDialogBuilder.setMessage("You are using different account, previous data will be reset.\nDo you want to login as " + username + " ?");
-                alertDialogBuilder.setPositiveButton("Yes", new DialogInterface.OnClickListener() {
-
-                    @Override
-                    public void onClick(DialogInterface dialog, int which) {
-
-                        if (realm != null) {
-
-                            realm.executeTransactionAsync(new Realm.Transaction() {
-                                @Override
-                                public void execute(Realm realm) {
-                                    realm.deleteAll();
-                                }
-                            }, new Realm.Transaction.OnSuccess() {
-                                @Override
-                                public void onSuccess() {
-
-                                    Date lastMorning = (Date) Storage.getObjPreference(getApplicationContext(), Storage.KEY_USER_LAST_DAY, Date.class);
-                                    if (lastMorning == null) {
-                                        loginOffline(username, password);
-                                    } else if (Utility.isSameDay(lastMorning, new Date())) {
-                                        loginOffline(username, password);
-                                    } else
-                                        loginOnline(username, password);
-
-                                }
-                            });
-
-                        }
-
-                    }
-                });
-
-                alertDialogBuilder.setNegativeButton("No", new DialogInterface.OnClickListener() {
-
-                    @Override
-                    public void onClick(DialogInterface dialog, int which) {
-                        dialog.dismiss();
-                    }
-                });
-
-                alertDialogBuilder.show();
-
-                return;
-            }
-
-            Date lastMorning = (Date) Storage.getObjPreference(getApplicationContext(), Storage.KEY_USER_LAST_DAY, Date.class);
-            if (lastMorning == null) {
-                loginOffline(username, password);
-            } else if (Utility.isSameDay(lastMorning, new Date())) {
-                loginOffline(username, password);
-            } else
-                loginOnline(username, password);
-
-            */
-        }
-
-    }
-
     private boolean isPasswordValid(String password) {
         //TODO: Replace this with your own logic
-        return password.length() > 4;
+        return password.length() > 3;   // need to allow demo as password
     }
 
     private void retrieveServerInfo(final OnPostRetrieveServerInfo listener) throws Exception {
+
         ApiInterface fastService = getAPIService();
 
         Call<ResponseServerInfo> call = fastService.getServerInfo();
@@ -810,22 +606,53 @@ public class LoginActivity extends BasicActivity {
                 }
 
                 Utility.showDialog(LoginActivity.this, "Error", t.getMessage());
-//                throw new RuntimeException("Failure retrieve server information");
             }
         });
 
     }
 
     private void loginOnline(final String username, final String password) {
+
+        boolean isOnline = NetUtil.isConnected(this);
+
+        if (!isOnline) {
+
+            /*
+                hardcode, if user is "demo"
+                make sure to use demo, flightmode is activated
+                surely you can only see dummy data in offline mode.
+                */
+            if (UserUtil.userIsDemo(username, password)) {
+                final ServerInfo si = new ServerInfo();
+                si.setServerDate(new Date());
+
+                LoginActivity.this.realm.executeTransaction(new Realm.Transaction() {
+                    @Override
+                    public void execute(Realm realm) {
+                        realm.delete(ServerInfo.class);
+                        realm.copyToRealm(si);
+                    }
+                });
+
+                Storage.saveObjPreference(getApplicationContext(), Storage.KEY_USER, DemoUtil.buildDemoUser());
+
+                // able to control nextday shpuld re-login to server
+                Storage.saveObjPreference(getApplicationContext(), Storage.KEY_USER_LAST_DAY, new Date());
+
+                // final check
+                startMainActivity();
+            } else
+                Utility.showDialog(this, "Offline", getString(R.string.error_offline));
+
+            return;
+        }
+
         Utility.disableScreen(this, true);
 
-        final ProgressDialog mProgressDialog = new ProgressDialog(this);
-        mProgressDialog.setIndeterminate(true);
-        mProgressDialog.setCancelable(false);
-        mProgressDialog.setMessage("Logging in...");
-        mProgressDialog.show();
+        final ProgressDialog mProgressDialog = Utility.createAndShowProgressDialog(this, "Logging in... ");
 
         try {
+
             retrieveServerInfo(new OnPostRetrieveServerInfo() {
                 @Override
                 public void onSuccess(ServerInfo serverInfo) {
@@ -850,8 +677,8 @@ public class LoginActivity extends BasicActivity {
 
                                 if (respLogin.getError() != null) {
                                     Utility.showDialog(LoginActivity.this, "Error (" + respLogin.getError().getErrorCode() + ")", respLogin.getError().getErrorDesc());
-                                    if (mProgressDialog.isShowing())
-                                        mProgressDialog.dismiss();
+
+                                    Utility.dismissDialog(mProgressDialog);
 
                                 } else {
                                     // dump
@@ -866,15 +693,12 @@ public class LoginActivity extends BasicActivity {
                                             if (count > 0) {
                                                 realm.delete(MstSecUser.class);
                                             }
-//                                            realm.copyToRealm(respLogin.getData().getUser());
-//                                            realm.copyToRealm(respLogin.getData().getSecUser());
 
                                         }
                                     }, new Realm.Transaction.OnSuccess() {
                                         @Override
                                         public void onSuccess() {
-                                            if (mProgressDialog.isShowing())
-                                                mProgressDialog.dismiss();
+                                            Utility.dismissDialog(mProgressDialog);
 
                                             Storage.saveObjPreference(getApplicationContext(), Storage.KEY_USER, respLogin.getData());
 
@@ -883,20 +707,19 @@ public class LoginActivity extends BasicActivity {
 
                                             // final check
                                             startMainActivity();
+
                                         }
                                     }, new Realm.Transaction.OnError() {
                                         @Override
                                         public void onError(Throwable error) {
-                                            if (mProgressDialog.isShowing())
-                                                mProgressDialog.dismiss();
+                                            Utility.dismissDialog(mProgressDialog);
 
                                             Utility.showDialog(LoginActivity.this, "Database Problem", getString(R.string.error_contact_admin));
                                         }
                                     });
                                 }
                             } else {
-                                if (mProgressDialog.isShowing())
-                                    mProgressDialog.dismiss();
+                                Utility.dismissDialog(mProgressDialog);
 
                                 int statusCode = response.code();
 
@@ -918,8 +741,7 @@ public class LoginActivity extends BasicActivity {
 
                             Log.e("fast", t.getMessage(), t);
 
-                            if (mProgressDialog.isShowing())
-                                mProgressDialog.dismiss();
+                            Utility.dismissDialog(mProgressDialog);
 
                             Utility.showDialog(LoginActivity.this, "Server Problem", t.getMessage());
                         }
@@ -931,17 +753,14 @@ public class LoginActivity extends BasicActivity {
                 public void onFailure(Throwable throwable) {
                     Utility.disableScreen(LoginActivity.this, false);
 
-                    if (mProgressDialog.isShowing())
-                        mProgressDialog.dismiss();
+                    Utility.dismissDialog(mProgressDialog);
 
                 }
             });
         } catch (Exception e) {
             e.printStackTrace();
-
-            if (mProgressDialog.isShowing())
-                mProgressDialog.dismiss();
-
+        } finally{
+            Utility.dismissDialog(mProgressDialog);
         }
 
     }
@@ -980,12 +799,6 @@ public class LoginActivity extends BasicActivity {
                     "Please refresh your LKP");
         }
 
-        final ProgressDialog mProgressDialog = new ProgressDialog(this);
-        mProgressDialog.setIndeterminate(true);
-        mProgressDialog.setCancelable(false);
-        mProgressDialog.setMessage("Logging in...");
-        mProgressDialog.show();
-
         UserData prevUserData = (UserData) Storage.getObjPreference(getApplicationContext(), Storage.KEY_USER, UserData.class);
 
 //        String pwd = prevUserData.getUserPwd() == null ? "" : prevUserData.getUserPwd();
@@ -997,37 +810,10 @@ public class LoginActivity extends BasicActivity {
         }
         /*
         if (prevUserData == null || !pwd.equals(password)) {
-            Utility.showDialog(this, "Invalid Login", getString(R.string.error_invalid_login));
+            Utility.createAndShowProgressDialog(this, "Invalid Login", getString(R.string.error_invalid_login));
         } else {
                 startMainActivity();
         }*/
-
-        if (mProgressDialog.isShowing())
-            mProgressDialog.dismiss();
-    }
-
-    private void loginOffline2(String username, String password) {
-
-        final ProgressDialog mProgressDialog = new ProgressDialog(this);
-        mProgressDialog.setIndeterminate(true);
-        mProgressDialog.setCancelable(false);
-        mProgressDialog.setMessage("Logging in...");
-        mProgressDialog.show();
-
-        final MstSecUser usr = this.realm.where(MstSecUser.class).contains("userName", username).findFirst();
-
-        String pwd = usr.getUserPwd() == null ? "" : usr.getUserPwd();
-
-        if (usr == null || !pwd.equals(password)) {
-            Utility.showDialog(this, "Invalid Login", getString(R.string.error_invalid_login));
-        } else {
-
-            startMainActivity();
-
-        }
-
-        if (mProgressDialog.isShowing())
-            mProgressDialog.dismiss();
     }
 
     @OnClick(R.id.btnTestGPS)
@@ -1039,11 +825,7 @@ public class LoginActivity extends BasicActivity {
     @OnClick(R.id.btnGetLKPUser)
     public void onClickGetLKPUser() {
 
-        final ProgressDialog mProgressDialog = new ProgressDialog(this);
-        mProgressDialog.setIndeterminate(true);
-        mProgressDialog.setCancelable(false);
-        mProgressDialog.setMessage("Get Any LKP User...");
-        mProgressDialog.show();
+        final ProgressDialog mProgressDialog = Utility.createAndShowProgressDialog(this, "Get Any LKP User...");
 
         ApiInterface fastService = getAPIService();
 
@@ -1052,8 +834,7 @@ public class LoginActivity extends BasicActivity {
             @Override
             public void onResponse(Call<ResponseUserPwd> call, Response<ResponseUserPwd> response) {
 
-                if (mProgressDialog.isShowing())
-                    mProgressDialog.dismiss();
+                Utility.dismissDialog(mProgressDialog);
 
                 final ResponseUserPwd resp = response.body();
 
@@ -1068,8 +849,7 @@ public class LoginActivity extends BasicActivity {
 
             @Override
             public void onFailure(Call<ResponseUserPwd> call, Throwable t) {
-                if (mProgressDialog.isShowing())
-                    mProgressDialog.dismiss();
+                Utility.dismissDialog(mProgressDialog);
             }
         });
 

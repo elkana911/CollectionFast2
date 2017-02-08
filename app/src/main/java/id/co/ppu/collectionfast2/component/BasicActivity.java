@@ -86,6 +86,11 @@ public class BasicActivity extends AppCompatActivity {
     }
 
     protected void resetData() {
+        Storage.savePreference(getApplicationContext(), Storage.KEY_USER, null);
+
+        // clean photo arrival cache
+        Storage.cleanPhotoArrival();
+
         DataUtil.resetData(realm);
     }
 
@@ -116,7 +121,7 @@ public class BasicActivity extends AppCompatActivity {
                 .equalTo("createdBy", Utility.LAST_UPDATE_BY);
     }
 
-    protected Date getServerDate(Realm realm) {
+    protected Date getServerDateFromDB(Realm realm) {
         return realm.where(ServerInfo.class)
                 .findFirst()
                 .getServerDate();

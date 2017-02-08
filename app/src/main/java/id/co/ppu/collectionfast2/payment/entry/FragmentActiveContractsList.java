@@ -103,7 +103,7 @@ public class FragmentActiveContractsList extends DialogFragment {
     private void loadList(String collectorCode) {
 
 /*
-        Date serverDate = this.realm.where(ServerInfo.class).findFirst().getServerDate();
+        Date serverDate = this.realm.where(ServerInfo.class).findFirst().getServerDateFromDB();
         final String createdBy = "JOB" + Utility.convertDateToString(serverDate, "yyyyMMdd");
         //populate
         final RealmResults<TrnContractBuckets> _buffer = this.realm.where(TrnContractBuckets.class)

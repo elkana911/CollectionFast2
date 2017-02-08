@@ -1,13 +1,23 @@
 package id.co.ppu.collectionfast2.payment.receive;
 
+import android.content.Intent;
+import android.graphics.Bitmap;
+import android.net.Uri;
 import android.os.Bundle;
+import android.provider.MediaStore;
 import android.support.design.widget.Snackbar;
+import android.util.Log;
 import android.view.View;
 import android.widget.AutoCompleteTextView;
 import android.widget.EditText;
+import android.widget.FrameLayout;
 import android.widget.Spinner;
 import android.widget.Toast;
 
+import java.io.File;
+import java.io.FileFilter;
+import java.io.FileNotFoundException;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
@@ -19,6 +29,7 @@ import id.co.ppu.collectionfast2.R;
 import id.co.ppu.collectionfast2.component.BasicActivity;
 import id.co.ppu.collectionfast2.component.RVBAdapter;
 import id.co.ppu.collectionfast2.location.Location;
+import id.co.ppu.collectionfast2.pojo.ArrivalDataBuffer;
 import id.co.ppu.collectionfast2.pojo.ServerInfo;
 import id.co.ppu.collectionfast2.pojo.UserConfig;
 import id.co.ppu.collectionfast2.pojo.UserData;
@@ -37,6 +48,8 @@ import io.realm.RealmResults;
 import io.realm.Sort;
 
 public class ActivityPaymentReceive extends BasicActivity {
+
+    private ArrivalDataBuffer arrivalData = new ArrivalDataBuffer();
 
     private final CharSequence[] collFeeList = {
             "0", "10000"
@@ -89,6 +102,9 @@ public class ActivityPaymentReceive extends BasicActivity {
 
     @BindView(R.id.spNoRVB)
     Spinner spNoRVB;
+
+    @BindView(R.id.flTakePhoto)
+    FrameLayout flTakePhoto;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -154,6 +170,8 @@ public class ActivityPaymentReceive extends BasicActivity {
             etBiayaTagih.setText(String.valueOf(trnRVColl.getCollFeeAc()));
             etDanaSosial.setText("0");
 
+            flTakePhoto.setVisibility(View.GONE);
+
         } else {
             RealmResults<TrnRVB> trnRVBs = this.realm.where(TrnRVB.class)
                     .equalTo("rvbStatus", "OP")
@@ -173,6 +191,7 @@ public class ActivityPaymentReceive extends BasicActivity {
             long danaSosial = dtl.getDanaSosial() == null ? 0 : dtl.getDanaSosial().longValue();
             etDanaSosial.setText(Utility.convertLongToRupiah(danaSosial));
 
+//            deletePhotoArrival(); untested
         }
         spNoRVB.setAdapter(adapterRVB);
 
@@ -188,6 +207,11 @@ public class ActivityPaymentReceive extends BasicActivity {
     }
 
     private void savePayment1() {
+
+        if (arrivalData.isEmpty() || !getPhotoFileCacheBeforeEntry().exists()) {
+            Snackbar.make(activityPaymentReceive, getString(R.string.message_no_photo_arrival_taken), Snackbar.LENGTH_LONG).show();
+        }
+
         boolean editMode = isExists(this.realm) != null;
         // reset errors
         etPenerimaan.setError(null);
@@ -236,7 +260,6 @@ public class ActivityPaymentReceive extends BasicActivity {
                 .equalTo("contractNo", contractNo)
                 .equalTo("createdBy", createdBy)
                 .findFirst();
-
 
         if (!Utility.isValidMoney(denda)) {
             etDenda.setError(getString(R.string.error_amount_invalid));
@@ -906,6 +929,9 @@ public class ActivityPaymentReceive extends BasicActivity {
                 RVBAdapter adapterRVB = new RVBAdapter(ActivityPaymentReceive.this, android.R.layout.simple_spinner_item, list);
                 spNoRVB.setAdapter(adapterRVB);
 
+                // move arrival photo from cache to outside
+                boolean ok = Storage.commitPhotoArrival(constructArrivalPhotoFilename());
+
                 Toast.makeText(ActivityPaymentReceive.this, "Payment Saved", Toast.LENGTH_SHORT).show();
 
             }
@@ -932,8 +958,82 @@ public class ActivityPaymentReceive extends BasicActivity {
 
     @OnClick(R.id.btnSave)
     public void onClickSave() {
-
         savePayment1();
     }
 
+    private void deletePhotoArrivalCache() {
+        // delete pra* files, dgn asumsi data baru. jgn hapus file yg sudah dientri
+        File dir = new File(Storage.getPhotoArrivalCachePath());
+        File[] toBeDeleted = dir.listFiles(new FileFilter() {
+            @Override
+            public boolean accept(File file) {
+                return (file.getName().startsWith("praPymtRcv") && file.getName().endsWith(".jpg"));
+//                        return (file.getName().startsWith("dailyReport_08") && pathname.getName().endsWith(".txt"));
+            }
+        });
+
+        for (File f : toBeDeleted) {
+            Log.e("RADANA-PRcv", "Delete " + f.getName() + (f.delete() ? " success" : " failed"));
+        }
+    }
+
+    private String constructArrivalPhotoFilename() {
+        return "praPymtRcv" + "_" + collectorId + "_" + contractNo + ".jpg";
+    }
+    private File getPhotoFileCacheBeforeEntry() {
+        return new File(Storage.getPhotoArrivalCachePath() + constructArrivalPhotoFilename());
+    }
+
+    @OnClick(R.id.llTakePhoto)
+    public void onTakePhotoBeforeEntry() {
+        Intent takePicture = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
+
+//        String storagePath = Environment.getExternalStorageDirectory().toString() +"/ImagesFolder/"; //storagePath=/storage/emulated/0/ImagesFolder/image.jpg
+//        Uri uriSavedImage = Uri.fromFile(new File(storagePath + "image.jpg"));
+
+        Uri uriSavedImage = Uri.fromFile(getPhotoFileCacheBeforeEntry());
+
+        takePicture.putExtra(MediaStore.EXTRA_OUTPUT, uriSavedImage);
+
+        startActivityForResult(takePicture, 1);//zero can be replaced with any action code
+
+    }
+
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+        super.onActivityResult(requestCode, resultCode, data);
+
+        // data will return a null intent and the picture is in the URI that you passed in.
+        if (resultCode != RESULT_OK) {
+            return;
+        }
+
+        Uri uriSavedImage = Uri.fromFile(getPhotoFileCacheBeforeEntry());
+
+        Bitmap bitmap;
+        try {
+            bitmap = MediaStore.Images.Media.getBitmap(getContentResolver(), uriSavedImage);
+//            bitmap = crupAndScale(bitmap, 300); // if you mind scaling
+//            pofileImageView.setImageBitmap(bitmap);
+
+            if (bitmap == null) {
+
+            }
+        } catch (FileNotFoundException e) {
+            e.printStackTrace();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+
+        double[] gps = Location.getGPS(this);
+        final String latitude = String.valueOf(gps[0]);
+        final String longitude = String.valueOf(gps[1]);
+
+        arrivalData.setLatitude(latitude);
+        arrivalData.setLongitude(longitude);
+        arrivalData.setPhotoFile(constructArrivalPhotoFilename());
+        arrivalData.setTimestamp(new Date());
+
+        flTakePhoto.setVisibility(View.GONE);
+    }
 }

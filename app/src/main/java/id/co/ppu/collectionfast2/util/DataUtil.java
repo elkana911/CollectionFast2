@@ -11,10 +11,14 @@ import java.io.IOException;
 import java.util.Date;
 import java.util.Set;
 
+import id.co.ppu.collectionfast2.exceptions.NoConnectionException;
 import id.co.ppu.collectionfast2.listener.OnPostRetrieveServerInfo;
+import id.co.ppu.collectionfast2.pojo.DisplayTrnContractBuckets;
+import id.co.ppu.collectionfast2.pojo.LKPData;
 import id.co.ppu.collectionfast2.pojo.ServerInfo;
 import id.co.ppu.collectionfast2.pojo.UserConfig;
 import id.co.ppu.collectionfast2.pojo.chat.TrnChatMsg;
+import id.co.ppu.collectionfast2.pojo.master.MasterData;
 import id.co.ppu.collectionfast2.pojo.master.MstDelqReasons;
 import id.co.ppu.collectionfast2.pojo.master.MstLDVClassifications;
 import id.co.ppu.collectionfast2.pojo.master.MstLDVParameters;
@@ -23,11 +27,26 @@ import id.co.ppu.collectionfast2.pojo.master.MstOffices;
 import id.co.ppu.collectionfast2.pojo.master.MstParam;
 import id.co.ppu.collectionfast2.pojo.master.MstPotensi;
 import id.co.ppu.collectionfast2.pojo.master.MstZip;
+import id.co.ppu.collectionfast2.pojo.sync.SyncFileUpload;
+import id.co.ppu.collectionfast2.pojo.sync.SyncTrnBastbj;
 import id.co.ppu.collectionfast2.pojo.sync.SyncTrnLDVComments;
+import id.co.ppu.collectionfast2.pojo.sync.SyncTrnLDVDetails;
+import id.co.ppu.collectionfast2.pojo.sync.SyncTrnLDVHeader;
+import id.co.ppu.collectionfast2.pojo.sync.SyncTrnRVB;
 import id.co.ppu.collectionfast2.pojo.sync.SyncTrnRVColl;
 import id.co.ppu.collectionfast2.pojo.sync.SyncTrnRepo;
+import id.co.ppu.collectionfast2.pojo.trn.HistInstallments;
+import id.co.ppu.collectionfast2.pojo.trn.TrnBastbj;
+import id.co.ppu.collectionfast2.pojo.trn.TrnCollectAddr;
+import id.co.ppu.collectionfast2.pojo.trn.TrnContractBuckets;
+import id.co.ppu.collectionfast2.pojo.trn.TrnLDVComments;
 import id.co.ppu.collectionfast2.pojo.trn.TrnLDVDetails;
 import id.co.ppu.collectionfast2.pojo.trn.TrnLDVHeader;
+import id.co.ppu.collectionfast2.pojo.trn.TrnPhoto;
+import id.co.ppu.collectionfast2.pojo.trn.TrnRVB;
+import id.co.ppu.collectionfast2.pojo.trn.TrnRVColl;
+import id.co.ppu.collectionfast2.pojo.trn.TrnRepo;
+import id.co.ppu.collectionfast2.pojo.trn.TrnVehicleInfo;
 import id.co.ppu.collectionfast2.rest.ApiInterface;
 import id.co.ppu.collectionfast2.rest.ServiceGenerator;
 import id.co.ppu.collectionfast2.rest.request.RequestZipCode;
@@ -110,7 +129,6 @@ public class DataUtil {
     }
 
     /**
-     *
      * @param realm
      * @param collCode
      * @return null jika valid
@@ -146,10 +164,11 @@ public class DataUtil {
 
     /**
      * Memastikan hanya table master utk transaksi yang akan ditarik
-     * @see #isMasterTransactionTable(String)
+     *
      * @param ctx
      * @param realm
      * @return
+     * @see #isMasterTransactionTable(String)
      */
     public static boolean isMasterDataDownloaded(Context ctx, Realm realm) {
 
@@ -191,8 +210,23 @@ public class DataUtil {
             return true;
         }
 
-        if (!NetUtil.isConnected(ctx))
-            return false;
+        if (!NetUtil.isConnected(ctx)) {
+            if (DemoUtil.isDemo(ctx)) {
+
+                realm.executeTransaction(new Realm.Transaction() {
+                    @Override
+                    public void execute(Realm realm) {
+
+                        MasterData data = DemoUtil.buildMasterData();
+
+                        saveMastersToDB(realm, data);
+                    }
+                });
+
+                return true;
+            }else
+                return false;
+        }
 
         try {
             retrieveMasterFromServerBackground(realm, ctx);
@@ -229,55 +263,7 @@ public class DataUtil {
                             _realm.executeTransaction(new Realm.Transaction() {
                                 @Override
                                 public void execute(Realm bgRealm) {
-                                    // insert ldp classifications
-                                    long count = bgRealm.where(MstLDVClassifications.class).count();
-                                    if (count > 0) {
-                                        bgRealm.delete(MstLDVClassifications.class);
-                                    }
-                                    bgRealm.copyToRealmOrUpdate(respGetMasterData.getData().getLdpClassifications());
-
-                                    // insert param
-                                    count = bgRealm.where(MstParam.class).count();
-                                    if (count > 0) {
-                                        bgRealm.delete(MstParam.class);
-                                    }
-                                    bgRealm.copyToRealmOrUpdate(respGetMasterData.getData().getParams());
-
-                                    // insert ldp status
-                                    count = bgRealm.where(MstLDVStatus.class).count();
-                                    if (count > 0) {
-                                        bgRealm.delete(MstLDVStatus.class);
-                                    }
-                                    bgRealm.copyToRealmOrUpdate(respGetMasterData.getData().getLdpStatus());
-
-                                    // insert ldp parameter
-                                    count = bgRealm.where(MstLDVParameters.class).count();
-                                    if (count > 0) {
-                                        bgRealm.delete(MstLDVParameters.class);
-                                    }
-                                    bgRealm.copyToRealmOrUpdate(respGetMasterData.getData().getLdpParameters());
-
-                                    // insert delq reasons
-                                    count = bgRealm.where(MstDelqReasons.class).count();
-                                    if (count > 0) {
-                                        bgRealm.delete(MstDelqReasons.class);
-                                    }
-                                    bgRealm.copyToRealmOrUpdate(respGetMasterData.getData().getDelqReasons());
-
-                                    // insert office
-                                    count = bgRealm.where(MstOffices.class).count();
-                                    if (count > 0) {
-                                        bgRealm.delete(MstOffices.class);
-                                    }
-                                    bgRealm.copyToRealmOrUpdate(respGetMasterData.getData().getOffices());
-
-                                    // insert potensi
-                                    count = bgRealm.where(MstPotensi.class).count();
-                                    if (count > 0) {
-                                        bgRealm.delete(MstPotensi.class);
-                                    }
-                                    bgRealm.copyToRealmOrUpdate(respGetMasterData.getData().getPotensi());
-
+                                    saveMastersToDB(bgRealm, respGetMasterData.getData());
                                 }
                             });
 
@@ -366,6 +352,28 @@ public class DataUtil {
     }
 
     public static void retrieveServerInfo(final String collCode, final Realm realm, final Context ctx, final OnPostRetrieveServerInfo listener) throws Exception {
+
+        if (!NetUtil.isConnected(ctx)) {
+            if (DemoUtil.isDemo(ctx)) {
+                final ServerInfo si = new ServerInfo();
+                si.setServerDate(new Date());
+
+                realm.executeTransaction(new Realm.Transaction() {
+                    @Override
+                    public void execute(Realm realm) {
+                        realm.delete(ServerInfo.class);
+                        realm.copyToRealm(si);
+                    }
+                });
+
+                if (listener != null)
+                    listener.onSuccess(si);
+            } else if (listener != null)
+                listener.onFailure(new NoConnectionException());
+
+            return;
+        }
+
         ApiInterface fastService =
                 ServiceGenerator.createService(ApiInterface.class, Utility.buildUrl(Storage.getPreferenceAsInt(ctx, Storage.KEY_SERVER_ID, 0)));
 
@@ -456,7 +464,6 @@ public class DataUtil {
                 .findAll();
         if (trnSyncRepo.size() > 0)
             return SYNC_AS_REPO;
-//        return trnSync.size() > 0 || trnSyncLDVComments.size() > 0 || trnSyncRepo.size() > 0;
 
         return 0;   // no sync
     }
@@ -502,4 +509,327 @@ public class DataUtil {
 
     }
 
+    // store db without commit/rollback. you need to prepare it first
+    public static void saveMastersToDB(Realm bgRealm, MasterData data) {
+        // insert ldp classifications
+        long count = bgRealm.where(MstLDVClassifications.class).count();
+        if (count > 0) {
+            bgRealm.delete(MstLDVClassifications.class);
+        }
+        bgRealm.copyToRealmOrUpdate(data.getLdpClassifications());
+
+        // insert param
+        count = bgRealm.where(MstParam.class).count();
+        if (count > 0) {
+            bgRealm.delete(MstParam.class);
+        }
+        bgRealm.copyToRealmOrUpdate(data.getParams());
+
+        // insert ldp status
+        count = bgRealm.where(MstLDVStatus.class).count();
+        if (count > 0) {
+            bgRealm.delete(MstLDVStatus.class);
+        }
+        bgRealm.copyToRealmOrUpdate(data.getLdpStatus());
+
+        // insert ldp parameter
+        count = bgRealm.where(MstLDVParameters.class).count();
+        if (count > 0) {
+            bgRealm.delete(MstLDVParameters.class);
+        }
+        bgRealm.copyToRealmOrUpdate(data.getLdpParameters());
+
+        // insert delq reasons
+        count = bgRealm.where(MstDelqReasons.class).count();
+        if (count > 0) {
+            bgRealm.delete(MstDelqReasons.class);
+        }
+        bgRealm.copyToRealmOrUpdate(data.getDelqReasons());
+
+        // insert office
+        count = bgRealm.where(MstOffices.class).count();
+        if (count > 0) {
+            bgRealm.delete(MstOffices.class);
+        }
+        bgRealm.copyToRealmOrUpdate(data.getOffices());
+
+        // insert potensi
+        count = bgRealm.where(MstPotensi.class).count();
+        if (count > 0) {
+            bgRealm.delete(MstPotensi.class);
+        }
+        bgRealm.copyToRealmOrUpdate(data.getPotensi());
+
+    }
+
+    // store db without commit/rollback. you need to prepare it first
+    public static void saveLKPToDB(Realm bgRealm, String collectorCode, String createdBy, LKPData data) {
+        // insert header
+        // wipe existing tables?
+        boolean d = bgRealm.where(TrnLDVHeader.class)
+                .equalTo("collCode", collectorCode)
+                .equalTo(Utility.COLUMN_CREATED_BY, createdBy)
+                .findAll()
+                .deleteAllFromRealm();
+
+        bgRealm.copyToRealm(data.getHeader());
+
+        // refresh synctable
+        TrnLDVHeader _header = data.getHeader();
+        if (_header.getFlagDone() != null && _header.getFlagDone().equalsIgnoreCase("Y")) {
+            SyncTrnLDVHeader sync = bgRealm.where(SyncTrnLDVHeader.class)
+                    .equalTo("ldvNo", _header.getLdvNo()).findFirst();
+
+            if (sync == null) {
+                sync = new SyncTrnLDVHeader();
+            }
+            sync.setLdvNo(_header.getLdvNo());
+            sync.setLastUpdateBy(_header.getLastupdateBy());
+            sync.setCreatedBy(_header.getCreatedBy());
+
+            sync.setSyncedDate(_header.getDateDone());
+
+            bgRealm.copyToRealm(sync);
+        }
+
+        // insert address
+        d = bgRealm.where(TrnCollectAddr.class).equalTo(Utility.COLUMN_CREATED_BY, createdBy).findAll().deleteAllFromRealm();
+        bgRealm.copyToRealm(data.getAddress());
+
+        // insert rvb
+        d = bgRealm.where(TrnRVB.class).equalTo(Utility.COLUMN_CREATED_BY, createdBy).findAll().deleteAllFromRealm();
+        bgRealm.copyToRealm(data.getRvb());
+
+        for (TrnRVB _rvb : data.getRvb()) {
+            if (_rvb == null)
+                continue;
+
+            if (_rvb.getFlagDone() != null && _rvb.getFlagDone().equalsIgnoreCase("Y")) {
+                SyncTrnRVB s = bgRealm.where(SyncTrnRVB.class)
+                        .equalTo("rvbNo", _rvb.getRvbNo()).findFirst();
+
+                if (s == null) {
+                    s = new SyncTrnRVB();
+                }
+                s.setRvbNo(_rvb.getRvbNo());
+                s.setLastUpdateBy(_rvb.getLastupdateBy());
+                s.setCreatedBy(_rvb.getCreatedBy());
+                s.setSyncedDate(_rvb.getDateDone());
+
+                bgRealm.copyToRealm(s);
+            }
+        }
+
+
+        // insert bastbj
+        d = bgRealm.where(TrnBastbj.class).equalTo(Utility.COLUMN_CREATED_BY, createdBy).findAll().deleteAllFromRealm();
+        bgRealm.copyToRealm(data.getBastbj());
+
+        for (TrnBastbj _bastbj : data.getBastbj()) {
+
+            if (_bastbj == null)
+                continue;
+
+            if (_bastbj.getFlagDone() != null && _bastbj.getFlagDone().equalsIgnoreCase("Y")) {
+                SyncTrnBastbj sync = bgRealm.where(SyncTrnBastbj.class)
+                        .equalTo("bastbjNo", _bastbj.getBastbjNo()).findFirst();
+
+                if (sync == null) {
+                    sync = new SyncTrnBastbj();
+                }
+                sync.setBastbjNo(_bastbj.getBastbjNo());
+                sync.setLastUpdateBy(_bastbj.getLastupdateBy());
+                sync.setCreatedBy(_bastbj.getCreatedBy());
+                sync.setSyncedDate(_bastbj.getDateDone());
+
+                bgRealm.copyToRealm(sync);
+            }
+        }
+
+        // insert vehicle info
+        d = bgRealm.where(TrnVehicleInfo.class).equalTo(Utility.COLUMN_CREATED_BY, createdBy).findAll().deleteAllFromRealm();
+        bgRealm.copyToRealmOrUpdate(data.getVehicleInfo());
+
+        // insert history installments
+        d = bgRealm.where(HistInstallments.class).findAll().deleteAllFromRealm();
+        bgRealm.copyToRealmOrUpdate(data.getHistoryInstallments());
+
+        // insert buckets
+        d = bgRealm.where(TrnContractBuckets.class).equalTo(Utility.COLUMN_CREATED_BY, createdBy).findAll().deleteAllFromRealm();
+        bgRealm.copyToRealm(data.getBuckets());
+
+        // insert details
+        d = bgRealm.where(TrnLDVDetails.class).equalTo(Utility.COLUMN_CREATED_BY, createdBy).findAll().deleteAllFromRealm();
+
+        // link trxCollectAddr
+        for (TrnLDVDetails ldvDetails : data.getDetails()) {
+
+            TrnCollectAddr _address = null;
+            for (TrnCollectAddr addr : data.getAddress()) {
+                if (addr.getPk().getContractNo().equalsIgnoreCase(ldvDetails.getContractNo())) {
+                    _address = addr;
+                    break;
+                }
+            }
+            ldvDetails.setAddress(_address);
+            bgRealm.copyToRealm(ldvDetails);
+        }
+
+        for (TrnLDVDetails _ldvDtl : data.getDetails()) {
+            if (_ldvDtl == null)
+                continue;
+
+            if (_ldvDtl.getFlagDone() != null && _ldvDtl.getFlagDone().equalsIgnoreCase("Y")) {
+                SyncTrnLDVDetails sync = bgRealm.where(SyncTrnLDVDetails.class)
+                        .equalTo("ldvNo", _ldvDtl.getPk().getLdvNo())
+                        .equalTo("seqNo", _ldvDtl.getPk().getSeqNo())
+                        .equalTo("contractNo", _ldvDtl.getContractNo())
+                        .findFirst();
+
+                if (sync == null) {
+                    sync = new SyncTrnLDVDetails();
+                }
+                sync.setLdvNo(_ldvDtl.getPk().getLdvNo());
+                sync.setSeqNo(_ldvDtl.getPk().getSeqNo());
+                sync.setContractNo(_ldvDtl.getContractNo());
+                sync.setLastUpdateBy(_ldvDtl.getLastupdateBy());
+                sync.setCreatedBy(_ldvDtl.getCreatedBy());
+                sync.setSyncedDate(_ldvDtl.getDateDone());
+
+                bgRealm.copyToRealm(sync);
+            }
+        }
+
+        // for faster show, but must be load after ldvdetails
+        bgRealm.delete(DisplayTrnContractBuckets.class);
+        for (TrnContractBuckets obj : data.getBuckets()) {
+
+            DisplayTrnContractBuckets displayTrnContractBuckets = bgRealm.createObject(DisplayTrnContractBuckets.class);
+
+            displayTrnContractBuckets.setContractNo(obj.getPk().getContractNo());
+            displayTrnContractBuckets.setCreatedBy(obj.getCreatedBy());
+            displayTrnContractBuckets.setCustName(obj.getCustName());
+
+            bgRealm.copyToRealm(displayTrnContractBuckets);
+        }
+
+        //repo inserted by MOBCOL
+        d = bgRealm.where(TrnRepo.class).equalTo(Utility.COLUMN_CREATED_BY, Utility.LAST_UPDATE_BY).findAll().deleteAllFromRealm();
+        bgRealm.copyToRealmOrUpdate(data.getRepo());
+
+        for (TrnRepo _obj : data.getRepo()) {
+            if (_obj == null)
+                continue;
+
+            if (_obj.getFlagDone() != null && _obj.getFlagDone().equalsIgnoreCase("Y")) {
+                SyncTrnRepo sync = bgRealm.where(SyncTrnRepo.class)
+                        .equalTo("repoNo", _obj.getRepoNo())
+                        .equalTo("contractNo", _obj.getContractNo())
+                        .findFirst();
+
+                if (sync == null) {
+                    sync = new SyncTrnRepo();
+                }
+                sync.setRepoNo(_obj.getRepoNo());
+                sync.setContractNo(_obj.getContractNo());
+                sync.setLastUpdateBy(_obj.getLastupdateBy());
+                sync.setCreatedBy(_obj.getCreatedBy());
+                sync.setSyncedDate(_obj.getDateDone());
+
+
+                bgRealm.copyToRealm(sync);
+            }
+        }
+        //changeaddr ?
+
+        //ldvcomment ?
+        d = bgRealm.where(TrnLDVComments.class).equalTo(Utility.COLUMN_CREATED_BY, Utility.LAST_UPDATE_BY).findAll().deleteAllFromRealm();
+        bgRealm.copyToRealmOrUpdate(data.getLdvComments());
+
+        for (TrnLDVComments _obj : data.getLdvComments()) {
+            if (_obj == null)
+                continue;
+
+            if (_obj.getFlagDone() != null && _obj.getFlagDone().equalsIgnoreCase("Y")) {
+                SyncTrnLDVComments sync = bgRealm.where(SyncTrnLDVComments.class)
+                        .equalTo("ldvNo", _obj.getPk().getLdvNo())
+                        .equalTo("seqNo", _obj.getPk().getSeqNo())
+                        .equalTo("contractNo", _obj.getPk().getContractNo())
+                        .findFirst();
+
+                if (sync == null) {
+                    sync = new SyncTrnLDVComments();
+                }
+                sync.setLdvNo(_obj.getPk().getLdvNo());
+                sync.setSeqNo(_obj.getPk().getSeqNo());
+                sync.setContractNo(_obj.getPk().getContractNo());
+                sync.setLastUpdateBy(_obj.getLastupdateBy());
+                sync.setCreatedBy(_obj.getCreatedBy());
+                sync.setSyncedDate(_obj.getDateDone());
+
+
+                bgRealm.copyToRealm(sync);
+            }
+        }
+
+        //rvcoll
+        d = bgRealm.where(TrnRVColl.class).equalTo(Utility.COLUMN_CREATED_BY, Utility.LAST_UPDATE_BY).findAll().deleteAllFromRealm();
+        bgRealm.copyToRealmOrUpdate(data.getRvColl());
+
+        for (TrnRVColl _obj : data.getRvColl()) {
+            if (_obj == null)
+                continue;
+
+            if (_obj.getFlagDone() != null && _obj.getFlagDone().equalsIgnoreCase("Y")) {
+                SyncTrnRVColl sync = bgRealm.where(SyncTrnRVColl.class)
+                        .equalTo("ldvNo", _obj.getLdvNo())
+                        .equalTo("contractNo", _obj.getContractNo())
+                        .findFirst();
+
+                if (sync == null) {
+                    sync = new SyncTrnRVColl();
+                }
+                sync.setLdvNo(_obj.getLdvNo());
+                sync.setContractNo(_obj.getContractNo());
+                sync.setLastUpdateBy(_obj.getLastupdateBy());
+                sync.setCreatedBy(_obj.getCreatedBy());
+                sync.setSyncedDate(_obj.getDateDone());
+
+
+                bgRealm.copyToRealm(sync);
+            }
+        }
+
+        // photo
+        d = bgRealm.where(TrnPhoto.class).findAll().deleteAllFromRealm();
+        bgRealm.copyToRealmOrUpdate(data.getPhoto());
+
+        for (TrnPhoto _obj : data.getPhoto()) {
+            if (_obj == null)
+                continue;
+
+            if (_obj.getCreatedTimestamp() != null) {
+                SyncFileUpload sync = bgRealm.where(SyncFileUpload.class)
+                        .equalTo("contractNo", _obj.getContractNo())
+                        .equalTo("collectorId", _obj.getCollCode())
+                        .equalTo("pictureId", _obj.getPhotoId())
+                        .findFirst();
+
+                if (sync == null) {
+                    sync = new SyncFileUpload();
+                    sync.setUid(java.util.UUID.randomUUID().toString());
+                }
+//                                            sync.setLdvNo(_obj.getLdvNo());
+                sync.setContractNo(_obj.getContractNo());
+                sync.setCollectorId(_obj.getCollCode());
+                sync.setPictureId(_obj.getPhotoId());
+                sync.setSyncedDate(_obj.getCreatedTimestamp());
+
+
+                bgRealm.copyToRealmOrUpdate(sync);
+            }
+        }
+
+    }
 }
+

@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:id="@+id/activity_payment_receive"
     android:layout_width="match_parent"
@@ -8,7 +9,6 @@
     android:paddingLeft="@dimen/activity_horizontal_margin"
     android:paddingRight="@dimen/activity_horizontal_margin"
     android:paddingTop="@dimen/activity_vertical_margin"
-    android:focusableInTouchMode="true"
     tools:context="id.co.ppu.collectionfast2.payment.receive.ActivityPaymentReceive">
 
     <ScrollView
@@ -74,8 +74,8 @@
                             android:focusable="false"
                             android:focusableInTouchMode="false"
                             android:hint="Angsuran Ke"
-                            android:textColor="@android:color/tertiary_text_dark"
-                            android:maxLines="1" />
+                            android:maxLines="1"
+                            android:textColor="@android:color/tertiary_text_dark" />
                     </android.support.design.widget.TextInputLayout>
 
                     <android.support.design.widget.TextInputLayout
@@ -92,8 +92,8 @@
                             android:focusableInTouchMode="false"
                             android:gravity="end"
                             android:hint="Angsuran"
-                            android:textColor="@android:color/tertiary_text_dark"
-                            android:maxLines="1" />
+                            android:maxLines="1"
+                            android:textColor="@android:color/tertiary_text_dark" />
                     </android.support.design.widget.TextInputLayout>
 
 
@@ -113,18 +113,18 @@
                             android:id="@+id/etDenda"
                             android:layout_width="match_parent"
                             android:layout_height="wrap_content"
+                            android:gravity="end"
                             android:hint="Denda"
                             android:inputType="number"
                             android:maxLines="1"
-                            android:gravity="end"
                             android:text="0" />
                     </android.support.design.widget.TextInputLayout>
 
                     <android.support.design.widget.TextInputLayout
-                        android:visibility="gone"
                         android:layout_width="0dp"
                         android:layout_height="wrap_content"
-                        android:layout_weight="0.5">
+                        android:layout_weight="0.5"
+                        android:visibility="gone">
 
                         <EditText
                             android:id="@+id/etDendaBerjalan"
@@ -160,14 +160,14 @@
                         android:id="@+id/etDanaSosial"
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:gravity="end"
-                        android:hint="Dana Sosial"
                         android:clickable="false"
                         android:focusable="false"
                         android:focusableInTouchMode="false"
+                        android:gravity="end"
+                        android:hint="Dana Sosial"
                         android:inputType="number"
-                        android:textColor="@android:color/tertiary_text_dark"
-                        android:maxLines="1" />
+                        android:maxLines="1"
+                        android:textColor="@android:color/tertiary_text_dark" />
                 </android.support.design.widget.TextInputLayout>
 
                 <android.support.design.widget.TextInputLayout
@@ -231,5 +231,34 @@
                 android:text="Save" />
         </LinearLayout>
     </ScrollView>
+
+    <FrameLayout
+        android:id="@+id/flTakePhoto"
+        android:background="@drawable/rounded_shade_shape"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        >
+
+        <LinearLayout
+            android:id="@+id/llTakePhoto"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:gravity="center"
+            android:layout_gravity="center"
+            android:orientation="vertical">
+
+            <ImageView
+                android:layout_width="160dp"
+                android:layout_height="160dp"
+                android:scaleType="fitCenter"
+                app:srcCompat="@drawable/ic_add_a_photo_black_24dp" />
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:textAppearance="?android:attr/textAppearanceMedium"
+                android:text="@string/text_takephoto_beforeentri" />
+        </LinearLayout>
+    </FrameLayout>
 
 </RelativeLayout>

@@ -612,7 +612,7 @@ public class NetUtil {
                 final ResponseGetOnlineContacts resp = response.body();
 
                 if (resp == null || resp.getData() == null) {
-//                    Utility.showDialog(MainChatActivity.this, "No Contacts found", "You have empty List.\nPlease try again.");
+//                    Utility.createAndShowProgressDialog(MainChatActivity.this, "No Contacts found", "You have empty List.\nPlease try again.");
                     return;
                 }
 
@@ -688,7 +688,7 @@ dangerous code
                 final ResponseGetOnlineContacts resp = response.body();
 
                 if (resp == null || resp.getData() == null) {
-//                    Utility.showDialog(MainChatActivity.this, "No Contacts found", "You have empty List.\nPlease try again.");
+//                    Utility.createAndShowProgressDialog(MainChatActivity.this, "No Contacts found", "You have empty List.\nPlease try again.");
                     return;
                 }
 
@@ -764,7 +764,7 @@ dangerous code
                 final ResponseGetOnlineContacts resp = response.body();
 
                 if (resp == null || resp.getData() == null) {
-//                    Utility.showDialog(MainChatActivity.this, "No Contacts found", "You have empty List.\nPlease try again.");
+//                    Utility.createAndShowProgressDialog(MainChatActivity.this, "No Contacts found", "You have empty List.\nPlease try again.");
                     return;
                 }
 

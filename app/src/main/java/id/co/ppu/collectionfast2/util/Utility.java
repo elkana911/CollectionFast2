@@ -2,6 +2,7 @@ package id.co.ppu.collectionfast2.util;
 
 import android.app.Activity;
 import android.app.AlertDialog;
+import android.app.ProgressDialog;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
@@ -34,12 +35,14 @@ import java.util.concurrent.TimeUnit;
 import id.co.ppu.collectionfast2.BuildConfig;
 import id.co.ppu.collectionfast2.R;
 import id.co.ppu.collectionfast2.exceptions.ExpiredException;
+import id.co.ppu.collectionfast2.exceptions.NoConnectionException;
 import okhttp3.HttpUrl;
 
 public class Utility {
 
     // TODO: always check version inside gradle on production
     public final static boolean developerMode = true;
+
     public final static String DATE_EXPIRED_YYYYMMDD = developerMode ? "20201231" : "20361231"; // 20 years
 
     public final static String SERVER_DEV_NAME = "dev-fast-mobile";
@@ -95,6 +98,9 @@ public class Utility {
     public static final String ACTION_SYNC_LKP = "SYNCLKP";
     public static final String ACTION_CHECK_PAID_LKP = "CHECKPAIDLKP";
     public static final String ACTION_SYNC_LOCATION = "SYNCLOCATION";
+
+    public static final String ROLE_ADMIN = "ADMIN";
+    public static final String ROLE_DEMO = "DEMO";
 
     public static String getServerName(int serverId) {
         String[] s = servers[serverId];
@@ -157,6 +163,23 @@ public class Utility {
                 .show();
 
     }
+
+    public static ProgressDialog createAndShowProgressDialog(Context ctx, String msg) {
+        ProgressDialog mProgressDialog = new ProgressDialog(ctx);
+        mProgressDialog.setIndeterminate(true);
+        mProgressDialog.setCancelable(false);
+        mProgressDialog.setMessage(msg);
+
+        mProgressDialog.show();
+
+        return mProgressDialog;
+    }
+
+    public static void dismissDialog(ProgressDialog dialog) {
+        if (dialog.isShowing())
+            dialog.dismiss();
+    }
+
 
     public static void showSettingsDialog(Context mContext) {
         final Context ctx = mContext;
@@ -242,6 +265,11 @@ public class Utility {
         } else if (throwable instanceof ConnectException) {
             if (dialog)
                 Utility.showDialog(ctx, ctx.getString(R.string.error_server_down), "Please contact administrator.\n" + throwable.getMessage());
+            else
+                Toast.makeText(ctx, "Server Down", Toast.LENGTH_LONG).show();
+        } else if (throwable instanceof NoConnectionException) {
+            if (dialog)
+                Utility.showDialog(ctx, ctx.getString(R.string.title_no_connection), ctx.getString(R.string.error_online_required));
             else
                 Toast.makeText(ctx, "Server Down", Toast.LENGTH_LONG).show();
         } else {
@@ -542,6 +570,7 @@ public class Utility {
                 TelephonyManager mngr = (TelephonyManager)ctx.getSystemService(Context.TELEPHONY_SERVICE);
 
                 sb.append(",").append("imei=").append(mngr.getDeviceId());
+                sb.append(",").append("simSN=").append(mngr.getSimSerialNumber());
 
                 LocationManager lm = (LocationManager)ctx.getSystemService(Context.LOCATION_SERVICE);
                 boolean gps_enabled = false;
@@ -619,6 +648,10 @@ public class Utility {
 
         return firstTwoChars;
 
+    }
+
+    public static void hideKeyboard(Activity ctx) {
+        ctx.getWindow().setSoftInputMode(WindowManager.LayoutParams.SOFT_INPUT_STATE_HIDDEN);
     }
 
 }

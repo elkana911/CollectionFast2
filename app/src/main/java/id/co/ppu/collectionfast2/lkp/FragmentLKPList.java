@@ -48,7 +48,6 @@ import id.co.ppu.collectionfast2.pojo.UserConfig;
 import id.co.ppu.collectionfast2.pojo.trn.TrnLDVDetails;
 import id.co.ppu.collectionfast2.pojo.trn.TrnLDVHeader;
 import id.co.ppu.collectionfast2.util.DataUtil;
-import id.co.ppu.collectionfast2.util.NetUtil;
 import id.co.ppu.collectionfast2.util.Utility;
 import io.realm.Realm;
 import io.realm.RealmResults;
@@ -212,11 +211,6 @@ public class FragmentLKPList extends Fragment {
 
     public void retrieveLKP(final OnFragmentLKPListInteractionListener implementor, final Date lkpDate) {
 
-        if (!NetUtil.isConnected(getContext())) {
-            Utility.showDialog(getContext(), getString(R.string.title_no_connection), getString(R.string.error_online_required));
-            return;
-        }
-
         if (implementor == null) {
             Toast.makeText(getContext(), "No implementor for FragmentLKPList", Toast.LENGTH_SHORT).show();
             return;
@@ -238,7 +232,7 @@ public class FragmentLKPList extends Fragment {
                 .equalTo("collCode", collectorCode).count();
 
         if (headerCount > 1) {
-            Utility.showDialog(getContext(), "Invalid header", "Cant retrieve LKP.\nMultiple LKP found !");
+            Utility.createAndShowProgressDialog(getContext(), "Invalid header", "Cant retrieve LKP.\nMultiple LKP found !");
             return;
         }
         */
@@ -246,7 +240,7 @@ public class FragmentLKPList extends Fragment {
         final ProgressDialog mProgressDialog = new ProgressDialog(getContext());
         mProgressDialog.setIndeterminate(true);
         mProgressDialog.setCancelable(false);
-        mProgressDialog.setMessage("Please wait...");
+        mProgressDialog.setMessage(getString(R.string.message_please_wait));
         mProgressDialog.show();
 
         try {
@@ -254,43 +248,26 @@ public class FragmentLKPList extends Fragment {
                 @Override
                 public void onSuccess(ServerInfo serverInfo) {
 
-                    if (mProgressDialog.isShowing()) {
-                        mProgressDialog.dismiss();
-                    }
-//                    boolean pleaseCloseBatch = false;
+                    Utility.dismissDialog(mProgressDialog);
 
                     // tembok pertama, jika tgl server berubah, must sync !
                     if (!Utility.isSameDay(new Date(), serverInfo.getServerDate())) {
                         if (implementor.isAnyDataToSync())
-//                            pleaseCloseBatch = true;
-                            // sync transaction
                             ((MainActivity)getActivity()).syncTransaction(true, null);
                     }
 
-//                    if (pleaseCloseBatch) {
-                        // proses close batch yg akan melakukan sync lokal if any
-//                        Utility.showDialog(getContext(), "Close Batch", "Server Date has changed.\nPlease do Close Batch first");
-//                        return;
-//                    }
-
                     if (Utility.isSameDay(lkpDate, serverInfo.getServerDate()) && implementor.isAnyDataToSync()) {
-                        // sync transaction
                         ((MainActivity)getActivity()).syncTransaction(true, null);
                     } else {
                         implementor.onLKPInquiry(collectorCode, lkpDate);
                     }
-
                 }
 
                 @Override
                 public void onFailure(Throwable throwable) {
-                    if (mProgressDialog.isShowing()) {
-                        mProgressDialog.dismiss();
-                    }
+                    Utility.dismissDialog(mProgressDialog);
 
                     Toast.makeText(getContext(), throwable.getMessage(), Toast.LENGTH_LONG).show();
-//                    Utility.showDialog(getContext(), "Server Error", "Fail to communicate with server");
-
                 }
             });
         } catch (Exception e) {
@@ -400,6 +377,7 @@ public class FragmentLKPList extends Fragment {
 
         return null;
     }
+
     /**
      *
      * @param collectorCode sementara ignore, karena gadget hanya dipakai 1 orang/collector saja
@@ -497,40 +475,7 @@ public class FragmentLKPList extends Fragment {
         } else {
             search_view.setVisibility(View.VISIBLE);
         }
-/*
-        this.realm.executeTransaction(new Realm.Transaction() {
-            @Override
-            public void execute(Realm realm) {
-                realm.delete(DisplayTrnLDVDetails.class);
 
-                for (TrnLDVDetails obj : _buffer) {
-
-                    DisplayTrnLDVDetails displayTrnLDVDetails = realm.createObject(DisplayTrnLDVDetails.class);
-
-                    displayTrnLDVDetails.setLkpDate(Utility.convertStringToDate(etTglLKP.getText().toString(), Utility.DATE_DISPLAY_PATTERN));
-
-                    displayTrnLDVDetails.setSeqNo(obj.getPk().getSeqNo());
-                    displayTrnLDVDetails.setLdvNo(obj.getPk().getLdvNo());
-                    displayTrnLDVDetails.setCollId(collectorCode);
-                    displayTrnLDVDetails.setContractNo(obj.getContractNo());
-                    displayTrnLDVDetails.setCustName(obj.getCustName());
-                    displayTrnLDVDetails.setCustNo(obj.getCustNo());
-                    displayTrnLDVDetails.setCreatedBy(obj.getCreatedBy());
-                    displayTrnLDVDetails.setFlagDone(obj.getFlagDone());
-                    displayTrnLDVDetails.setAddress(obj.getAddress());
-
-                    if (DataUtil.isLKPSynced(realm, obj) > 0) {
-                        displayTrnLDVDetails.setWorkStatus("SYNC");
-                    }else{
-                        displayTrnLDVDetails.setWorkStatus(obj.getWorkStatus());
-                    }
-
-
-                    realm.copyToRealm(displayTrnLDVDetails);
-                }
-            }
-        });
-*/
         // due to the limitations of realmsearchview, searchable column has been disabled
         // because when sort by seqNo, i cant search by custname
         mAdapter = new LKPListAdapter(

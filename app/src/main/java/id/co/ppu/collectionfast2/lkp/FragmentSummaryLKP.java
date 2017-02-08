@@ -242,7 +242,7 @@ public class FragmentSummaryLKP extends Fragment {
 
     @OnClick(R.id.btnDetailsLKP)
     public void onClickDetailsLKP() {
-//        Utility.showDialog(getContext(), "Details LKP Summary", "Sorry, Under Constructions");
+//        Utility.createAndShowProgressDialog(getContext(), "Details LKP Summary", "Sorry, Under Constructions");
         Intent i = new Intent(getActivity(), ActivityDetailsLKPSummary.class);
 
 //        i.putExtra(ActivityDetailsLKPSummary.PARAM_IS_LKP_INQUIRY, isLKPInquiry);

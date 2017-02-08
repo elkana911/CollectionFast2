@@ -131,6 +131,8 @@ public class ActivityScrollingLKPDetails extends BasicActivity {
         Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
 
+        toolbar_layout.setExpandedTitleTextAppearance(R.style.ExpandedAppBar);
+
         if (getSupportActionBar() != null) {
             getSupportActionBar().setDisplayHomeAsUpEnabled(true);
             getSupportActionBar().setHomeButtonEnabled(true);

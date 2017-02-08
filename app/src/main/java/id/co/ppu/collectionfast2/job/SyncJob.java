@@ -34,7 +34,6 @@ public class SyncJob extends BroadcastReceiver{
             }
         }
 
-
         /*
         try {
 

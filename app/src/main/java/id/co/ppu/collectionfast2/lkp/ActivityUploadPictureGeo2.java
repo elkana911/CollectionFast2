@@ -51,8 +51,8 @@ import retrofit2.Callback;
 import retrofit2.Response;
 
 /**
- * Cara lama, upload sync terpisah dari sinkronisasi utama.
- * ide baru adalah upload sync digabung dengan sinkronisasi utama, tp sepertinya akan memperlambat jd cara lama ini masih kupakai dulu
+ * Cara yg lama, upload sync terpisah dari sinkronisasi utama.
+ * ide baru adalah upload sync digabung dengan sinkronisasi utama, tp sepertinya akan memperlambat jd cara lama masih kupakai dulu
  */
 public class ActivityUploadPictureGeo2 extends BasicActivity {
     public static final String PARAM_CONTRACT_NO = "customer.contractNo";

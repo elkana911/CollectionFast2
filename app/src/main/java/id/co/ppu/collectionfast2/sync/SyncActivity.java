@@ -135,7 +135,7 @@ public abstract class SyncActivity extends MainbaseActivity {
 /*
     protected void syncTransaction(boolean closeBatch) {
         // TODO: important !
-        Utility.showDialog(this, "Close Batch", "Cannot close batch.\nPlease finish all transactions.");
+        Utility.createAndShowProgressDialog(this, "Close Batch", "Cannot close batch.\nPlease finish all transactions.");
 
         // update
         long ldvHeader = this.realm.where(TrnLDVHeader.class).equalTo("lastupdateBy", Utility.LAST_UPDATE_BY).count();

@@ -217,7 +217,7 @@ public class ActivityRepoEntry extends BasicActivity {
             @Override
             public void execute(Realm realm) {
                 UserConfig userConfig = realm.where(UserConfig.class).findFirst();
-//                Date serverDate = realm.where(ServerInfo.class).findFirst().getServerDate();
+//                Date serverDate = realm.where(ServerInfo.class).findFirst().getServerDateFromDB();
 
                 String createdBy = "JOB" + Utility.convertDateToString(serverDate, Utility.DATE_DATA_PATTERN);
 

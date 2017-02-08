@@ -76,30 +76,16 @@ import id.co.ppu.collectionfast2.login.LoginActivity;
 import id.co.ppu.collectionfast2.payment.entry.ActivityPaymentEntri;
 import id.co.ppu.collectionfast2.pojo.DisplayTrnContractBuckets;
 import id.co.ppu.collectionfast2.pojo.DisplayTrnLDVDetails;
+import id.co.ppu.collectionfast2.pojo.LKPData;
 import id.co.ppu.collectionfast2.pojo.ServerInfo;
 import id.co.ppu.collectionfast2.pojo.UserConfig;
 import id.co.ppu.collectionfast2.pojo.UserData;
-import id.co.ppu.collectionfast2.pojo.sync.SyncFileUpload;
-import id.co.ppu.collectionfast2.pojo.sync.SyncTrnBastbj;
-import id.co.ppu.collectionfast2.pojo.sync.SyncTrnLDVComments;
-import id.co.ppu.collectionfast2.pojo.sync.SyncTrnLDVDetails;
-import id.co.ppu.collectionfast2.pojo.sync.SyncTrnLDVHeader;
-import id.co.ppu.collectionfast2.pojo.sync.SyncTrnRVB;
-import id.co.ppu.collectionfast2.pojo.sync.SyncTrnRVColl;
-import id.co.ppu.collectionfast2.pojo.sync.SyncTrnRepo;
-import id.co.ppu.collectionfast2.pojo.trn.HistInstallments;
-import id.co.ppu.collectionfast2.pojo.trn.TrnBastbj;
 import id.co.ppu.collectionfast2.pojo.trn.TrnCollPos;
-import id.co.ppu.collectionfast2.pojo.trn.TrnCollectAddr;
-import id.co.ppu.collectionfast2.pojo.trn.TrnContractBuckets;
-import id.co.ppu.collectionfast2.pojo.trn.TrnLDVComments;
 import id.co.ppu.collectionfast2.pojo.trn.TrnLDVDetails;
 import id.co.ppu.collectionfast2.pojo.trn.TrnLDVHeader;
 import id.co.ppu.collectionfast2.pojo.trn.TrnPhoto;
 import id.co.ppu.collectionfast2.pojo.trn.TrnRVB;
 import id.co.ppu.collectionfast2.pojo.trn.TrnRVColl;
-import id.co.ppu.collectionfast2.pojo.trn.TrnRepo;
-import id.co.ppu.collectionfast2.pojo.trn.TrnVehicleInfo;
 import id.co.ppu.collectionfast2.rest.ApiInterface;
 import id.co.ppu.collectionfast2.rest.ServiceGenerator;
 import id.co.ppu.collectionfast2.rest.request.RequestLKPByDate;
@@ -120,6 +106,7 @@ import id.co.ppu.collectionfast2.sync.SyncRepo;
 import id.co.ppu.collectionfast2.sync.SyncRvb;
 import id.co.ppu.collectionfast2.test.ActivityDeveloper;
 import id.co.ppu.collectionfast2.util.DataUtil;
+import id.co.ppu.collectionfast2.util.DemoUtil;
 import id.co.ppu.collectionfast2.util.NetUtil;
 import id.co.ppu.collectionfast2.util.RootUtil;
 import id.co.ppu.collectionfast2.util.Storage;
@@ -141,8 +128,7 @@ public class MainActivity extends ChatActivity
         implements GoogleApiClient.ConnectionCallbacks,
         GoogleApiClient.OnConnectionFailedListener,
         LocationListener, NavigationView.OnNavigationItemSelectedListener
-        , FragmentLKPList.OnFragmentLKPListInteractionListener
-        {
+        , FragmentLKPList.OnFragmentLKPListInteractionListener {
 
     public static final String SELECTED_NAV_MENU_KEY = "selected_nav_menu_key";
     private static final String TAG = "MainActivity";
@@ -188,8 +174,7 @@ public class MainActivity extends ChatActivity
         call.enqueue(new Callback<ResponseGetMobileConfig>() {
             @Override
             public void onResponse(Call<ResponseGetMobileConfig> call, Response<ResponseGetMobileConfig> response) {
-                if (mProgressDialog.isShowing())
-                    mProgressDialog.dismiss();
+                Utility.dismissDialog(mProgressDialog);
 
                 if (response.isSuccessful()) {
                     final ResponseGetMobileConfig respGetMobileCfg = response.body();
@@ -228,8 +213,7 @@ public class MainActivity extends ChatActivity
 
             @Override
             public void onFailure(Call<ResponseGetMobileConfig> call, Throwable t) {
-                if (mProgressDialog.isShowing())
-                    mProgressDialog.dismiss();
+                Utility.dismissDialog(mProgressDialog);
 
             }
         });
@@ -601,18 +585,18 @@ public class MainActivity extends ChatActivity
         return true;
     }
 
-            @Override
-            protected boolean onPrepareOptionsPanel(View view, Menu menu) {
+    @Override
+    protected boolean onPrepareOptionsPanel(View view, Menu menu) {
 
-                Fragment frag = getSupportFragmentManager().findFragmentById(R.id.content_frame);
+        Fragment frag = getSupportFragmentManager().findFragmentById(R.id.content_frame);
 
-                MenuItem chatClearItem = menu.findItem(R.id.action_clear_chats);
-                chatClearItem.setVisible(frag instanceof FragmentChatWith);
+        MenuItem chatClearItem = menu.findItem(R.id.action_clear_chats);
+        chatClearItem.setVisible(frag instanceof FragmentChatWith);
 
-                return super.onPrepareOptionsPanel(view, menu);
-            }
+        return super.onPrepareOptionsPanel(view, menu);
+    }
 
-            @Override
+    @Override
     public boolean onOptionsItemSelected(MenuItem item) {
         // Handle action bar item clicks here. The action bar will
         // automatically handle clicks on the Home/Up button, so long
@@ -626,7 +610,7 @@ public class MainActivity extends ChatActivity
         } else if (id == R.id.action_clear_chats) {
             Fragment frag = getSupportFragmentManager().findFragmentById(R.id.content_frame);
             if (frag instanceof FragmentChatWith) {
-                ((FragmentChatWith)frag).clearChat();
+                ((FragmentChatWith) frag).clearChat();
             }
 
         } else if (id == R.id.action_reset) {
@@ -804,7 +788,7 @@ public class MainActivity extends ChatActivity
         return true;
     }
 
-            @Override
+    @Override
     protected void displayView(int viewId) {
 
         if (mSelectedNavMenuIndex == viewId) {
@@ -975,7 +959,6 @@ public class MainActivity extends ChatActivity
         Fragment frag = getSupportFragmentManager().findFragmentById(R.id.content_frame);
 
         if (frag != null && frag instanceof FragmentLKPList) {
-//            ((FragmentLKPList) frag).performClickSync();
             if (!anyDataToSync()) {
 
                 new AlertDialog.Builder(this)
@@ -988,7 +971,7 @@ public class MainActivity extends ChatActivity
                                 clearLKPTables();
                                 clearSyncTables();
 
-                                attemptGetLKP(currentUser.getUserId(), getServerDate(realm), false, null);
+                                attemptGetLKP(currentUser.getUserId(), getServerDateFromDB(realm), false, null);
                             }
 
                         })
@@ -1001,7 +984,7 @@ public class MainActivity extends ChatActivity
     }
 
 
-    private void getLKPFromServer(final ProgressDialog mProgressDialog, final String collectorCode, Date lkpDate, final String createdBy, final OnPostRetrieveLKP listener) {
+    private void getLKPFromServer(final String collectorCode, Date lkpDate, final String createdBy, final OnPostRetrieveLKP listener) {
         ApiInterface fastService =
                 ServiceGenerator.createService(ApiInterface.class, Utility.buildUrl(Storage.getPreferenceAsInt(getApplicationContext(), Storage.KEY_SERVER_ID, 0)));
 
@@ -1012,13 +995,14 @@ public class MainActivity extends ChatActivity
 
         fillRequest(Utility.ACTION_GET_LKP, requestLKP);
 
+        final ProgressDialog mProgressDialog = Utility.createAndShowProgressDialog(this, "Getting your LKP from server.\nPlease wait...");
+
         Call<ResponseGetLKP> call = fastService.getLKPByDate(requestLKP);
         call.enqueue(new Callback<ResponseGetLKP>() {
             @Override
             public void onResponse(Call<ResponseGetLKP> call, Response<ResponseGetLKP> response) {
 
-                if (mProgressDialog.isShowing())
-                    mProgressDialog.dismiss();
+                Utility.dismissDialog(mProgressDialog);
 
                 if (response.isSuccessful()) {
                     final ResponseGetLKP respGetLKP = response.body();
@@ -1039,287 +1023,10 @@ public class MainActivity extends ChatActivity
                             RealmAsyncTask realmAsyncTask = realm.executeTransactionAsync(new Realm.Transaction() {
                                 @Override
                                 public void execute(Realm bgRealm) {
-                                    // insert header
-                                    // wipe existing tables?
-                                    boolean d = bgRealm.where(TrnLDVHeader.class)
-                                            .equalTo("collCode", collectorCode)
-                                            .equalTo(Utility.COLUMN_CREATED_BY, createdBy)
-                                            .findAll()
-                                            .deleteAllFromRealm();
-
-                                    bgRealm.copyToRealm(respGetLKP.getData().getHeader());
 
                                     currentLDVNo = respGetLKP.getData().getHeader().getLdvNo();
 
-                                    // refresh synctable
-                                    TrnLDVHeader _header = respGetLKP.getData().getHeader();
-                                    if (_header.getFlagDone() != null && _header.getFlagDone().equalsIgnoreCase("Y")) {
-                                        SyncTrnLDVHeader sync = bgRealm.where(SyncTrnLDVHeader.class)
-                                                .equalTo("ldvNo", _header.getLdvNo()).findFirst();
-
-                                        if (sync == null) {
-                                            sync = new SyncTrnLDVHeader();
-                                        }
-                                        sync.setLdvNo(_header.getLdvNo());
-                                        sync.setLastUpdateBy(_header.getLastupdateBy());
-                                        sync.setCreatedBy(_header.getCreatedBy());
-
-                                        sync.setSyncedDate(_header.getDateDone());
-
-                                        bgRealm.copyToRealm(sync);
-                                    }
-
-                                    // insert address
-                                    d = bgRealm.where(TrnCollectAddr.class).equalTo(Utility.COLUMN_CREATED_BY, createdBy).findAll().deleteAllFromRealm();
-                                    bgRealm.copyToRealm(respGetLKP.getData().getAddress());
-
-                                    // insert rvb
-                                    d = bgRealm.where(TrnRVB.class).equalTo(Utility.COLUMN_CREATED_BY, createdBy).findAll().deleteAllFromRealm();
-                                    bgRealm.copyToRealm(respGetLKP.getData().getRvb());
-
-                                    for (TrnRVB _rvb : respGetLKP.getData().getRvb()) {
-                                        if (_rvb == null)
-                                            continue;
-
-                                        if (_rvb.getFlagDone() != null && _rvb.getFlagDone().equalsIgnoreCase("Y")) {
-                                            SyncTrnRVB s = bgRealm.where(SyncTrnRVB.class)
-                                                    .equalTo("rvbNo", _rvb.getRvbNo()).findFirst();
-
-                                            if (s == null) {
-                                                s = new SyncTrnRVB();
-                                            }
-                                            s.setRvbNo(_rvb.getRvbNo());
-                                            s.setLastUpdateBy(_rvb.getLastupdateBy());
-                                            s.setCreatedBy(_rvb.getCreatedBy());
-                                            s.setSyncedDate(_rvb.getDateDone());
-
-                                            bgRealm.copyToRealm(s);
-                                        }
-                                    }
-
-
-                                    // insert bastbj
-                                    d = bgRealm.where(TrnBastbj.class).equalTo(Utility.COLUMN_CREATED_BY, createdBy).findAll().deleteAllFromRealm();
-                                    bgRealm.copyToRealm(respGetLKP.getData().getBastbj());
-
-                                    for (TrnBastbj _bastbj : respGetLKP.getData().getBastbj()) {
-
-                                        if (_bastbj == null)
-                                            continue;
-
-                                        if (_bastbj.getFlagDone() != null && _bastbj.getFlagDone().equalsIgnoreCase("Y")) {
-                                            SyncTrnBastbj sync = bgRealm.where(SyncTrnBastbj.class)
-                                                    .equalTo("bastbjNo", _bastbj.getBastbjNo()).findFirst();
-
-                                            if (sync == null) {
-                                                sync = new SyncTrnBastbj();
-                                            }
-                                            sync.setBastbjNo(_bastbj.getBastbjNo());
-                                            sync.setLastUpdateBy(_bastbj.getLastupdateBy());
-                                            sync.setCreatedBy(_bastbj.getCreatedBy());
-                                            sync.setSyncedDate(_bastbj.getDateDone());
-
-                                            bgRealm.copyToRealm(sync);
-                                        }
-                                    }
-
-                                    // insert vehicle info
-                                    d = bgRealm.where(TrnVehicleInfo.class).equalTo(Utility.COLUMN_CREATED_BY, createdBy).findAll().deleteAllFromRealm();
-                                    bgRealm.copyToRealmOrUpdate(respGetLKP.getData().getVehicleInfo());
-
-                                    // insert history installments
-                                    d = bgRealm.where(HistInstallments.class)./*equalTo(Utility.COLUMN_CREATED_BY, createdBy).*/findAll().deleteAllFromRealm();
-                                    bgRealm.copyToRealmOrUpdate(respGetLKP.getData().getHistoryInstallments());
-
-                                    // insert buckets
-                                    d = bgRealm.where(TrnContractBuckets.class).equalTo(Utility.COLUMN_CREATED_BY, createdBy).findAll().deleteAllFromRealm();
-                                    bgRealm.copyToRealm(respGetLKP.getData().getBuckets());
-
-                                    // insert details
-                                    d = bgRealm.where(TrnLDVDetails.class).equalTo(Utility.COLUMN_CREATED_BY, createdBy).findAll().deleteAllFromRealm();
-
-                                    // link trxCollectAddr
-                                    for (TrnLDVDetails ldvDetails : respGetLKP.getData().getDetails()) {
-
-                                        TrnCollectAddr _address = null;
-                                        for (TrnCollectAddr addr : respGetLKP.getData().getAddress()) {
-                                            if (addr.getPk().getContractNo().equalsIgnoreCase(ldvDetails.getContractNo())) {
-                                                _address = addr;
-                                                break;
-                                            }
-                                        }
-                                        ldvDetails.setAddress(_address);
-                                        bgRealm.copyToRealm(ldvDetails);
-                                    }
-
-                                    for (TrnLDVDetails _ldvDtl : respGetLKP.getData().getDetails()) {
-                                        if (_ldvDtl == null)
-                                            continue;
-
-                                        if (_ldvDtl.getFlagDone() != null && _ldvDtl.getFlagDone().equalsIgnoreCase("Y")) {
-                                            SyncTrnLDVDetails sync = bgRealm.where(SyncTrnLDVDetails.class)
-                                                    .equalTo("ldvNo", _ldvDtl.getPk().getLdvNo())
-                                                    .equalTo("seqNo", _ldvDtl.getPk().getSeqNo())
-                                                    .equalTo("contractNo", _ldvDtl.getContractNo())
-                                                    .findFirst();
-
-                                            if (sync == null) {
-                                                sync = new SyncTrnLDVDetails();
-                                            }
-                                            sync.setLdvNo(_ldvDtl.getPk().getLdvNo());
-                                            sync.setSeqNo(_ldvDtl.getPk().getSeqNo());
-                                            sync.setContractNo(_ldvDtl.getContractNo());
-                                            sync.setLastUpdateBy(_ldvDtl.getLastupdateBy());
-                                            sync.setCreatedBy(_ldvDtl.getCreatedBy());
-                                            sync.setSyncedDate(_ldvDtl.getDateDone());
-
-                                            bgRealm.copyToRealm(sync);
-                                        }
-                                    }
-
-                                    // for faster show, but must be load after ldvdetails
-                                    bgRealm.delete(DisplayTrnContractBuckets.class);
-                                    for (TrnContractBuckets obj : respGetLKP.getData().getBuckets()) {
-                                        /*
-                                        batal difilter karena pak yoce bilang utk kasus lkp yg sudah bayar bisa dientri di payment entri utk cicilan di bulan berikutnya
-                                        boolean exist = false;
-                                        for (TrnLDVDetails _dtl : respGetLKP.getData().getDetails()) {
-                                            if (_dtl.getContractNo().equalsIgnoreCase(obj.getPk().getContractNo())) {
-                                                exist = true;
-                                                break;
-                                            }
-                                        }
-
-                                        if (exist)
-                                            continue;
-                                            */
-
-                                        DisplayTrnContractBuckets displayTrnContractBuckets = bgRealm.createObject(DisplayTrnContractBuckets.class);
-
-                                        displayTrnContractBuckets.setContractNo(obj.getPk().getContractNo());
-                                        displayTrnContractBuckets.setCreatedBy(obj.getCreatedBy());
-                                        displayTrnContractBuckets.setCustName(obj.getCustName());
-
-                                        bgRealm.copyToRealm(displayTrnContractBuckets);
-                                    }
-
-                                    //repo inserted by MOBCOL
-                                    d = bgRealm.where(TrnRepo.class).equalTo(Utility.COLUMN_CREATED_BY, Utility.LAST_UPDATE_BY).findAll().deleteAllFromRealm();
-                                    bgRealm.copyToRealmOrUpdate(respGetLKP.getData().getRepo());
-
-                                    for (TrnRepo _obj : respGetLKP.getData().getRepo()) {
-                                        if (_obj == null)
-                                            continue;
-
-                                        if (_obj.getFlagDone() != null && _obj.getFlagDone().equalsIgnoreCase("Y")) {
-                                            SyncTrnRepo sync = bgRealm.where(SyncTrnRepo.class)
-                                                    .equalTo("repoNo", _obj.getRepoNo())
-                                                    .equalTo("contractNo", _obj.getContractNo())
-                                                    .findFirst();
-
-                                            if (sync == null) {
-                                                sync = new SyncTrnRepo();
-                                            }
-                                            sync.setRepoNo(_obj.getRepoNo());
-                                            sync.setContractNo(_obj.getContractNo());
-                                            sync.setLastUpdateBy(_obj.getLastupdateBy());
-                                            sync.setCreatedBy(_obj.getCreatedBy());
-                                            sync.setSyncedDate(_obj.getDateDone());
-
-
-                                            bgRealm.copyToRealm(sync);
-                                        }
-                                    }
-                                    //changeaddr ?
-
-                                    //ldvcomment ?
-                                    d = bgRealm.where(TrnLDVComments.class).equalTo(Utility.COLUMN_CREATED_BY, Utility.LAST_UPDATE_BY).findAll().deleteAllFromRealm();
-                                    bgRealm.copyToRealmOrUpdate(respGetLKP.getData().getLdvComments());
-
-                                    for (TrnLDVComments _obj : respGetLKP.getData().getLdvComments()) {
-                                        if (_obj == null)
-                                            continue;
-
-                                        if (_obj.getFlagDone() != null && _obj.getFlagDone().equalsIgnoreCase("Y")) {
-                                            SyncTrnLDVComments sync = bgRealm.where(SyncTrnLDVComments.class)
-                                                    .equalTo("ldvNo", _obj.getPk().getLdvNo())
-                                                    .equalTo("seqNo", _obj.getPk().getSeqNo())
-                                                    .equalTo("contractNo", _obj.getPk().getContractNo())
-                                                    .findFirst();
-
-                                            if (sync == null) {
-                                                sync = new SyncTrnLDVComments();
-                                            }
-                                            sync.setLdvNo(_obj.getPk().getLdvNo());
-                                            sync.setSeqNo(_obj.getPk().getSeqNo());
-                                            sync.setContractNo(_obj.getPk().getContractNo());
-                                            sync.setLastUpdateBy(_obj.getLastupdateBy());
-                                            sync.setCreatedBy(_obj.getCreatedBy());
-                                            sync.setSyncedDate(_obj.getDateDone());
-
-
-                                            bgRealm.copyToRealm(sync);
-                                        }
-                                    }
-
-                                    //rvcoll
-                                    d = bgRealm.where(TrnRVColl.class).equalTo(Utility.COLUMN_CREATED_BY, Utility.LAST_UPDATE_BY).findAll().deleteAllFromRealm();
-                                    bgRealm.copyToRealmOrUpdate(respGetLKP.getData().getRvColl());
-
-                                    for (TrnRVColl _obj : respGetLKP.getData().getRvColl()) {
-                                        if (_obj == null)
-                                            continue;
-
-                                        if (_obj.getFlagDone() != null && _obj.getFlagDone().equalsIgnoreCase("Y")) {
-                                            SyncTrnRVColl sync = bgRealm.where(SyncTrnRVColl.class)
-                                                    .equalTo("ldvNo", _obj.getLdvNo())
-                                                    .equalTo("contractNo", _obj.getContractNo())
-                                                    .findFirst();
-
-                                            if (sync == null) {
-                                                sync = new SyncTrnRVColl();
-                                            }
-                                            sync.setLdvNo(_obj.getLdvNo());
-                                            sync.setContractNo(_obj.getContractNo());
-                                            sync.setLastUpdateBy(_obj.getLastupdateBy());
-                                            sync.setCreatedBy(_obj.getCreatedBy());
-                                            sync.setSyncedDate(_obj.getDateDone());
-
-
-                                            bgRealm.copyToRealm(sync);
-                                        }
-                                    }
-
-                                    // photo
-                                    d = bgRealm.where(TrnPhoto.class).findAll().deleteAllFromRealm();
-                                    bgRealm.copyToRealmOrUpdate(respGetLKP.getData().getPhoto());
-
-                                    for (TrnPhoto _obj : respGetLKP.getData().getPhoto()) {
-                                        if (_obj == null)
-                                            continue;
-
-                                        if (_obj.getCreatedTimestamp() != null) {
-                                            SyncFileUpload sync = bgRealm.where(SyncFileUpload.class)
-                                                    .equalTo("contractNo", _obj.getContractNo())
-                                                    .equalTo("collectorId", _obj.getCollCode())
-                                                    .equalTo("pictureId", _obj.getPhotoId())
-                                                    .findFirst();
-
-                                            if (sync == null) {
-                                                sync = new SyncFileUpload();
-                                                sync.setUid(java.util.UUID.randomUUID().toString());
-                                            }
-//                                            sync.setLdvNo(_obj.getLdvNo());
-                                            sync.setContractNo(_obj.getContractNo());
-                                            sync.setCollectorId(_obj.getCollCode());
-                                            sync.setPictureId(_obj.getPhotoId());
-                                            sync.setSyncedDate(_obj.getCreatedTimestamp());
-
-
-                                            bgRealm.copyToRealmOrUpdate(sync);
-                                        }
-                                    }
-
+                                    DataUtil.saveLKPToDB(bgRealm, collectorCode, createdBy, respGetLKP.getData());
 
                                 }
                             }, new Realm.Transaction.OnSuccess() {
@@ -1340,7 +1047,6 @@ public class MainActivity extends ChatActivity
                                         listener.onFailure();
                                 }
                             });
-
 
                         }
                     }
@@ -1370,8 +1076,7 @@ public class MainActivity extends ChatActivity
                 if (listener != null)
                     listener.onFailure();
 
-                if (mProgressDialog.isShowing())
-                    mProgressDialog.dismiss();
+                Utility.dismissDialog(mProgressDialog);
 
                 Utility.showDialog(MainActivity.this, "Server Problem", t.getMessage());
             }
@@ -1385,7 +1090,7 @@ public class MainActivity extends ChatActivity
             return;
         }
 
-        Date serverDate = getServerDate(this.realm);
+        Date serverDate = getServerDateFromDB(this.realm);
 
         final String createdBy = "JOB" + Utility.convertDateToString(lkpDate, "yyyyMMdd");
         // load cache
@@ -1394,7 +1099,6 @@ public class MainActivity extends ChatActivity
                 .count();
 
         if (useCache) {
-
             if (count > 0 && lkpDate.before(serverDate)) {
                 if (listener != null)
                     listener.onLoadFromLocal();
@@ -1402,52 +1106,68 @@ public class MainActivity extends ChatActivity
             }
         }
 
-        // should check apakah ada data lkp yg masih kecantol di hari kemarin
+        if (!NetUtil.isConnected(this)) {
 
-        final ProgressDialog mProgressDialog = new ProgressDialog(this);
-        mProgressDialog.setIndeterminate(true);
-        mProgressDialog.setCancelable(false);
-        mProgressDialog.setMessage("Getting your LKP from server.\nPlease wait...");
-        mProgressDialog.show();
+            if (DemoUtil.isDemo(this)) {
 
-        // must sync first
-        syncTransaction(false, new OnSuccessError() {
-            @Override
-            public void onSuccess(String msg) {
-                getLKPFromServer(mProgressDialog, collectorCode, lkpDate, createdBy, listener);
+                final ProgressDialog mProgressDialog = Utility.createAndShowProgressDialog(this, "Getting your LKP from server.\nPlease wait...");
+
+                // save db here
+                RealmAsyncTask realmAsyncTask = realm.executeTransactionAsync(new Realm.Transaction() {
+                    @Override
+                    public void execute(Realm bgRealm) {
+                        LKPData lkpData = DemoUtil.buildLKP(new Date(), currentUser.getUserId(), currentUser.getBranchId(), createdBy);
+
+                        currentLDVNo = lkpData.getHeader().getLdvNo();
+
+                        DataUtil.saveLKPToDB(bgRealm, collectorCode, createdBy, lkpData);
+
+                    }
+                }, new Realm.Transaction.OnSuccess() {
+                    @Override
+                    public void onSuccess() {
+                        Utility.dismissDialog(mProgressDialog);
+
+                        if (listener != null)
+                            listener.onSuccess();
+                    }
+                }, new Realm.Transaction.OnError() {
+                    @Override
+                    public void onError(Throwable error) {
+                        // Transaction failed and was automatically canceled.
+                        Toast.makeText(MainActivity.this, "Error while getting LKP", Toast.LENGTH_LONG).show();
+                        error.printStackTrace();
+
+                        Utility.dismissDialog(mProgressDialog);
+
+                        if (listener != null)
+                            listener.onFailure();
+                    }
+                });
+
             }
 
-            @Override
-            public void onFailure(Throwable throwable) {
-                if (mProgressDialog.isShowing())
-                    mProgressDialog.dismiss();
-            }
+        } else {
 
-            @Override
-            public void onSkip() {
-                getLKPFromServer(mProgressDialog, collectorCode, lkpDate, createdBy, listener);
-            }
-        });
-/*
-        syncTransaction(false, false, new OnSuccessError() {
-            @Override
-            public void onSuccess(String msg) {
-                getLKPFromServer(mProgressDialog, collectorCode, lkpDate, createdBy, listener);
-            }
+            // should check apakah ada data lkp yg masih kecantol di hari kemarin
+            // must sync first
+            syncTransaction(false, new OnSuccessError() {
+                @Override
+                public void onSuccess(String msg) {
+                    getLKPFromServer(collectorCode, lkpDate, createdBy, listener);
+                }
 
-            @Override
-            public void onFailure(Throwable throwable) {
-                if (mProgressDialog.isShowing())
-                    mProgressDialog.dismiss();
-            }
+                @Override
+                public void onFailure(Throwable throwable) {
+                }
 
-            @Override
-            public void onSkip() {
-                getLKPFromServer(mProgressDialog, collectorCode, lkpDate, createdBy, listener);
-            }
+                @Override
+                public void onSkip() {
+                    getLKPFromServer(collectorCode, lkpDate, createdBy, listener);
+                }
+            });
+        }
 
-        });
-*/
     }
 
     @Override
@@ -1725,7 +1445,6 @@ public class MainActivity extends ChatActivity
     }
 
     public void openPaymentEntry() {
-//        UserData userData = (UserData) Storage.getObjPreference(getApplicationContext(), Storage.KEY_USER, UserData.class);
 
         if (DataUtil.isLDVHeaderValid(realm, currentUser.getUserId()) != null) {
             showSnackBar(getString(R.string.warning_close_batch));
@@ -1872,33 +1591,27 @@ public class MainActivity extends ChatActivity
             @Override
             public void onResponse(Call<ResponseBody> call, Response<ResponseBody> response) {
 
-                if (mProgressDialog.isShowing()) {
-                    mProgressDialog.dismiss();
-                }
+                Utility.dismissDialog(mProgressDialog);
 
                 if (response.isSuccessful()) {
 
-                    if (listener != null) {
+                    if (listener != null)
                         listener.onSuccess(null);
-                    }
 
                 } else {
 
-                    if (listener != null) {
+                    if (listener != null)
                         try {
                             listener.onFailure(new RuntimeException(response.errorBody().string()));
                         } catch (IOException e) {
                             e.printStackTrace();
                         }
-                    }
                 }
             }
 
             @Override
             public void onFailure(Call<ResponseBody> call, Throwable t) {
-                if (mProgressDialog.isShowing()) {
-                    mProgressDialog.dismiss();
-                }
+                Utility.dismissDialog(mProgressDialog);
 
                 if (listener != null) {
                     listener.onFailure(new RuntimeException(t != null ? t.getMessage() : "Unknown error"));
@@ -1945,11 +1658,7 @@ public class MainActivity extends ChatActivity
         final SyncLdvHeader syncLdvHeader = new SyncLdvHeader(this.realm);
         if (syncLdvHeader.anyDataToSync()) {
 
-            final ProgressDialog mProgressDialog = new ProgressDialog(this);
-            mProgressDialog.setIndeterminate(true);
-            mProgressDialog.setCancelable(false);
-            mProgressDialog.setMessage(getString(R.string.message_please_wait));
-            mProgressDialog.show();
+            final ProgressDialog mProgressDialog = Utility.createAndShowProgressDialog(this, getString(R.string.message_please_wait));
 
             final RequestSyncLKP req = new RequestSyncLKP();
             req.setLdvHeader(syncLdvHeader.getDataToSync());
@@ -1964,8 +1673,7 @@ public class MainActivity extends ChatActivity
                 @Override
                 public void onResponse(Call<ResponseSync> call, Response<ResponseSync> response) {
 
-                    if (mProgressDialog.isShowing())
-                        mProgressDialog.dismiss();
+                    Utility.dismissDialog(mProgressDialog);
 
                     if (!response.isSuccessful()) {
 
@@ -1973,7 +1681,7 @@ public class MainActivity extends ChatActivity
 
                         String msg = "";
                         try {
-//                        Utility.showDialog(MainActivity.this, "Server Problem (" + statusCode + ")", errorBody.string());
+//                        Utility.createAndShowProgressDialog(MainActivity.this, "Server Problem (" + statusCode + ")", errorBody.string());
                             msg = response.message() + "(" + response.code() + ") " + errorBody.string();
                             Snackbar.make(coordinatorLayout, msg, Snackbar.LENGTH_LONG).show();
                         } catch (Exception e) {
@@ -2020,8 +1728,7 @@ public class MainActivity extends ChatActivity
                 @Override
                 public void onFailure(Call<ResponseSync> call, Throwable t) {
 
-                    if (mProgressDialog.isShowing())
-                        mProgressDialog.dismiss();
+                    Utility.dismissDialog(mProgressDialog);
 
                     Log.e("eric.onFailure", t.getMessage(), t);
                     if (t instanceof ConnectException) {
@@ -2044,7 +1751,7 @@ public class MainActivity extends ChatActivity
                         clearLKPTables();
                         clearSyncTables();
 
-                        attemptGetLKP(currentUser.getUserId(), getServerDate(realm), false, null);
+                        attemptGetLKP(currentUser.getUserId(), getServerDateFromDB(realm), false, null);
                     }
                 }
             });
@@ -2102,8 +1809,7 @@ public class MainActivity extends ChatActivity
             call.enqueue(new Callback<ResponseSync>() {
                 @Override
                 public void onResponse(Call<ResponseSync> call, Response<ResponseSync> response) {
-                    if (mProgressDialog.isShowing())
-                        mProgressDialog.dismiss();
+                    Utility.dismissDialog(mProgressDialog);
 
                     if (!response.isSuccessful()) {
 
@@ -2111,7 +1817,7 @@ public class MainActivity extends ChatActivity
 
                         String msg = "";
                         try {
-//                        Utility.showDialog(MainActivity.this, "Server Problem (" + statusCode + ")", errorBody.string());
+//                        Utility.createAndShowProgressDialog(MainActivity.this, "Server Problem (" + statusCode + ")", errorBody.string());
                             msg = response.message() + "(" + response.code() + ") " + errorBody.string();
                             Snackbar.make(coordinatorLayout, msg, Snackbar.LENGTH_LONG).show();
                         } catch (Exception e) {
@@ -2158,8 +1864,7 @@ public class MainActivity extends ChatActivity
                 @Override
                 public void onFailure(Call<ResponseSync> call, Throwable t) {
 
-                    if (mProgressDialog.isShowing())
-                        mProgressDialog.dismiss();
+                    Utility.dismissDialog(mProgressDialog);
 
                     Log.e("eric.onFailure", t.getMessage(), t);
                     if (t instanceof ConnectException) {
@@ -2182,7 +1887,7 @@ public class MainActivity extends ChatActivity
                         clearLKPTables();
                         clearSyncTables();
 
-                        attemptGetLKP(currentUser.getUserId(), getServerDate(realm), false, null);
+                        attemptGetLKP(currentUser.getUserId(), getServerDateFromDB(realm), false, null);
                     }
                 }
             });
@@ -2196,19 +1901,13 @@ public class MainActivity extends ChatActivity
     protected void closeBatch() {
 
         try {
-            final ProgressDialog mProgressDialog = new ProgressDialog(this);
-            mProgressDialog.setIndeterminate(true);
-            mProgressDialog.setCancelable(false);
-            mProgressDialog.setMessage(getString(R.string.message_please_wait));
-            mProgressDialog.show();
+            final ProgressDialog mProgressDialog = Utility.createAndShowProgressDialog(this, getString(R.string.message_please_wait));
 
             // memastikan pengecekan closebatch menggunakan tanggal di server
             DataUtil.retrieveServerInfo(currentUser.getUserId(), this.realm, this, new OnPostRetrieveServerInfo() {
                 @Override
                 public void onSuccess(ServerInfo serverInfo) {
-                    if (mProgressDialog.isShowing()) {
-                        mProgressDialog.dismiss();
-                    }
+                    Utility.dismissDialog(mProgressDialog);
 
                     final String createdBy = "JOB" + Utility.convertDateToString(serverInfo.getServerDate(), "yyyyMMdd");
 
@@ -2271,9 +1970,7 @@ public class MainActivity extends ChatActivity
 
                 @Override
                 public void onFailure(Throwable throwable) {
-                    if (mProgressDialog.isShowing()) {
-                        mProgressDialog.dismiss();
-                    }
+                    Utility.dismissDialog(mProgressDialog);
 
                     if (throwable == null) {
                         return;
@@ -2316,7 +2013,7 @@ public class MainActivity extends ChatActivity
                 .findFirst();
 
         if (trnLDVHeader == null) {
-            Utility.showDialog(MainActivity.this, "No Data", "Please Get LKP first");
+            Utility.createAndShowProgressDialog(MainActivity.this, "No Data", "Please Get LKP first");
             return;
         }
 */
@@ -2378,7 +2075,7 @@ public class MainActivity extends ChatActivity
                                 syncTransaction(true, true, new OnSuccessError() {
                                     @Override
                                     public void onSuccess(String msg) {
-                                        Utility.showDialog(MainActivity.this, "Close Batch", "Close Batch Success");
+                                        Utility.createAndShowProgressDialog(MainActivity.this, "Close Batch", "Close Batch Success");
 
                                         clearLKPTables();
                                         clearSyncTables();
@@ -2460,9 +2157,7 @@ public class MainActivity extends ChatActivity
         call.enqueue(new Callback<ResponseBody>() {
             @Override
             public void onResponse(Call<ResponseBody> call, Response<ResponseBody> response) {
-                if (mProgressDialog.isShowing()) {
-                    mProgressDialog.dismiss();
-                }
+                Utility.dismissDialog(mProgressDialog);
 
                 if (response.isSuccessful()) {
 
@@ -2511,9 +2206,7 @@ public class MainActivity extends ChatActivity
                 if (listener != null)
                     listener.onFailure(t);
 
-                if (mProgressDialog.isShowing()) {
-                    mProgressDialog.dismiss();
-                }
+                Utility.dismissDialog(mProgressDialog);
                 Toast.makeText(MainActivity.this, t.getMessage(), Toast.LENGTH_SHORT).show();
 
             }
@@ -2691,8 +2384,7 @@ public class MainActivity extends ChatActivity
             @Override
             public void onResponse(Call<ResponseGetLKP> call, Response<ResponseGetLKP> response) {
 
-                if (mProgressDialog.isShowing())
-                    mProgressDialog.dismiss();
+                Utility.dismissDialog(mProgressDialog);
 
                 if (!response.isSuccessful()) {
                     int statusCode = response.code();
@@ -2795,8 +2487,7 @@ public class MainActivity extends ChatActivity
             public void onFailure(Call<ResponseGetLKP> call, Throwable t) {
                 Log.e("eric.onFailure", t.getMessage(), t);
 
-                if (mProgressDialog.isShowing())
-                    mProgressDialog.dismiss();
+                Utility.dismissDialog(mProgressDialog);
 
                 if (listener != null)
                     listener.onFailure(t);
@@ -2808,22 +2499,26 @@ public class MainActivity extends ChatActivity
 
     }
 
+    /**
+     * @param showDialog
+     * @param listener
+     */
     public void syncTransaction(final boolean showDialog, final OnSuccessError listener) {
-        if (!NetUtil.isConnected(this)) {
-            Snackbar.make(coordinatorLayout, getString(R.string.error_online_required), Snackbar.LENGTH_LONG).show();
-            return;
-        }
-
         if (currentUser == null) {
             Snackbar.make(coordinatorLayout, "Please relogin", Snackbar.LENGTH_LONG).show();
-            return;
+            return; // be careful
         }
 
         if (RootUtil.isDeviceRooted()) {
             Toast.makeText(this, "Sorry, your device is rooted. Unable to open application.", Toast.LENGTH_SHORT).show();
             resetData();
             backToLoginScreen();
-            return;
+            return; // be careful
+        }
+
+        if (!NetUtil.isConnected(this)) {
+            Snackbar.make(coordinatorLayout, getString(R.string.error_online_required), Snackbar.LENGTH_LONG).show();
+            return; // be careful
         }
 
         // check dulu udah dibayar apa belum, kalo udah yg status kuning di cancel saja
@@ -2879,11 +2574,10 @@ public class MainActivity extends ChatActivity
 
                 Snackbar.make(coordinatorLayout, "Sync started", Snackbar.LENGTH_SHORT).show();
 
-                mProgressDialog.setMessage("Sync Data In Progress.\nPlease wait...");
+                mProgressDialog.setMessage("Sync Photo In Progress.\nPlease wait...");
 
                 if (showDialog) {
                     mProgressDialog.show();
-
                 }
 
                 // upload photo first
@@ -2908,6 +2602,8 @@ public class MainActivity extends ChatActivity
                 }
 
 
+                mProgressDialog.setMessage("Sync Data In Progress.\nPlease wait...");
+
                 ApiInterface fastService =
                         ServiceGenerator.createService(ApiInterface.class, Utility.buildUrl(Storage.getPreferenceAsInt(getApplicationContext(), Storage.KEY_SERVER_ID, 0)));
 
@@ -2921,7 +2617,6 @@ public class MainActivity extends ChatActivity
 
                             String msg = "";
                             try {
-//                        Utility.showDialog(MainActivity.this, "Server Problem (" + statusCode + ")", errorBody.string());
                                 msg = response.message() + "(" + response.code() + ") " + errorBody.string();
                                 Snackbar.make(coordinatorLayout, msg, Snackbar.LENGTH_LONG).show();
                             } catch (Exception e) {
@@ -2932,8 +2627,7 @@ public class MainActivity extends ChatActivity
                                 listener.onFailure(new RuntimeException(msg));
 
                             if (showDialog) {
-                                if (mProgressDialog.isShowing())
-                                    mProgressDialog.dismiss();
+                                Utility.dismissDialog(mProgressDialog);
                             }
 
                             return;
@@ -3033,7 +2727,7 @@ public class MainActivity extends ChatActivity
                             }
 
                             resetData();
-                            attemptGetLKP(currentUser.getUserId(), getServerDate(realm), false, null);
+                            attemptGetLKP(currentUser.getUserId(), getServerDateFromDB(realm), false, null);
                         }
                     }
                 });
@@ -3076,7 +2770,7 @@ public class MainActivity extends ChatActivity
             closeBatch();
             /*
             // bug, krn serverDate msh ada kemungkinan tidak update krn isi serverdate hanya diupdate wkt data reset/closebatch sukses
-            Date serverDate = getServerDate(this.realm);
+            Date serverDate = getServerDateFromDB(this.realm);
             final String createdBy = "JOB" + Utility.convertDateToString(serverDate, "yyyyMMdd");
 
             TrnLDVHeader trnLDVHeaderToday = this.realm.where(TrnLDVHeader.class)
@@ -3194,7 +2888,7 @@ public class MainActivity extends ChatActivity
 
                     String msg = "";
                     try {
-//                        Utility.showDialog(MainActivity.this, "Server Problem (" + statusCode + ")", errorBody.string());
+//                        Utility.createAndShowProgressDialog(MainActivity.this, "Server Problem (" + statusCode + ")", errorBody.string());
                         msg = response.message() + "(" + response.code() + ") " + errorBody.string();
                         Snackbar.make(coordinatorLayout, msg, Snackbar.LENGTH_LONG).show();
                     } catch (Exception e) {
@@ -3232,8 +2926,7 @@ public class MainActivity extends ChatActivity
                         listener.onSkip();
 
                     if (showDialog) {
-                        if (mProgressDialog.isShowing())
-                            mProgressDialog.dismiss();
+                        Utility.dismissDialog(mProgressDialog);
                     }
                 } else {
 
@@ -3278,8 +2971,7 @@ public class MainActivity extends ChatActivity
                 }
 
                 if (showDialog) {
-                    if (mProgressDialog.isShowing())
-                        mProgressDialog.dismiss();
+                    Utility.dismissDialog(mProgressDialog);
                 }
 
                 Snackbar.make(coordinatorLayout, "Sync success", Snackbar.LENGTH_SHORT).show();
@@ -3318,7 +3010,7 @@ public class MainActivity extends ChatActivity
                     }
 
                     resetData();
-                    attemptGetLKP(currentUser.getUserId(), getServerDate(realm), false, null);
+                    attemptGetLKP(currentUser.getUserId(), getServerDateFromDB(realm), false, null);
                 }
             }
         });
