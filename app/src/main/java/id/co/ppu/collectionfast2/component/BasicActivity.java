@@ -25,6 +25,7 @@ import id.co.ppu.collectionfast2.rest.ServiceGenerator;
 import id.co.ppu.collectionfast2.rest.request.RequestBasic;
 import id.co.ppu.collectionfast2.settings.SettingsActivity;
 import id.co.ppu.collectionfast2.util.DataUtil;
+import id.co.ppu.collectionfast2.util.PoAUtil;
 import id.co.ppu.collectionfast2.util.Storage;
 import id.co.ppu.collectionfast2.util.Utility;
 import io.realm.Realm;
@@ -89,7 +90,7 @@ public class BasicActivity extends AppCompatActivity {
         Storage.savePreference(getApplicationContext(), Storage.KEY_USER, null);
 
         // clean photo arrival cache
-        Storage.cleanPhotoArrival();
+        PoAUtil.cleanPoA();
 
         DataUtil.resetData(realm);
     }

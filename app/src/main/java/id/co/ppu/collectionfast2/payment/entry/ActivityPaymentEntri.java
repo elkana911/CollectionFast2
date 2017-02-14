@@ -2,15 +2,12 @@ package id.co.ppu.collectionfast2.payment.entry;
 
 import android.app.ProgressDialog;
 import android.content.Intent;
-import android.graphics.Bitmap;
 import android.graphics.Color;
 import android.net.Uri;
 import android.os.AsyncTask;
 import android.os.Bundle;
-import android.provider.MediaStore;
 import android.support.design.widget.Snackbar;
 import android.support.v4.app.DialogFragment;
-import android.util.Log;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ArrayAdapter;
@@ -30,9 +27,6 @@ import com.google.android.gms.appindexing.Thing;
 import com.google.android.gms.common.api.GoogleApiClient;
 
 import java.io.File;
-import java.io.FileFilter;
-import java.io.FileNotFoundException;
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
@@ -44,7 +38,6 @@ import id.co.ppu.collectionfast2.R;
 import id.co.ppu.collectionfast2.component.BasicActivity;
 import id.co.ppu.collectionfast2.component.RVBAdapter;
 import id.co.ppu.collectionfast2.location.Location;
-import id.co.ppu.collectionfast2.pojo.ArrivalDataBuffer;
 import id.co.ppu.collectionfast2.pojo.DisplayTrnContractBuckets;
 import id.co.ppu.collectionfast2.pojo.ServerInfo;
 import id.co.ppu.collectionfast2.pojo.UserConfig;
@@ -59,6 +52,7 @@ import id.co.ppu.collectionfast2.pojo.trn.TrnRVB;
 import id.co.ppu.collectionfast2.pojo.trn.TrnRVColl;
 import id.co.ppu.collectionfast2.pojo.trn.TrnRVCollPK;
 import id.co.ppu.collectionfast2.util.NetUtil;
+import id.co.ppu.collectionfast2.util.PoAUtil;
 import id.co.ppu.collectionfast2.util.Storage;
 import id.co.ppu.collectionfast2.util.Utility;
 import io.realm.Realm;
@@ -80,7 +74,7 @@ public class ActivityPaymentEntri extends BasicActivity implements FragmentActiv
     private Date lkpDate = null;
     private String ldvNo = null;
 
-    private ArrivalDataBuffer arrivalData = new ArrivalDataBuffer();
+//    private TrnPOA arrivalData = new TrnPOA();
 
     @BindView(R.id.activity_payment_entri)
     View activityPaymentEntri;
@@ -478,7 +472,9 @@ public class ActivityPaymentEntri extends BasicActivity implements FragmentActiv
     @OnClick(R.id.btnSave)
     public void onClickSave() {
 
-        if (arrivalData.isEmpty() || !getPhotoFileCacheBeforeEntry().exists()) {
+        // seharusnya PoA udah diexecute sebelumnya
+        if (PoAUtil.isPoAExists(realm, collectorId, ldvNo, contractNo) == null
+                || !PoAUtil.getPoAFile(this, collectorId, contractNo).exists()) {
             Snackbar.make(activityPaymentEntri, getString(R.string.message_no_photo_arrival_taken), Snackbar.LENGTH_LONG).show();
         }
 
@@ -594,6 +590,21 @@ public class ActivityPaymentEntri extends BasicActivity implements FragmentActiv
             }
         }
 
+        /*
+            10feb17 bug fix denda ga boleh lebih besar dari penerimaan
+         */
+        if (Utility.isValidMoney(penerimaan) && Utility.isValidMoney(denda)) {
+            long penerimaanValue = Long.parseLong(penerimaan);
+            long dendaValue = Long.parseLong(denda);
+
+            if (dendaValue > penerimaanValue) {
+                etPenerimaan.setError(getString(R.string.error_penalty_over_receive));
+                focusView = etDenda;
+                cancel = true;
+            }
+        }
+
+
         final String createdBy = "JOB" + Utility.convertDateToString(lkpDate, Utility.DATE_DATA_PATTERN);
 
         // TODO: check lagi kalo ada di daftar LKP dan workstatus nya belum bayar ("V") jgn entri disini
@@ -696,7 +707,6 @@ public class ActivityPaymentEntri extends BasicActivity implements FragmentActiv
                         userConfig.setKodeRVCollRunningNumber(runningNumber);
                         userConfig.setKodeRVCollLastGenerated(new Date());
                         realm.copyToRealmOrUpdate(userConfig);
-
                     }
 */
                     // generate runningnumber: 1 koletor 1 nomor per hari. maka triknya yyyymmdd<collectorId>
@@ -761,8 +771,7 @@ public class ActivityPaymentEntri extends BasicActivity implements FragmentActiv
                 RVBAdapter adapterRVB = new RVBAdapter(ActivityPaymentEntri.this, android.R.layout.simple_spinner_item, list);
                 spNoRVB.setAdapter(adapterRVB);
 
-                // move arrival photo from cache to outside
-                boolean ok = Storage.commitPhotoArrival(constructArrivalPhotoFilename());
+                PoAUtil.commit(ActivityPaymentEntri.this, collectorId, ldvNo, contractNo);
 
                 Toast.makeText(ActivityPaymentEntri.this, "Payment Saved", Toast.LENGTH_SHORT).show();
 
@@ -825,43 +834,9 @@ public class ActivityPaymentEntri extends BasicActivity implements FragmentActiv
         client.disconnect();
     }
 
-    private void deletePhotoArrivalCache() {
-        // delete pra* files, dgn asumsi data baru. jgn hapus file yg sudah dientri
-        File dir = new File(Storage.getPhotoArrivalCachePath());
-        File[] toBeDeleted = dir.listFiles(new FileFilter() {
-            @Override
-            public boolean accept(File file) {
-                return (file.getName().startsWith("praPymtEntr") && file.getName().endsWith(".jpg"));
-//                        return (file.getName().startsWith("dailyReport_08") && pathname.getName().endsWith(".txt"));
-            }
-        });
-
-        for (File f : toBeDeleted) {
-            Log.e("RADANA-PEntri", "Delete " + f.getName() + (f.delete() ? " success" : " failed"));
-        }
-    }
-
-    private String constructArrivalPhotoFilename() {
-        return "praPymtEntr" + "_" + collectorId + "_" + contractNo + ".jpg";
-    }
-    private File getPhotoFileCacheBeforeEntry() {
-        return new File(Storage.getPhotoArrivalCachePath() + constructArrivalPhotoFilename());
-    }
-
     @OnClick(R.id.llTakePhoto)
-    public void onTakePhotoBeforeEntry() {
-        Intent takePicture = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
-
-//        String storagePath = Environment.getExternalStorageDirectory().toString() +"/ImagesFolder/"; //storagePath=/storage/emulated/0/ImagesFolder/image.jpg
-//        Uri uriSavedImage = Uri.fromFile(new File(storagePath + "image.jpg"));
-
-        Uri uriSavedImage = Uri.fromFile(getPhotoFileCacheBeforeEntry());
-
-        takePicture.putExtra(MediaStore.EXTRA_OUTPUT, uriSavedImage);
-
-        startActivityForResult(takePicture, 1);//zero can be replaced with any action code
-
-
+    public void onTakePoA() {
+        PoAUtil.callCameraIntent(this, collectorId, contractNo);
     }
 
     @Override
@@ -873,33 +848,12 @@ public class ActivityPaymentEntri extends BasicActivity implements FragmentActiv
             return;
         }
 
-        Uri uriSavedImage = Uri.fromFile(getPhotoFileCacheBeforeEntry());
+        File file = PoAUtil.flushCameraIntoCache(this, collectorId, contractNo);
 
-        Bitmap bitmap;
-        try {
-            bitmap = MediaStore.Images.Media.getBitmap(getContentResolver(), uriSavedImage);
-//            bitmap = crupAndScale(bitmap, 300); // if you mind scaling
-//            pofileImageView.setImageBitmap(bitmap);
-
-            if (bitmap == null) {
-
-            }
-        } catch (FileNotFoundException e) {
-            e.printStackTrace();
-        } catch (IOException e) {
-            e.printStackTrace();
+        if (file != null) {
+            flTakePhoto.setVisibility(View.GONE);
         }
 
-        double[] gps = Location.getGPS(this);
-        final String latitude = String.valueOf(gps[0]);
-        final String longitude = String.valueOf(gps[1]);
-
-        arrivalData.setLatitude(latitude);
-        arrivalData.setLongitude(longitude);
-        arrivalData.setPhotoFile(constructArrivalPhotoFilename());
-        arrivalData.setTimestamp(new Date());
-
-        flTakePhoto.setVisibility(View.GONE);
     }
 
 }

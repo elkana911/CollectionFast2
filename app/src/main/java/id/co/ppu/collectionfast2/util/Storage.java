@@ -4,16 +4,13 @@ import android.content.Context;
 import android.content.SharedPreferences;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
-import android.os.Environment;
 import android.preference.PreferenceManager;
 import android.text.TextUtils;
-import android.util.Log;
 
 import com.google.firebase.iid.FirebaseInstanceId;
 import com.google.gson.Gson;
 
 import java.io.File;
-import java.io.FileFilter;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
@@ -198,54 +195,18 @@ public class Storage {
         return dir.delete();
     }
 
-    /**
-     *
-     * @param jpgFileName something.jpg
-     * @return
-     */
-    public static File getPhotoArrival(String jpgFileName) {
-//        File dir = getCacheDir();   // hindari penggunaan cache, krn bisa dibersihkan by job oleh utility
-        return new File(getPhotoArrivalPath() + jpgFileName);
-    }
 
-    public static String getPhotoArrivalPath() {
-//        File dir = getCacheDir();   // hindari penggunaan cache, krn bisa dibersihkan by job oleh utility
-        String storagePath = Environment.getExternalStorageDirectory().toString() +"/RadanaCache/";
+    public static void putNoMediaInto(File dir) {
+        File output = new File(dir, ".nomedia");
+        try {
+            boolean fileCreated = output.createNewFile();
+            if (fileCreated) {
 
-        return storagePath;
-    }
-
-    public static String getPhotoArrivalCachePath() {
-//        File dir = getCacheDir();   // hindari penggunaan cache, krn bisa dibersihkan by job oleh utility
-        String storagePath = getPhotoArrivalPath() + "cache/";
-
-        return storagePath;
-    }
-
-    // will move from cache to outside
-    public static boolean commitPhotoArrival(String jpgFileName) {
-        File from = new File(getPhotoArrivalCachePath() + jpgFileName);
-        File to = new File(getPhotoArrivalPath() + jpgFileName);
-
-        return from.renameTo(to);
-    }
-
-    public static void cleanPhotoArrival() {
-        File dir = new File(getPhotoArrivalPath());
-        File[] toBeDeleted = dir.listFiles(new FileFilter() {
-            @Override
-            public boolean accept(File file) {
-                return (file.getName().startsWith("pra") && file.getName().endsWith(".jpg"));
             }
-        });
 
-        for (File f : toBeDeleted) {
-            Log.e("RADANA-Rst", "Delete " + f.getName() + (f.delete() ? " success" : " failed"));
+        } catch (IOException e) {
+            e.printStackTrace();
         }
-
-        // delete cache
-        File cacheDir = new File(getPhotoArrivalCachePath());
-        deleteDir(cacheDir);
 
     }
 }

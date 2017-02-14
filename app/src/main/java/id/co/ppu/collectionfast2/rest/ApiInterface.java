@@ -100,10 +100,21 @@ public interface ApiInterface {
             , @Part("longitude") RequestBody longitude
             , @Part MultipartBody.Part file);
 
+    // recommended
     @Multipart
     @POST("fast/upload_photo")
     Call<ResponseBody> upload_Photo(@Part("trn_photo") RequestBody trnPhoto
             , @Part MultipartBody.Part file);
+
+    @Multipart
+    @POST("fast/upload_poa")
+    Call<ResponseBody> upload_PhotoOnArrival(@Part("poa_data") RequestBody trnPoA
+            , @Part MultipartBody.Part file);
+
+    @Multipart
+    @POST("fast/upload_poa1")
+    Call<ResponseBody> upload_PhotoOnArrival(@Part("poa_data") RequestBody poaData
+                                            , @Part("poa_body") MultipartBody bodies);
 
     @POST("fast/sync_gps")
     Call<ResponseBody> syncLocation(@Body RequestSyncLocation req);
@@ -165,4 +176,5 @@ public interface ApiInterface {
 
     @POST("fastchat/chat_hist")
     Call<ResponseGetChatHistory> getChatHistory(@Body RequestGetChatHistory req);
+
 }

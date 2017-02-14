@@ -10,6 +10,7 @@ import android.graphics.Color;
 import android.net.Uri;
 import android.os.Bundle;
 import android.preference.PreferenceManager;
+import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.v7.app.AlertDialog;
 import android.text.TextUtils;
@@ -161,7 +162,7 @@ public class LoginActivity extends BasicActivity {
 
         ButterKnife.bind(this);
 
-        int versionCode = BuildConfig.VERSION_CODE;
+//        int versionCode = BuildConfig.VERSION_CODE;
         String versionName = BuildConfig.VERSION_NAME;
 
         tvVersion.setText("v" + versionName);
@@ -288,7 +289,7 @@ public class LoginActivity extends BasicActivity {
     public void onSignInClick() {
 
         if (RootUtil.isDeviceRooted()) {
-            Utility.showDialog(this, "Rooted", "This device is rooted. Unable to open application.");
+            Utility.showDialog(this, "Rooted", getString(R.string.error_rooted));
             resetData();
             return;
         }
@@ -493,7 +494,7 @@ public class LoginActivity extends BasicActivity {
                                 }
                             } else {
 
-                                // krn update aplikasi bisa mengakibatkan data transaksi hilang, maka dianggap sukses jika ada transaksi
+                                // WARNING ! krn update aplikasi bisa mengakibatkan data transaksi realm hilang, maka dianggap sukses jika ada transaksi
                                 TrnLDVHeader ldvHeader = realm.where(TrnLDVHeader.class)
                                         .equalTo("closeBatch", "N")
                                         .or()
@@ -788,7 +789,7 @@ public class LoginActivity extends BasicActivity {
         finish();
     }
 
-    private void loginOffline(String username, String password) {
+    private void loginOffline(@NonNull String username, @NonNull String password) {
 
         String logoutDate = Storage.getPreference(getApplicationContext(), Storage.KEY_LOGOUT_DATE);
 

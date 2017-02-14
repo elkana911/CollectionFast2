@@ -35,20 +35,47 @@
                     android:maxLines="1" />
             </android.support.design.widget.TextInputLayout>
 
-            <android.support.design.widget.TextInputLayout
+            <LinearLayout
                 android:layout_width="match_parent"
-                android:layout_height="wrap_content">
+                android:layout_height="wrap_content"
+                android:orientation="horizontal">
 
-                <EditText
-                    android:id="@+id/etPlatform"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:clickable="false"
-                    android:focusable="false"
-                    android:focusableInTouchMode="false"
-                    android:hint="Platform"
-                    android:maxLines="1" />
-            </android.support.design.widget.TextInputLayout>
+                <android.support.design.widget.TextInputLayout
+                    android:layout_width="0dp"
+                    android:layout_weight="0.5"
+                    android:layout_height="wrap_content">
+
+                    <EditText
+                        android:id="@+id/etPlatform"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:clickable="false"
+                        android:focusable="false"
+                        android:focusableInTouchMode="false"
+                        android:hint="Platform"
+                        android:maxLines="1" />
+                </android.support.design.widget.TextInputLayout>
+
+                <android.support.design.widget.TextInputLayout
+                    android:layout_width="0dp"
+                    android:layout_weight="0.5"
+                    android:layout_height="wrap_content">
+
+                    <EditText
+                        android:id="@+id/etDanaSosial"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:clickable="false"
+                        android:focusable="false"
+                        android:focusableInTouchMode="false"
+                        android:gravity="end"
+                        android:hint="Dana Sosial"
+                        android:inputType="number"
+                        android:maxLines="1"
+                        android:textColor="@android:color/tertiary_text_dark" />
+                </android.support.design.widget.TextInputLayout>
+
+            </LinearLayout>
 
             <LinearLayout
                 android:id="@+id/llFormDependsLOV"
@@ -116,8 +143,7 @@
                             android:gravity="end"
                             android:hint="Denda"
                             android:inputType="number"
-                            android:maxLines="1"
-                            android:text="0" />
+                            android:maxLines="1" />
                     </android.support.design.widget.TextInputLayout>
 
                     <android.support.design.widget.TextInputLayout
@@ -133,8 +159,7 @@
                             android:gravity="end"
                             android:hint="Denda Berjalan"
                             android:inputType="number"
-                            android:maxLines="1"
-                            android:text="0" />
+                            android:maxLines="1" />
                     </android.support.design.widget.TextInputLayout>
                 </LinearLayout>
 
@@ -150,24 +175,6 @@
                         android:hint="Biaya Tagih"
                         android:inputType="number"
                         android:maxLines="1" />
-                </android.support.design.widget.TextInputLayout>
-
-                <android.support.design.widget.TextInputLayout
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content">
-
-                    <EditText
-                        android:id="@+id/etDanaSosial"
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:clickable="false"
-                        android:focusable="false"
-                        android:focusableInTouchMode="false"
-                        android:gravity="end"
-                        android:hint="Dana Sosial"
-                        android:inputType="number"
-                        android:maxLines="1"
-                        android:textColor="@android:color/tertiary_text_dark" />
                 </android.support.design.widget.TextInputLayout>
 
                 <android.support.design.widget.TextInputLayout
@@ -234,17 +241,16 @@
 
     <FrameLayout
         android:id="@+id/flTakePhoto"
-        android:background="@drawable/rounded_shade_shape"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        >
+        android:background="@drawable/rounded_shade_shape">
 
         <LinearLayout
             android:id="@+id/llTakePhoto"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:gravity="center"
             android:layout_gravity="center"
+            android:gravity="center"
             android:orientation="vertical">
 
             <ImageView
@@ -256,8 +262,8 @@
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:textAppearance="?android:attr/textAppearanceMedium"
-                android:text="@string/text_takephoto_beforeentri" />
+                android:text="@string/text_takephoto_beforeentri"
+                android:textAppearance="?android:attr/textAppearanceMedium" />
         </LinearLayout>
     </FrameLayout>
 

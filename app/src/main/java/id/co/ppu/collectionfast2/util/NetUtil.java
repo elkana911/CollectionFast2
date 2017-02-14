@@ -14,6 +14,7 @@ import java.io.IOException;
 import java.util.Date;
 import java.util.List;
 
+import id.co.ppu.collectionfast2.exceptions.NoConnectionException;
 import id.co.ppu.collectionfast2.listener.OnGetChatContactListener;
 import id.co.ppu.collectionfast2.listener.OnSuccessError;
 import id.co.ppu.collectionfast2.pojo.UserData;
@@ -21,6 +22,7 @@ import id.co.ppu.collectionfast2.pojo.chat.TrnChatContact;
 import id.co.ppu.collectionfast2.pojo.chat.TrnChatMsg;
 import id.co.ppu.collectionfast2.pojo.trn.TrnCollPos;
 import id.co.ppu.collectionfast2.pojo.trn.TrnErrorLog;
+import id.co.ppu.collectionfast2.pojo.trn.TrnFlagTimestamp;
 import id.co.ppu.collectionfast2.pojo.trn.TrnLDVHeader;
 import id.co.ppu.collectionfast2.pojo.trn.TrnPhoto;
 import id.co.ppu.collectionfast2.pojo.trn.TrnRVB;
@@ -521,6 +523,124 @@ public class NetUtil {
 
     }
 
+    /**
+     * Using array technique still confusing and hog my dev time
+     * Mengapa diperlukan array, krn callbacknya cukup sekali. kalo satu2 kan callbacknya sendiri2 ngaruh ke progressbar
+     *
+     * @param ctx
+     * @param poaData
+     * @param poaFiles
+     * @param callback
+     */
+    @Deprecated
+    public static void uploadPoA(Context ctx, List<TrnFlagTimestamp> poaData, File[] poaFiles, Callback<ResponseBody> callback) {
+
+        MultipartBody.Builder builder = new MultipartBody.Builder()
+                .setType(MultipartBody.FORM);
+
+        for (int i = 0; i < poaFiles.length; i++) {
+            File file = poaFiles[i];
+
+            RequestBody bannerPicture1 = RequestBody.create(MediaType.parse("image/*"), file);
+
+            builder.addFormDataPart("picture" + (i + 1), file.getName(), bannerPicture1);
+        }
+
+        MultipartBody bodies = builder.build();
+
+//        RequestBody requestFile = RequestBody.create(MediaType.parse("multipart/form-data"), Storage.getCompressedImage(ctx, file4, trnPhoto.getPhotoId()));
+        Gson gson = new GsonBuilder()
+                .setDateFormat("dd-MM-yyyy HH:mm:ss")
+                .create();
+        String jsonData = gson.toJson(poaData);
+        RequestBody body_poaData =
+                RequestBody.create(
+                        MediaType.parse("multipart/form-data"), jsonData);
+
+        /*
+        RequestBody requestFile = RequestBody.create(MediaType.parse("multipart/form-data"), Storage.getCompressedImage(ctx, file4, trnPhoto.getPhotoId()));
+        MultipartBody.Part body =
+                MultipartBody.Part.createFormData("picture", file4.getName(), requestFile);
+
+        MultipartBody.Part body1 = prepareFilePart("video", file1Uri);
+        MultipartBody.Part body2 = prepareFilePart("thumbnail", file2Uri);
+*/
+
+        if (!NetUtil.isConnected(ctx)) {
+            throw new NoConnectionException();
+        }
+
+        ApiInterface fastService =
+                ServiceGenerator.createService(ApiInterface.class, Utility.buildUrl(Storage.getPreferenceAsInt(ctx, Storage.KEY_SERVER_ID, 0)));
+
+        Call<ResponseBody> call = fastService.upload_PhotoOnArrival(body_poaData, bodies);
+
+        call.enqueue(callback);
+
+    }
+
+    //    public static boolean uploadPoA(Context ctx, TrnFlagTimestamp trnFlagTimestamp, File file, Callback<ResponseBody> callback) {
+    public static boolean uploadPoA(Context ctx, TrnFlagTimestamp trnFlagTimestamp, File file, OnSuccessError listener) {
+
+        if (trnFlagTimestamp == null)
+            return false;
+
+        ApiInterface fastService =
+                ServiceGenerator.createService(ApiInterface.class, Utility.buildUrl(Storage.getPreferenceAsInt(ctx, Storage.KEY_SERVER_ID, 0)));
+
+//        File file4 = new File(DataUtil.getRealPathFromUri(ctx, uri));
+
+        boolean b4 = file.exists();
+
+        if (!file.canRead()) {
+            return false;
+        }
+
+        // create RequestBody instance from file
+        try {
+            RequestBody requestFile = RequestBody.create(MediaType.parse("multipart/form-data"), Storage.getCompressedImage(ctx, file, trnFlagTimestamp.getFileName()));
+            MultipartBody.Part body =
+                    MultipartBody.Part.createFormData("picture", file.getName(), requestFile);
+
+            Gson gson = new GsonBuilder()
+                    .setDateFormat("dd-MM-yyyy HH:mm:ss")
+                    .create();
+            String jsonData = gson.toJson(trnFlagTimestamp);
+            RequestBody body_trnPoA =
+                    RequestBody.create(
+                            MediaType.parse("multipart/form-data"), jsonData);
+
+
+            Call<ResponseBody> call = fastService.upload_PhotoOnArrival(body_trnPoA, body);
+//            Call<ResponseBody> call = fastService.upload_Photo(body_trnPhoto, body);
+
+            Response<ResponseBody> execute = call.execute();
+
+            if (!execute.isSuccessful()) {
+                int statusCode = execute.code();
+
+                // handle request errors yourself
+                ResponseBody errorBody = execute.errorBody();
+
+                if (listener != null) {
+                    listener.onFailure(new RuntimeException("Server Problem (" + statusCode + ")" + errorBody.string()));
+                }
+
+                return false;
+            }
+
+            final ResponseBody resp = execute.body();
+
+            String msgStatus = resp.string();
+
+        } catch (Exception e) {
+            e.printStackTrace();
+            return false;
+        }
+
+        return true;
+    }
+
     public static void chatLogOff(Context ctx, String collCode, final OnSuccessError listener) {
         if (!isConnected(ctx)) {
             return;
@@ -820,7 +940,7 @@ dangerous code
             public void run() {
                 // Do something here on the main thread
                 final Realm r = Realm.getDefaultInstance();
-                try{
+                try {
 
                     // 1. check transmitting data
                     final RealmResults<TrnChatMsg> anyTransmittingData = r.where(TrnChatMsg.class)
@@ -911,7 +1031,7 @@ dangerous code
 
                     }
 
-                }finally{
+                } finally {
                     if (r != null)
                         r.close();
                 }
@@ -920,4 +1040,5 @@ dangerous code
             }
         });
     }
+
 }

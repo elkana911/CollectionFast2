@@ -36,6 +36,7 @@
     <string name="error_select_rvb">Mohon pilih RVB</string>
     <string name="error_amount_too_small">Nilai terlalu kecil</string>
     <string name="error_amount_too_large">Nilai terlalu besar</string>
+    <string name="error_penalty_over_receive">Nilai denda tidak boleh lebih besar dari Penerimaan</string>
     <string name="error_value_too_long">Karakter terlalu panjang</string>
     <string name="error_amount_invalid">Nilai tidak valid</string>
     <string name="spinner_please_select"><![CDATA[<Please select>]]></string>
@@ -47,6 +48,8 @@
     <string name="message_please_wait">Please wait...</string>
     <string name="message_no_gps">Tidak bisa mendapatkan lokasi. Mohon aktifkan GPS.</string>
     <string name="message_no_photo_arrival_taken">Gagal mendapatkan foto Customer di awal entri. Pastikan akses ke Camera diijinkan.</string>
+    <string name="message_sync_photo_wait">Sync Photo sedang diproses...</string>
+    <string name="message_sync_data_wait">Sync Data sedang diproses...</string>
     <string name="error_expired_warning">Aplikasi akan expired dalam hitunga hari.\nHubungi Administrator.</string>
     <string name="text_takephoto_beforeentri">Silakan ambil Foto di tempat sebelum Entri data</string>
 </resources>
