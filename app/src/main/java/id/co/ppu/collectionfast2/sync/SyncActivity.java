@@ -3,11 +3,13 @@ package id.co.ppu.collectionfast2.sync;
 import java.util.Set;
 
 import id.co.ppu.collectionfast2.MainbaseActivity;
+import id.co.ppu.collectionfast2.listener.OnSuccessError;
 import id.co.ppu.collectionfast2.pojo.DisplayTrnContractBuckets;
 import id.co.ppu.collectionfast2.pojo.DisplayTrnLDVDetails;
 import id.co.ppu.collectionfast2.pojo.UploadPicture;
 import id.co.ppu.collectionfast2.pojo.trn.HistInstallments;
 import id.co.ppu.collectionfast2.pojo.trn.HistInstallmentsPK;
+import id.co.ppu.collectionfast2.rest.request.RequestSyncLKP;
 import io.realm.Realm;
 import io.realm.RealmModel;
 
@@ -313,6 +315,39 @@ public abstract class SyncActivity extends MainbaseActivity {
 
             }
         });
+    }
+
+    /**
+     * @see {@link id.co.ppu.collectionfast2.MainActivity#syncTransaction(boolean, OnSuccessError)}
+     */
+    protected void onPostSyncTransactionSuccess(RequestSyncLKP req, final SyncLdvDetails syncLdvDetails
+            , final SyncLdvComments syncLdvComments
+            , final SyncRvb syncRvb
+            , final SyncRVColl syncRVColl
+            , final SyncBastbj syncBastbj
+            , final SyncRepo syncRepo
+            , final SyncChangeAddr syncChangeAddr) {
+        if (req.getLdvDetails() != null && req.getLdvDetails().size() > 0)
+            syncLdvDetails.syncData();
+
+        if (req.getLdvComments() != null && req.getLdvComments().size() > 0)
+            syncLdvComments.syncData();
+
+        if (req.getRepo() != null && req.getRepo().size() > 0)
+            syncRepo.syncData();
+
+        if (req.getRvb() != null && req.getRvb().size() > 0)
+            syncRvb.syncData();
+
+        if (req.getRvColl() != null && req.getRvColl().size() > 0)
+            syncRVColl.syncData();
+
+        if (req.getChangeAddr() != null && req.getChangeAddr().size() > 0)
+            syncChangeAddr.syncData();
+
+        if (req.getBastbj() != null && req.getBastbj().size() > 0)
+            syncBastbj.syncData();
+
     }
 
 

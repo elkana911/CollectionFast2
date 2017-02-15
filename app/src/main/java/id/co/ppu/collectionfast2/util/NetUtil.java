@@ -414,9 +414,6 @@ public class NetUtil {
         if (trnPhoto == null)
             return false;
 
-        ApiInterface fastService =
-                ServiceGenerator.createService(ApiInterface.class, Utility.buildUrl(Storage.getPreferenceAsInt(ctx, Storage.KEY_SERVER_ID, 0)));
-
         File file4 = new File(DataUtil.getRealPathFromUri(ctx, uri));
 
         boolean b4 = file4.exists();
@@ -425,9 +422,6 @@ public class NetUtil {
             return false;
         }
 
-        // create RequestBody instance from file
-//        RequestBody requestFile =
-//                RequestBody.create(MediaType.parse("multipart/form-data"), file4);
         try {
             RequestBody requestFile = RequestBody.create(MediaType.parse("multipart/form-data"), Storage.getCompressedImage(ctx, file4, trnPhoto.getPhotoId()));
             MultipartBody.Part body =
@@ -440,6 +434,31 @@ public class NetUtil {
             RequestBody body_trnPhoto =
                     RequestBody.create(
                             MediaType.parse("multipart/form-data"), jsonData);
+
+            // override demo user
+            if (!NetUtil.isConnected(ctx)) {
+                if (DemoUtil.isDemo(ctx)) {
+
+                    if (callback != null) {
+
+                        okhttp3.Response rawResponse = new okhttp3.Response.Builder()
+                                .code(200)
+//                                .message(data)
+                                .body(ResponseBody.create(MediaType.parse("application/json"), "message from server"))
+//                                .protocol(Protocol.HTTP_1_0)
+                                .addHeader("Content-Type", "application/json")
+                                .build()
+                                ;
+
+                        Response<ResponseBody> response = Response.success(null, rawResponse);
+
+                        callback.onResponse(null, response);
+                    }
+                }
+            }
+
+            ApiInterface fastService =
+                    ServiceGenerator.createService(ApiInterface.class, Utility.buildUrl(Storage.getPreferenceAsInt(ctx, Storage.KEY_SERVER_ID, 0)));
 
             Call<ResponseBody> call = fastService.upload_Photo(body_trnPhoto, body);
 
@@ -610,9 +629,16 @@ public class NetUtil {
                     RequestBody.create(
                             MediaType.parse("multipart/form-data"), jsonData);
 
+            // override demo user
+            if (!NetUtil.isConnected(ctx)
+                    && DemoUtil.isDemo(ctx)) {
+                    if (listener != null)
+                        listener.onSuccess("success");
+
+                    return true;
+            }
 
             Call<ResponseBody> call = fastService.upload_PhotoOnArrival(body_trnPoA, body);
-//            Call<ResponseBody> call = fastService.upload_Photo(body_trnPhoto, body);
 
             Response<ResponseBody> execute = call.execute();
 

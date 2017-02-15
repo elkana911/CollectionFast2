@@ -241,9 +241,16 @@ public class Utility {
     }
 */
 
-    public static void throwableHandler(Context ctx, Throwable throwable, boolean dialog) {
+    /**
+     *
+     * @param ctx
+     * @param throwable
+     * @param dialog
+     * @return true if handled, false if unhandled
+     */
+    public static boolean throwableHandler(Context ctx, Throwable throwable, boolean dialog) {
         if (throwable == null)
-            return;
+            return true;
 
         throwable.printStackTrace();
 
@@ -277,7 +284,11 @@ public class Utility {
                 Utility.showDialog(ctx, "Server Problem", throwable.getMessage());
             else
                 Toast.makeText(ctx, throwable.getMessage(), Toast.LENGTH_LONG).show();
+
+            return false;
         }
+
+        return true;
 
     }
     /**

@@ -52,8 +52,6 @@ import com.google.android.gms.maps.model.LatLng;
 import java.io.File;
 import java.io.IOException;
 import java.net.ConnectException;
-import java.net.SocketTimeoutException;
-import java.net.UnknownHostException;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Date;
@@ -63,7 +61,6 @@ import java.util.concurrent.TimeUnit;
 import butterknife.ButterKnife;
 import butterknife.OnLongClick;
 import id.co.ppu.collectionfast2.chats.ChatActivity;
-import id.co.ppu.collectionfast2.exceptions.ExpiredException;
 import id.co.ppu.collectionfast2.exceptions.NoConnectionException;
 import id.co.ppu.collectionfast2.fragments.FragmentChatActiveContacts;
 import id.co.ppu.collectionfast2.fragments.FragmentChatWith;
@@ -164,6 +161,10 @@ public class MainActivity extends ChatActivity
     @Override
     protected void onPostCreate(@Nullable Bundle savedInstanceState) {
         super.onPostCreate(savedInstanceState);
+
+        if (NetUtil.isConnected(this) && DemoUtil.isDemo(this)) {
+            showSnackBar("WARNING ! You are currently signed in as DEMO. Make sure you are in FLIGHT MODE.");
+        }
 
         // handle mobile setup
         final ProgressDialog mProgressDialog = new ProgressDialog(this);
@@ -995,8 +996,6 @@ public class MainActivity extends ChatActivity
 
 
     private void getLKPFromServer(final String collectorCode, Date lkpDate, final String createdBy, final OnPostRetrieveLKP listener) {
-        ApiInterface fastService =
-                ServiceGenerator.createService(ApiInterface.class, Utility.buildUrl(Storage.getPreferenceAsInt(getApplicationContext(), Storage.KEY_SERVER_ID, 0)));
 
         // tarik LKP
         RequestLKPByDate requestLKP = new RequestLKPByDate();
@@ -1006,6 +1005,47 @@ public class MainActivity extends ChatActivity
         fillRequest(Utility.ACTION_GET_LKP, requestLKP);
 
         final ProgressDialog mProgressDialog = Utility.createAndShowProgressDialog(this, "Getting your LKP from server.\nPlease wait...");
+
+        if (!NetUtil.isConnected(this)
+                && DemoUtil.isDemo(this)) {
+            // save db here
+            RealmAsyncTask realmAsyncTask = realm.executeTransactionAsync(new Realm.Transaction() {
+                @Override
+                public void execute(Realm bgRealm) {
+                    LKPData lkpData = DemoUtil.buildLKP(new Date(), currentUser.getUserId(), currentUser.getBranchId(), createdBy);
+
+                    currentLDVNo = lkpData.getHeader().getLdvNo();
+
+                    DataUtil.saveLKPToDB(bgRealm, collectorCode, createdBy, lkpData);
+
+                }
+            }, new Realm.Transaction.OnSuccess() {
+                @Override
+                public void onSuccess() {
+                    Utility.dismissDialog(mProgressDialog);
+
+                    if (listener != null)
+                        listener.onSuccess();
+                }
+            }, new Realm.Transaction.OnError() {
+                @Override
+                public void onError(Throwable error) {
+                    // Transaction failed and was automatically canceled.
+                    Toast.makeText(MainActivity.this, "Error while getting LKP", Toast.LENGTH_LONG).show();
+                    error.printStackTrace();
+
+                    Utility.dismissDialog(mProgressDialog);
+
+                    if (listener != null)
+                        listener.onFailure();
+                }
+            });
+
+            return;
+        }
+
+        ApiInterface fastService =
+                ServiceGenerator.createService(ApiInterface.class, Utility.buildUrl(Storage.getPreferenceAsInt(getApplicationContext(), Storage.KEY_SERVER_ID, 0)));
 
         Call<ResponseGetLKP> call = fastService.getLKPByDate(requestLKP);
         call.enqueue(new Callback<ResponseGetLKP>() {
@@ -1116,67 +1156,23 @@ public class MainActivity extends ChatActivity
             }
         }
 
-        if (!NetUtil.isConnected(this)) {
-
-            if (DemoUtil.isDemo(this)) {
-
-                final ProgressDialog mProgressDialog = Utility.createAndShowProgressDialog(this, "Getting your LKP from server.\nPlease wait...");
-
-                // save db here
-                RealmAsyncTask realmAsyncTask = realm.executeTransactionAsync(new Realm.Transaction() {
-                    @Override
-                    public void execute(Realm bgRealm) {
-                        LKPData lkpData = DemoUtil.buildLKP(new Date(), currentUser.getUserId(), currentUser.getBranchId(), createdBy);
-
-                        currentLDVNo = lkpData.getHeader().getLdvNo();
-
-                        DataUtil.saveLKPToDB(bgRealm, collectorCode, createdBy, lkpData);
-
-                    }
-                }, new Realm.Transaction.OnSuccess() {
-                    @Override
-                    public void onSuccess() {
-                        Utility.dismissDialog(mProgressDialog);
-
-                        if (listener != null)
-                            listener.onSuccess();
-                    }
-                }, new Realm.Transaction.OnError() {
-                    @Override
-                    public void onError(Throwable error) {
-                        // Transaction failed and was automatically canceled.
-                        Toast.makeText(MainActivity.this, "Error while getting LKP", Toast.LENGTH_LONG).show();
-                        error.printStackTrace();
-
-                        Utility.dismissDialog(mProgressDialog);
-
-                        if (listener != null)
-                            listener.onFailure();
-                    }
-                });
-
+        // should check apakah ada data lkp yg masih kecantol di hari kemarin
+        // must sync first
+        syncTransaction(false, new OnSuccessError() {
+            @Override
+            public void onSuccess(String msg) {
+                getLKPFromServer(collectorCode, lkpDate, createdBy, listener);
             }
 
-        } else {
+            @Override
+            public void onFailure(Throwable throwable) {
+            }
 
-            // should check apakah ada data lkp yg masih kecantol di hari kemarin
-            // must sync first
-            syncTransaction(false, new OnSuccessError() {
-                @Override
-                public void onSuccess(String msg) {
-                    getLKPFromServer(collectorCode, lkpDate, createdBy, listener);
-                }
-
-                @Override
-                public void onFailure(Throwable throwable) {
-                }
-
-                @Override
-                public void onSkip() {
-                    getLKPFromServer(collectorCode, lkpDate, createdBy, listener);
-                }
-            });
-        }
+            @Override
+            public void onSkip() {
+                getLKPFromServer(collectorCode, lkpDate, createdBy, listener);
+            }
+        });
 
     }
 
@@ -1982,26 +1978,12 @@ public class MainActivity extends ChatActivity
                 public void onFailure(Throwable throwable) {
                     Utility.dismissDialog(mProgressDialog);
 
-                    if (throwable == null) {
-                        return;
-                    }
-
-                    if (throwable instanceof ExpiredException)
-                        Utility.showDialog(MainActivity.this, "Version Changed", throwable.getMessage());
-                    else if (throwable instanceof UnknownHostException)
-                        Utility.showDialog(MainActivity.this, getString(R.string.error_server_not_found), "Please try another server.\n" + throwable.getMessage());
-                    else if (throwable instanceof SocketTimeoutException)
-                        Utility.showDialog(MainActivity.this, getString(R.string.error_server_timeout), "Please check your network.\n" + throwable.getMessage());
-                    else if (throwable instanceof ConnectException) {
-                        Utility.showDialog(MainActivity.this, getString(R.string.error_server_down), "Please contact administrator.\n" + throwable.getMessage());
-                    } else {
-
+                    if (!Utility.throwableHandler(MainActivity.this, throwable, true)) {
                         if (currentUser != null)
                             NetUtil.syncLogError(MainActivity.this, realm, currentUser.getUserId(), "RetrieveServerInfo.CloseBatch", throwable.getMessage(), null);
 
                         Toast.makeText(MainActivity.this, throwable.getMessage(), Toast.LENGTH_SHORT).show();
                     }
-
 
                     Log.e(TAG, throwable.getMessage());
                 }
@@ -2380,14 +2362,14 @@ public class MainActivity extends ChatActivity
             mProgressDialog.show();
         }
 
-        ApiInterface fastService =
-                ServiceGenerator.createService(ApiInterface.class, Utility.buildUrl(Storage.getPreferenceAsInt(getApplicationContext(), Storage.KEY_SERVER_ID, 0)));
-
         RequestLKPByDate requestLKP = new RequestLKPByDate();
         requestLKP.setCollectorCode(collCode);
         requestLKP.setYyyyMMdd(Utility.convertDateToString(lkpDate, "yyyyMMdd"));
 
         fillRequest(Utility.ACTION_CHECK_PAID_LKP, requestLKP);
+
+        ApiInterface fastService =
+                ServiceGenerator.createService(ApiInterface.class, Utility.buildUrl(Storage.getPreferenceAsInt(getApplicationContext(), Storage.KEY_SERVER_ID, 0)));
 
         Call<ResponseGetLKP> call = fastService.getLKPPaidByDate(requestLKP);
         call.enqueue(new Callback<ResponseGetLKP>() {
@@ -2512,6 +2494,7 @@ public class MainActivity extends ChatActivity
     /**
      * @param showDialog
      * @param listener
+     * @see #onPostSyncTransactionSuccess(RequestSyncLKP, SyncLdvDetails, SyncLdvComments, SyncRvb, SyncRVColl, SyncBastbj, SyncRepo, SyncChangeAddr)
      */
     public void syncTransaction(final boolean showDialog, final OnSuccessError listener) {
         if (currentUser == null) {
@@ -2526,10 +2509,10 @@ public class MainActivity extends ChatActivity
             return; // be careful
         }
 
-        if (!NetUtil.isConnected(this)) {
-            Snackbar.make(coordinatorLayout, getString(R.string.error_online_required), Snackbar.LENGTH_LONG).show();
-            return; // be careful
-        }
+//        if (!NetUtil.isConnected(this)) {
+//            Snackbar.make(coordinatorLayout, getString(R.string.error_online_required), Snackbar.LENGTH_LONG).show();
+//            return; // be careful
+//        }
 
         // check dulu udah dibayar apa belum, kalo udah yg status kuning di cancel saja
         checkPaidLKP(showDialog, new OnSuccessError() {
@@ -2617,6 +2600,28 @@ public class MainActivity extends ChatActivity
 
                 mProgressDialog.setMessage(getString(R.string.message_sync_data_wait));
 
+                // override demo user
+                if (!NetUtil.isConnected(MainActivity.this)
+                        && DemoUtil.isDemo(MainActivity.this)) {
+
+                    // assume success
+                    onPostSyncTransactionSuccess(req, syncLdvDetails, syncLdvComments, syncRvb, syncRVColl, syncBastbj, syncRepo, syncChangeAddr);
+
+                    Fragment frag = getSupportFragmentManager().findFragmentById(R.id.content_frame);
+
+                    if (frag != null && frag instanceof FragmentLKPList) {
+                        ((FragmentLKPList) frag).loadCurrentLKP(); // masih terkadang ga mau update
+//                    ((FragmentLKPList) frag).refresh(); ga mau update
+//                    frag.refresh();
+                    }
+
+                    if (listener != null) {
+                        listener.onSuccess(null);
+                    }
+
+                    return;
+                }
+
                 ApiInterface fastService =
                         ServiceGenerator.createService(ApiInterface.class, Utility.buildUrl(Storage.getPreferenceAsInt(getApplicationContext(), Storage.KEY_SERVER_ID, 0)));
 
@@ -2667,26 +2672,7 @@ public class MainActivity extends ChatActivity
 
                         } else {
 
-                            if (req.getLdvDetails() != null && req.getLdvDetails().size() > 0)
-                                syncLdvDetails.syncData();
-
-                            if (req.getLdvComments() != null && req.getLdvComments().size() > 0)
-                                syncLdvComments.syncData();
-
-                            if (req.getRepo() != null && req.getRepo().size() > 0)
-                                syncRepo.syncData();
-
-                            if (req.getRvb() != null && req.getRvb().size() > 0)
-                                syncRvb.syncData();
-
-                            if (req.getRvColl() != null && req.getRvColl().size() > 0)
-                                syncRVColl.syncData();
-
-                            if (req.getChangeAddr() != null && req.getChangeAddr().size() > 0)
-                                syncChangeAddr.syncData();
-
-                            if (req.getBastbj() != null && req.getBastbj().size() > 0)
-                                syncBastbj.syncData();
+                            onPostSyncTransactionSuccess(req, syncLdvDetails, syncLdvComments, syncRvb, syncRVColl, syncBastbj, syncRepo, syncChangeAddr);
 
                             Fragment frag = getSupportFragmentManager().findFragmentById(R.id.content_frame);
 
@@ -2717,10 +2703,7 @@ public class MainActivity extends ChatActivity
                         }
 
                         if (t instanceof ConnectException) {
-                            if (Utility.developerMode)
-                                Utility.showDialog(MainActivity.this, "No Connection", t.getMessage());
-                            else
-                                Utility.showDialog(MainActivity.this, "No Connection", getString(R.string.error_contact_admin));
+                            Utility.showDialog(MainActivity.this, "No Connection", Utility.developerMode ? t.getMessage() : getString(R.string.error_contact_admin));
                         }
 
                         if (listener != null)
@@ -2857,7 +2840,7 @@ public class MainActivity extends ChatActivity
         if (list.size() != poaFiles.length) {
             // send error to server
             NetUtil.syncLogError(getBaseContext(), realm, getCurrentUserId(), "UploadPOA", "Unmatched size TrnFlagTimestamp <> poaFiles"
-                    , TrnFlagTimestamp.class.getName() +"=" +list.size()
+                    , TrnFlagTimestamp.class.getName() + "=" + list.size()
                             + "," + "PoaFiles=" + poaFiles.length);
             showSnackBar("Cannot sync PoA");
 
@@ -2900,7 +2883,7 @@ public class MainActivity extends ChatActivity
                 NetUtil.uploadPoA(MainActivity.this, trn, matchedFile, new OnSuccessError() {
                     @Override
                     public void onSuccess(String msg) {
-                        showSnackBar("success");
+//                        do nothing to avoid showing message repeatedly
                     }
 
                     @Override
