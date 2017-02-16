@@ -14,7 +14,6 @@ import android.widget.ArrayAdapter;
 import android.widget.AutoCompleteTextView;
 import android.widget.Button;
 import android.widget.EditText;
-import android.widget.FrameLayout;
 import android.widget.ImageView;
 import android.widget.Spinner;
 import android.widget.TableLayout;
@@ -46,6 +45,7 @@ import id.co.ppu.collectionfast2.pojo.master.MstParam;
 import id.co.ppu.collectionfast2.pojo.sync.SyncTrnRVColl;
 import id.co.ppu.collectionfast2.pojo.trn.TrnCollPos;
 import id.co.ppu.collectionfast2.pojo.trn.TrnContractBuckets;
+import id.co.ppu.collectionfast2.pojo.trn.TrnFlagTimestamp;
 import id.co.ppu.collectionfast2.pojo.trn.TrnLDVDetails;
 import id.co.ppu.collectionfast2.pojo.trn.TrnLDVHeader;
 import id.co.ppu.collectionfast2.pojo.trn.TrnRVB;
@@ -119,7 +119,10 @@ public class ActivityPaymentEntri extends BasicActivity implements FragmentActiv
     Spinner spNoRVB;
 
     @BindView(R.id.flTakePhoto)
-    FrameLayout flTakePhoto;
+    View flTakePhoto;
+
+    @BindView(R.id.svMain)
+    View svMain;
 
     /**
      * ATTENTION: This was auto-generated to implement the App Indexing API.
@@ -399,6 +402,7 @@ public class ActivityPaymentEntri extends BasicActivity implements FragmentActiv
             spNoRVB.setAdapter(adapterRVB);
 
             flTakePhoto.setVisibility(View.GONE);
+            svMain.setVisibility(View.VISIBLE);
         } else {
             etPenerimaan.setText(null);
             etDenda.setText(String.valueOf(0));
@@ -471,12 +475,6 @@ public class ActivityPaymentEntri extends BasicActivity implements FragmentActiv
 
     @OnClick(R.id.btnSave)
     public void onClickSave() {
-
-        // seharusnya PoA udah diexecute sebelumnya
-        if (PoAUtil.isPoAExists(realm, collectorId, ldvNo, contractNo) == null
-                || !PoAUtil.getPoAFile(this, collectorId, contractNo).exists()) {
-            Snackbar.make(activityPaymentEntri, getString(R.string.message_no_photo_arrival_taken), Snackbar.LENGTH_LONG).show();
-        }
 
         boolean editMode = isExists(this.realm) != null;
 
@@ -592,17 +590,17 @@ public class ActivityPaymentEntri extends BasicActivity implements FragmentActiv
 
         /*
             10feb17 bug fix denda ga boleh lebih besar dari penerimaan
-         */
         if (Utility.isValidMoney(penerimaan) && Utility.isValidMoney(denda)) {
             long penerimaanValue = Long.parseLong(penerimaan);
             long dendaValue = Long.parseLong(denda);
 
             if (dendaValue > penerimaanValue) {
                 etPenerimaan.setError(getString(R.string.error_penalty_over_receive));
-                focusView = etDenda;
+                focusView = etPenerimaan;
                 cancel = true;
             }
         }
+         */
 
 
         final String createdBy = "JOB" + Utility.convertDateToString(lkpDate, Utility.DATE_DATA_PATTERN);
@@ -620,6 +618,16 @@ public class ActivityPaymentEntri extends BasicActivity implements FragmentActiv
             Toast.makeText(this, "Please use LKP List screen to entri payment", Toast.LENGTH_SHORT).show();
             cancel = true;
         }
+
+
+        // seharusnya PoA udah diexecute sebelumnya
+        TrnFlagTimestamp trnFlagTimestamp = PoAUtil.isPoADataExists(realm, collectorId, ldvNo, contractNo);
+        boolean poaCacheFileExists = PoAUtil.getPoACacheFile(this, collectorId, contractNo).exists();
+        boolean poaFileExists = PoAUtil.getPoAFile(this, collectorId, contractNo).exists();
+
+        if (poaCacheFileExists || poaFileExists) {
+        } else
+            Snackbar.make(activityPaymentEntri, getString(R.string.message_no_photo_arrival_taken), Snackbar.LENGTH_LONG).show();
 
         if (cancel) {
             focusView.requestFocus();
@@ -836,7 +844,7 @@ public class ActivityPaymentEntri extends BasicActivity implements FragmentActiv
 
     @OnClick(R.id.llTakePhoto)
     public void onTakePoA() {
-        PoAUtil.callCameraIntent(this, collectorId, contractNo);
+        PoAUtil.callCameraIntent(this, collectorId, ldvNo, contractNo);
     }
 
     @Override
@@ -848,10 +856,11 @@ public class ActivityPaymentEntri extends BasicActivity implements FragmentActiv
             return;
         }
 
-        File file = PoAUtil.flushCameraIntoCache(this, collectorId, contractNo);
+        File file = PoAUtil.postCameraIntoCache(this, collectorId, contractNo);
 
         if (file != null) {
             flTakePhoto.setVisibility(View.GONE);
+            svMain.setVisibility(View.VISIBLE);
         }
 
     }

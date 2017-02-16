@@ -162,8 +162,8 @@ public class MainActivity extends ChatActivity
     protected void onPostCreate(@Nullable Bundle savedInstanceState) {
         super.onPostCreate(savedInstanceState);
 
-        if (NetUtil.isConnected(this) && DemoUtil.isDemo(this)) {
-            showSnackBar("WARNING ! You are currently signed in as DEMO. Make sure you are in FLIGHT MODE.");
+        if (DemoUtil.isDemo(this)) {
+            showSnackBar("WARNING ! You are currently signed in as DEMO. Make sure you are in FLIGHT MODE.", Snackbar.LENGTH_LONG);
         }
 
         // handle mobile setup
@@ -1329,8 +1329,14 @@ public class MainActivity extends ChatActivity
 //                        .equalTo("createdBy", createdBy)
                         .findAll().deleteAllFromRealm();
 
+
+
             }
         });
+
+        PoAUtil.cancel(realm, currentUser.getUserId(), contractNo);
+
+
         // must sync (not async) to avoid process sequence
         /*
         realm.executeTransaction(new Realm.Transaction() {
@@ -2619,6 +2625,10 @@ public class MainActivity extends ChatActivity
                         listener.onSuccess(null);
                     }
 
+                    if (showDialog) {
+                        Utility.dismissDialog(mProgressDialog);
+                    }
+
                     return;
                 }
 
@@ -2743,6 +2753,10 @@ public class MainActivity extends ChatActivity
 
     public void showSnackBar(String message) {
         Snackbar.make(coordinatorLayout, message, Snackbar.LENGTH_SHORT).show();
+    }
+
+    public void showSnackBar(String message, int duration) {
+        Snackbar.make(coordinatorLayout, message, duration).show();
     }
 
     /*

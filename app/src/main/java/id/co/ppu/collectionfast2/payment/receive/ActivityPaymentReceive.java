@@ -6,7 +6,6 @@ import android.support.design.widget.Snackbar;
 import android.view.View;
 import android.widget.AutoCompleteTextView;
 import android.widget.EditText;
-import android.widget.FrameLayout;
 import android.widget.Spinner;
 import android.widget.Toast;
 
@@ -40,6 +39,7 @@ import id.co.ppu.collectionfast2.util.Utility;
 import io.realm.Realm;
 import io.realm.RealmResults;
 import io.realm.Sort;
+import pl.bclogic.pulsator4droid.library.PulsatorLayout;
 
 public class ActivityPaymentReceive extends BasicActivity {
 
@@ -96,7 +96,13 @@ public class ActivityPaymentReceive extends BasicActivity {
     Spinner spNoRVB;
 
     @BindView(R.id.flTakePhoto)
-    FrameLayout flTakePhoto;
+    View flTakePhoto;
+
+    @BindView(R.id.svMain)
+    View svMain;
+
+    @BindView(R.id.pulsator)
+    PulsatorLayout pulsator;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -163,6 +169,7 @@ public class ActivityPaymentReceive extends BasicActivity {
             etDanaSosial.setText("0");
 
             flTakePhoto.setVisibility(View.GONE);
+            svMain.setVisibility(View.VISIBLE);
 
         } else {
             RealmResults<TrnRVB> trnRVBs = this.realm.where(TrnRVB.class)
@@ -183,6 +190,7 @@ public class ActivityPaymentReceive extends BasicActivity {
             long danaSosial = dtl.getDanaSosial() == null ? 0 : dtl.getDanaSosial().longValue();
             etDanaSosial.setText(Utility.convertLongToRupiah(danaSosial));
 
+            pulsator.start();
 //            deletePhotoArrival(); untested
         }
         spNoRVB.setAdapter(adapterRVB);
@@ -207,12 +215,6 @@ public class ActivityPaymentReceive extends BasicActivity {
     }
 
     private void savePayment1() {
-
-        // seharusnya PoA udah diexecute sebelumnya
-        if (PoAUtil.isPoAExists(realm, collectorId, ldvNo, contractNo) == null
-                || !PoAUtil.getPoAFile(this, collectorId, contractNo).exists()) {
-            Snackbar.make(activityPaymentReceive, getString(R.string.message_no_photo_arrival_taken), Snackbar.LENGTH_LONG).show();
-        }
 
         boolean editMode = isExists(this.realm) != null;
         // reset errors
@@ -419,17 +421,26 @@ public class ActivityPaymentReceive extends BasicActivity {
 
         /*
             10feb17 bug fix denda ga boleh lebih besar dari penerimaan
-         */
         if (Utility.isValidMoney(penerimaan) && Utility.isValidMoney(denda)) {
             long penerimaanValue = Long.parseLong(penerimaan);
             long dendaValue = Long.parseLong(denda);
 
             if (dendaValue > penerimaanValue) {
                 etPenerimaan.setError(getString(R.string.error_penalty_over_receive));
-                focusView = etDenda;
+                focusView = etPenerimaan;
                 cancel = true;
             }
         }
+         */
+
+        // seharusnya PoA udah diexecute sebelumnya
+        TrnFlagTimestamp trnFlagTimestamp = PoAUtil.isPoADataExists(realm, collectorId, ldvNo, contractNo);
+        boolean poaCacheFileExists = PoAUtil.getPoACacheFile(this, collectorId, contractNo).exists();
+        boolean poaFileExists = PoAUtil.getPoAFile(this, collectorId, contractNo).exists();
+
+        if (poaCacheFileExists || poaFileExists) {
+        } else
+            Snackbar.make(activityPaymentReceive, getString(R.string.message_no_photo_arrival_taken), Snackbar.LENGTH_LONG).show();
 
         if (cancel) {
             focusView.requestFocus();
@@ -625,7 +636,7 @@ public class ActivityPaymentReceive extends BasicActivity {
 
     @OnClick(R.id.llTakePhoto)
     public void onTakePoA() {
-        PoAUtil.callCameraIntent(this, collectorId, contractNo);
+        PoAUtil.callCameraIntent(this, collectorId, ldvNo, contractNo);
     }
 
     @Override
@@ -637,10 +648,12 @@ public class ActivityPaymentReceive extends BasicActivity {
             return;
         }
 
-        File file = PoAUtil.flushCameraIntoCache(this, collectorId, contractNo);
+        File file = PoAUtil.postCameraIntoCache(this, collectorId, contractNo);
 
         if (file != null) {
+            pulsator.stop();
             flTakePhoto.setVisibility(View.GONE);
+            svMain.setVisibility(View.VISIBLE);
         }
 
     }

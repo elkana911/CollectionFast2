@@ -40,6 +40,8 @@ public class Storage {
     public static final String KEY_SERVER_DEV_IP = "server.dev.ip";
     public static final String KEY_SERVER_DEV_PORT = "server.dev.port";
 
+    public static final String KEY_POA_DATA_TEMPORARY = "poa.data.tmp";
+
     /*
     public static String getPrefAsString(Context ctx, String key) {
         SharedPreferences sp = ctx.getSharedPreferences("pref", Context.MODE_PRIVATE);

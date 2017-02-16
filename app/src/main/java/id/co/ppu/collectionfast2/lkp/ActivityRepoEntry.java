@@ -17,6 +17,7 @@ import android.widget.Toast;
 
 import com.weiwangcn.betterspinner.library.material.MaterialBetterSpinner;
 
+import java.io.File;
 import java.util.Date;
 import java.util.List;
 
@@ -29,10 +30,12 @@ import id.co.ppu.collectionfast2.pojo.ServerInfo;
 import id.co.ppu.collectionfast2.pojo.UserConfig;
 import id.co.ppu.collectionfast2.pojo.sync.SyncTrnRepo;
 import id.co.ppu.collectionfast2.pojo.trn.TrnBastbj;
+import id.co.ppu.collectionfast2.pojo.trn.TrnFlagTimestamp;
 import id.co.ppu.collectionfast2.pojo.trn.TrnLDVDetails;
 import id.co.ppu.collectionfast2.pojo.trn.TrnLDVHeader;
 import id.co.ppu.collectionfast2.pojo.trn.TrnRepo;
 import id.co.ppu.collectionfast2.util.NetUtil;
+import id.co.ppu.collectionfast2.util.PoAUtil;
 import id.co.ppu.collectionfast2.util.Utility;
 import io.realm.Realm;
 import io.realm.RealmResults;
@@ -75,6 +78,12 @@ public class ActivityRepoEntry extends BasicActivity {
 
     @BindView(R.id.spBASTK)
     MaterialBetterSpinner spBASTK;
+
+    @BindView(R.id.flTakePhoto)
+    View flTakePhoto;
+
+    @BindView(R.id.svMain)
+    View svMain;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -134,6 +143,9 @@ public class ActivityRepoEntry extends BasicActivity {
 
             radioSTNK.setChecked(trnRepo.getStnkStatus() != null && trnRepo.getStnkStatus().equals("Y"));
             radioNoSTNK.setChecked(trnRepo.getStnkStatus() == null || !trnRepo.getStnkStatus().equals("Y"));
+
+            flTakePhoto.setVisibility(View.GONE);
+            svMain.setVisibility(View.VISIBLE);
 
         } else {
 
@@ -207,6 +219,15 @@ public class ActivityRepoEntry extends BasicActivity {
             focusView = etKomentar;
             cancel = true;
         }
+
+        // seharusnya PoA udah diexecute sebelumnya
+        TrnFlagTimestamp trnFlagTimestamp = PoAUtil.isPoADataExists(realm, collectorId, ldvNo, contractNo);
+        boolean poaCacheFileExists = PoAUtil.getPoACacheFile(this, collectorId, contractNo).exists();
+        boolean poaFileExists = PoAUtil.getPoAFile(this, collectorId, contractNo).exists();
+
+        if (poaCacheFileExists || poaFileExists) {
+        } else
+            Snackbar.make(activityRepoEntri, getString(R.string.message_no_photo_arrival_taken), Snackbar.LENGTH_LONG).show();
 
         if (cancel) {
             focusView.requestFocus();
@@ -291,6 +312,9 @@ public class ActivityRepoEntry extends BasicActivity {
         }, new Realm.Transaction.OnSuccess() {
             @Override
             public void onSuccess() {
+
+                PoAUtil.commit(ActivityRepoEntry.this, collectorId, ldvNo, contractNo);
+
                 Toast.makeText(ActivityRepoEntry.this, "Repo saved !", Toast.LENGTH_SHORT).show();
 
             }
@@ -316,10 +340,10 @@ public class ActivityRepoEntry extends BasicActivity {
 
     @OnClick(R.id.btnUploadPicture)
     public void onClickUploadPicture() {
-        Intent i = new Intent(this, ActivityUploadPictureGeo2.class);
-        i.putExtra(ActivityUploadPictureGeo2.PARAM_CONTRACT_NO, etContractNo.getText().toString());
-        i.putExtra(ActivityUploadPictureGeo2.PARAM_COLLECTOR_ID, this.collectorId);
-        i.putExtra(ActivityUploadPictureGeo2.PARAM_LDV_NO, this.ldvNo);
+        Intent i = new Intent(this, ActivityUploadPictureGeo.class);
+        i.putExtra(ActivityUploadPictureGeo.PARAM_CONTRACT_NO, etContractNo.getText().toString());
+        i.putExtra(ActivityUploadPictureGeo.PARAM_COLLECTOR_ID, this.collectorId);
+        i.putExtra(ActivityUploadPictureGeo.PARAM_LDV_NO, this.ldvNo);
 
         startActivity(i);
 
@@ -331,6 +355,29 @@ public class ActivityRepoEntry extends BasicActivity {
         i.putExtra(ActivityPaymentHistory.PARAM_CONTRACT_NO, etContractNo.getText().toString());
 
         startActivity(i);
+    }
+
+    @OnClick(R.id.llTakePhoto)
+    public void onTakePoA() {
+        PoAUtil.callCameraIntent(this, collectorId, ldvNo, contractNo);
+    }
+
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+        super.onActivityResult(requestCode, resultCode, data);
+
+        // data will return a null intent and the picture is in the URI that you passed in.
+        if (resultCode != RESULT_OK) {
+            return;
+        }
+
+        File file = PoAUtil.postCameraIntoCache(this, collectorId, contractNo);
+
+        if (file != null) {
+            flTakePhoto.setVisibility(View.GONE);
+            svMain.setVisibility(View.VISIBLE);
+        }
+
     }
 
     public class BastkAdapter extends ArrayAdapter<TrnBastbj> {

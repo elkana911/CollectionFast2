@@ -48,6 +48,7 @@ dependencies {
     compile 'com.google.android.gms:play-services-maps:10.0.1'
     compile 'com.google.android.gms:play-services-location:10.0.1'
     compile 'com.google.firebase:firebase-messaging:10.0.1'
+    compile 'pl.bclogic:pulsator4droid:1.0.3'
 }
 
 apply plugin: 'com.google.gms.google-services'

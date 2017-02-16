@@ -24,6 +24,7 @@ import id.co.ppu.collectionfast2.payment.entry.ActivityPaymentEntri;
 import id.co.ppu.collectionfast2.payment.receive.ActivityPaymentReceive;
 import id.co.ppu.collectionfast2.pojo.trn.TrnFlagTimestamp;
 import io.realm.Realm;
+import io.realm.RealmResults;
 
 /**
  * PoA = Photo On Arrival
@@ -94,8 +95,10 @@ public class PoAUtil {
     }
 
     /**
+     * Check the file exists or not
+     *
      * @return
-     * @see #commit(BasicActivity, Realm, String, String, String)
+     * @see #commit(BasicActivity, String, String, String)
      */
     public static File getPoAFile(BasicActivity activity, String collCode, String contractNo) {
 //        File dir = getCacheDir();   // hindari penggunaan cache, krn bisa dibersihkan by job oleh utility
@@ -103,15 +106,19 @@ public class PoAUtil {
         return new File(getPoAPath() + getJpg(activity, collCode, contractNo));
     }
 
-    private static File getPoACacheFile(BasicActivity activity, String collCode, String contractNo) {
+    public static File getPoACacheFile(BasicActivity activity, String collCode, String contractNo) {
 //        File dir = getCacheDir();   // hindari penggunaan cache, krn bisa dibersihkan by job oleh utility
 
         return new File(getPoACachePath() + getJpg(activity, collCode, contractNo));
     }
 
     /**
-     * if succeed will insert data into table {@link TrnFlagTimestamp}
-     *
+     * Following the action taken:
+     * <ul>
+     * <li>if succeed will insert data into table {@link TrnFlagTimestamp}</li>
+     * <li>will also moving the cache picture into parent folder</li>
+     * </ul>
+     * <p>WARNING ! may return false on second commit
      * @param activity
      * @param collCode
      * @param contractNo
@@ -121,8 +128,8 @@ public class PoAUtil {
 
         String jpgFileName = getJpg(activity, collCode, contractNo);
 
-        File from = new File(getPoACachePath() + jpgFileName);
-        final File to = new File(getPoAPath() + jpgFileName);
+        File from = new File(getPoACachePath() + jpgFileName);  // /storage/emulated/0/RadanaCache/cache/poaPymtRcv_demo_71000000008115.jpg
+        final File to = new File(getPoAPath() + jpgFileName);   // /storage/emulated/0/RadanaCache/poaPymtRcv_demo_71000000008115.jpg
 
         boolean ok = from.renameTo(to);
 
@@ -135,25 +142,14 @@ public class PoAUtil {
                 @Override
                 public void execute(Realm realm) {
 
-                    TrnFlagTimestamp obj = new TrnFlagTimestamp();
+                    TrnFlagTimestamp obj = (TrnFlagTimestamp) Storage.getObjPreference(activity.getApplicationContext(), Storage.KEY_POA_DATA_TEMPORARY, TrnFlagTimestamp.class);
 
-                    try {
-                        double[] gps = Location.getGPS(activity);
-                        final String latitude = String.valueOf(gps[0]);
-                        final String longitude = String.valueOf(gps[1]);
-
-                        obj.setLatitude(latitude);
-                        obj.setLongitude(longitude);
-                    } catch (Exception e) {
-                        e.printStackTrace();
+                    if (obj == null) {
+                        throw new NullPointerException("No Temporary PoA found !");
                     }
-
-                    obj.setContractNo(contractNo);
-                    obj.setCollCode(collCode);
-                    obj.setLdvNo(ldvNo);
-                    obj.setFileName(to.getName());
-                    obj.setCreatedBy(Utility.LAST_UPDATE_BY);
-                    obj.setCreatedTimestamp(new Date());
+                    if (!obj.getFileName().equals(to.getName())) {
+                        throw new RuntimeException("Temporary PoA not match(" + obj.getFileName() + "<>" + to.getName());
+                    }
 
                     realm.copyToRealm(obj);
                 }
@@ -186,6 +182,9 @@ public class PoAUtil {
             }
         });
 
+        if (toBeDeleted == null)
+            return;
+
         for (File f : toBeDeleted) {
             Log.e("RADANAReset", "Delete " + f.getName() + (f.delete() ? " success" : " failed"));
         }
@@ -196,7 +195,7 @@ public class PoAUtil {
      * Only get files that was committed
      *
      * @return
-     * @see #commit(BasicActivity, Realm, String, String, String)
+     * @see #commit(BasicActivity, String, String, String)
      */
     public static File[] getPoAFiles() {
         File dir = new File(getPoAPath());
@@ -230,7 +229,16 @@ public class PoAUtil {
     }
     */
 
-    public static TrnFlagTimestamp isPoAExists(Realm realm, String collCode, String ldvNo, String contractNo) {
+    /**
+     * Only check within database. Not the file.
+     *
+     * @param realm
+     * @param collCode
+     * @param ldvNo
+     * @param contractNo
+     * @return
+     */
+    public static TrnFlagTimestamp isPoADataExists(Realm realm, String collCode, String ldvNo, String contractNo) {
         TrnFlagTimestamp first = realm.where(TrnFlagTimestamp.class)
                 .equalTo("contractNo", contractNo)
                 .equalTo("ldvNo", ldvNo)
@@ -247,19 +255,47 @@ public class PoAUtil {
      * @param activity
      * @param collCode
      * @param contractNo
-     * @see #flushCameraIntoCache(BasicActivity, String, String)
+     * @see #postCameraIntoCache(BasicActivity, String, String)
+     * @see #commit(BasicActivity, String, String, String)
      */
-    public static void callCameraIntent(BasicActivity activity, String collCode, String contractNo) {
+    public static void callCameraIntent(BasicActivity activity, String collCode, String ldvNo, String contractNo) {
         Intent takePicture = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
 
         hidePoAFiles();
 
         // prepare the Uri
         File cacheFile = getPoACacheFile(activity, collCode, contractNo);
+
+        // clean up the last one
+        if (cacheFile.exists())
+            cacheFile.delete();
+
         takePicture.putExtra(MediaStore.EXTRA_OUTPUT, Uri.fromFile(cacheFile));
 
         activity.startActivityForResult(takePicture, 1);//zero can be replaced with any action code
 
+        // create temporary data
+        TrnFlagTimestamp obj = new TrnFlagTimestamp();
+
+        try {
+            double[] gps = Location.getGPS(activity);
+            final String latitude = String.valueOf(gps[0]);
+            final String longitude = String.valueOf(gps[1]);
+
+            obj.setLatitude(latitude);
+            obj.setLongitude(longitude);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+
+        obj.setContractNo(contractNo);
+        obj.setCollCode(collCode);
+        obj.setLdvNo(ldvNo);
+        obj.setFileName(getPoAFile(activity, collCode, contractNo).getName());
+        obj.setCreatedBy(Utility.LAST_UPDATE_BY);
+        obj.setCreatedTimestamp(new Date());
+
+        Storage.saveObjPreference(activity.getApplicationContext(), Storage.KEY_POA_DATA_TEMPORARY, obj);
     }
 
     /**
@@ -268,12 +304,13 @@ public class PoAUtil {
      * @param activity
      * @param collCode
      * @param contractNo
-     * @see #callCameraIntent(BasicActivity, String, String)
-     * @see #commit(BasicActivity, Realm, String, String, String)
+     * @see #callCameraIntent(BasicActivity, String, String, String)
+     * @see #commit(BasicActivity, String, String, String)
      */
-    public static File flushCameraIntoCache(BasicActivity activity, String collCode, String contractNo) {
-        File cacheFile = PoAUtil.getPoACacheFile(activity, collCode, contractNo);
-        Uri uriSavedImage = Uri.fromFile(cacheFile);
+    public static File postCameraIntoCache(BasicActivity activity, String collCode, String contractNo) {
+        File cacheFile = PoAUtil.getPoACacheFile(activity, collCode, contractNo); // /storage/emulated/0/RadanaCache/cache/poaVstRslt_demo_71000000008115.jpg
+
+        Uri uriSavedImage = Uri.fromFile(cacheFile); // file:///storage/emulated/0/RadanaCache/cache/poaVstRslt_demo_71000000008115.jpg
 
         Bitmap bitmap;
         try {
@@ -285,8 +322,8 @@ public class PoAUtil {
                 Bitmap bm2 = BitmapFactory.decodeStream(in);
 
                 // flush the compressed as temp file
-                File outputDir = new File(getPoACachePath());
-                File outputFile = File.createTempFile("poa-", ".jpg", outputDir);
+                File outputDir = new File(getPoACachePath());   //  /storage/emulated/0/RadanaCache/cache
+                File outputFile = File.createTempFile("poa-", ".jpg", outputDir);// /storage/emulated/0/RadanaCache/cache/poa-300549737.jpg
 
                 OutputStream stream = new FileOutputStream(outputFile);
 //                bm2.compress(Bitmap.CompressFormat.JPEG, 10, stream); // agak rusak gambarnya
@@ -312,4 +349,32 @@ public class PoAUtil {
 
         return null;
     }
+
+    /**
+     *
+     * @param realm
+     * @param collCode
+     * @param contractNo
+     * @return
+     */
+    public static void cancel(Realm realm, String collCode, String contractNo){
+        RealmResults<TrnFlagTimestamp> all = realm.where(TrnFlagTimestamp.class)
+                .equalTo("contractNo", contractNo)
+                // .equalTo("ldvNo", ldvNo)
+                .equalTo("collCode", collCode)
+                .findAll();
+
+        for (TrnFlagTimestamp trn :
+                all) {
+            File file = new File(getPoAPath() + trn.getFileName());
+
+            if (file.exists())
+                file.delete();
+
+           // getPoAFile(null, collCode, contractNo)
+        }
+
+    }
+
+
 }

@@ -78,7 +78,7 @@ public class DemoUtil {
         return demo;
     }
 
-    private static TrnCollectAddr generateCollAddress(String contractNo, long seqNo, String collCode, String collAddress, String collRT, String collRW, String collKelKode, String collKel, String collKecCode, String collKec, String collCityCode, String collCity, String collZip, String collSubZip, String collProvCode, String collProv, String collFixPhArea, String collFixPhone, String collFaxArea, String collFax, String collMobPhone, String collName, String collEmail, String collMobPhone2, String collNickName, String createdBy, Date createdTimestamp, String officeCode) {
+    private static TrnCollectAddr generateTrnCollAddress(String contractNo, long seqNo, String collCode, String collAddress, String collRT, String collRW, String collKelKode, String collKel, String collKecCode, String collKec, String collCityCode, String collCity, String collZip, String collSubZip, String collProvCode, String collProv, String collFixPhArea, String collFixPhone, String collFaxArea, String collFax, String collMobPhone, String collName, String collEmail, String collMobPhone2, String collNickName, String createdBy, Date createdTimestamp, String officeCode) {
         TrnCollectAddr obj = new TrnCollectAddr();
 
         TrnCollectAddrPK pk = new TrnCollectAddrPK();
@@ -115,7 +115,7 @@ public class DemoUtil {
         return obj;
     }
 
-    private static TrnLDVDetails generateLDVDetail(String ldvNo, long seqNo, String period, String contractNo, String custNo, String custName, Long ovdInstNo, Date ovdDueDate, Date dueDate, Long instNo, Long prncAmbc, Long intrAmbc, Long penaltyAmbc, Long prncAC, Long intrAC, Long penaltyAC, String ldvFlag, String workStatus, Long prncOTS, Date startedTimestamp, String createdBy, Date createdTimestamp, String occupation, String subOccupation, Long monthInst, Long daysIntrAmbc, Long collectionFee, Date lastPaidDate, Long dpd) {
+    private static TrnLDVDetails generateTrnLDVDetail(String ldvNo, long seqNo, String period, String contractNo, String custNo, String custName, Long ovdInstNo, Date ovdDueDate, Date dueDate, Long instNo, Long prncAmbc, Long intrAmbc, Long penaltyAmbc, Long prncAC, Long intrAC, Long penaltyAC, String ldvFlag, String workStatus, Long prncOTS, Date startedTimestamp, String createdBy, Date createdTimestamp, String occupation, String subOccupation, Long monthInst, Long daysIntrAmbc, Long collectionFee, Date lastPaidDate, Long dpd) {
         TrnLDVDetails obj = new TrnLDVDetails();
 
         TrnLDVDetailsPK pk = new TrnLDVDetailsPK();
@@ -350,6 +350,19 @@ public class DemoUtil {
         return mst;
     }
 
+    private static TrnRVB generateTrnRVB(String rvbNo, String officeCode, String collCode, String createdBy, Date createdTimestamp) {
+        TrnRVB trn = new TrnRVB();
+        trn.setRvbNo(rvbNo);
+        trn.setOfficeCode(officeCode);
+        trn.setRvbDate(new Date());
+        trn.setRvbOnHand(collCode);
+        trn.setRvbStatus("OP");
+        trn.setCreatedBy(createdBy);
+        trn.setCreatedTimestamp(createdTimestamp);
+
+        return trn;
+    }
+
     public static LKPData buildLKP(final Date lkpDate, final String collCode, final String officeCode, final String createdBy) {
 
         LKPData data = new LKPData();
@@ -383,68 +396,68 @@ public class DemoUtil {
         Date createdTimestamp = new Date();
         Date startedTimestamp = new Date();
         //1
-        details.add(generateLDVDetail(header.getLdvNo(), 86L, period, "71000000008115", "71000150000027", "MALAN"
+        details.add(generateTrnLDVDetail(header.getLdvNo(), 86L, period, "71000000008115", "71000150000027", "MALAN"
                 , 17L, ovdDueDate, dueDate, 16L, 1193882L, 1446118L, 350300L, 0L, 0L, 0L, "NEW", "A", 281350L, startedTimestamp, createdBy, createdTimestamp
                 , "Pekerja Lepas/Freelance (>=1)", "FREELANCE"
                 , 660000L, 336600L, null, null, 102L));
         //2
-        details.add(generateLDVDetail(header.getLdvNo(), 87L, period, "71000000069115", "71000150000555", "RUDI EFENDI"
+        details.add(generateTrnLDVDetail(header.getLdvNo(), 87L, period, "71000000069115", "71000150000555", "RUDI EFENDI"
                 , 14L, ovdDueDate, dueDate, 13L, 951098L, 1488902L, 678500L, 0L, 0L, 0L, "NEW", "A", 223658L, startedTimestamp, createdBy, createdTimestamp
                 , "Kry Swasta Tetap", "MEKANIK"
                 , 610000L, 353800L, 10000L, null, 116L));
         //3
-        details.add(generateLDVDetail(header.getLdvNo(), 88L, period, "71000000034615", "71000150000254", "RASIDIN"
+        details.add(generateTrnLDVDetail(header.getLdvNo(), 88L, period, "71000000034615", "71000150000254", "RASIDIN"
                 , 16L, ovdDueDate, dueDate, 15L, 934575L, 1465425L, 417000L, 0L, 0L, 0L, "NEW", "A", 219758L, startedTimestamp, createdBy, createdTimestamp
                 , "Pekerja Lepas/Freelance (>=1)", "PEMBANTU RUMAH TANGGA"
                 , 600000L, 309000L, 10000L, null, 103L));
         //4
-        details.add(generateLDVDetail(header.getLdvNo(), 89L, period, "71000900029814", "71000140002255", "SUNIK"
+        details.add(generateTrnLDVDetail(header.getLdvNo(), 89L, period, "71000900029814", "71000140002255", "SUNIK"
                 , 22L, ovdDueDate, dueDate, 21L, 1966547L, 929453L, 1161760L, 0L, 0L, 0L, "NEW", "A", 461931L, startedTimestamp, createdBy, createdTimestamp
                 , "Kry Swasta Kontrak (>=1)", "Perusahaan Swasta"
                 , 724000L, 427160L, null, null, 118L));
         //5
-        details.add(generateLDVDetail(header.getLdvNo(), 90L, period, "71000000349714", "71000140004033", "BUSRON"
+        details.add(generateTrnLDVDetail(header.getLdvNo(), 90L, period, "71000000349714", "71000140004033", "BUSRON"
                 , 19L, ovdDueDate, dueDate, 18L, 1901013L, 1498987L, 1097750L, 0L, 0L, 0L, "NEW", "A", 464567L, startedTimestamp, createdBy, createdTimestamp
                 , "Kry Swasta Tetap", "Perusahaan Swasta"
                 , 858000L, 323000L, null, null, 76L));
         /*
-        details.add(generateLDVDetail(header.getLdvNo(), 91L, period, "71000000192715", "71000150001452", "GUSTIANA"
+        details.add(generateTrnLDVDetail(header.getLdvNo(), 91L, period, "71000000192715", "71000150001452", "GUSTIANA"
                 , 13L, ovdDueDate, dueDate, 12L, 1883295L, 1548705L, 1900650L, 0L, 0L, 0L, "NEW", "A", 480831L, startedTimestamp, createdBy, createdTimestamp
                 , "Wiraswasta (Tempat usaha sendiri)", "PEDAGANG MAKANAN"
                 , 858000L, 193050L, 10000L, null, 45L));
-        details.add(generateLDVDetail(header.getLdvNo(), 92L, period, "71000000279114", "71000140003373", "DJARDAWATI"
+        details.add(generateTrnLDVDetail(header.getLdvNo(), 92L, period, "71000000279114", "71000140003373", "DJARDAWATI"
                 , 21L, ovdDueDate, dueDate, 20L, 1286020L, 1381980L, 2890715L, 0L, 0L, 0L, "NEW", "A", 314910L, startedTimestamp, createdBy, createdTimestamp
                 , "Kry Pemerintah Tetap", "Badan-badan dan lembaga-lembaga pemerintah"
                 , 667000L, 216775L, null, null, 65L));
-        details.add(generateLDVDetail(header.getLdvNo(), 93L, period, "71000900009014", "71000140001900", "ACHMAD ISHAK"
+        details.add(generateTrnLDVDetail(header.getLdvNo(), 93L, period, "71000900009014", "71000140001900", "ACHMAD ISHAK"
                 , 24L, ovdDueDate, dueDate, 23L, 1580526L, 903474L, 2177005L, 0L, 0L, 0L, "NEW", "A", 388774L, startedTimestamp, createdBy, createdTimestamp
                 , "Pekerja Lepas/Freelance (>=1)", "FREELANCE"
                 , 621000L, 267030L, null, null, 86L));
-        details.add(generateLDVDetail(header.getLdvNo(), 94L, period, "71000900013114", "71000140002002", "CHANDRAR"
+        details.add(generateTrnLDVDetail(header.getLdvNo(), 94L, period, "71000900013114", "71000140002002", "CHANDRAR"
                 , 23L, ovdDueDate, dueDate, 22L, 1398533L, 1085467L, 1820515L, 0L, 0L, 0L, "NEW", "A", 329104L, startedTimestamp, createdBy, createdTimestamp
                 , "Pekerja Lepas/Freelance (>=1)", "FREELANCE"
                 , 621000L, 338445L, null, null, 109L));
-        details.add(generateLDVDetail(header.getLdvNo(), 95L, period, "71000000267113", "71000130002520", "ANIS"
+        details.add(generateTrnLDVDetail(header.getLdvNo(), 95L, period, "71000000267113", "71000130002520", "ANIS"
                 , 31L, ovdDueDate, dueDate, 30L, 1708811L, 651189L, 3035950L, 0L, 0L, 0L, "NEW", "A", 418764L, startedTimestamp, createdBy, createdTimestamp
                 , "Pekerja Lepas/Freelance (>=1)", "FREELANCE"
                 , 590000L, 209450L, null, null, 71L));
-        details.add(generateLDVDetail(header.getLdvNo(), 96L, period, "71000000124514", "71000140001175", "AAN ANSORI"
+        details.add(generateTrnLDVDetail(header.getLdvNo(), 96L, period, "71000000124514", "71000140001175", "AAN ANSORI"
                 , 26L, ovdDueDate, dueDate, 25L, 2452654L, 579346L, 3160110L, 0L, 0L, 0L, "NEW", "A", 600842L, startedTimestamp, createdBy, createdTimestamp
                 , "Wiraswasta (Tempat usaha sendiri)", "Perseorangan (Sektor Swasta)"
                 , 758000L, 272880L, null, null, 72L));
-        details.add(generateLDVDetail(header.getLdvNo(), 97L, period, "71000000183914", "71000140001485", "HERI"
+        details.add(generateTrnLDVDetail(header.getLdvNo(), 97L, period, "71000000183914", "71000140001485", "HERI"
                 , 25L, ovdDueDate, dueDate, 24L, 1278061L, 621939L, 738500L, 0L, 0L, 0L, "NEW", "A", 313245L, startedTimestamp, createdBy, createdTimestamp
                 , "Pekerja Lepas/Freelance (>=1)", "FREELANCE"
                 , 475000L, 159125L, null, null, 67L));
-        details.add(generateLDVDetail(header.getLdvNo(), 98L, period, "71000000264414", "71000140003173", "THEO FREDYTUS REVANO"
+        details.add(generateTrnLDVDetail(header.getLdvNo(), 98L, period, "71000000264414", "71000140003173", "THEO FREDYTUS REVANO"
                 , 20L, ovdDueDate, dueDate, 19L, 2994886L, 365114L, 108300L, 0L, 0L, 0L, "NEW", "A", 697276L, startedTimestamp, createdBy, createdTimestamp
                 , "Kry Swasta Tetap", "Perusahaan Swasta"
                 , 840000L, 449400L, 10000L, null, 107L));
-        details.add(generateLDVDetail(header.getLdvNo(), 99L, period, "71000000121915", "71000140004127", "ZAINAH"
+        details.add(generateTrnLDVDetail(header.getLdvNo(), 99L, period, "71000000121915", "71000140004127", "ZAINAH"
                 , 13L, ovdDueDate, dueDate, 12L, 984032L, 271968L, 366850L, 0L, 0L, 0L, "NEW", "A", 226226L, startedTimestamp, createdBy, createdTimestamp
                 , "Kry Swasta Tetap", "CLEANING SERVICE"
                 , 314000L, 160140L, 10000L, null, 102L));
-        details.add(generateLDVDetail(header.getLdvNo(), 100L, period, "71000000306114", "71000140003500", "ADY KURNIAWAN"
+        details.add(generateTrnLDVDetail(header.getLdvNo(), 100L, period, "71000000306114", "71000140003500", "ADY KURNIAWAN"
                 , 19L, ovdDueDate, dueDate, 18L, 881548L, 48452L, 3062100L, 0L, 0L, 0L, "NEW", "A", 881548L, startedTimestamp, createdBy, createdTimestamp
                 , "Wiraswasta (Tempat usaha sendiri)", "Perseorangan (Sektor Swasta)"
                 , 930000L, 502200L, null, null, 108L));
@@ -452,11 +465,11 @@ public class DemoUtil {
         data.setDetails(details);
 
         List<TrnCollectAddr> addresses = new ArrayList<TrnCollectAddr>();
-        addresses.add(generateCollAddress("71000000008115", 1L, collCode, "JALAN IMPRES", "016", "003", "30771015", "Perajen", "3201020", "BanyuasinI", "3201", "Kab Banyu Asin", "30771", "015", "32", "Prop Sumatera Selatan", "0711", "0", null, null, "081271516996", null, "MALAN", "081271516996", "MALAN", createdBy, createdTimestamp, officeCode));
-        addresses.add(generateCollAddress("71000000069115", 1L, collCode, "JALAN KANCIL PUTIH II", "010", "037", "30135002", "Demang Lebar Daun", "3220030", "IlirBaratI", "3220", "Kota Palembang Plaju", "30135", "002", "32", "Prop Sumatera Selatan", "0711", "0", null, null, "08977777046", null, "RUDI EFENDI", null, "RUDI EFENDI", createdBy, createdTimestamp, officeCode));
-        addresses.add(generateCollAddress("71000000034615", 1L, collCode, "DESA TIRTO RAHARJO", "004", "003", "30975016", "Tirto Raharjo", "3201070", "Muara Padang", "3201", "Kab Banyu Asin", "30975", "016", "32", "Prop Sumatera Selatan", "0711", "0", null, null, "082375838457", null, "RASIDIN", "082375838547", "RASIDIN", createdBy, createdTimestamp, officeCode));
-        addresses.add(generateCollAddress("71000900029814", 1L, collCode, "LORONG SENTOSA JAYA NOMOR 1123", "029", "007", "30266001", "Tangga Takat", "3220140", "SeberangUluIi", "3220", "Kota Palembang Plaju", "30266", "001", "32", "Prop Sumatera Selatan", "0711", "0", null, null, "082183047537", null, "SUNIK", "082183047537", "SUNIK", createdBy, createdTimestamp, officeCode));
-        addresses.add(generateCollAddress("71000000349714", 1L, collCode, "JLN JOKO ATAS NO 927", "027", "011", "30143001", "29Ilir", "3220040", "IlirBaratIi", "3220", "Kota Palembang Plaju", "30143", "001", "32", "Prop Sumatera Selatan", "0711", "0", null, null, "08127303577", null, "BUSRON", null, "BUSRON", createdBy, createdTimestamp, officeCode));
+        addresses.add(generateTrnCollAddress("71000000008115", 1L, collCode, "JALAN IMPRES", "016", "003", "30771015", "Perajen", "3201020", "BanyuasinI", "3201", "Kab Banyu Asin", "30771", "015", "32", "Prop Sumatera Selatan", "0711", "0", null, null, "081271516996", null, "MALAN", "081271516996", "MALAN", createdBy, createdTimestamp, officeCode));
+        addresses.add(generateTrnCollAddress("71000000069115", 1L, collCode, "JALAN KANCIL PUTIH II", "010", "037", "30135002", "Demang Lebar Daun", "3220030", "IlirBaratI", "3220", "Kota Palembang Plaju", "30135", "002", "32", "Prop Sumatera Selatan", "0711", "0", null, null, "08977777046", null, "RUDI EFENDI", null, "RUDI EFENDI", createdBy, createdTimestamp, officeCode));
+        addresses.add(generateTrnCollAddress("71000000034615", 1L, collCode, "DESA TIRTO RAHARJO", "004", "003", "30975016", "Tirto Raharjo", "3201070", "Muara Padang", "3201", "Kab Banyu Asin", "30975", "016", "32", "Prop Sumatera Selatan", "0711", "0", null, null, "082375838457", null, "RASIDIN", "082375838547", "RASIDIN", createdBy, createdTimestamp, officeCode));
+        addresses.add(generateTrnCollAddress("71000900029814", 1L, collCode, "LORONG SENTOSA JAYA NOMOR 1123", "029", "007", "30266001", "Tangga Takat", "3220140", "SeberangUluIi", "3220", "Kota Palembang Plaju", "30266", "001", "32", "Prop Sumatera Selatan", "0711", "0", null, null, "082183047537", null, "SUNIK", "082183047537", "SUNIK", createdBy, createdTimestamp, officeCode));
+        addresses.add(generateTrnCollAddress("71000000349714", 1L, collCode, "JLN JOKO ATAS NO 927", "027", "011", "30143001", "29Ilir", "3220040", "IlirBaratIi", "3220", "Kota Palembang Plaju", "30143", "001", "32", "Prop Sumatera Selatan", "0711", "0", null, null, "08127303577", null, "BUSRON", null, "BUSRON", createdBy, createdTimestamp, officeCode));
         data.setAddress(addresses);
 
         List<TrnBastbj> bastbjs = new ArrayList<TrnBastbj>();
@@ -475,6 +488,12 @@ public class DemoUtil {
         data.setRepo(repos);
 
         List<TrnRVB> rvbs = new ArrayList<TrnRVB>();
+        rvbs.add(generateTrnRVB("7100016K1183025", officeCode, collCode, createdBy, createdTimestamp));
+        rvbs.add(generateTrnRVB("7100016K1183026", officeCode, collCode, createdBy, createdTimestamp));
+        rvbs.add(generateTrnRVB("7100016K1183027", officeCode, collCode, createdBy, createdTimestamp));
+        rvbs.add(generateTrnRVB("7100016K1183028", officeCode, collCode, createdBy, createdTimestamp));
+        rvbs.add(generateTrnRVB("7100016K1183722", officeCode, collCode, createdBy, createdTimestamp));
+        rvbs.add(generateTrnRVB("7100016K1183723", officeCode, collCode, createdBy, createdTimestamp));
         data.setRvb(rvbs);
 
         List<TrnRVColl> rvColls = new ArrayList<TrnRVColl>();

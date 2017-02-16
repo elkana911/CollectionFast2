@@ -141,7 +141,8 @@ public class LoginActivity extends BasicActivity {
         if (!TextUtils.isEmpty(loginDate)) {
             UserData prevUserData = (UserData) Storage.getObjPreference(getApplicationContext(), Storage.KEY_USER, UserData.class);
 
-            loginOffline(prevUserData.getUserId(), prevUserData.getUserPwd());
+            if (prevUserData != null)
+                loginOffline(prevUserData.getUserId(), prevUserData.getUserPwd());
         } else {
             boolean b = DataUtil.isMasterDataDownloaded(this, this.realm);
         }
@@ -458,7 +459,7 @@ public class LoginActivity extends BasicActivity {
      */
     private void isLatestVersion(final OnSuccessError listener) {
         if (!NetUtil.isConnected(this)) {
-            Toast.makeText(this, getString(R.string.error_online_required), Toast.LENGTH_LONG).show();
+//            Toast.makeText(this, getString(R.string.error_online_required), Toast.LENGTH_LONG).show();
 
             if (listener != null) {
                 listener.onSkip();

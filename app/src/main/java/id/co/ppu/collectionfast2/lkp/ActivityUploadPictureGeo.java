@@ -50,6 +50,10 @@ import retrofit2.Call;
 import retrofit2.Callback;
 import retrofit2.Response;
 
+/**
+ * Cara yg lama, upload sync terpisah dari sinkronisasi utama.
+ * ide baru adalah upload sync digabung dengan sinkronisasi utama, tp sepertinya akan memperlambat jd cara lama masih kupakai dulu
+ */
 public class ActivityUploadPictureGeo extends BasicActivity {
     public static final String PARAM_CONTRACT_NO = "customer.contractNo";
     public static final String PARAM_COLLECTOR_ID = "collector.id";
@@ -342,7 +346,7 @@ public class ActivityUploadPictureGeo extends BasicActivity {
                                     .findFirst();
                             if (sync == null) {
                                 sync = new SyncFileUpload();
-                                sync.setUid(java.util.UUID.randomUUID().toString());
+                                sync.setUid(UUID.randomUUID().toString());
                                 sync.setContractNo(contractNo);
                                 sync.setCollectorId(collectorId);
                                 sync.setPictureId(picId);
@@ -494,6 +498,7 @@ public class ActivityUploadPictureGeo extends BasicActivity {
         });
     }
 
+    @OnClick(R.id.btnUpload)
     public void onClickUpload() {
 
         if (!NetUtil.isConnected(this)) {

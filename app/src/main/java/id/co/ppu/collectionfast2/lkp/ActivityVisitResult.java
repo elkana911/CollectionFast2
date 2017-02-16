@@ -19,6 +19,7 @@ import android.widget.Spinner;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import java.io.File;
 import java.text.DateFormat;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
@@ -41,10 +42,12 @@ import id.co.ppu.collectionfast2.pojo.master.MstParam;
 import id.co.ppu.collectionfast2.pojo.master.MstPotensi;
 import id.co.ppu.collectionfast2.pojo.sync.SyncTrnLDVComments;
 import id.co.ppu.collectionfast2.pojo.trn.TrnCollPos;
+import id.co.ppu.collectionfast2.pojo.trn.TrnFlagTimestamp;
 import id.co.ppu.collectionfast2.pojo.trn.TrnLDVComments;
 import id.co.ppu.collectionfast2.pojo.trn.TrnLDVCommentsPK;
 import id.co.ppu.collectionfast2.pojo.trn.TrnLDVDetails;
 import id.co.ppu.collectionfast2.util.NetUtil;
+import id.co.ppu.collectionfast2.util.PoAUtil;
 import id.co.ppu.collectionfast2.util.Utility;
 import io.realm.Realm;
 import io.realm.RealmResults;
@@ -106,6 +109,12 @@ public class ActivityVisitResult extends BasicActivity {
 
     @BindView(R.id.spAlasan)
     Spinner spAlasan;
+
+    @BindView(R.id.flTakePhoto)
+    View flTakePhoto;
+
+    @BindView(R.id.svMain)
+    View svMain;
 
     private int getIndex(Spinner spinner, String myString){
 
@@ -301,6 +310,9 @@ public class ActivityVisitResult extends BasicActivity {
 //            etTindakSelanjutnya.setText(trnLDVComments.getActionPlan());
 
             etKomentar.setText(trnLDVComments.getLkpComments());
+
+            flTakePhoto.setVisibility(View.GONE);
+
         }
 
     }
@@ -529,6 +541,16 @@ public class ActivityVisitResult extends BasicActivity {
             cancel = true;
         }
 
+
+        // seharusnya PoA udah diexecute sebelumnya
+        TrnFlagTimestamp trnFlagTimestamp = PoAUtil.isPoADataExists(realm, collectorId, ldvNo, contractNo);
+        boolean poaCacheFileExists = PoAUtil.getPoACacheFile(this, collectorId, contractNo).exists();
+        boolean poaFileExists = PoAUtil.getPoAFile(this, collectorId, contractNo).exists();
+
+        if (poaCacheFileExists || poaFileExists) {
+        } else
+            Snackbar.make(activityVisitResult, getString(R.string.message_no_photo_arrival_taken), Snackbar.LENGTH_LONG).show();
+
         if (cancel) {
             focusView.requestFocus();
             return;
@@ -654,6 +676,9 @@ public class ActivityVisitResult extends BasicActivity {
         }, new Realm.Transaction.OnSuccess() {
             @Override
             public void onSuccess() {
+
+                PoAUtil.commit(ActivityVisitResult.this, collectorId, ldvNo, contractNo);
+
                 Toast.makeText(ActivityVisitResult.this, "Data saved !", Toast.LENGTH_SHORT).show();
             }
         }, new Realm.Transaction.OnError() {
@@ -679,16 +704,10 @@ public class ActivityVisitResult extends BasicActivity {
 
     @OnClick(R.id.btnUploadPicture)
     public void onClickUploadPic() {
-        /*
-        Intent i = new Intent(this, ActivityUploadPicture.class);
-        i.putExtra(ActivityUploadPicture.PARAM_CONTRACT_NO, etContractNo.getText().toString());
-        i.putExtra(ActivityUploadPicture.PARAM_COLLECTOR_ID, this.collectorId);
-        i.putExtra(ActivityUploadPicture.PARAM_LDV_NO, this.ldvNo);
-        */
-        Intent i = new Intent(this, ActivityUploadPictureGeo2.class);
-        i.putExtra(ActivityUploadPictureGeo2.PARAM_CONTRACT_NO, etContractNo.getText().toString());
-        i.putExtra(ActivityUploadPictureGeo2.PARAM_COLLECTOR_ID, this.collectorId);
-        i.putExtra(ActivityUploadPictureGeo2.PARAM_LDV_NO, this.ldvNo);
+        Intent i = new Intent(this, ActivityUploadPictureGeo.class);
+        i.putExtra(ActivityUploadPictureGeo.PARAM_CONTRACT_NO, etContractNo.getText().toString());
+        i.putExtra(ActivityUploadPictureGeo.PARAM_COLLECTOR_ID, this.collectorId);
+        i.putExtra(ActivityUploadPictureGeo.PARAM_LDV_NO, this.ldvNo);
 
         startActivity(i);
 
@@ -699,6 +718,29 @@ public class ActivityVisitResult extends BasicActivity {
         Intent i = new Intent(this, ActivityChangeAddress.class);
         i.putExtra(ActivityChangeAddress.PARAM_CONTRACT_NO, etContractNo.getText().toString());
         startActivity(i);
+    }
+
+    @OnClick(R.id.llTakePhoto)
+    public void onTakePoA() {
+        PoAUtil.callCameraIntent(this, collectorId, ldvNo, contractNo);
+    }
+
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+        super.onActivityResult(requestCode, resultCode, data);
+
+        // data will return a null intent and the picture is in the URI that you passed in.
+        if (resultCode != RESULT_OK) {
+            return;
+        }
+
+        File file = PoAUtil.postCameraIntoCache(this, collectorId, contractNo);
+
+        if (file != null) {
+            flTakePhoto.setVisibility(View.GONE);
+            svMain.setVisibility(View.VISIBLE);
+        }
+
     }
 
     public class KlasifikasiAdapter extends ArrayAdapter<MstLDVClassifications> {
