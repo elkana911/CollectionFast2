@@ -610,7 +610,9 @@ public class NetUtil {
 
         // create RequestBody instance from file
         try {
-            RequestBody requestFile = RequestBody.create(MediaType.parse("multipart/form-data"), Storage.getCompressedImage(ctx, file, trnFlagTimestamp.getFileName()));
+            // ga perlu kompress lagi krn udah dikompress
+            RequestBody requestFile = RequestBody.create(MediaType.parse("multipart/form-data"), file);
+//            RequestBody requestFile = RequestBody.create(MediaType.parse("multipart/form-data"), Storage.getCompressedImage(ctx, file, trnFlagTimestamp.getFileName()));
             MultipartBody.Part body =
                     MultipartBody.Part.createFormData("picture", file.getName(), requestFile);
 

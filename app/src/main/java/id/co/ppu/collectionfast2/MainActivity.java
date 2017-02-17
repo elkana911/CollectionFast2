@@ -234,7 +234,7 @@ public class MainActivity extends ChatActivity
     private void applyFontToMenuItem(MenuItem mi) {
         Typeface font = Typeface.createFromAsset(getAssets(), Utility.FONT_SAMSUNG_BOLD);
         SpannableString mNewTitle = new SpannableString(mi.getTitle());
-        mNewTitle.setSpan(new CustomTypefaceSpan("" , font), 0 , mNewTitle.length(),  Spannable.SPAN_INCLUSIVE_INCLUSIVE);
+        mNewTitle.setSpan(new CustomTypefaceSpan("", font), 0, mNewTitle.length(), Spannable.SPAN_INCLUSIVE_INCLUSIVE);
         mi.setTitle(mNewTitle);
     }
 
@@ -286,13 +286,13 @@ public class MainActivity extends ChatActivity
                 miManualSync.setVisible(Utility.developerMode);
             }
             // set custom font
-            for (int i=0; i< mn.size();i++) {
+            for (int i = 0; i < mn.size(); i++) {
                 MenuItem mi = mn.getItem(i);
 
                 //for aapplying a font to subMenu ...
                 SubMenu subMenu = mi.getSubMenu();
-                if (subMenu!=null && subMenu.size() >0 ) {
-                    for (int j=0; j <subMenu.size();j++) {
+                if (subMenu != null && subMenu.size() > 0) {
+                    for (int j = 0; j < subMenu.size(); j++) {
                         MenuItem subMenuItem = subMenu.getItem(j);
                         applyFontToMenuItem(subMenuItem);
                     }
@@ -2704,7 +2704,8 @@ public class MainActivity extends ChatActivity
                 uploadPoAOneByOne(new OnSuccessError() {
                     @Override
                     public void onSuccess(String msg) {
-                        PoAUtil.cleanPoA();
+                        PoAUtil.cleanPoACache();
+//                        PoAUtil.cleanPoA();
 
                         realm.beginTransaction();
                         realm.where(TrnFlagTimestamp.class)
@@ -3042,8 +3043,8 @@ public class MainActivity extends ChatActivity
      */
     private int uploadPoAOneByOne(OnSuccessError listener) {
 
-        File[] poaFiles = PoAUtil.getPoAFiles();
-        if (poaFiles == null || poaFiles.length < 1) {
+        File[] poaFilesBuffer = PoAUtil.getPoAFiles();
+        if (poaFilesBuffer == null || poaFilesBuffer.length < 1) {
             if (listener != null)
                 listener.onFailure(new RuntimeException("No PoA File found"));
             return 0;
@@ -3067,6 +3068,17 @@ public class MainActivity extends ChatActivity
             valid = false;
         }
 
+        /*
+        for (int i = 0; i < poaFiles.length; i++) {
+            // analisa file
+            if (!poaFiles[i].canRead()) {
+                errorMsg = "Some of the Photo cannot be upload";
+                valid = false;
+                break;
+            }
+        }
+        */
+
         if (!valid) {
             if (listener != null)
                 listener.onFailure(new RuntimeException("Nothing PoA sent"));
@@ -3074,6 +3086,7 @@ public class MainActivity extends ChatActivity
             return 0;
         }
 
+        /*
         if (list.size() != poaFiles.length) {
             // send error to server
             errorMsg = "Unmatched size TrnFlagTimestamp <> poaFiles";
@@ -3084,78 +3097,60 @@ public class MainActivity extends ChatActivity
 
             valid = false;
         } else
-            for (TrnFlagTimestamp trn : list) {
+        */
 
-                boolean gaAda = true;
-                for (File file : poaFiles) {
-                    if (file.getName().equals(trn.getFileName())) {
-                        gaAda = false;
-                        break;
-                    }
-                }
+        File[] poaFiles = new File[list.size()];
+        for (int i = 0; i < list.size(); i++) {
+            File ada = null;
 
-                if (gaAda) {
-                    valid = false;
+            TrnFlagTimestamp trn = list.get(i);
+
+            for (File file : poaFilesBuffer) {
+                if (file.getName().equals(trn.getFileName())) {
+                    ada = file ;
                     break;
                 }
-
             }
 
+            if (ada == null) {
+                valid = false;
+                break;
+            } else {
+                poaFiles[i] = ada;
+            }
+        }
+/*
+        for (TrnFlagTimestamp trn : list) {
+
+            boolean gaAda = true;
+
+            for (File file : poaFiles) {
+                if (file.getName().equals(trn.getFileName())) {
+                    gaAda = false;
+                    break;
+                } else {
+                    poaFiles
+                }
+            }
+
+            if (gaAda) {
+                valid = false;
+                break;
+            }
+
+        }
+*/
         if (!valid) {
             if (listener != null)
                 listener.onFailure(new RuntimeException(errorMsg));
             return 0;
         }
 
+        // harusnya hanya kirim based on list, jadi bisa buat cek foto manual jika ada apa2
+        // jadi keberadaan list lebih prioritas
         NetUtil.uploadPoAs(MainActivity.this, list, poaFiles, listener);
 
         return list.size();
 
-        /*
-        final List<String> success = new ArrayList<>();
-        for (TrnFlagTimestamp trn : list) {
-
-            File matchedFile = null;
-
-            for (File file : poaFiles) {
-                if (file.getName().equals(trn.getFileName())) {
-                    matchedFile = file;
-                    break;
-                }
-            }
-
-            if (matchedFile == null)
-                continue;
-
-            try {
-                NetUtil.uploadPoA(MainActivity.this, trn, matchedFile, new OnSuccessError() {
-                    @Override
-                    public void onSuccess(String msg) {
-//                        donot show any dialog here to avoid confusion showing message repeatedly
-                        success.add(msg);
-                    }
-
-                    @Override
-                    public void onFailure(Throwable throwable) {
-                        if (throwable != null)
-                            Utility.throwableHandler(MainActivity.this, throwable, false);
-                    }
-
-                    @Override
-                    public void onSkip() {
-
-                    }
-                });
-
-            } catch (NoConnectionException e) {
-                e.printStackTrace();
-                showSnackBar(getString(R.string.error_online_required));
-            }
-        }
-
-        Log.e("eric.uploadPoAOneByOne", success.size() + " of " + list.size() + " uploaded");
-
-        return success.size();
-        */
     }
 }

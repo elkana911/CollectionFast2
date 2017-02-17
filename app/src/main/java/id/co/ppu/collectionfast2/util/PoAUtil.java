@@ -175,11 +175,15 @@ public class PoAUtil {
         return false;
     }
 
-    public static void cleanPoA() {
-
-        // delete cache
+    public static void cleanPoACache() {
         File cacheDir = new File(getPoACachePath());
         Storage.deleteDir(cacheDir);
+
+    }
+
+    public static void cleanPoA() {
+
+        cleanPoACache();
 
         // delete root
         File dir = new File(getPoAPath());
