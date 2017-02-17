@@ -9,18 +9,11 @@ import io.realm.RealmObject;
 
 /**
  * Created by Eric on 13-Sep-16.
- * @See #TrnPOA
  */
 public class TrnFlagTimestamp extends RealmObject implements Serializable {
 
-    @SerializedName("contractNo")
-    private String contractNo;
-
-    @SerializedName("ldvNo")
-    private String ldvNo;
-
-    @SerializedName("collCode")
-    private String collCode;
+    @SerializedName("pk")
+    private TrnFlagTimestampPK pk;
 
     @SerializedName("fileName")
     private String fileName;
@@ -55,29 +48,12 @@ public class TrnFlagTimestamp extends RealmObject implements Serializable {
     @SerializedName("lastupdateTimestamp")
     private Date lastupdateTimestamp;
 
-
-    public String getContractNo() {
-        return contractNo;
+    public TrnFlagTimestampPK getPk() {
+        return pk;
     }
 
-    public void setContractNo(String contractNo) {
-        this.contractNo = contractNo;
-    }
-
-    public String getLdvNo() {
-        return ldvNo;
-    }
-
-    public void setLdvNo(String ldvNo) {
-        this.ldvNo = ldvNo;
-    }
-
-    public String getCollCode() {
-        return collCode;
-    }
-
-    public void setCollCode(String collCode) {
-        this.collCode = collCode;
+    public void setPk(TrnFlagTimestampPK pk) {
+        this.pk = pk;
     }
 
     public String getFileName() {
@@ -155,9 +131,7 @@ public class TrnFlagTimestamp extends RealmObject implements Serializable {
     @Override
     public String toString() {
         return "TrnFlagTimestamp{" +
-                "contractNo='" + contractNo + '\'' +
-                ", ldvNo='" + ldvNo + '\'' +
-                ", collCode='" + collCode + '\'' +
+                "pk=" + pk +
                 ", fileName='" + fileName + '\'' +
                 ", longitude='" + longitude + '\'' +
                 ", latitude='" + latitude + '\'' +

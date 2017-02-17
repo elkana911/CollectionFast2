@@ -22,6 +22,7 @@ import android.view.inputmethod.InputMethodManager;
 import android.widget.Spinner;
 import android.widget.Toast;
 
+import java.lang.reflect.Method;
 import java.net.ConnectException;
 import java.net.SocketTimeoutException;
 import java.net.UnknownHostException;
@@ -51,10 +52,10 @@ public class Utility {
     public final static String SERVER_DEV_PORT = "7002";
 
     public static String[][] servers = {
-            {"local-server", "10.212.0.184", "8090"}
+//            {"local-server", "10.212.0.184", "8090"}
 //            {"local-server", "192.168.10.109", "8090"} // kelapa gading
 //            {"local-server", "192.168.0.9", "8090"}
-//            {"local-server", "192.168.0.7", "8090"} //faraday
+            {"local-server", "192.168.0.7", "8090"} //faraday
             ,{SERVER_DEV_NAME, SERVER_DEV_IP, SERVER_DEV_PORT}
             ,{"fast-mobile", "cmobile.radanafinance.co.id", "7001"}
             ,{"fast-mobile2", "c1mobile.radanafinance.co.id", "7001"}
@@ -103,7 +104,8 @@ public class Utility {
     public static final String ROLE_ADMIN = "ADMIN";
     public static final String ROLE_DEMO = "DEMO";
 
-    public static final String FONT_SAMSUNG = "SamsungSharpSans-Bold.ttf";
+    public static final String FONT_SAMSUNG_BOLD = "SamsungSharpSans-Bold.ttf";
+    public static final String FONT_SAMSUNG = "SamsungSharpSans-Regular.ttf";
 
     public static String getServerName(int serverId) {
         String[] s = servers[serverId];
@@ -585,6 +587,13 @@ public class Utility {
 
                 sb.append(",").append("imei=").append(mngr.getDeviceId());
                 sb.append(",").append("simSN=").append(mngr.getSimSerialNumber());
+
+                Class<?> c = Class.forName("android.os.SystemProperties");
+                Method get = c.getMethod("get", String.class);
+                String serial1 = (String) get.invoke(c, "ril.serialnumber");
+                String id = Settings.Secure.getString(ctx.getContentResolver(), Settings.Secure.ANDROID_ID);
+                sb.append(",").append("deviceSN=").append(serial1);
+                sb.append(",").append("androidId=").append(id);
 
                 LocationManager lm = (LocationManager)ctx.getSystemService(Context.LOCATION_SERVICE);
                 boolean gps_enabled = false;

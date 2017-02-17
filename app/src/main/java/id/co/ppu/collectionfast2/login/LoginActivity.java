@@ -13,6 +13,7 @@ import android.preference.PreferenceManager;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.v7.app.AlertDialog;
+import android.telephony.TelephonyManager;
 import android.text.TextUtils;
 import android.util.Log;
 import android.util.TypedValue;
@@ -38,6 +39,7 @@ import com.google.android.gms.appindexing.Thing;
 import com.google.android.gms.common.api.GoogleApiClient;
 
 import java.io.IOException;
+import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
@@ -120,6 +122,9 @@ public class LoginActivity extends BasicActivity {
 
     @BindView(R.id.tvVersion)
     TextView tvVersion;
+
+    @BindView(R.id.tvDebug)
+    TextView tvDebug;
 
     /**
      * ATTENTION: This was auto-generated to implement the App Indexing API.
@@ -282,7 +287,22 @@ public class LoginActivity extends BasicActivity {
 
         if (Utility.developerMode) {
             btnGetLKPUser.setVisibility(View.VISIBLE);
+            tvDebug.setVisibility(View.VISIBLE);
 
+            TelephonyManager mngr = (TelephonyManager)getSystemService(Context.TELEPHONY_SERVICE);
+
+            StringBuffer sb = new StringBuffer();
+            sb.append("imei=").append(mngr.getDeviceId());
+            try {
+                Class<?> c = Class.forName("android.os.SystemProperties");
+                Method get = c.getMethod("get", String.class);
+                String serial1 = (String) get.invoke(c, "ril.serialnumber");
+                sb.append(",").append("deviceSN=").append(serial1);
+            } catch (Exception ignored) {
+                ignored.printStackTrace();
+            }
+
+            tvDebug.setText(sb.toString());
         }
     }
 

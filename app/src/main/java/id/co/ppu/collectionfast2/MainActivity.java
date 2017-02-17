@@ -232,7 +232,7 @@ public class MainActivity extends ChatActivity
     }
 
     private void applyFontToMenuItem(MenuItem mi) {
-        Typeface font = Typeface.createFromAsset(getAssets(), Utility.FONT_SAMSUNG);
+        Typeface font = Typeface.createFromAsset(getAssets(), Utility.FONT_SAMSUNG_BOLD);
         SpannableString mNewTitle = new SpannableString(mi.getTitle());
         mNewTitle.setSpan(new CustomTypefaceSpan("" , font), 0 , mNewTitle.length(),  Spannable.SPAN_INCLUSIVE_INCLUSIVE);
         mi.setTitle(mNewTitle);
@@ -793,7 +793,9 @@ public class MainActivity extends ChatActivity
 
             drawer.closeDrawers();
 
-            testuploadPoAOneByOne();
+            showSnackBar("Nothing to do");
+
+//            testuploadPoAOneByOne();
                     /*
             syncTransaction(true, new OnSuccessError() {
                 @Override
@@ -2699,88 +2701,23 @@ public class MainActivity extends ChatActivity
 
                 // do here for POA (Photo-On-Arrival)
                 // mending kirim semua file spy tau ada yg gagal apa tidak
-                uploadPoAOneByOne();
-
-                mProgressDialog.setMessage(getString(R.string.message_sync_data_wait));
-
-                // override demo user
-                if (!NetUtil.isConnected(MainActivity.this)
-                        && DemoUtil.isDemo(MainActivity.this)) {
-
-                    // assume success
-                    onPostSyncTransactionSuccess(req, syncLdvDetails, syncLdvComments, syncRvb, syncRVColl, syncBastbj, syncRepo, syncChangeAddr);
-
-                    Fragment frag = getSupportFragmentManager().findFragmentById(R.id.content_frame);
-
-                    if (frag != null && frag instanceof FragmentLKPList) {
-                        ((FragmentLKPList) frag).loadCurrentLKP(); // masih terkadang ga mau update
-//                    ((FragmentLKPList) frag).refresh(); ga mau update
-//                    frag.refresh();
-                    }
-
-                    if (listener != null) {
-                        listener.onSuccess(null);
-                    }
-
-                    if (showDialog) {
-                        Utility.dismissDialog(mProgressDialog);
-                    }
-
-                    showSnackBar("Sync success");
-
-                    return;
-                }
-
-                ApiInterface fastService =
-                        ServiceGenerator.createService(ApiInterface.class, Utility.buildUrl(Storage.getPreferenceAsInt(getApplicationContext(), Storage.KEY_SERVER_ID, 0)));
-
-                Call<ResponseSync> call = fastService.syncLKP(req);
-                call.enqueue(new Callback<ResponseSync>() {
+                uploadPoAOneByOne(new OnSuccessError() {
                     @Override
-                    public void onResponse(Call<ResponseSync> call, Response<ResponseSync> response) {
-                        if (!response.isSuccessful()) {
+                    public void onSuccess(String msg) {
+                        PoAUtil.cleanPoA();
 
-                            ResponseBody errorBody = response.errorBody();
+                        realm.beginTransaction();
+                        realm.where(TrnFlagTimestamp.class)
+                                .findAll().deleteAllFromRealm();
+                        realm.commitTransaction();
 
-                            String msg = "";
-                            try {
-                                msg = response.message() + "(" + response.code() + ") " + errorBody.string();
-                                Snackbar.make(coordinatorLayout, msg, Snackbar.LENGTH_LONG).show();
-                            } catch (Exception e) {
-                                e.printStackTrace();
-                            }
+                        mProgressDialog.setMessage(getString(R.string.message_sync_data_wait));
 
-                            if (listener != null)
-                                listener.onFailure(new RuntimeException(msg));
+                        // override demo user
+                        if (!NetUtil.isConnected(MainActivity.this)
+                                && DemoUtil.isDemo(MainActivity.this)) {
 
-                            if (showDialog) {
-                                Utility.dismissDialog(mProgressDialog);
-                            }
-
-                            return;
-                        }
-
-                        // successful here
-                        final ResponseSync respSync = response.body();
-
-                        if (respSync == null || respSync.getError() != null) {
-                            if (listener != null)
-                                listener.onFailure(new RuntimeException("Sync Failed due to Server Error"));
-
-                            if (respSync == null) {
-                                // Not found(404) berarti ada yg salah di json
-                                Snackbar.make(coordinatorLayout, response.message() + "(" + response.code() + ") ", Snackbar.LENGTH_LONG).show();
-                            } else {
-                                Toast.makeText(MainActivity.this, "Data Error (" + respSync.getError() + ")\n" + respSync.getError().getErrorDesc(), Toast.LENGTH_SHORT).show();
-                            }
-
-                        } else if (respSync.getData() != 1) {
-
-                            if (listener != null)
-                                listener.onSkip();
-
-                        } else {
-
+                            // assume success
                             onPostSyncTransactionSuccess(req, syncLdvDetails, syncLdvComments, syncRvb, syncRVColl, syncBastbj, syncRepo, syncChangeAddr);
 
                             Fragment frag = getSupportFragmentManager().findFragmentById(R.id.content_frame);
@@ -2791,47 +2728,133 @@ public class MainActivity extends ChatActivity
 //                    frag.refresh();
                             }
 
-                            if (listener != null)
+                            if (listener != null) {
                                 listener.onSuccess(null);
+                            }
 
+                            if (showDialog) {
+                                Utility.dismissDialog(mProgressDialog);
+                            }
+
+                            showSnackBar("Sync success");
+
+                            return;
                         }
 
-                        if (showDialog) {
-                            Utility.dismissDialog(mProgressDialog);
-                        }
+                        ApiInterface fastService =
+                                ServiceGenerator.createService(ApiInterface.class, Utility.buildUrl(Storage.getPreferenceAsInt(getApplicationContext(), Storage.KEY_SERVER_ID, 0)));
 
-                        showSnackBar("Sync success");
+                        Call<ResponseSync> call = fastService.syncLKP(req);
+                        call.enqueue(new Callback<ResponseSync>() {
+                            @Override
+                            public void onResponse(Call<ResponseSync> call, Response<ResponseSync> response) {
+                                if (!response.isSuccessful()) {
+
+                                    ResponseBody errorBody = response.errorBody();
+
+                                    String msg = "";
+                                    try {
+                                        msg = response.message() + "(" + response.code() + ") " + errorBody.string();
+                                        Snackbar.make(coordinatorLayout, msg, Snackbar.LENGTH_LONG).show();
+                                    } catch (Exception e) {
+                                        e.printStackTrace();
+                                    }
+
+                                    if (listener != null)
+                                        listener.onFailure(new RuntimeException(msg));
+
+                                    if (showDialog) {
+                                        Utility.dismissDialog(mProgressDialog);
+                                    }
+
+                                    return;
+                                }
+
+                                // successful here
+                                final ResponseSync respSync = response.body();
+
+                                if (respSync == null || respSync.getError() != null) {
+                                    if (listener != null)
+                                        listener.onFailure(new RuntimeException("Sync Failed due to Server Error"));
+
+                                    if (respSync == null) {
+                                        // Not found(404) berarti ada yg salah di json
+                                        Snackbar.make(coordinatorLayout, response.message() + "(" + response.code() + ") ", Snackbar.LENGTH_LONG).show();
+                                    } else {
+                                        Toast.makeText(MainActivity.this, "Data Error (" + respSync.getError() + ")\n" + respSync.getError().getErrorDesc(), Toast.LENGTH_SHORT).show();
+                                    }
+
+                                } else if (respSync.getData() != 1) {
+
+                                    if (listener != null)
+                                        listener.onSkip();
+
+                                } else {
+
+                                    onPostSyncTransactionSuccess(req, syncLdvDetails, syncLdvComments, syncRvb, syncRVColl, syncBastbj, syncRepo, syncChangeAddr);
+
+                                    Fragment frag = getSupportFragmentManager().findFragmentById(R.id.content_frame);
+
+                                    if (frag != null && frag instanceof FragmentLKPList) {
+                                        ((FragmentLKPList) frag).loadCurrentLKP(); // masih terkadang ga mau update
+//                    ((FragmentLKPList) frag).refresh(); ga mau update
+//                    frag.refresh();
+                                    }
+
+                                    if (listener != null)
+                                        listener.onSuccess(null);
+
+                                }
+
+                                if (showDialog) {
+                                    Utility.dismissDialog(mProgressDialog);
+                                }
+
+                                showSnackBar("Sync success");
+                            }
+
+                            @Override
+                            public void onFailure(Call<ResponseSync> call, Throwable t) {
+                                Log.e("eric.onFailure", t.getMessage(), t);
+
+                                if (showDialog) {
+                                    Utility.dismissDialog(mProgressDialog);
+                                }
+
+                                if (t instanceof ConnectException) {
+                                    Utility.showDialog(MainActivity.this, "No Connection", Utility.developerMode ? t.getMessage() : getString(R.string.error_contact_admin));
+                                }
+
+                                if (listener != null)
+                                    listener.onFailure(t);
+
+                                showSnackBar("Sync Failed\n" + t.getMessage(), Snackbar.LENGTH_LONG);
+
+                                // TODO: utk mencegah data di server udah sync, coba get lkp lagi
+                                if (t.getMessage() == null) {
+                                    // should add delay to gave server a breath
+                                    try {
+                                        TimeUnit.SECONDS.sleep(10);
+                                    } catch (InterruptedException e) {
+                                        //Handle exception
+                                    }
+
+                                    resetData();
+                                    attemptGetLKP(currentUser.getUserId(), getServerDateFromDB(realm), false, null);
+                                }
+                            }
+                        });
+
                     }
 
                     @Override
-                    public void onFailure(Call<ResponseSync> call, Throwable t) {
-                        Log.e("eric.onFailure", t.getMessage(), t);
+                    public void onFailure(Throwable throwable) {
 
-                        if (showDialog) {
-                            Utility.dismissDialog(mProgressDialog);
-                        }
+                    }
 
-                        if (t instanceof ConnectException) {
-                            Utility.showDialog(MainActivity.this, "No Connection", Utility.developerMode ? t.getMessage() : getString(R.string.error_contact_admin));
-                        }
+                    @Override
+                    public void onSkip() {
 
-                        if (listener != null)
-                            listener.onFailure(t);
-
-                        showSnackBar("Sync Failed\n" + t.getMessage(), Snackbar.LENGTH_LONG);
-
-                        // TODO: utk mencegah data di server udah sync, coba get lkp lagi
-                        if (t.getMessage() == null) {
-                            // should add delay to gave server a breath
-                            try {
-                                TimeUnit.SECONDS.sleep(10);
-                            } catch (InterruptedException e) {
-                                //Handle exception
-                            }
-
-                            resetData();
-                            attemptGetLKP(currentUser.getUserId(), getServerDateFromDB(realm), false, null);
-                        }
                     }
                 });
 
@@ -3017,10 +3040,12 @@ public class MainActivity extends ChatActivity
     /**
      * @return < 0 means nothing uploaded
      */
-    private int uploadPoAOneByOne() {
+    private int uploadPoAOneByOne(OnSuccessError listener) {
 
         File[] poaFiles = PoAUtil.getPoAFiles();
         if (poaFiles == null || poaFiles.length < 1) {
+            if (listener != null)
+                listener.onFailure(new RuntimeException("No PoA File found"));
             return 0;
         }
 
@@ -3034,23 +3059,28 @@ public class MainActivity extends ChatActivity
         }
 
         // validate
+        String errorMsg = "Cannot send PoA to Server";
         boolean valid = true;
 
         // surely, data is more important
         if (list.size() < 1) {
-            showSnackBar("Nothing PoA sent");
-
             valid = false;
         }
 
-        if (!valid) return 0;
+        if (!valid) {
+            if (listener != null)
+                listener.onFailure(new RuntimeException("Nothing PoA sent"));
+
+            return 0;
+        }
 
         if (list.size() != poaFiles.length) {
             // send error to server
-            NetUtil.syncLogError(getBaseContext(), realm, getCurrentUserId(), "UploadPOA", "Unmatched size TrnFlagTimestamp <> poaFiles"
+            errorMsg = "Unmatched size TrnFlagTimestamp <> poaFiles";
+            NetUtil.syncLogError(getBaseContext(), realm, getCurrentUserId(), "UploadPOA", errorMsg
                     , TrnFlagTimestamp.class.getName() + "=" + list.size()
                             + "," + "PoaFiles=" + poaFiles.length);
-            showSnackBar("Cannot sync PoA");
+//            showSnackBar("Cannot sync PoA");
 
             valid = false;
         } else
@@ -3071,8 +3101,17 @@ public class MainActivity extends ChatActivity
 
             }
 
-        if (!valid) return 0;
+        if (!valid) {
+            if (listener != null)
+                listener.onFailure(new RuntimeException(errorMsg));
+            return 0;
+        }
 
+        NetUtil.uploadPoAs(MainActivity.this, list, poaFiles, listener);
+
+        return list.size();
+
+        /*
         final List<String> success = new ArrayList<>();
         for (TrnFlagTimestamp trn : list) {
 
@@ -3117,5 +3156,6 @@ public class MainActivity extends ChatActivity
         Log.e("eric.uploadPoAOneByOne", success.size() + " of " + list.size() + " uploaded");
 
         return success.size();
+        */
     }
 }

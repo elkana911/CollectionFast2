@@ -21,6 +21,7 @@ import butterknife.ButterKnife;
 import id.co.ppu.collectionfast2.R;
 import id.co.ppu.collectionfast2.component.BasicActivity;
 import id.co.ppu.collectionfast2.util.Storage;
+import id.co.ppu.collectionfast2.util.Utility;
 import io.realm.Realm;
 import io.realm.RealmModel;
 
@@ -127,11 +128,7 @@ public class ActivityDeveloper extends BasicActivity {
 
     private void way2() {
 
-        final ProgressDialog mProgressDialog = new ProgressDialog(this);
-        mProgressDialog.setIndeterminate(true);
-        mProgressDialog.setCancelable(false);
-        mProgressDialog.setMessage("Please wait...");
-        mProgressDialog.show();
+        final ProgressDialog mProgressDialog = Utility.createAndShowProgressDialog(this, getString(R.string.message_please_wait));
 
         realm.executeTransactionAsync(new Realm.Transaction() {
             @Override
@@ -183,21 +180,33 @@ public class ActivityDeveloper extends BasicActivity {
 
                 displayRows(listPref);
 
-                if (mProgressDialog.isShowing()) {
-                    mProgressDialog.dismiss();
+                List<Pair<String, String>> listKeyVal = new ArrayList<>();
+                String sysInfoCsv = Utility.buildSysInfoAsCsv(ActivityDeveloper.this);
+                String[] split = sysInfoCsv.split(",", -1);
+                for (String s : split) {
+                    String[] _s = s.split("=", -1);
+                    Pair<String, String> p = Pair.create(_s[0], _s[1]);
+
+                    listKeyVal.add(p);
                 }
+
+                displayRows(listKeyVal);
+
+                Utility.dismissDialog(mProgressDialog);
 
             }
         }, new Realm.Transaction.OnError() {
             @Override
             public void onError(Throwable error) {
-                if (mProgressDialog.isShowing()) {
-                    mProgressDialog.dismiss();
-                }
-
+                Utility.dismissDialog(mProgressDialog);
             }
         });
 
+    }
+
+    private Pair<String, String> createPair(String key, String value) {
+        Pair<String, String> p = Pair.create(key, value);
+        return p;
     }
 
     private void setTableHeader(TextView textView, String text) {

@@ -34,14 +34,14 @@
                 android:layout_height="wrap_content"
                 android:layout_gravity="center_vertical"
                 android:textAppearance="@android:style/TextAppearance.DeviceDefault.Medium"
-                android:text="ELKANA" />
+                android:text="No Customer Name" />
 
             <TextView
                 android:id="@+id/tvKelKec"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_gravity="center_vertical"
-                android:text="ELKANA" />
+                android:text="No Address" />
 
             <TextView
                 android:id="@+id/tvNoLKP"
@@ -49,7 +49,7 @@
                 android:layout_height="wrap_content"
                 android:layout_gravity="center_vertical"
                 android:textAppearance="@android:style/TextAppearance.DeviceDefault.Small"
-                android:text="ELKANA" />
+                android:text="No Contract" />
 
         </LinearLayout>
 

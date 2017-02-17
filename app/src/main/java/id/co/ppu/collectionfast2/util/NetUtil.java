@@ -11,6 +11,7 @@ import com.google.gson.GsonBuilder;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 
@@ -598,18 +599,10 @@ public class NetUtil {
 
     }
 
-    //    public static boolean uploadPoA(Context ctx, TrnFlagTimestamp trnFlagTimestamp, File file, Callback<ResponseBody> callback) {
     public static boolean uploadPoA(Context ctx, TrnFlagTimestamp trnFlagTimestamp, File file, OnSuccessError listener) {
-
-        if (trnFlagTimestamp == null)
-            return false;
 
         ApiInterface fastService =
                 ServiceGenerator.createService(ApiInterface.class, Utility.buildUrl(Storage.getPreferenceAsInt(ctx, Storage.KEY_SERVER_ID, 0)));
-
-//        File file4 = new File(DataUtil.getRealPathFromUri(ctx, uri));
-
-        boolean b4 = file.exists();
 
         if (!file.canRead()) {
             return false;
@@ -669,6 +662,56 @@ public class NetUtil {
         }
 
         return true;
+    }
+
+    public static void uploadPoAs(final Context ctx, final List<TrnFlagTimestamp> trnFlagTimestamps, final File[] files, final OnSuccessError listener) {
+
+        new AsyncTask<Void, Void, String>() {
+
+            @Override
+            protected String doInBackground(Void... voids) {
+                final List<String> errors = new ArrayList<String>();
+
+                for (int i = 0; i < trnFlagTimestamps.size(); i++) {
+                    uploadPoA(ctx, trnFlagTimestamps.get(i), files[i], new OnSuccessError() {
+                        @Override
+                        public void onSuccess(String msg) {
+
+                        }
+
+                        @Override
+                        public void onFailure(Throwable throwable) {
+                            if (throwable == null)
+                                return;
+                            errors.add(throwable.getMessage());
+                        }
+
+                        @Override
+                        public void onSkip() {
+
+                        }
+                    });
+                }
+
+                if (errors.size() < 1)
+                    return null;
+
+                return errors.get(0);
+            }
+
+            @Override
+            protected void onPostExecute(String ret) {
+                super.onPostExecute(ret);
+
+                if (listener != null) {
+                    if (ret != null)
+                        listener.onFailure(new RuntimeException(ret));
+                    else
+                        listener.onSuccess(null);
+                }
+            }
+        }.execute();
+
     }
 
     public static void chatLogOff(Context ctx, String collCode, final OnSuccessError listener) {

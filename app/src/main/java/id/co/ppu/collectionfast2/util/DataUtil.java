@@ -39,7 +39,6 @@ import id.co.ppu.collectionfast2.pojo.trn.HistInstallments;
 import id.co.ppu.collectionfast2.pojo.trn.TrnBastbj;
 import id.co.ppu.collectionfast2.pojo.trn.TrnCollectAddr;
 import id.co.ppu.collectionfast2.pojo.trn.TrnContractBuckets;
-import id.co.ppu.collectionfast2.pojo.trn.TrnFlagTimestamp;
 import id.co.ppu.collectionfast2.pojo.trn.TrnLDVComments;
 import id.co.ppu.collectionfast2.pojo.trn.TrnLDVDetails;
 import id.co.ppu.collectionfast2.pojo.trn.TrnLDVHeader;
@@ -843,9 +842,9 @@ public class DataUtil {
             }
         }
 
-        //PoA
-        d = bgRealm.where(TrnFlagTimestamp.class).findAll().deleteAllFromRealm();
-        bgRealm.copyToRealmOrUpdate(data.getFlagTimestamps());
+        //PoA. no need because it will not used after sync
+//        d = bgRealm.where(TrnFlagTimestamp.class).findAll().deleteAllFromRealm();
+//        bgRealm.copyToRealmOrUpdate(data.getFlagTimestamps());
 
     }
 }

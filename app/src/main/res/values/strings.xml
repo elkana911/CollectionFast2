@@ -251,7 +251,7 @@
     <string name="message_sync_data_wait">Sync Data In Progress.\nPlease wait...</string>
     <string name="error_rooted">This device is rooted. Unable to open application.</string>
     <string name="error_expired_warning">This application will be expired within days.\nPlease contact Administrator for any updates.</string>
-    <string name="text_takephoto_beforeentri">Please take a picture on arrival</string>
+    <string name="text_takephoto_beforeentri">Please take a picture\nwhen You arrive at the location</string>
     <string name="msg_no_contracts">No Contracts found</string>
     <string name="label_prev_contract">"Previous Contracts: "</string>
     <string name="label_today_contract">"Today Contracts: "</string>

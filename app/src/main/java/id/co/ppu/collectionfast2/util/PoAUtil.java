@@ -19,6 +19,7 @@ import java.util.Date;
 import id.co.ppu.collectionfast2.component.BasicActivity;
 import id.co.ppu.collectionfast2.location.Location;
 import id.co.ppu.collectionfast2.pojo.trn.TrnFlagTimestamp;
+import id.co.ppu.collectionfast2.pojo.trn.TrnFlagTimestampPK;
 import io.realm.Realm;
 import io.realm.RealmResults;
 
@@ -37,6 +38,9 @@ public class PoAUtil {
     public static final String POA_VISIT_RESULT_RPC_PREFIX = POA_PREFIX + "VstRsltRPC";
     public static final String POA_REPO_ENTRI_PREFIX = POA_PREFIX + "RepoEntri";
     public static final String POA_DEFAULT_PREFIX = POA_PREFIX + "Default";
+
+    public static final int POA_JPG_QUALITY = 10;
+//    public static final int POA_JPG_QUALITY = 20;
 
     private static String concatAsJpgFilename(String prefix, String collectorId, String contractNo) {
         return prefix + "_" + collectorId + "_" + contractNo + ".jpg";
@@ -244,9 +248,9 @@ public class PoAUtil {
      */
     public static TrnFlagTimestamp isPoADataExists(Realm realm, String collCode, String ldvNo, String contractNo) {
         TrnFlagTimestamp first = realm.where(TrnFlagTimestamp.class)
-                .equalTo("contractNo", contractNo)
-                .equalTo("ldvNo", ldvNo)
-                .equalTo("collCode", collCode)
+                .equalTo("pk.contractNo", contractNo)
+                .equalTo("pk.ldvNo", ldvNo)
+                .equalTo("pk.collCode", collCode)
                 .findFirst();
 
         return first;
@@ -292,12 +296,16 @@ public class PoAUtil {
             e.printStackTrace();
         }
 
-        obj.setContractNo(contractNo);
-        obj.setCollCode(collCode);
-        obj.setLdvNo(ldvNo);
         obj.setFileName(getPoAFile(activity, collCode, contractNo).getName());
         obj.setCreatedBy(Utility.LAST_UPDATE_BY);
         obj.setCreatedTimestamp(new Date());
+
+
+        TrnFlagTimestampPK pk = new TrnFlagTimestampPK();
+        pk.setContractNo(contractNo);
+        pk.setCollCode(collCode);
+        pk.setLdvNo(ldvNo);
+        obj.setPk(pk);
 
         Storage.saveObjPreference(activity.getApplicationContext(), Storage.KEY_POA_DATA_TEMPORARY, obj);
     }
@@ -331,7 +339,7 @@ public class PoAUtil {
 
                 OutputStream stream = new FileOutputStream(outputFile);
 //                bm2.compress(Bitmap.CompressFormat.JPEG, 10, stream); // agak rusak gambarnya
-                bm2.compress(Bitmap.CompressFormat.JPEG, 20, stream);
+                bm2.compress(Bitmap.CompressFormat.JPEG, POA_JPG_QUALITY, stream);
                 stream.close();
                 in.close();
 

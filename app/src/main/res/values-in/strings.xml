@@ -51,7 +51,7 @@
     <string name="message_sync_photo_wait">Sync Photo sedang diproses...</string>
     <string name="message_sync_data_wait">Sync Data sedang diproses...</string>
     <string name="error_expired_warning">Aplikasi akan expired dalam hitunga hari.\nHubungi Administrator.</string>
-    <string name="text_takephoto_beforeentri">Mohon ambil Foto di tempat\nsebelum Entri data</string>
+    <string name="text_takephoto_beforeentri">Mohon ambil Foto \nsaat Anda tiba di lokasi</string>
     <string name="msg_no_contracts">Tidak ada Kontrak</string>
     <string name="label_prev_contract">"Kontrak Sebelumnya: "</string>
     <string name="label_today_contract">"Kontrak Hari ini: "</string>
