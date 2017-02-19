@@ -1,5 +1,6 @@
 package id.co.ppu.collectionfast2.fragments;
 
+import android.graphics.Typeface;
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
 import android.text.method.LinkMovementMethod;
@@ -99,6 +100,9 @@ public class HomeFragment extends Fragment {
         etEmail.setText(userData.getEmailAddr());
 
         etPhone.setMovementMethod(LinkMovementMethod.getInstance());
+
+        Typeface font = Typeface.createFromAsset(getActivity().getAssets(), Utility.FONT_SAMSUNG);
+        etCollectorName.setTypeface(font);
 
         return view;
     }

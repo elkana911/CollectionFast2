@@ -18,8 +18,10 @@ import id.co.ppu.collectionfast2.component.BasicActivity;
 import id.co.ppu.collectionfast2.pojo.ServerInfo;
 import id.co.ppu.collectionfast2.pojo.UserData;
 import id.co.ppu.collectionfast2.pojo.sync.SyncTrnLDVComments;
+import id.co.ppu.collectionfast2.pojo.trn.TrnFlagTimestamp;
 import id.co.ppu.collectionfast2.pojo.trn.TrnLDVComments;
 import id.co.ppu.collectionfast2.pojo.trn.TrnLDVDetails;
+import id.co.ppu.collectionfast2.util.PoAUtil;
 import id.co.ppu.collectionfast2.util.Storage;
 import id.co.ppu.collectionfast2.util.Utility;
 import io.realm.Realm;
@@ -45,6 +47,12 @@ public class ActivityVisitResultRPC extends BasicActivity {
 
     @BindView(R.id.etKomentar)
     EditText etKomentar;
+
+    @BindView(R.id.flTakePhoto)
+    View flTakePhoto;
+
+    @BindView(R.id.svMain)
+    View svMain;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -78,6 +86,9 @@ public class ActivityVisitResultRPC extends BasicActivity {
 
         if (trnLDVComments != null) {
             etKomentar.setText(trnLDVComments.getLkpComments());
+
+            flTakePhoto.setVisibility(View.GONE);
+            svMain.setVerticalScrollbarPosition(View.VISIBLE);
         }
 
     }
@@ -97,6 +108,16 @@ public class ActivityVisitResultRPC extends BasicActivity {
             focusView = etContractNo;
             cancel = true;
         }
+
+        // seharusnya PoA udah diexecute sebelumnya
+        TrnFlagTimestamp trnFlagTimestamp = PoAUtil.isPoADataExists(realm, collectorId, ldvNo, contractNo);
+        boolean poaCacheFileExists = PoAUtil.getPoACacheFile(this, collectorId, contractNo).exists();
+        boolean poaFileExists = PoAUtil.getPoAFile(this, collectorId, contractNo).exists();
+
+        if (poaCacheFileExists || poaFileExists) {
+        } else
+            Snackbar.make(activityVisitResultRPC, getString(R.string.message_no_photo_arrival_taken), Snackbar.LENGTH_LONG).show();
+
 
         if (cancel) {
             focusView.requestFocus();
@@ -181,4 +202,29 @@ public class ActivityVisitResultRPC extends BasicActivity {
         startActivity(i);
 
     }
+
+    /* Moved to ActivityPoA
+    @OnClick(R.id.llTakePhoto)
+    public void onTakePoA() {
+        PoAUtil.callCameraIntent(this, collectorId, ldvNo, contractNo);
+    }
+
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+        super.onActivityResult(requestCode, resultCode, data);
+
+        // data will return a null intent and the picture is in the URI that you passed in.
+        if (resultCode != RESULT_OK) {
+            return;
+        }
+
+        File file = PoAUtil.postCameraIntoCache(this, collectorId, contractNo);
+
+        if (file != null) {
+            flTakePhoto.setVisibility(View.GONE);
+            svMain.setVisibility(View.VISIBLE);
+        }
+
+    }
+*/
 }

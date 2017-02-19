@@ -19,7 +19,6 @@ import android.widget.Spinner;
 import android.widget.TextView;
 import android.widget.Toast;
 
-import java.io.File;
 import java.text.DateFormat;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
@@ -52,6 +51,7 @@ import id.co.ppu.collectionfast2.util.Utility;
 import io.realm.Realm;
 import io.realm.RealmResults;
 import io.realm.Sort;
+import pl.bclogic.pulsator4droid.library.PulsatorLayout;
 
 public class ActivityVisitResult extends BasicActivity {
 
@@ -115,6 +115,9 @@ public class ActivityVisitResult extends BasicActivity {
 
     @BindView(R.id.svMain)
     View svMain;
+
+    @BindView(R.id.pulsator)
+    PulsatorLayout pulsator;
 
     private int getIndex(Spinner spinner, String myString){
 
@@ -248,8 +251,8 @@ public class ActivityVisitResult extends BasicActivity {
 
         if (trnLDVComments != null) {
             String lkpFlag = dtl.getLdvFlag();
-            for(int i = 0; i < adapterLKPFlag.getCount(); i++) {
-                if(lkpFlag.equals(adapterLKPFlag.getItem(i).getLkpFlag())){
+            for (int i = 0; i < adapterLKPFlag.getCount(); i++) {
+                if (lkpFlag.equals(adapterLKPFlag.getItem(i).getLkpFlag())) {
                     spLKPFlags.setSelection(i);
                     break;
                 }
@@ -257,16 +260,16 @@ public class ActivityVisitResult extends BasicActivity {
 
 
             String classCode = trnLDVComments.getClassCode();
-            for(int i = 0; i < adapterKlasifikasi.getCount(); i++) {
-                if(classCode.equals(adapterKlasifikasi.getItem(i).getClassCode())){
+            for (int i = 0; i < adapterKlasifikasi.getCount(); i++) {
+                if (classCode.equals(adapterKlasifikasi.getItem(i).getClassCode())) {
                     spKlasifikasi.setSelection(i);
                     break;
                 }
             }
 
             String delqCode = trnLDVComments.getDelqCode();
-            for(int i = 0; i < adapterAlasan.getCount(); i++) {
-                if(delqCode.equals(adapterAlasan.getItem(i).getDelqCode())){
+            for (int i = 0; i < adapterAlasan.getCount(); i++) {
+                if (delqCode.equals(adapterAlasan.getItem(i).getDelqCode())) {
                     spAlasan.setSelection(i);
                     break;
                 }
@@ -281,16 +284,16 @@ public class ActivityVisitResult extends BasicActivity {
 
             Long potensi = trnLDVComments.getPotensi();
             PotensiAdapter adapterPotensi = (PotensiAdapter) spPotensi.getAdapter();
-            for(int i = 0; i < adapterPotensi.getCount(); i++) {
-                if(potensi.longValue() == adapterPotensi.getItem(i).getPotensi().longValue()){
+            for (int i = 0; i < adapterPotensi.getCount(); i++) {
+                if (potensi.longValue() == adapterPotensi.getItem(i).getPotensi().longValue()) {
                     spPotensi.setSelection(i);
                     break;
                 }
             }
 
             String actionPlanCode = trnLDVComments.getActionPlan();
-            for(int i = 0; i < adapterTindakSelanjutnya.getCount(); i++) {
-                if(actionPlanCode.equals(adapterTindakSelanjutnya.getItem(i).getValue())){
+            for (int i = 0; i < adapterTindakSelanjutnya.getCount(); i++) {
+                if (actionPlanCode.equals(adapterTindakSelanjutnya.getItem(i).getValue())) {
                     spTindakSelanjutnya.setSelection(i);
                     break;
                 }
@@ -311,8 +314,11 @@ public class ActivityVisitResult extends BasicActivity {
 
             etKomentar.setText(trnLDVComments.getLkpComments());
 
-            flTakePhoto.setVisibility(View.GONE);
+//            flTakePhoto.setVisibility(View.GONE);
+//            svMain.setVerticalScrollbarPosition(View.VISIBLE);
 
+        } else {
+//            pulsator.start();
         }
 
     }
@@ -720,10 +726,12 @@ public class ActivityVisitResult extends BasicActivity {
         startActivity(i);
     }
 
+    /* Moved to ActivityPoA
     @OnClick(R.id.llTakePhoto)
     public void onTakePoA() {
         PoAUtil.callCameraIntent(this, collectorId, ldvNo, contractNo);
     }
+
 
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
@@ -737,11 +745,13 @@ public class ActivityVisitResult extends BasicActivity {
         File file = PoAUtil.postCameraIntoCache(this, collectorId, contractNo);
 
         if (file != null) {
+            pulsator.stop();
             flTakePhoto.setVisibility(View.GONE);
             svMain.setVisibility(View.VISIBLE);
         }
 
     }
+    */
 
     public class KlasifikasiAdapter extends ArrayAdapter<MstLDVClassifications> {
         private Context ctx;

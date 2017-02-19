@@ -382,6 +382,7 @@
 
         <Button
             android:id="@+id/btnPaymentReceive"
+            style="@style/Widget.AppCompat.Button.Colored"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginTop="12dp"
@@ -390,12 +391,14 @@
 
         <Button
             android:id="@+id/btnVisitResultEntry"
+            style="@style/Widget.AppCompat.Button.Colored"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:text="VISIT RESULT ENTRY" />
 
         <Button
             android:id="@+id/btnRepoEntry"
+            style="@style/Widget.AppCompat.Button.Colored"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:text="REPO ENTRY" />

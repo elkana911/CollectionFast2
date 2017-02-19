@@ -17,11 +17,7 @@ import java.io.OutputStream;
 import java.util.Date;
 
 import id.co.ppu.collectionfast2.component.BasicActivity;
-import id.co.ppu.collectionfast2.lkp.ActivityRepoEntry;
-import id.co.ppu.collectionfast2.lkp.ActivityVisitResult;
 import id.co.ppu.collectionfast2.location.Location;
-import id.co.ppu.collectionfast2.payment.entry.ActivityPaymentEntri;
-import id.co.ppu.collectionfast2.payment.receive.ActivityPaymentReceive;
 import id.co.ppu.collectionfast2.pojo.trn.TrnFlagTimestamp;
 import io.realm.Realm;
 import io.realm.RealmResults;
@@ -34,10 +30,13 @@ import io.realm.RealmResults;
  */
 public class PoAUtil {
 
-    public static final String POA_PAYMENT_RECEIVE_PREFIX = "poaPymtRcv";
-    public static final String POA_PAYMENT_ENTRI_PREFIX = "poaPymtEntri";
-    public static final String POA_VISIT_RESULT_PREFIX = "poaVstRslt";
-    public static final String POA_REPO_ENTRI_PREFIX = "poaRepoEntri";
+    public static final String POA_PREFIX = "poa";
+    public static final String POA_PAYMENT_RECEIVE_PREFIX = POA_PREFIX + "PymtRcv";
+    public static final String POA_PAYMENT_ENTRI_PREFIX = POA_PREFIX + "PymtEntri";
+    public static final String POA_VISIT_RESULT_PREFIX = POA_PREFIX + "VstRslt";
+    public static final String POA_VISIT_RESULT_RPC_PREFIX = POA_PREFIX + "VstRsltRPC";
+    public static final String POA_REPO_ENTRI_PREFIX = POA_PREFIX + "RepoEntri";
+    public static final String POA_DEFAULT_PREFIX = POA_PREFIX + "Default";
 
     private static String concatAsJpgFilename(String prefix, String collectorId, String contractNo) {
         return prefix + "_" + collectorId + "_" + contractNo + ".jpg";
@@ -73,7 +72,7 @@ public class PoAUtil {
 
     private static String getJpg(BasicActivity activity, String collCode, String contractNo) {
         String jpgFileName = null;
-
+/*
         if (activity instanceof ActivityPaymentReceive)
             jpgFileName = concatAsJpgFilename(POA_PAYMENT_RECEIVE_PREFIX, collCode, contractNo);
         else if (activity instanceof ActivityPaymentEntri)
@@ -82,6 +81,11 @@ public class PoAUtil {
             jpgFileName = concatAsJpgFilename(POA_REPO_ENTRI_PREFIX, collCode, contractNo);
         else if (activity instanceof ActivityVisitResult)
             jpgFileName = concatAsJpgFilename(POA_VISIT_RESULT_PREFIX, collCode, contractNo);
+        else if (activity instanceof ActivityVisitResultRPC)
+            jpgFileName = concatAsJpgFilename(POA_VISIT_RESULT_RPC_PREFIX, collCode, contractNo);
+        else if (activity instanceof ActivityPoA)
+        */
+            jpgFileName = concatAsJpgFilename(POA_DEFAULT_PREFIX, collCode, contractNo);
 
         return jpgFileName;
     }
@@ -128,8 +132,8 @@ public class PoAUtil {
 
         String jpgFileName = getJpg(activity, collCode, contractNo);
 
-        File from = new File(getPoACachePath() + jpgFileName);  // /storage/emulated/0/RadanaCache/cache/poaPymtRcv_demo_71000000008115.jpg
-        final File to = new File(getPoAPath() + jpgFileName);   // /storage/emulated/0/RadanaCache/poaPymtRcv_demo_71000000008115.jpg
+        File from = new File(getPoACachePath() + jpgFileName);  // /storage/emulated/0/RadanaCache/cache/poaDefault_demo_71000000069115.jpg
+        final File to = new File(getPoAPath() + jpgFileName);   // /storage/emulated/0/RadanaCache/poaDefault_demo_71000000069115.jpg
 
         boolean ok = from.renameTo(to);
 
@@ -178,7 +182,7 @@ public class PoAUtil {
         File[] toBeDeleted = dir.listFiles(new FileFilter() {
             @Override
             public boolean accept(File file) {
-                return (file.getName().startsWith("poa") && file.getName().endsWith(".jpg"));
+                return (file.getName().startsWith(POA_PREFIX) && file.getName().endsWith(".jpg"));
             }
         });
 
@@ -203,7 +207,7 @@ public class PoAUtil {
         File[] selectedFiles = dir.listFiles(new FileFilter() {
             @Override
             public boolean accept(File file) {
-                return (file.getName().startsWith("poa") && file.getName().endsWith(".jpg"));
+                return (file.getName().startsWith(POA_PREFIX) && file.getName().endsWith(".jpg"));
             }
         });
 
@@ -323,7 +327,7 @@ public class PoAUtil {
 
                 // flush the compressed as temp file
                 File outputDir = new File(getPoACachePath());   //  /storage/emulated/0/RadanaCache/cache
-                File outputFile = File.createTempFile("poa-", ".jpg", outputDir);// /storage/emulated/0/RadanaCache/cache/poa-300549737.jpg
+                File outputFile = File.createTempFile(POA_PREFIX + "-", ".jpg", outputDir);// /storage/emulated/0/RadanaCache/cache/poa-300549737.jpg
 
                 OutputStream stream = new FileOutputStream(outputFile);
 //                bm2.compress(Bitmap.CompressFormat.JPEG, 10, stream); // agak rusak gambarnya

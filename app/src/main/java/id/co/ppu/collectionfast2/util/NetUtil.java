@@ -633,7 +633,7 @@ public class NetUtil {
             if (!NetUtil.isConnected(ctx)
                     && DemoUtil.isDemo(ctx)) {
                     if (listener != null)
-                        listener.onSuccess("success");
+                        listener.onSuccess(file.getName());
 
                     return true;
             }
@@ -658,6 +658,10 @@ public class NetUtil {
             final ResponseBody resp = execute.body();
 
             String msgStatus = resp.string();
+
+            if (listener != null)
+                listener.onSuccess(file.getName());
+
 
         } catch (Exception e) {
             e.printStackTrace();

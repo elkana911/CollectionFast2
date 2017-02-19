@@ -22,7 +22,7 @@
         android:background="@color/colorRadanaDarkGreen"
         app:itemIconTint="@android:color/white"
         app:itemTextColor="@android:color/white"
-        app:itemTextAppearance="@style/NavDrawerTextStyle"
+
         app:headerLayout="@layout/nav_header_main"
         app:menu="@menu/activity_main_drawer" />
 

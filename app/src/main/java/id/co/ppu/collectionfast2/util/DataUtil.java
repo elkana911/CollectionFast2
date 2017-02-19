@@ -39,6 +39,7 @@ import id.co.ppu.collectionfast2.pojo.trn.HistInstallments;
 import id.co.ppu.collectionfast2.pojo.trn.TrnBastbj;
 import id.co.ppu.collectionfast2.pojo.trn.TrnCollectAddr;
 import id.co.ppu.collectionfast2.pojo.trn.TrnContractBuckets;
+import id.co.ppu.collectionfast2.pojo.trn.TrnFlagTimestamp;
 import id.co.ppu.collectionfast2.pojo.trn.TrnLDVComments;
 import id.co.ppu.collectionfast2.pojo.trn.TrnLDVDetails;
 import id.co.ppu.collectionfast2.pojo.trn.TrnLDVHeader;
@@ -437,10 +438,17 @@ public class DataUtil {
         }
     }
 
-    public static int isLKPSynced(Realm realm, TrnLDVDetails dtl) {
+    /**
+     *
+     * @param realm
+     * @param ldvNo
+     * @param contractNo
+     * @return < 1 if not synced. 1 synced as {@link #SYNC_AS_PAYMENT}, 2 synced as {@link #SYNC_AS_VISIT} visit, 4 synced as {@link #SYNC_AS_REPO}
+     */
+    public static int isLKPSynced(Realm realm, String ldvNo, String contractNo) {
         RealmResults<SyncTrnRVColl> trnSync = realm.where(SyncTrnRVColl.class)
-                .equalTo("ldvNo", dtl.getPk().getLdvNo())
-                .equalTo("contractNo", dtl.getContractNo())
+                .equalTo("ldvNo", ldvNo)
+                .equalTo("contractNo", contractNo)
                 .equalTo("createdBy", Utility.LAST_UPDATE_BY)
                 .isNotNull("syncedDate")
                 .findAll();
@@ -449,8 +457,8 @@ public class DataUtil {
             return SYNC_AS_PAYMENT;
 
         RealmResults<SyncTrnLDVComments> trnSyncLDVComments = realm.where(SyncTrnLDVComments.class)
-                .equalTo("ldvNo", dtl.getPk().getLdvNo())
-                .equalTo("contractNo", dtl.getContractNo())
+                .equalTo("ldvNo", ldvNo)
+                .equalTo("contractNo", contractNo)
                 .equalTo("createdBy", Utility.LAST_UPDATE_BY)
                 .isNotNull("syncedDate")
                 .findAll();
@@ -458,7 +466,7 @@ public class DataUtil {
             return SYNC_AS_VISIT;
 
         RealmResults<SyncTrnRepo> trnSyncRepo = realm.where(SyncTrnRepo.class)
-                .equalTo("contractNo", dtl.getContractNo())
+                .equalTo("contractNo", contractNo)
                 .equalTo("createdBy", Utility.LAST_UPDATE_BY)
                 .isNotNull("syncedDate")
                 .findAll();
@@ -466,6 +474,11 @@ public class DataUtil {
             return SYNC_AS_REPO;
 
         return 0;   // no sync
+
+    }
+
+    public static int isLKPSynced(Realm realm, TrnLDVDetails dtl) {
+        return isLKPSynced(realm, dtl.getPk().getLdvNo(), dtl.getContractNo());
     }
 
     public static void resetData(Realm realm) {
@@ -829,6 +842,10 @@ public class DataUtil {
                 bgRealm.copyToRealmOrUpdate(sync);
             }
         }
+
+        //PoA
+        d = bgRealm.where(TrnFlagTimestamp.class).findAll().deleteAllFromRealm();
+        bgRealm.copyToRealmOrUpdate(data.getFlagTimestamps());
 
     }
 }

@@ -1,6 +1,5 @@
 package id.co.ppu.collectionfast2.payment.receive;
 
-import android.content.Intent;
 import android.os.Bundle;
 import android.support.design.widget.Snackbar;
 import android.view.View;
@@ -9,7 +8,6 @@ import android.widget.EditText;
 import android.widget.Spinner;
 import android.widget.Toast;
 
-import java.io.File;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
@@ -168,8 +166,8 @@ public class ActivityPaymentReceive extends BasicActivity {
             etBiayaTagih.setText(String.valueOf(trnRVColl.getCollFeeAc()));
             etDanaSosial.setText("0");
 
-            flTakePhoto.setVisibility(View.GONE);
-            svMain.setVisibility(View.VISIBLE);
+//            flTakePhoto.setVisibility(View.GONE);
+//            svMain.setVisibility(View.VISIBLE);
 
         } else {
             RealmResults<TrnRVB> trnRVBs = this.realm.where(TrnRVB.class)
@@ -190,7 +188,7 @@ public class ActivityPaymentReceive extends BasicActivity {
             long danaSosial = dtl.getDanaSosial() == null ? 0 : dtl.getDanaSosial().longValue();
             etDanaSosial.setText(Utility.convertLongToRupiah(danaSosial));
 
-            pulsator.start();
+//            pulsator.start();
 //            deletePhotoArrival(); untested
         }
         spNoRVB.setAdapter(adapterRVB);
@@ -634,6 +632,7 @@ public class ActivityPaymentReceive extends BasicActivity {
         savePayment1();
     }
 
+    /* Moved to ActivityPoA
     @OnClick(R.id.llTakePhoto)
     public void onTakePoA() {
         PoAUtil.callCameraIntent(this, collectorId, ldvNo, contractNo);
@@ -657,4 +656,5 @@ public class ActivityPaymentReceive extends BasicActivity {
         }
 
     }
+    */
 }

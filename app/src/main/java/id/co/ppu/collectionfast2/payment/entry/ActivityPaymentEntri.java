@@ -1,7 +1,6 @@
 package id.co.ppu.collectionfast2.payment.entry;
 
 import android.app.ProgressDialog;
-import android.content.Intent;
 import android.graphics.Color;
 import android.net.Uri;
 import android.os.AsyncTask;
@@ -25,7 +24,6 @@ import com.google.android.gms.appindexing.AppIndex;
 import com.google.android.gms.appindexing.Thing;
 import com.google.android.gms.common.api.GoogleApiClient;
 
-import java.io.File;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
@@ -58,6 +56,7 @@ import id.co.ppu.collectionfast2.util.Utility;
 import io.realm.Realm;
 import io.realm.RealmResults;
 import io.realm.Sort;
+import pl.bclogic.pulsator4droid.library.PulsatorLayout;
 
 /**
  * Dipakai juga untuk LKP Inquiry.
@@ -123,6 +122,9 @@ public class ActivityPaymentEntri extends BasicActivity implements FragmentActiv
 
     @BindView(R.id.svMain)
     View svMain;
+
+    @BindView(R.id.pulsator)
+    PulsatorLayout pulsator;
 
     /**
      * ATTENTION: This was auto-generated to implement the App Indexing API.
@@ -401,8 +403,8 @@ public class ActivityPaymentEntri extends BasicActivity implements FragmentActiv
             RVBAdapter adapterRVB = new RVBAdapter(this, android.R.layout.simple_spinner_item, list);
             spNoRVB.setAdapter(adapterRVB);
 
-            flTakePhoto.setVisibility(View.GONE);
-            svMain.setVisibility(View.VISIBLE);
+//            flTakePhoto.setVisibility(View.GONE);
+//            svMain.setVisibility(View.VISIBLE);
         } else {
             etPenerimaan.setText(null);
             etDenda.setText(String.valueOf(0));
@@ -411,6 +413,7 @@ public class ActivityPaymentEntri extends BasicActivity implements FragmentActiv
 
             buildRVB();
 
+//            pulsator.start();
 //            deletePhotoArrival(); untested
         }
 
@@ -842,6 +845,7 @@ public class ActivityPaymentEntri extends BasicActivity implements FragmentActiv
         client.disconnect();
     }
 
+    /* Moved to ActivityPoA
     @OnClick(R.id.llTakePhoto)
     public void onTakePoA() {
         PoAUtil.callCameraIntent(this, collectorId, ldvNo, contractNo);
@@ -859,11 +863,13 @@ public class ActivityPaymentEntri extends BasicActivity implements FragmentActiv
         File file = PoAUtil.postCameraIntoCache(this, collectorId, contractNo);
 
         if (file != null) {
+            pulsator.stop();
             flTakePhoto.setVisibility(View.GONE);
             svMain.setVisibility(View.VISIBLE);
         }
 
     }
+    */
 
 }
 

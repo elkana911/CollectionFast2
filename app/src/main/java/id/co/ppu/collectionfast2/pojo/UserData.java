@@ -26,7 +26,7 @@ public class UserData {
     private String mobilePhone;
     private String fullName;
     private String bussUnit;
-
+    private String serialNumber;
 
     @NonNull
 //    private List<MstUser> user;
@@ -178,6 +178,14 @@ public class UserData {
         this.config = config;
     }
 
+    public String getSerialNumber() {
+        return serialNumber;
+    }
+
+    public void setSerialNumber(String serialNumber) {
+        this.serialNumber = serialNumber;
+    }
+
     @Override
     public String toString() {
         return "UserData{" +
@@ -196,8 +204,7 @@ public class UserData {
                 ", mobilePhone='" + mobilePhone + '\'' +
                 ", fullName='" + fullName + '\'' +
                 ", bussUnit='" + bussUnit + '\'' +
-//                ", user=" + user +
-//                ", secUser=" + secUser +
+                ", serialNumber='" + serialNumber + '\'' +
                 ", config=" + config +
                 '}';
     }

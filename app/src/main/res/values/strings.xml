@@ -225,7 +225,7 @@
     <string name="title_activity_payment_history">Payment History</string>
     <string name="title_activity_details_lkp">Details LKP</string>
     <string name="title_no_connection">No Connection</string>
-    <string name="error_online_required">This task require internet connection\nMake sure Flight mode is off.</string>
+    <string name="error_online_required">This task require internet connection\nMake sure Flight mode is OFF.</string>
     <string name="title_activity_vehicle_info">Vehicle Information</string>
     <string name="error_select_rvb">Please select a voucher</string>
     <string name="error_amount_too_small">Amount to small</string>
@@ -252,4 +252,7 @@
     <string name="error_rooted">This device is rooted. Unable to open application.</string>
     <string name="error_expired_warning">This application will be expired within days.\nPlease contact Administrator for any updates.</string>
     <string name="text_takephoto_beforeentri">Please take a picture on arrival</string>
+    <string name="msg_no_contracts">No Contracts found</string>
+    <string name="label_prev_contract">"Previous Contracts: "</string>
+    <string name="label_today_contract">"Today Contracts: "</string>
 </resources>

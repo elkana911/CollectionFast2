@@ -53,6 +53,10 @@ public class MstSecUser extends RealmObject implements Serializable {
     @SerializedName("bussUnit")
     private String bussUnit;
 
+    // 17feb17
+    @SerializedName("SN")
+    private String sn;
+
     @SerializedName("createdTimestamp")
     private Date createdTimestamp;
 
@@ -205,6 +209,14 @@ public class MstSecUser extends RealmObject implements Serializable {
         this.lastupdateTimestamp = lastupdateTimestamp;
     }
 
+    public String getSn() {
+        return sn;
+    }
+
+    public void setSn(String sn) {
+        this.sn = sn;
+    }
+
     @Override
     public String toString() {
         return "MstSecUser{" +
@@ -221,6 +233,7 @@ public class MstSecUser extends RealmObject implements Serializable {
                 ", fullName='" + fullName + '\'' +
                 ", branchId='" + branchId + '\'' +
                 ", bussUnit='" + bussUnit + '\'' +
+                ", sn='" + sn + '\'' +
                 ", createdTimestamp=" + createdTimestamp +
                 ", createdBy='" + createdBy + '\'' +
                 ", lastupdateBy='" + lastupdateBy + '\'' +

@@ -18,6 +18,7 @@ import android.view.ContextThemeWrapper;
 import android.view.View;
 import android.view.ViewGroup;
 import android.view.WindowManager;
+import android.view.inputmethod.InputMethodManager;
 import android.widget.Spinner;
 import android.widget.Toast;
 
@@ -50,9 +51,9 @@ public class Utility {
     public final static String SERVER_DEV_PORT = "7002";
 
     public static String[][] servers = {
-//            {"local-server", "10.212.0.71", "8090"}
+            {"local-server", "10.212.0.184", "8090"}
 //            {"local-server", "192.168.10.109", "8090"} // kelapa gading
-            {"local-server", "192.168.0.9", "8090"}
+//            {"local-server", "192.168.0.9", "8090"}
 //            {"local-server", "192.168.0.7", "8090"} //faraday
             ,{SERVER_DEV_NAME, SERVER_DEV_IP, SERVER_DEV_PORT}
             ,{"fast-mobile", "cmobile.radanafinance.co.id", "7001"}
@@ -101,6 +102,8 @@ public class Utility {
 
     public static final String ROLE_ADMIN = "ADMIN";
     public static final String ROLE_DEMO = "DEMO";
+
+    public static final String FONT_SAMSUNG = "SamsungSharpSans-Bold.ttf";
 
     public static String getServerName(int serverId) {
         String[] s = servers[serverId];
@@ -665,4 +668,13 @@ public class Utility {
         ctx.getWindow().setSoftInputMode(WindowManager.LayoutParams.SOFT_INPUT_STATE_HIDDEN);
     }
 
+    public static void hideKeyboard(View v) {
+        InputMethodManager imm = (InputMethodManager) v.getContext().getSystemService(Context.INPUT_METHOD_SERVICE);
+        imm.hideSoftInputFromWindow(v.getWindowToken(), 0);
+    }
+
+    public static void showKeyboard(View v) {
+        InputMethodManager imm = (InputMethodManager) v.getContext().getSystemService(Context.INPUT_METHOD_SERVICE);
+        imm.toggleSoftInput(InputMethodManager.SHOW_FORCED, 0);
+    }
 }

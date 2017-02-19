@@ -8,6 +8,7 @@ import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.pm.PackageManager;
+import android.graphics.Typeface;
 import android.graphics.drawable.Drawable;
 import android.location.Location;
 import android.net.Uri;
@@ -31,11 +32,14 @@ import android.support.v7.app.AlertDialog;
 import android.support.v7.widget.AppCompatDrawableManager;
 import android.support.v7.widget.SearchView;
 import android.support.v7.widget.Toolbar;
+import android.text.Spannable;
+import android.text.SpannableString;
 import android.text.TextUtils;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuItem;
+import android.view.SubMenu;
 import android.view.View;
 import android.widget.EditText;
 import android.widget.ImageView;
@@ -48,6 +52,7 @@ import com.google.android.gms.location.LocationListener;
 import com.google.android.gms.location.LocationRequest;
 import com.google.android.gms.location.LocationServices;
 import com.google.android.gms.maps.model.LatLng;
+import com.google.gson.Gson;
 
 import java.io.File;
 import java.io.IOException;
@@ -61,6 +66,7 @@ import java.util.concurrent.TimeUnit;
 import butterknife.ButterKnife;
 import butterknife.OnLongClick;
 import id.co.ppu.collectionfast2.chats.ChatActivity;
+import id.co.ppu.collectionfast2.component.CustomTypefaceSpan;
 import id.co.ppu.collectionfast2.exceptions.NoConnectionException;
 import id.co.ppu.collectionfast2.fragments.FragmentChatActiveContacts;
 import id.co.ppu.collectionfast2.fragments.FragmentChatWith;
@@ -74,6 +80,7 @@ import id.co.ppu.collectionfast2.lkp.FragmentLKPList;
 import id.co.ppu.collectionfast2.lkp.FragmentSummaryLKP;
 import id.co.ppu.collectionfast2.login.LoginActivity;
 import id.co.ppu.collectionfast2.payment.entry.ActivityPaymentEntri;
+import id.co.ppu.collectionfast2.poa.ActivityPoA;
 import id.co.ppu.collectionfast2.pojo.DisplayTrnContractBuckets;
 import id.co.ppu.collectionfast2.pojo.DisplayTrnLDVDetails;
 import id.co.ppu.collectionfast2.pojo.LKPData;
@@ -163,15 +170,11 @@ public class MainActivity extends ChatActivity
         super.onPostCreate(savedInstanceState);
 
         if (DemoUtil.isDemo(this)) {
-            showSnackBar("WARNING ! You are currently signed in as DEMO. Make sure you are in FLIGHT MODE.", Snackbar.LENGTH_LONG);
+            promptSnackBar("WARNING! You're currently signed in as DEMO. Make sure you're OFFLINE");
         }
 
         // handle mobile setup
-        final ProgressDialog mProgressDialog = new ProgressDialog(this);
-        mProgressDialog.setIndeterminate(true);
-        mProgressDialog.setCancelable(true); // WARNING: rarely true
-        mProgressDialog.setMessage("Please wait...");
-        mProgressDialog.show();
+        final ProgressDialog mProgressDialog = Utility.createAndShowProgressDialog(this, getString(R.string.message_please_wait));
 
         ApiInterface fastService =
                 ServiceGenerator.createService(ApiInterface.class, Utility.buildUrl(Storage.getPreferenceAsInt(getApplicationContext(), Storage.KEY_SERVER_ID, 0)));
@@ -228,6 +231,13 @@ public class MainActivity extends ChatActivity
 
     }
 
+    private void applyFontToMenuItem(MenuItem mi) {
+        Typeface font = Typeface.createFromAsset(getAssets(), Utility.FONT_SAMSUNG);
+        SpannableString mNewTitle = new SpannableString(mi.getTitle());
+        mNewTitle.setSpan(new CustomTypefaceSpan("" , font), 0 , mNewTitle.length(),  Spannable.SPAN_INCLUSIVE_INCLUSIVE);
+        mi.setTitle(mNewTitle);
+    }
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -275,6 +285,22 @@ public class MainActivity extends ChatActivity
             if (miManualSync != null) {
                 miManualSync.setVisible(Utility.developerMode);
             }
+            // set custom font
+            for (int i=0; i< mn.size();i++) {
+                MenuItem mi = mn.getItem(i);
+
+                //for aapplying a font to subMenu ...
+                SubMenu subMenu = mi.getSubMenu();
+                if (subMenu!=null && subMenu.size() >0 ) {
+                    for (int j=0; j <subMenu.size();j++) {
+                        MenuItem subMenuItem = subMenu.getItem(j);
+                        applyFontToMenuItem(subMenuItem);
+                    }
+                }
+
+                //the method we have create in activity
+                applyFontToMenuItem(mi);
+            }
         }
 
         View v = navigationView.getHeaderView(0);
@@ -283,6 +309,8 @@ public class MainActivity extends ChatActivity
 
         TextView tvProfileName = ButterKnife.findById(v, R.id.tvProfileName);
         tvProfileName.setText(currentUser.getFullName());
+        Typeface font = Typeface.createFromAsset(getAssets(), Utility.FONT_SAMSUNG);
+        tvProfileName.setTypeface(font);
 
         if (getSupportActionBar() != null) {
             getSupportActionBar().setSubtitle(currentUser.getFullName());
@@ -765,6 +793,8 @@ public class MainActivity extends ChatActivity
 
             drawer.closeDrawers();
 
+            testuploadPoAOneByOne();
+                    /*
             syncTransaction(true, new OnSuccessError() {
                 @Override
                 public void onSuccess(String msg) {
@@ -787,7 +817,7 @@ public class MainActivity extends ChatActivity
 
                 }
             });
-
+*/
             return false;
         } else if (id == R.id.nav_clearSyncTables) {
             clearSyncTables();
@@ -1182,7 +1212,6 @@ public class MainActivity extends ChatActivity
         if (DataUtil.isLDVHeaderValid(realm, currentUser.getUserId()) != null) {
             // di method ini terkadang penggunaan getString bisa ga ketemu lho, mungkin krn listener bisa beda context
             showSnackBar(getString(R.string.warning_close_batch));
-//            showSnackBar("Server date changed. Please Close Batch.");
             return;
         }
 /*
@@ -1195,8 +1224,25 @@ public class MainActivity extends ChatActivity
         if (detail instanceof RealmObject) {
             DisplayTrnLDVDetails dtl = this.realm.copyFromRealm(detail);
 
-//            getSupportFragmentManager().beginTransaction().replace(R.id.content_frame, new LKPDetailFragment()).commit();
+            // always call POA if not synced / edited
+            if (dtl.getWorkStatus().equals("A")) {
+                Intent i = new Intent((this), ActivityPoA.class);
 
+                String json = new Gson().toJson(dtl);
+
+                i.putExtra(ActivityPoA.PARAM_LKP_DETAIL, json);
+                i.putExtra(ActivityPoA.PARAM_COLLECTOR_ID, dtl.getCollId());
+                i.putExtra(ActivityPoA.PARAM_CONTRACT_NO, dtl.getContractNo());
+                i.putExtra(ActivityPoA.PARAM_LDV_NO, dtl.getLdvNo());
+
+                startActivityForResult(i, 66);
+            } else {
+                showLKPDetail(dtl);
+            }
+
+
+//            showLKPDetail(dtl);
+            /*
             Intent i = new Intent(this, ActivityScrollingLKPDetails.class);
             i.putExtra(ActivityScrollingLKPDetails.PARAM_CONTRACT_NO, dtl.getContractNo());
             i.putExtra(ActivityScrollingLKPDetails.PARAM_LDV_NO, dtl.getLdvNo());
@@ -1210,8 +1256,8 @@ public class MainActivity extends ChatActivity
             i.putExtra(ActivityScrollingLKPDetails.PARAM_IS_LKP_INQUIRY, isLKPInquiry);
 
             startActivity(i);
+            */
         }
-//        Toast.makeText(MainActivity.this, "You select " + detail.getCustName(), Toast.LENGTH_SHORT).show();
     }
 
     @Override
@@ -1328,7 +1374,6 @@ public class MainActivity extends ChatActivity
                         .equalTo("lastupdateBy", Utility.LAST_UPDATE_BY)
 //                        .equalTo("createdBy", createdBy)
                         .findAll().deleteAllFromRealm();
-
 
 
             }
@@ -1507,6 +1552,10 @@ public class MainActivity extends ChatActivity
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
 
+        if (resultCode != RESULT_OK) {
+            return;
+        }
+
         switch (requestCode) {
             case 999:
                 /*
@@ -1523,26 +1572,33 @@ public class MainActivity extends ChatActivity
                 break;
             case 44:
             case 55:
-                if (resultCode == RESULT_OK) {
-                    View v = navigationView.getHeaderView(0);
-                    final ImageView imageView = ButterKnife.findById(v, R.id.imageView);
+                View v = navigationView.getHeaderView(0);
+                final ImageView imageView = ButterKnife.findById(v, R.id.imageView);
 
-                    final Uri selectedImage = data.getData();
-                    imageView.setImageURI(selectedImage);
+                final Uri selectedImage = data.getData();
+                imageView.setImageURI(selectedImage);
 
-                    this.realm.executeTransactionAsync(new Realm.Transaction() {
-                        @Override
-                        public void execute(Realm realm) {
-                            UserConfig userConfig = realm.where(UserConfig.class).findFirst();
-                            if (userConfig != null) {
-                                userConfig.setPhotoProfileUri(selectedImage.toString());
-                            }
-
-                            realm.copyToRealmOrUpdate(userConfig);
+                this.realm.executeTransactionAsync(new Realm.Transaction() {
+                    @Override
+                    public void execute(Realm realm) {
+                        UserConfig userConfig = realm.where(UserConfig.class).findFirst();
+                        if (userConfig != null) {
+                            userConfig.setPhotoProfileUri(selectedImage.toString());
                         }
-                    });
 
+                        realm.copyToRealmOrUpdate(userConfig);
+                    }
+                });
+
+                break;
+            case 66:
+                if (data != null) {
+
+                    String json = data.getStringExtra(ActivityPoA.PARAM_LKP_DETAIL);
+                    DisplayTrnLDVDetails dtl = new Gson().fromJson(json, DisplayTrnLDVDetails.class);
+                    showLKPDetail(dtl);
                 }
+                break;
 
         }
     }
@@ -1641,7 +1697,7 @@ public class MainActivity extends ChatActivity
             return;
         }
 
-        if (TextUtils.isEmpty(currentLDVNo)) {
+        if (this.realm.where(TrnLDVHeader.class).count() < 1) {
             Utility.showDialog(MainActivity.this, "Invalid LKP", "Please try to Get LKP");
             return;
         }
@@ -1652,7 +1708,7 @@ public class MainActivity extends ChatActivity
             public void execute(Realm realm) {
 
                 TrnLDVHeader trnLDVHeader = realm.where(TrnLDVHeader.class)
-                        .equalTo("ldvNo", currentLDVNo)
+//                        .equalTo("ldvNo", currentLDVNo)   // dangerous, currentLDVNo maybe null on first time activity
                         .equalTo("collCode", currentUser.getUserId())
                         .findFirst();
 
@@ -1668,6 +1724,7 @@ public class MainActivity extends ChatActivity
         });
 
         final SyncLdvHeader syncLdvHeader = new SyncLdvHeader(this.realm);
+
         if (syncLdvHeader.anyDataToSync()) {
 
             final ProgressDialog mProgressDialog = Utility.createAndShowProgressDialog(this, getString(R.string.message_please_wait));
@@ -1676,6 +1733,33 @@ public class MainActivity extends ChatActivity
             req.setLdvHeader(syncLdvHeader.getDataToSync());
 
             fillRequest(Utility.ACTION_CLOSEBATCH, req);
+
+            // override demo user
+            if (!NetUtil.isConnected(MainActivity.this)
+                    && DemoUtil.isDemo(MainActivity.this)) {
+                Utility.dismissDialog(mProgressDialog);
+
+                if (req.getLdvHeader() != null && req.getLdvHeader().size() > 0) {
+                    syncLdvHeader.syncData();
+
+                    resetData();
+
+                    AlertDialog.Builder alertDialogBuilder = new AlertDialog.Builder(MainActivity.this);
+                    alertDialogBuilder.setTitle("");
+                    alertDialogBuilder.setMessage("Close Batch success.\nPlease relogin.");
+                    alertDialogBuilder.setPositiveButton("Ok", new DialogInterface.OnClickListener() {
+
+                        @Override
+                        public void onClick(DialogInterface dialog, int which) {
+                            backToLoginScreen();
+                        }
+                    });
+
+                    alertDialogBuilder.show();
+                }
+
+                return;
+            }
 
             ApiInterface fastService =
                     ServiceGenerator.createService(ApiInterface.class, Utility.buildUrl(Storage.getPreferenceAsInt(getApplicationContext(), Storage.KEY_SERVER_ID, 0)));
@@ -2031,12 +2115,15 @@ public class MainActivity extends ChatActivity
                 View promptsView = LayoutInflater.from(MainActivity.this).inflate(R.layout.dialog_pwd, null);
                 final EditText input = ButterKnife.findById(promptsView, R.id.password);
 
-                new AlertDialog.Builder(MainActivity.this)
+                AlertDialog alertDialog = new AlertDialog.Builder(MainActivity.this)
                         .setTitle("Type Your Password")
                         .setView(promptsView)
                         .setPositiveButton("Ok", new DialogInterface.OnClickListener() {
                             @Override
                             public void onClick(DialogInterface dialogInterface, int i) {
+
+                                Utility.hideKeyboard(input);
+
                                 String value = input.getText().toString();
 
                                 if (!value.equals(currentUser.getUserPwd())) {
@@ -2103,11 +2190,20 @@ public class MainActivity extends ChatActivity
                         .setNegativeButton("Cancel", new DialogInterface.OnClickListener() {
                             @Override
                             public void onClick(DialogInterface dialogInterface, int i) {
-
+                                Utility.hideKeyboard(input);
                             }
                         })
-                        .show()
-                ;
+                        .show();
+
+                alertDialog.setOnDismissListener(new DialogInterface.OnDismissListener() {
+                    @Override
+                    public void onDismiss(DialogInterface dialogInterface) {
+                        Utility.hideKeyboard(input);
+                    }
+                });
+
+                Utility.showKeyboard(input);
+
             }
         });
 
@@ -2120,6 +2216,7 @@ public class MainActivity extends ChatActivity
         });
 
         alertDialogBuilder.show();
+//        input.requestFocus();
     }
 
     // wiwan: maunya dipanggil real time, tp kalo sudah sukses terkirim hapus yg dilokal spy ga penuh
@@ -2571,7 +2668,7 @@ public class MainActivity extends ChatActivity
 
                 fillRequest(Utility.ACTION_SYNC_LKP, req);
 
-                Snackbar.make(coordinatorLayout, "Sync started", Snackbar.LENGTH_SHORT).show();
+                showSnackBar("Sync started");
 
                 mProgressDialog.setMessage(getString(R.string.message_sync_photo_wait));
 
@@ -2628,6 +2725,8 @@ public class MainActivity extends ChatActivity
                     if (showDialog) {
                         Utility.dismissDialog(mProgressDialog);
                     }
+
+                    showSnackBar("Sync success");
 
                     return;
                 }
@@ -2701,7 +2800,7 @@ public class MainActivity extends ChatActivity
                             Utility.dismissDialog(mProgressDialog);
                         }
 
-                        Snackbar.make(coordinatorLayout, "Sync success", Snackbar.LENGTH_SHORT).show();
+                        showSnackBar("Sync success");
                     }
 
                     @Override
@@ -2719,7 +2818,7 @@ public class MainActivity extends ChatActivity
                         if (listener != null)
                             listener.onFailure(t);
 
-                        Snackbar.make(coordinatorLayout, "Sync Failed\n" + t.getMessage(), Snackbar.LENGTH_LONG).show();
+                        showSnackBar("Sync Failed\n" + t.getMessage(), Snackbar.LENGTH_LONG);
 
                         // TODO: utk mencegah data di server udah sync, coba get lkp lagi
                         if (t.getMessage() == null) {
@@ -2757,6 +2856,22 @@ public class MainActivity extends ChatActivity
 
     public void showSnackBar(String message, int duration) {
         Snackbar.make(coordinatorLayout, message, duration).show();
+    }
+
+    public void promptSnackBar(String message) {
+        final Snackbar snackbar = Snackbar.make(coordinatorLayout, message, Snackbar.LENGTH_INDEFINITE);
+        snackbar.setAction("OK", new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                snackbar.dismiss();
+            }
+        });
+
+        View snackbarView = snackbar.getView();
+        TextView textView = (TextView) snackbarView.findViewById(android.support.design.R.id.snackbar_text);
+        textView.setMaxLines(5);
+
+        snackbar.show();
     }
 
     /*
@@ -2823,11 +2938,90 @@ public class MainActivity extends ChatActivity
 
     }
 */
-    private void uploadPoAOneByOne() {
+
+    private void showLKPDetail(DisplayTrnLDVDetails dtl) {
+        Intent i = new Intent(this, ActivityScrollingLKPDetails.class);
+        i.putExtra(ActivityScrollingLKPDetails.PARAM_CONTRACT_NO, dtl.getContractNo());
+        i.putExtra(ActivityScrollingLKPDetails.PARAM_LDV_NO, dtl.getLdvNo());
+        i.putExtra(ActivityScrollingLKPDetails.PARAM_COLLECTOR_ID, dtl.getCollId());
+        i.putExtra(ActivityScrollingLKPDetails.PARAM_LKP_DATE, dtl.getLkpDate().getTime());
+        i.putExtra(ActivityScrollingLKPDetails.PARAM_WORKSTATUS, dtl.getWorkStatus());
+
+        Date serverDate = this.realm.where(ServerInfo.class).findFirst().getServerDate();
+        boolean isLKPInquiry = !dtl.getCreatedBy().equals("JOB" + Utility.convertDateToString(serverDate, "yyyyMMdd"));
+
+        i.putExtra(ActivityScrollingLKPDetails.PARAM_IS_LKP_INQUIRY, isLKPInquiry);
+
+        startActivity(i);
+
+    }
+
+    private void testuploadPoAOneByOne() {
 
         File[] poaFiles = PoAUtil.getPoAFiles();
         if (poaFiles == null || poaFiles.length < 1) {
             return;
+        }
+
+        List<TrnFlagTimestamp> list = new ArrayList<>();
+        Realm r = Realm.getDefaultInstance();
+        try {
+            list = r.copyFromRealm(r.where(TrnFlagTimestamp.class).findAll());
+        } finally {
+            if (r != null)
+                r.close();
+        }
+
+        for (TrnFlagTimestamp trn : list) {
+
+            File matchedFile = null;
+
+            for (File file : poaFiles) {
+                if (file.getName().equals(trn.getFileName())) {
+                    matchedFile = file;
+                    break;
+                }
+            }
+
+            if (matchedFile == null)
+                continue;
+
+            try {
+                NetUtil.uploadPoA(MainActivity.this, trn, matchedFile, new OnSuccessError() {
+                    @Override
+                    public void onSuccess(String msg) {
+//                        donot show any dialog here to avoid confusion showing message repeatedly
+                        Log.e("eric.uploadPoAOneByOne", "success with message=" + msg);
+                    }
+
+                    @Override
+                    public void onFailure(Throwable throwable) {
+                        if (throwable != null)
+                            Utility.throwableHandler(MainActivity.this, throwable, false);
+                    }
+
+                    @Override
+                    public void onSkip() {
+
+                    }
+                });
+
+            } catch (NoConnectionException e) {
+                e.printStackTrace();
+                showSnackBar(getString(R.string.error_online_required));
+            }
+        }
+
+    }
+
+    /**
+     * @return < 0 means nothing uploaded
+     */
+    private int uploadPoAOneByOne() {
+
+        File[] poaFiles = PoAUtil.getPoAFiles();
+        if (poaFiles == null || poaFiles.length < 1) {
+            return 0;
         }
 
         List<TrnFlagTimestamp> list = new ArrayList<>();
@@ -2849,7 +3043,7 @@ public class MainActivity extends ChatActivity
             valid = false;
         }
 
-        if (!valid) return;
+        if (!valid) return 0;
 
         if (list.size() != poaFiles.length) {
             // send error to server
@@ -2877,8 +3071,9 @@ public class MainActivity extends ChatActivity
 
             }
 
-        if (!valid) return;
+        if (!valid) return 0;
 
+        final List<String> success = new ArrayList<>();
         for (TrnFlagTimestamp trn : list) {
 
             File matchedFile = null;
@@ -2897,7 +3092,8 @@ public class MainActivity extends ChatActivity
                 NetUtil.uploadPoA(MainActivity.this, trn, matchedFile, new OnSuccessError() {
                     @Override
                     public void onSuccess(String msg) {
-//                        do nothing to avoid showing message repeatedly
+//                        donot show any dialog here to avoid confusion showing message repeatedly
+                        success.add(msg);
                     }
 
                     @Override
@@ -2918,6 +3114,8 @@ public class MainActivity extends ChatActivity
             }
         }
 
+        Log.e("eric.uploadPoAOneByOne", success.size() + " of " + list.size() + " uploaded");
 
+        return success.size();
     }
 }

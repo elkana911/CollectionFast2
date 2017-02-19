@@ -6,6 +6,7 @@ import id.co.ppu.collectionfast2.pojo.trn.HistInstallments;
 import id.co.ppu.collectionfast2.pojo.trn.TrnBastbj;
 import id.co.ppu.collectionfast2.pojo.trn.TrnCollectAddr;
 import id.co.ppu.collectionfast2.pojo.trn.TrnContractBuckets;
+import id.co.ppu.collectionfast2.pojo.trn.TrnFlagTimestamp;
 import id.co.ppu.collectionfast2.pojo.trn.TrnLDVComments;
 import id.co.ppu.collectionfast2.pojo.trn.TrnLDVDetails;
 import id.co.ppu.collectionfast2.pojo.trn.TrnLDVHeader;
@@ -33,6 +34,8 @@ public class LKPData{
     private List<TrnRVColl> rvColl;
     private List<TrnRepo> repo;
     private List<TrnLDVComments> ldvComments;
+
+    private List<TrnFlagTimestamp> flagTimestamps;
 
     public TrnLDVHeader getHeader() {
         return header;
@@ -128,5 +131,13 @@ public class LKPData{
 
     public void setPhoto(List<TrnPhoto> photo) {
         this.photo = photo;
+    }
+
+    public List<TrnFlagTimestamp> getFlagTimestamps() {
+        return flagTimestamps;
+    }
+
+    public void setFlagTimestamps(List<TrnFlagTimestamp> flagTimestamps) {
+        this.flagTimestamps = flagTimestamps;
     }
 }

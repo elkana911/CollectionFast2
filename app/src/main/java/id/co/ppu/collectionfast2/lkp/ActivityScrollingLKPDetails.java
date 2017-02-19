@@ -1,6 +1,7 @@
 package id.co.ppu.collectionfast2.lkp;
 
 import android.content.Intent;
+import android.graphics.Typeface;
 import android.os.Bundle;
 import android.support.annotation.Nullable;
 import android.support.design.widget.CollapsingToolbarLayout;
@@ -132,6 +133,9 @@ public class ActivityScrollingLKPDetails extends BasicActivity {
         setSupportActionBar(toolbar);
 
         toolbar_layout.setExpandedTitleTextAppearance(R.style.ExpandedAppBar);
+        Typeface font = Typeface.createFromAsset(getAssets(), Utility.FONT_SAMSUNG);
+        toolbar_layout.setExpandedTitleTypeface(font);
+        toolbar_layout.setCollapsedTitleTypeface(font);
 
         if (getSupportActionBar() != null) {
             getSupportActionBar().setDisplayHomeAsUpEnabled(true);

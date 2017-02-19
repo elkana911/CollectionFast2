@@ -389,7 +389,7 @@ public class FragmentLKPList extends Fragment {
 
         search_view.setAdapter(null);
 
-        tvSeparator.setText("No Contracts found" );
+        tvSeparator.setText(R.string.msg_no_contracts );
 
         final String createdBy = "JOB" + Utility.convertDateToString(dateLKP, "yyyyMMdd");
 
@@ -451,17 +451,16 @@ public class FragmentLKPList extends Fragment {
         });
 
         long count = realm.where(DisplayTrnLDVDetails.class).count();
-        String dateLabel = "Today";
 
         try {
             if (!Utility.isSameDay(dateLKP, serverDate)) {
-                dateLabel = "Previous";
+                tvSeparator.setText(getString(R.string.label_prev_contract) + count);
+            } else {
+                tvSeparator.setText(getString(R.string.label_today_contract) + count);
             }
         } catch (Exception e) {
             e.printStackTrace();
         }
-
-        tvSeparator.setText(dateLabel + " Contracts: " + count);
 
         /* entah knp ga mau
         etNoLKP.setHint("No LKP");
@@ -489,18 +488,6 @@ public class FragmentLKPList extends Fragment {
 
         return ldvNo;
     }
-/*
-    public void clearTodayList() {
-
-        if (tvSeparator.getText().toString().toLowerCase().startsWith("today"))
-            tvSeparator.setText("TODAY CONTRACTS: 0 ");
-
-        etNoLKP.setText(null);
-//            return;
-
-        search_view.setVisibility(View.INVISIBLE);
-    }
-    */
 
     public void refresh() {
         mAdapter.notifyDataSetChanged();
@@ -578,6 +565,10 @@ public class FragmentLKPList extends Fragment {
             }
 
             TextView custName = dataViewHolder.tvCustName;
+            /* ga cocok
+            Typeface font = Typeface.createFromAsset(getContext().getAssets(), Utility.FONT_SAMSUNG);
+            custName.setTypeface(font);
+            */
             if (Build.VERSION.SDK_INT >= 24) {
                 custName.setText(Html.fromHtml("<strong>" + detail.getCustName() + "</strong>", Html.FROM_HTML_MODE_LEGACY));
             } else {

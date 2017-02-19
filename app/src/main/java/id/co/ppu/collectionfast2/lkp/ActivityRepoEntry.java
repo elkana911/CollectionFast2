@@ -17,7 +17,6 @@ import android.widget.Toast;
 
 import com.weiwangcn.betterspinner.library.material.MaterialBetterSpinner;
 
-import java.io.File;
 import java.util.Date;
 import java.util.List;
 
@@ -39,6 +38,7 @@ import id.co.ppu.collectionfast2.util.PoAUtil;
 import id.co.ppu.collectionfast2.util.Utility;
 import io.realm.Realm;
 import io.realm.RealmResults;
+import pl.bclogic.pulsator4droid.library.PulsatorLayout;
 
 public class ActivityRepoEntry extends BasicActivity {
 
@@ -84,6 +84,9 @@ public class ActivityRepoEntry extends BasicActivity {
 
     @BindView(R.id.svMain)
     View svMain;
+
+    @BindView(R.id.pulsator)
+    PulsatorLayout pulsator;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -144,10 +147,12 @@ public class ActivityRepoEntry extends BasicActivity {
             radioSTNK.setChecked(trnRepo.getStnkStatus() != null && trnRepo.getStnkStatus().equals("Y"));
             radioNoSTNK.setChecked(trnRepo.getStnkStatus() == null || !trnRepo.getStnkStatus().equals("Y"));
 
-            flTakePhoto.setVisibility(View.GONE);
-            svMain.setVisibility(View.VISIBLE);
+//            flTakePhoto.setVisibility(View.GONE);
+//            svMain.setVisibility(View.VISIBLE);
 
         } else {
+
+//            pulsator.start();
 
             // generate running number
             if (userConfig.getKodeTarikRunningNumber() == null)
@@ -160,7 +165,6 @@ public class ActivityRepoEntry extends BasicActivity {
             */
 
             etKodeTarik.setText(generateKodeTarik(header.getOfficeCode(), runningNumber));
-
         }
 
     }
@@ -357,6 +361,7 @@ public class ActivityRepoEntry extends BasicActivity {
         startActivity(i);
     }
 
+    /* Moved to ActivityPoA
     @OnClick(R.id.llTakePhoto)
     public void onTakePoA() {
         PoAUtil.callCameraIntent(this, collectorId, ldvNo, contractNo);
@@ -376,9 +381,11 @@ public class ActivityRepoEntry extends BasicActivity {
         if (file != null) {
             flTakePhoto.setVisibility(View.GONE);
             svMain.setVisibility(View.VISIBLE);
+            pulsator.stop();
         }
 
     }
+    */
 
     public class BastkAdapter extends ArrayAdapter<TrnBastbj> {
         private Context ctx;
