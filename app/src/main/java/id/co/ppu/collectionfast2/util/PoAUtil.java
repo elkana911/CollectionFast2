@@ -260,6 +260,31 @@ public class PoAUtil {
         return first;
     }
 
+    /**
+     *
+     * @param realm
+     * @param collCode
+     * @param contractNo
+     * @return
+     */
+    public static void cancel(Realm realm, String collCode, String ldvNo, String contractNo){
+        RealmResults<TrnFlagTimestamp> all = realm.where(TrnFlagTimestamp.class)
+                .equalTo("pk.contractNo", contractNo)
+                .equalTo("ldvNo", ldvNo)
+                .equalTo("pk.collCode", collCode)
+                .findAll();
+
+        for (TrnFlagTimestamp trn :
+                all) {
+            File file = new File(getPoAPath() + trn.getFileName());
+
+            if (file.exists())
+                file.delete();
+
+            // getPoAFile(null, collCode, contractNo)
+        }
+
+    }
 
     /**
      * You must set onActivityResult to create the file using Uri, resultCode is 1
@@ -366,31 +391,6 @@ public class PoAUtil {
         return null;
     }
 
-    /**
-     *
-     * @param realm
-     * @param collCode
-     * @param contractNo
-     * @return
-     */
-    public static void cancel(Realm realm, String collCode, String contractNo){
-        RealmResults<TrnFlagTimestamp> all = realm.where(TrnFlagTimestamp.class)
-                .equalTo("contractNo", contractNo)
-                // .equalTo("ldvNo", ldvNo)
-                .equalTo("collCode", collCode)
-                .findAll();
-
-        for (TrnFlagTimestamp trn :
-                all) {
-            File file = new File(getPoAPath() + trn.getFileName());
-
-            if (file.exists())
-                file.delete();
-
-           // getPoAFile(null, collCode, contractNo)
-        }
-
-    }
 
 
 }

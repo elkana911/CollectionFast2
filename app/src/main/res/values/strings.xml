@@ -243,8 +243,12 @@
     <string name="title_activity_chats">Chats</string>
     <string name="error_ptp_max_month">PTP Date cannot next month</string>
     <string name="error_ptp_end_month">PTP Date cannot the end of the month</string>
+    <string name="error_sync_failed_with_msg">Sync Failed.\n%1$s</string>
+    <string name="error_lkp_empty">You have empty LKP</string>
 
     <string name="message_please_wait">Please wait...</string>
+    <string name="message_sync_start">Sync Started...</string>
+    <string name="message_sync_finish">Sync Finished</string>
     <string name="message_no_gps">Unable to get location. Please turn on GPS.</string>
     <string name="message_no_photo_arrival_taken">Unable to get arrival photo. Please enable Camera access.</string>
     <string name="message_sync_photo_wait">Sync Photo In Progress.\nPlease wait...</string>

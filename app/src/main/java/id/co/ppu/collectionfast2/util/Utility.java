@@ -55,7 +55,7 @@ public class Utility {
 //            {"local-server", "10.212.0.184", "8090"}
 //            {"local-server", "192.168.10.109", "8090"} // kelapa gading
 //            {"local-server", "192.168.0.9", "8090"}
-            {"local-server", "192.168.0.8", "8090"} //faraday
+            {"local-server", "192.168.0.11", "8090"} //faraday
             ,{SERVER_DEV_NAME, SERVER_DEV_IP, SERVER_DEV_PORT}
             ,{"fast-mobile", "cmobile.radanafinance.co.id", "7001"}
             ,{"fast-mobile2", "c1mobile.radanafinance.co.id", "7001"}
@@ -336,6 +336,7 @@ public class Utility {
         }
         view.setEnabled(enabled);
     }
+
     public static void setViewGroupFocusable(ViewGroup view, boolean enabled)
     {
         int childern = view.getChildCount();

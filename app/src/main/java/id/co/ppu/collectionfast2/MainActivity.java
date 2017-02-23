@@ -1090,7 +1090,7 @@ public class MainActivity extends ChatActivity
                     final ResponseGetLKP respGetLKP = response.body();
 
                     if (respGetLKP == null) {
-                        Utility.showDialog(MainActivity.this, "No LKP found", "You have empty List");
+                        Utility.showDialog(MainActivity.this, "No LKP found", getString(R.string.error_lkp_empty));
                         return;
                     }
 
@@ -1273,10 +1273,18 @@ public class MainActivity extends ChatActivity
         if (detail instanceof RealmObject) {
             final DisplayTrnLDVDetails dtl = this.realm.copyFromRealm(detail);
 
+            StringBuffer sb = new StringBuffer("Are you sure to cancel ");
+            sb.append(dtl.getCustName()).append(" ?\n");
+
+            if (dtl.getAddress() != null)
+                sb.append("[").append(dtl.getAddress().getCollKel())
+                        .append("/").append(dtl.getAddress().getCollKec())
+                        .append("]");
+
             new AlertDialog.Builder(this)
                     .setIcon(android.R.drawable.ic_dialog_alert)
                     .setTitle("Cancel Sync")
-                    .setMessage("Are you sure to cancel " + dtl.getCustName() + " ?\n[" + dtl.getAddress().getCollKel() + "/" + dtl.getAddress().getCollKec() + "]")
+                    .setMessage(sb.toString())
                     .setPositiveButton("Yes", new DialogInterface.OnClickListener() {
                         @Override
                         public void onClick(DialogInterface dialog, int which) {
@@ -1301,6 +1309,8 @@ public class MainActivity extends ChatActivity
         // hanya cancel yg statusnya V
         TrnLDVDetails ada = realm.where(TrnLDVDetails.class)
                 .equalTo("workStatus", "V")
+                .equalTo("pk.ldvNo", ldvNo)
+                .equalTo("contractNo", contractNo)
                 .findFirst();
 
         if (ada == null) {
@@ -1381,7 +1391,7 @@ public class MainActivity extends ChatActivity
             }
         });
 
-        PoAUtil.cancel(realm, currentUser.getUserId(), contractNo);
+        PoAUtil.cancel(realm, currentUser.getUserId(), ldvNo, contractNo);
 
 
         // must sync (not async) to avoid process sequence
@@ -2593,7 +2603,6 @@ public class MainActivity extends ChatActivity
 
             }
         });
-
     }
 
     /**
@@ -2613,11 +2622,6 @@ public class MainActivity extends ChatActivity
             backToLoginScreen();
             return; // be careful
         }
-
-//        if (!NetUtil.isConnected(this)) {
-//            Snackbar.make(coordinatorLayout, getString(R.string.error_online_required), Snackbar.LENGTH_LONG).show();
-//            return; // be careful
-//        }
 
         // check dulu udah dibayar apa belum, kalo udah yg status kuning di cancel saja
         checkPaidLKP(showDialog, new OnSuccessError() {
@@ -2670,7 +2674,7 @@ public class MainActivity extends ChatActivity
 
                 fillRequest(Utility.ACTION_SYNC_LKP, req);
 
-                showSnackBar("Sync started");
+                showSnackBar(getString(R.string.message_sync_start));
 
                 mProgressDialog.setMessage(getString(R.string.message_sync_photo_wait));
 
@@ -2737,7 +2741,7 @@ public class MainActivity extends ChatActivity
                                 Utility.dismissDialog(mProgressDialog);
                             }
 
-                            showSnackBar("Sync success");
+                            showSnackBar(getString(R.string.message_sync_finish));
 
                             return;
                         }
@@ -2776,7 +2780,7 @@ public class MainActivity extends ChatActivity
 
                                 if (respSync == null || respSync.getError() != null) {
                                     if (listener != null)
-                                        listener.onFailure(new RuntimeException("Sync Failed due to Server Error"));
+                                        listener.onFailure(new RuntimeException(getString(R.string.error_sync_failed_with_msg, "Server Error")));
 
                                     if (respSync == null) {
                                         // Not found(404) berarti ada yg salah di json
@@ -2811,7 +2815,7 @@ public class MainActivity extends ChatActivity
                                     Utility.dismissDialog(mProgressDialog);
                                 }
 
-                                showSnackBar("Sync success");
+                                showSnackBar(getString(R.string.message_sync_finish));
                             }
 
                             @Override
@@ -2829,7 +2833,7 @@ public class MainActivity extends ChatActivity
                                 if (listener != null)
                                     listener.onFailure(t);
 
-                                showSnackBar("Sync Failed\n" + t.getMessage(), Snackbar.LENGTH_LONG);
+                                showSnackBar(getString(R.string.error_sync_failed_with_msg, t.getMessage()), Snackbar.LENGTH_LONG);
 
                                 // TODO: utk mencegah data di server udah sync, coba get lkp lagi
                                 if (t.getMessage() == null) {
@@ -2850,11 +2854,19 @@ public class MainActivity extends ChatActivity
 
                     @Override
                     public void onFailure(Throwable throwable) {
+                        if (showDialog) {
+                            Utility.dismissDialog(mProgressDialog);
+                        }
 
+                        if (throwable != null)
+                            showSnackBar(getString(R.string.error_sync_failed_with_msg, throwable.getMessage()), Snackbar.LENGTH_LONG);
                     }
 
                     @Override
                     public void onSkip() {
+                        if (showDialog) {
+                            Utility.dismissDialog(mProgressDialog);
+                        }
 
                     }
                 });
@@ -2863,12 +2875,12 @@ public class MainActivity extends ChatActivity
 
             @Override
             public void onFailure(Throwable throwable) {
-
+                // 1ignore
             }
 
             @Override
             public void onSkip() {
-
+                // ignore
             }
         });
 
@@ -3046,7 +3058,7 @@ public class MainActivity extends ChatActivity
         File[] poaFilesBuffer = PoAUtil.getPoAFiles();
         if (poaFilesBuffer == null || poaFilesBuffer.length < 1) {
             if (listener != null)
-                listener.onFailure(new RuntimeException("No PoA File found"));
+                listener.onFailure(new RuntimeException("Photo On Arrival missing!"));
             return 0;
         }
 
@@ -3113,6 +3125,7 @@ public class MainActivity extends ChatActivity
             }
 
             if (ada == null) {
+                errorMsg = "Missing Photo On Arrival for contract " + trn.getPk().getContractNo();
                 valid = false;
                 break;
             } else {
