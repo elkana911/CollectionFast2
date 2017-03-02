@@ -178,6 +178,9 @@ public class ActivityDeveloper extends BasicActivity {
                     listPref.add(p);
                 }
 
+                Pair<String, String> pScreenRes = Pair.create("screen.density", Utility.getDeviceResolution(ActivityDeveloper.this));
+                listPref.add(pScreenRes);
+
                 displayRows(listPref);
 
                 List<Pair<String, String>> listKeyVal = new ArrayList<>();

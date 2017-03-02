@@ -13,9 +13,13 @@ import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
+import java.util.UUID;
 
 import id.co.ppu.collectionfast2.exceptions.NoConnectionException;
+import id.co.ppu.collectionfast2.fcm.MyFirebaseMessagingService;
 import id.co.ppu.collectionfast2.listener.OnGetChatContactListener;
 import id.co.ppu.collectionfast2.listener.OnSuccessError;
 import id.co.ppu.collectionfast2.pojo.UserData;
@@ -448,8 +452,7 @@ public class NetUtil {
                                 .body(ResponseBody.create(MediaType.parse("application/json"), "message from server"))
 //                                .protocol(Protocol.HTTP_1_0)
                                 .addHeader("Content-Type", "application/json")
-                                .build()
-                                ;
+                                .build();
 
                         Response<ResponseBody> response = Response.success(null, rawResponse);
 
@@ -496,10 +499,6 @@ public class NetUtil {
 
     public static void chatLogOn(Context ctx, String collCode, final OnSuccessError listener) {
         // send to server that current contact is online
-        if (!isConnected(ctx)) {
-            return;
-        }
-
         String androidId = Storage.getAndroidToken(ctx);
         String userStatus = ConstChat.FLAG_ONLINE;
         String userMsg = "Available";
@@ -509,6 +508,15 @@ public class NetUtil {
         req.setStatus(userStatus);
         req.setMessage(userMsg);
         req.setAndroidId(androidId);
+
+        if (!isConnected(ctx)) {
+            if (DemoUtil.isDemo(ctx)) {
+                if (listener != null)
+                    listener.onSuccess(null);
+            }
+
+            return;
+        }
 
         Call<ResponseBody> call = Storage.getAPIService(ctx).sendStatus(req);
         call.enqueue(new Callback<ResponseBody>() {
@@ -627,10 +635,10 @@ public class NetUtil {
             // override demo user
             if (!NetUtil.isConnected(ctx)
                     && DemoUtil.isDemo(ctx)) {
-                    if (listener != null)
-                        listener.onSuccess(file.getName());
+                if (listener != null)
+                    listener.onSuccess(file.getName());
 
-                    return true;
+                return true;
             }
 
             Call<ResponseBody> call = fastService.upload_PhotoOnArrival(body_trnPoA, body);
@@ -717,9 +725,6 @@ public class NetUtil {
     }
 
     public static void chatLogOff(Context ctx, String collCode, final OnSuccessError listener) {
-        if (!isConnected(ctx)) {
-            return;
-        }
 
         String androidId = Storage.getAndroidToken(ctx);
         String userStatus = ConstChat.FLAG_OFFLINE;
@@ -730,6 +735,27 @@ public class NetUtil {
         req.setStatus(userStatus);
         req.setMessage(userMsg);
         req.setAndroidId(androidId);
+
+        if (!isConnected(ctx)) {
+            if (DemoUtil.isDemo(ctx)) {
+
+                Realm r = Realm.getDefaultInstance();
+                try {
+                    r.beginTransaction();
+                    r.delete(TrnChatContact.class);
+//                    r.delete(TrnChatMsg.class);
+                    r.commitTransaction();
+                } finally {
+                    if (r != null)
+                        r.close();
+                }
+
+                if (listener != null)
+                    listener.onSuccess(null);
+            }
+
+            return;
+        }
 
         Call<ResponseBody> call = Storage.getAPIService(ctx).sendStatus(req);
         call.enqueue(new Callback<ResponseBody>() {
@@ -777,14 +803,27 @@ public class NetUtil {
     }
 
     public static void chatUpdateContacts(Context ctx, String collCode, final OnGetChatContactListener listener) {
-        if (!isConnected(ctx)) {
-            return;
-        }
 
         RequestChatStatus req = new RequestChatStatus();
         req.setCollCode(collCode);
         req.setStatus(null);
         req.setMessage(null);
+
+        if (!isConnected(ctx)) {
+            if (DemoUtil.isDemo(ctx)) {
+
+                if (listener != null) {
+
+                    ResponseGetOnlineContacts resp = new ResponseGetOnlineContacts();
+                    resp.setData(DemoUtil.buildDummyChatContacts());
+
+                    listener.onSuccess(resp.getData());
+                }
+            }
+
+
+            return;
+        }
 
         Call<ResponseGetOnlineContacts> call = Storage.getAPIService(ctx).getOnlineContacts(req);
         call.enqueue(new Callback<ResponseGetOnlineContacts>() {
@@ -1007,7 +1046,7 @@ dangerous code
     }
 
     public static void chatSendQueueMessage(final Context ctx) {
-        if (Utility.isScreenOff(ctx) || !NetUtil.isConnected(ctx))
+        if (Utility.isScreenOff(ctx))
             return;
 
         AsyncTask.execute(new Runnable() {
@@ -1048,62 +1087,88 @@ dangerous code
                             .equalTo("messageStatus", ConstChat.MESSAGE_STATUS_UNOPENED_OR_FIRSTTIME)
                             .findAll();
 
-                    if (pendings.size() > 0) {
-                        r.executeTransaction(new Realm.Transaction() {
-                            @Override
-                            public void execute(Realm realm) {
-                                for (TrnChatMsg _obj : pendings) {
-                                    _obj.setMessageStatus(ConstChat.MESSAGE_STATUS_TRANSMITTING);
-                                }
+                    if (pendings.size() < 1)
+                        return;
+
+                    r.executeTransaction(new Realm.Transaction() {
+                        @Override
+                        public void execute(Realm realm) {
+                            for (TrnChatMsg _obj : pendings) {
+                                _obj.setMessageStatus(ConstChat.MESSAGE_STATUS_TRANSMITTING);
                             }
-                        });
+                        }
+                    });
 
-                        final RequestChatMsg req = new RequestChatMsg();
-                        req.setMsg(r.copyFromRealm(pendings));
+                    final RequestChatMsg req = new RequestChatMsg();
+                    req.setMsg(r.copyFromRealm(pendings));
 
-                        Call<ResponseBody> call = Storage.getAPIService(ctx).sendMessages(req);
-                        // ga boleh call.enqueue krn bisa hilang dr memory utk variable2 di atas
-                        try {
-                            Response<ResponseBody> execute = call.execute();
-
-                            if (!execute.isSuccessful()) {
-                                r.executeTransaction(new Realm.Transaction() {
-                                    @Override
-                                    public void execute(Realm realm) {
-                                        for (TrnChatMsg _obj : pendings) {
-                                            _obj.setMessageStatus(ConstChat.MESSAGE_STATUS_FAILED);
-                                        }
-                                    }
-                                });
-
-                                return;
-                            }
-
-                            final ResponseBody resp = execute.body();
-
-                            try {
-                                String msgStatus = resp.string();
-
-//                        Log.d(TAG, "msgStatus = " + msgStatus);
-                            } catch (IOException e) {
-                                e.printStackTrace();
-                            }
+                    if (!NetUtil.isConnected(ctx)) {
+                        if (DemoUtil.isDemo(ctx)) {
 
                             r.executeTransaction(new Realm.Transaction() {
                                 @Override
                                 public void execute(Realm realm) {
                                     for (TrnChatMsg msg : pendings) {
-                                        msg.setMessageStatus(ConstChat.MESSAGE_STATUS_SERVER_RECEIVED);
+                                        msg.setMessageStatus(ConstChat.MESSAGE_STATUS_ALL_READ_AND_OPENED);
                                     }
-
                                 }
                             });
 
-                        } catch (Exception e) {
-                            e.printStackTrace();
-//                            Utility.throwableHandler(ctx, e, false);
+                            // give dummy respond rightaway
+                            for (TrnChatMsg msg : pendings) {
+                                Map<String, String> data = new HashMap<String, String>();
+                                data.put(ConstChat.KEY_FROM, msg.getToCollCode());
+                                data.put(ConstChat.KEY_UID, UUID.randomUUID().toString());
+                                data.put(ConstChat.KEY_MESSAGE, "OK, i read your message:" + msg.getMessage());
+                                data.put(ConstChat.KEY_STATUS, ConstChat.MESSAGE_STATUS_SERVER_RECEIVED);
+                                data.put(ConstChat.KEY_TIMESTAMP, Utility.convertDateToString(new Date(), "yyyyMMddHHmmssSSS"));
+
+                                MyFirebaseMessagingService.broadcastMessage(ctx, msg.getToCollCode(), null, data);
+                            }
                         }
 
+                        return;
+                    }
+
+                    Call<ResponseBody> call = Storage.getAPIService(ctx).sendMessages(req);
+                    // ga boleh call.enqueue krn bisa hilang dr memory utk variable2 di atas
+                    try {
+                        Response<ResponseBody> execute = call.execute();
+
+                        if (!execute.isSuccessful()) {
+                            r.executeTransaction(new Realm.Transaction() {
+                                @Override
+                                public void execute(Realm realm) {
+                                    for (TrnChatMsg _obj : pendings) {
+                                        _obj.setMessageStatus(ConstChat.MESSAGE_STATUS_FAILED);
+                                    }
+                                }
+                            });
+
+                            return;
+                        }
+
+                        final ResponseBody resp = execute.body();
+
+                        try {
+                            String msgStatus = resp.string();
+
+                            Log.i("RC-chat", "msgStatus = " + msgStatus);
+                        } catch (IOException e) {
+                            e.printStackTrace();
+                        }
+
+                        r.executeTransaction(new Realm.Transaction() {
+                            @Override
+                            public void execute(Realm realm) {
+                                for (TrnChatMsg msg : pendings) {
+                                    msg.setMessageStatus(ConstChat.MESSAGE_STATUS_SERVER_RECEIVED);
+                                }
+                            }
+                        });
+
+                    } catch (Exception e) {
+                        e.printStackTrace();
                     }
 
                 } finally {

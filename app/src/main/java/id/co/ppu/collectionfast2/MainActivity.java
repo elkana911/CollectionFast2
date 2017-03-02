@@ -1040,36 +1040,14 @@ public class MainActivity extends ChatActivity
 
         if (!NetUtil.isConnected(this)
                 && DemoUtil.isDemo(this)) {
-            // save db here
-            RealmAsyncTask realmAsyncTask = realm.executeTransactionAsync(new Realm.Transaction() {
+
+            final LKPData lkpData = DemoUtil.buildLKP(new Date(), currentUser.getUserId(), currentUser.getBranchId(), createdBy);
+            currentLDVNo = lkpData.getHeader().getLdvNo();
+
+            realm.executeTransaction(new Realm.Transaction() {
                 @Override
                 public void execute(Realm bgRealm) {
-                    LKPData lkpData = DemoUtil.buildLKP(new Date(), currentUser.getUserId(), currentUser.getBranchId(), createdBy);
-
-                    currentLDVNo = lkpData.getHeader().getLdvNo();
-
                     DataUtil.saveLKPToDB(bgRealm, collectorCode, createdBy, lkpData);
-
-                }
-            }, new Realm.Transaction.OnSuccess() {
-                @Override
-                public void onSuccess() {
-                    Utility.dismissDialog(mProgressDialog);
-
-                    if (listener != null)
-                        listener.onSuccess();
-                }
-            }, new Realm.Transaction.OnError() {
-                @Override
-                public void onError(Throwable error) {
-                    // Transaction failed and was automatically canceled.
-                    Toast.makeText(MainActivity.this, "Error while getting LKP", Toast.LENGTH_LONG).show();
-                    error.printStackTrace();
-
-                    Utility.dismissDialog(mProgressDialog);
-
-                    if (listener != null)
-                        listener.onFailure();
                 }
             });
 

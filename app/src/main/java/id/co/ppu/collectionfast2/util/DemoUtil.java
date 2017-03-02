@@ -5,10 +5,12 @@ import android.content.Context;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
+import java.util.UUID;
 
 import id.co.ppu.collectionfast2.pojo.LKPData;
 import id.co.ppu.collectionfast2.pojo.UserConfig;
 import id.co.ppu.collectionfast2.pojo.UserData;
+import id.co.ppu.collectionfast2.pojo.chat.TrnChatContact;
 import id.co.ppu.collectionfast2.pojo.master.MasterData;
 import id.co.ppu.collectionfast2.pojo.master.MstDelqReasons;
 import id.co.ppu.collectionfast2.pojo.master.MstLDVClassifications;
@@ -508,4 +510,28 @@ public class DemoUtil {
         return data;
 
     }
+
+    private static TrnChatContact generateTrnChatContact(String collCode, String nickName, String room, String statusMsg) {
+        TrnChatContact trn = new TrnChatContact();
+        trn.setCollCode(collCode);
+        trn.setAndroidId(UUID.randomUUID().toString());
+        trn.setContactType("BOT");
+        trn.setNickName(nickName);
+        trn.setRoom(room);
+        trn.setStatusMsg(statusMsg);
+
+        return trn;
+    }
+
+    public static List<TrnChatContact> buildDummyChatContacts() {
+
+        List<TrnChatContact> dummyData = new ArrayList<>();
+
+        dummyData.add(generateTrnChatContact("11111111", "Satu", "123", "Available"));
+        dummyData.add(generateTrnChatContact("22222222", "Dua", "123", "Semangatttt"));
+        dummyData.add(generateTrnChatContact("33333333", "Tiga", "123", "Aku galau"));
+
+        return dummyData;
+    }
+
 }

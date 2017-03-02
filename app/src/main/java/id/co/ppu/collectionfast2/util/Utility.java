@@ -14,6 +14,7 @@ import android.os.PowerManager;
 import android.provider.Settings;
 import android.telephony.TelephonyManager;
 import android.text.TextUtils;
+import android.util.DisplayMetrics;
 import android.view.ContextThemeWrapper;
 import android.view.View;
 import android.view.ViewGroup;
@@ -146,7 +147,7 @@ public class Utility {
     }
 
     public static void disableScreen(Activity act, boolean disable) {
-        // kumatiin per 22 feb 17, krn takutnya ngefek ke freeze dialog
+        // kumatiin per 22 feb 17, krn takutnya ngefek ke freeze dialog. please use loading bar instead
         if (true)
             return;
 
@@ -690,5 +691,29 @@ public class Utility {
     public static void showKeyboard(View v) {
         InputMethodManager imm = (InputMethodManager) v.getContext().getSystemService(Context.INPUT_METHOD_SERVICE);
         imm.toggleSoftInput(InputMethodManager.SHOW_FORCED, 0);
+    }
+
+    public static String getDeviceResolution(Context ctx) {
+        int density = ctx.getResources().getDisplayMetrics().densityDpi;
+        switch (density) {
+            case DisplayMetrics.DENSITY_MEDIUM:
+                return "mdpi";
+            case DisplayMetrics.DENSITY_HIGH:
+                return "hdpi";
+            case DisplayMetrics.DENSITY_LOW:
+                return "ldpi";
+            case DisplayMetrics.DENSITY_XHIGH:
+                return "xhdpi";
+            case DisplayMetrics.DENSITY_TV:
+                return "tv";
+            case DisplayMetrics.DENSITY_XXHIGH:
+                return "xxhdpi";
+            case DisplayMetrics.DENSITY_XXXHIGH:
+                return "xxxhdpi";
+            default:
+                return "Unknown";
+
+        }
+
     }
 }

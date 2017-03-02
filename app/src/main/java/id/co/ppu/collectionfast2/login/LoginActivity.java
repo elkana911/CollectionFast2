@@ -365,11 +365,6 @@ public class LoginActivity extends BasicActivity {
 
     }
 
-    @OnClick(R.id.sign_up_button)
-    public void onSignUpClick() {
-//        startActivity(new Intent(LoginActivity.this, RegisterActivity.class));
-    }
-
     private void attemptLogin() throws Exception {
 /*
         disabled due to complaints
@@ -479,7 +474,6 @@ public class LoginActivity extends BasicActivity {
      */
     private void isLatestVersion(final OnSuccessError listener) {
         if (!NetUtil.isConnected(this)) {
-//            Toast.makeText(this, getString(R.string.error_online_required), Toast.LENGTH_LONG).show();
 
             if (listener != null) {
                 listener.onSkip();
@@ -794,8 +788,6 @@ public class LoginActivity extends BasicActivity {
         Storage.savePreference(getApplicationContext(), Storage.KEY_SERVER_DEV_IP, ipDev);
         Storage.savePreference(getApplicationContext(), Storage.KEY_SERVER_DEV_PORT, portDev);
 
-//        final String username = mUserNameView.getText().toString();
-//        Storage.savePreference(getApplicationContext(), Storage.KEY_USER_NAME_LAST,  username);
         if (cbRememberPwd.isChecked()) {
             final String password = mPasswordView.getText().toString();
 
@@ -830,17 +822,6 @@ public class LoginActivity extends BasicActivity {
         } else {
             Utility.showDialog(this, "Invalid Login", getString(R.string.error_invalid_login));
         }
-        /*
-        if (prevUserData == null || !pwd.equals(password)) {
-            Utility.createAndShowProgressDialog(this, "Invalid Login", getString(R.string.error_invalid_login));
-        } else {
-                startMainActivity();
-        }*/
-    }
-
-    @OnClick(R.id.btnTestGPS)
-    public void onClickTestGPS() {
-
 
     }
 
@@ -938,10 +919,8 @@ public class LoginActivity extends BasicActivity {
         @Override
         public View getView(int position, View convertView, ViewGroup parent) {
             TextView tv = new TextView(this.ctx);
-//            TextView tv = (TextView) convertView.findViewById(R.id.nama);
             tv.setPadding(10, 20, 10, 20);
             tv.setTextColor(Color.BLACK);
-//            tv.setText(list.get(position).getRvbNo());
             tv.setText(list.get(position));
             tv.setTextSize(TypedValue.COMPLEX_UNIT_DIP, 16);
 

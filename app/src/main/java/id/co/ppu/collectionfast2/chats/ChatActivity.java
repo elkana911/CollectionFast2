@@ -317,7 +317,7 @@ public abstract class ChatActivity extends SyncActivity implements FragmentChatA
                         } else {
 //                    di MainActivity memang semua broadcast message pasti ditaruh di notificationbar sehingga harus new intent, onCreate tdk akan terbaca melainkan ke onNewIntent
                             Intent resultIntent = new Intent(getApplicationContext(), MainActivity.class);  //dont use ChatActivity or wont run after click on notification
-                            //must redefine supaya dieksekusi dari notificationbar
+                            //must redefine supaya bisa dieksekusi dari notificationbar
                             resultIntent.putExtras(extras);
 //                            resultIntent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
                             NotificationUtils.showNotificationMessage(ChatActivity.this, key_from, key_msg, "", resultIntent);
@@ -441,12 +441,13 @@ public abstract class ChatActivity extends SyncActivity implements FragmentChatA
 
                                         msg.setMessage(key_msg);
                                         msg.setMessageType(ConstChat.MESSAGE_TYPE_COMMON);
-                                        msg.setCreatedTimestamp(Utility.convertStringToDate(key_timestamp, "yyyyMMddHHmmss"));
+                                        msg.setCreatedTimestamp(Utility.convertStringToDate(key_timestamp, "yyyyMMddHHmmssSSS"));
 
                                     } else {
                                     }
                                     msg.setMessageStatus(msgStatus);
 //                        msg.setMessageStatus(ConstChat.MESSAGE_STATUS_READ_AND_OPENED);
+                                    // TODO: sepertinya perlu linkid, message ini me-respon message yg mana supaya urutannya benar
                                     realm.copyToRealmOrUpdate(msg);
                                 }
                             });
@@ -683,12 +684,8 @@ public abstract class ChatActivity extends SyncActivity implements FragmentChatA
 
             d.show(getSupportFragmentManager(), "dialog");
 
-
         } else if (frag instanceof FragmentChatWith) {
-
             addMessage((FragmentChatWith) frag);
-
-
         } else
             displayView(R.id.nav_loa);
     }
