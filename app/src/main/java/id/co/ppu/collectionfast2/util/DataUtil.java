@@ -82,7 +82,18 @@ public class DataUtil {
                 .findFirst() != null;
     }
     */
+    // generate runningnumber: 1 koletor 1 nomor per hari. maka triknya yyyymmdd<collectorId>
+    public static String generateRunningNumber(Date date, String collCode) {
+        //yyyyMMdd-runnningnumber2digit
+        StringBuilder sb = new StringBuilder();
+        sb.append(Utility.convertDateToString(date, "dd"))
+                .append(Utility.convertDateToString(date, "MM"))
+                .append(Utility.convertDateToString(date, "yyyy"))
+//                            .append(Utility.leftPad(runningNumber, 3));
+                .append(collCode);
 
+        return sb.toString();
+    }
 
     public static boolean isLDVHeaderTodayOpen(Realm realm, String collCode) {
         final String createdBy = "JOB" + Utility.convertDateToString(new Date(), "yyyyMMdd");

@@ -19,7 +19,6 @@ import android.util.Log;
 import android.util.TypedValue;
 import android.view.View;
 import android.view.ViewGroup;
-import android.view.animation.Animation;
 import android.view.animation.AnimationUtils;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
@@ -152,8 +151,8 @@ public class LoginActivity extends BasicActivity {
             boolean b = DataUtil.isMasterDataDownloaded(this, this.realm);
         }
 
-        Animation animZoomIn = AnimationUtils.loadAnimation(this, R.anim.zoom_in);
-        imageLogo.startAnimation(animZoomIn);
+//        Animation animZoomIn = AnimationUtils.loadAnimation(this, R.anim.zoom_in);
+//        imageLogo.startAnimation(animZoomIn);
 
         tilUsername.startAnimation(AnimationUtils.loadAnimation(this, R.anim.slide_in_left));
         tilPassword.startAnimation(AnimationUtils.loadAnimation(this, R.anim.slide_in_right));

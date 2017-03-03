@@ -47,7 +47,7 @@
     <string name="error_sync_failed_with_msg">Sinkronisasi Gagal.\n%1$s</string>
     <string name="error_lkp_empty">Tidak ada LKP untuk hari ini</string>
 
-    <string name="message_please_wait">Please wait...</string>
+    <string name="message_please_wait">Sedang diproses...</string>
     <string name="message_sync_start">Mulai Sinkronisasi...</string>
     <string name="message_sync_finish">Sinkronisasi Selesai.</string>
     <string name="message_no_gps">Tidak bisa mendapatkan lokasi. Mohon aktifkan GPS.</string>

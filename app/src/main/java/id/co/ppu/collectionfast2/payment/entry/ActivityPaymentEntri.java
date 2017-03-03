@@ -49,6 +49,7 @@ import id.co.ppu.collectionfast2.pojo.trn.TrnLDVHeader;
 import id.co.ppu.collectionfast2.pojo.trn.TrnRVB;
 import id.co.ppu.collectionfast2.pojo.trn.TrnRVColl;
 import id.co.ppu.collectionfast2.pojo.trn.TrnRVCollPK;
+import id.co.ppu.collectionfast2.util.DataUtil;
 import id.co.ppu.collectionfast2.util.NetUtil;
 import id.co.ppu.collectionfast2.util.PoAUtil;
 import id.co.ppu.collectionfast2.util.Storage;
@@ -720,16 +721,9 @@ public class ActivityPaymentEntri extends BasicActivity implements FragmentActiv
                         realm.copyToRealmOrUpdate(userConfig);
                     }
 */
-                    // generate runningnumber: 1 koletor 1 nomor per hari. maka triknya yyyymmdd<collectorId>
-                    StringBuilder sb = new StringBuilder();
-                    sb.append(Utility.convertDateToString(serverDate, "dd"))
-                            .append(Utility.convertDateToString(serverDate, "MM"))
-                            .append(Utility.convertDateToString(serverDate, "yyyy"))
-                            .append(collectorId);
-//                            .append(Utility.leftPad(runningNumber, 3));
 
                     TrnRVCollPK trnRVCollPK = realm.createObject(TrnRVCollPK.class);
-                    trnRVCollPK.setRvCollNo(sb.toString());
+                    trnRVCollPK.setRvCollNo(DataUtil.generateRunningNumber(serverDate, collectorId));
                     trnRVCollPK.setRbvNo(rvbNo);
 
                     trnRVColl = realm.createObject(TrnRVColl.class);

@@ -20,7 +20,6 @@ import id.co.ppu.collectionfast2.component.BasicActivity;
 import id.co.ppu.collectionfast2.component.RVBAdapter;
 import id.co.ppu.collectionfast2.location.Location;
 import id.co.ppu.collectionfast2.pojo.ServerInfo;
-import id.co.ppu.collectionfast2.pojo.UserConfig;
 import id.co.ppu.collectionfast2.pojo.UserData;
 import id.co.ppu.collectionfast2.pojo.master.MstParam;
 import id.co.ppu.collectionfast2.pojo.sync.SyncTrnRVColl;
@@ -30,6 +29,7 @@ import id.co.ppu.collectionfast2.pojo.trn.TrnLDVDetails;
 import id.co.ppu.collectionfast2.pojo.trn.TrnRVB;
 import id.co.ppu.collectionfast2.pojo.trn.TrnRVColl;
 import id.co.ppu.collectionfast2.pojo.trn.TrnRVCollPK;
+import id.co.ppu.collectionfast2.util.DataUtil;
 import id.co.ppu.collectionfast2.util.NetUtil;
 import id.co.ppu.collectionfast2.util.PoAUtil;
 import id.co.ppu.collectionfast2.util.Storage;
@@ -218,7 +218,6 @@ public class ActivityPaymentReceive extends BasicActivity {
         // reset errors
         etPenerimaan.setError(null);
         etDenda.setError(null);
-//        etDendaBerjalan.setError(null);
         etBiayaTagih.setError(null);
         etDanaSosial.setError(null);
         etPlatform.setError(null);
@@ -238,7 +237,7 @@ public class ActivityPaymentReceive extends BasicActivity {
             cancel = true;
         }
 
-        final String rvbNo = spNoRVB.getSelectedItem().toString();
+        final String rvbNo = spNoRVB.getSelectedItem().toString(); // contoh: 0202201721120478 (16 digit)
         TrnRVB selectedRVB = realm.where(TrnRVB.class)
                 .equalTo("rvbNo", rvbNo)
                 .findFirst();
@@ -418,7 +417,7 @@ public class ActivityPaymentReceive extends BasicActivity {
         }
 
         /*
-            10feb17 bug fix denda ga boleh lebih besar dari penerimaan
+            10feb17 bug fix denda ga boleh lebih besar dari penerimaan ??
         if (Utility.isValidMoney(penerimaan) && Utility.isValidMoney(denda)) {
             long penerimaanValue = Long.parseLong(penerimaan);
             long dendaValue = Long.parseLong(denda);
@@ -532,19 +531,8 @@ public class ActivityPaymentReceive extends BasicActivity {
 
                 if (trnRVColl == null) {
 
-                    // generate runningnumber: 1 koletor 1 nomor per hari. maka triknya yyyymmdd<collectorId>
-                    UserConfig userConfig = realm.where(UserConfig.class).findFirst();
-
-                    //yyyyMMdd-runnningnumber2digit
-                    StringBuilder sb = new StringBuilder();
-                    sb.append(Utility.convertDateToString(serverDate, "dd"))
-                            .append(Utility.convertDateToString(serverDate, "MM"))
-                            .append(Utility.convertDateToString(serverDate, "yyyy"))
-//                            .append(Utility.leftPad(runningNumber, 3));
-                            .append(collectorId);
-
                     TrnRVCollPK trnRVCollPK = new TrnRVCollPK();
-                    trnRVCollPK.setRvCollNo(sb.toString());
+                    trnRVCollPK.setRvCollNo(DataUtil.generateRunningNumber(serverDate, collectorId));
                     trnRVCollPK.setRbvNo(rvbNo);
 
                     trnRVColl = new TrnRVColl();
