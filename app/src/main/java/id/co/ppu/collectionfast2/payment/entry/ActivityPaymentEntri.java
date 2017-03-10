@@ -1,6 +1,7 @@
 package id.co.ppu.collectionfast2.payment.entry;
 
 import android.app.ProgressDialog;
+import android.content.Intent;
 import android.graphics.Color;
 import android.net.Uri;
 import android.os.AsyncTask;
@@ -35,6 +36,7 @@ import id.co.ppu.collectionfast2.R;
 import id.co.ppu.collectionfast2.component.BasicActivity;
 import id.co.ppu.collectionfast2.component.RVBAdapter;
 import id.co.ppu.collectionfast2.location.Location;
+import id.co.ppu.collectionfast2.poa.ActivityPoA;
 import id.co.ppu.collectionfast2.pojo.DisplayTrnContractBuckets;
 import id.co.ppu.collectionfast2.pojo.ServerInfo;
 import id.co.ppu.collectionfast2.pojo.UserConfig;
@@ -68,8 +70,9 @@ public class ActivityPaymentEntri extends BasicActivity implements FragmentActiv
     public static final String PARAM_CONTRACT_NO = "contractNo";
     public static final String PARAM_LKP_DATE = "lkpDate";
     public static final String PARAM_LDV_NO = "ldvNo";
+    private static final String BIAYA_TAGIH_DEFAULT = "10000";
 
-    private String contractNo = null;
+//    private String contractNo = null;
     private String collectorId = null;
     private Date lkpDate = null;
     private String ldvNo = null;
@@ -148,7 +151,7 @@ public class ActivityPaymentEntri extends BasicActivity implements FragmentActiv
         Bundle extras = getIntent().getExtras();
         if (extras != null) {
             this.ldvNo = extras.getString(PARAM_LDV_NO);
-            this.contractNo = extras.getString(PARAM_CONTRACT_NO);
+            String contractNo = extras.getString(PARAM_CONTRACT_NO);
 
             long lkpdate = extras.getLong(PARAM_LKP_DATE);
             this.lkpDate = new Date(lkpdate);
@@ -157,7 +160,7 @@ public class ActivityPaymentEntri extends BasicActivity implements FragmentActiv
 
             ivDropDown.setVisibility(View.GONE);
 
-            onContractSelected(this.contractNo);
+            onContractSelected(contractNo);
 
         } else {
             UserData userData = (UserData) Storage.getObjPreference(getApplicationContext(), Storage.KEY_USER, UserData.class);
@@ -175,6 +178,7 @@ public class ActivityPaymentEntri extends BasicActivity implements FragmentActiv
                         .findFirst();
 
                 this.ldvNo = trnLDVHeader.getLdvNo();
+                this.lkpDate = trnLDVHeader.getLdvDate();
             }
 
             /*
@@ -340,11 +344,28 @@ public class ActivityPaymentEntri extends BasicActivity implements FragmentActiv
             getSupportActionBar().setTitle(R.string.title_activity_payment_entry);
         }
 
-        etBiayaTagih.setText("10000");
+        etBiayaTagih.setText(BIAYA_TAGIH_DEFAULT);
 
         // ATTENTION: This was auto-generated to implement the App Indexing API.
         // See https://g.co/AppIndexing/AndroidStudio for more information.
         client = new GoogleApiClient.Builder(this).addApi(AppIndex.API).build();
+    }
+
+    private void resetForm() {
+        etContractNo.setText(null);
+        etPlatform.setText(null);
+        etAngsuran.setText(null);
+        etAngsuranKe.setText(null);
+        etDenda.setText(null);
+        etDanaSosial.setText(null);
+        etPenerimaan.setText(null);
+        etCatatan.setText(null);
+
+        if (getSupportActionBar() != null) {
+            getSupportActionBar().setSubtitle(null);
+        }
+
+        etBiayaTagih.setText(BIAYA_TAGIH_DEFAULT);
     }
 
     private void buildRVB() {
@@ -383,7 +404,7 @@ public class ActivityPaymentEntri extends BasicActivity implements FragmentActiv
     public void onContractSelected(String contractNo) {
 
         // load last save
-        TrnRVColl trnRVColl = isExists(this.realm);
+        TrnRVColl trnRVColl = isExists(this.realm, contractNo);
 
         if (trnRVColl != null) {
             spNoRVB.setAdapter(null);
@@ -410,7 +431,7 @@ public class ActivityPaymentEntri extends BasicActivity implements FragmentActiv
             etPenerimaan.setText(null);
             etDenda.setText(String.valueOf(0));
             etDendaBerjalan.setText(String.valueOf(0));
-            etBiayaTagih.setText("10000");
+            etBiayaTagih.setText(BIAYA_TAGIH_DEFAULT);
 
             buildRVB();
 
@@ -424,7 +445,7 @@ public class ActivityPaymentEntri extends BasicActivity implements FragmentActiv
 
         String createdBy = "JOB" + Utility.convertDateToString(this.lkpDate, "yyyyMMdd");
 
-        this.contractNo = contractNo;
+//        this.contractNo = contractNo;
         etContractNo.setText(contractNo);
 
         TrnLDVHeader trnLDVHeader = realm.where(TrnLDVHeader.class)
@@ -467,9 +488,23 @@ public class ActivityPaymentEntri extends BasicActivity implements FragmentActiv
         etAngsuran.setText(Utility.convertLongToRupiah(angsuran));
 
         etPenerimaan.requestFocus();
+
+        if (trnRVColl == null) {
+            Intent i = new Intent((this), ActivityPoA.class);
+
+//            String json = new Gson().toJson(dtl);
+
+//            i.putExtra(ActivityPoA.PARAM_LKP_DETAIL, json);
+            i.putExtra(ActivityPoA.PARAM_COLLECTOR_ID, this.collectorId);
+            i.putExtra(ActivityPoA.PARAM_CONTRACT_NO, contractNo);
+            i.putExtra(ActivityPoA.PARAM_LDV_NO, this.ldvNo);
+
+            startActivityForResult(i, 66);
+
+        }
     }
 
-    private TrnRVColl isExists(Realm realm) {
+    private TrnRVColl isExists(Realm realm, String contractNo) {
         return realm.where(TrnRVColl.class)
                 .equalTo("createdBy", Utility.LAST_UPDATE_BY)
                 .equalTo("contractNo", contractNo)
@@ -480,7 +515,9 @@ public class ActivityPaymentEntri extends BasicActivity implements FragmentActiv
     @OnClick(R.id.btnSave)
     public void onClickSave() {
 
-        boolean editMode = isExists(this.realm) != null;
+        final String contractNo = etContractNo.getText().toString().trim();
+
+        boolean editMode = isExists(this.realm, contractNo) != null;
 
         // reset errors
         etPenerimaan.setError(null);
@@ -505,8 +542,8 @@ public class ActivityPaymentEntri extends BasicActivity implements FragmentActiv
             cancel = true;
         }
 
-        final String rvbNo = spNoRVB.getSelectedItem().toString();
-        TrnRVB selectedRVB = realm.where(TrnRVB.class)
+        final String rvbNo = spNoRVB.getSelectedItem() == null ? null : spNoRVB.getSelectedItem().toString();
+        TrnRVB selectedRVB = rvbNo == null ? null : realm.where(TrnRVB.class)
                 .equalTo("rvbNo", rvbNo)
                 .findFirst();
 
@@ -563,10 +600,10 @@ public class ActivityPaymentEntri extends BasicActivity implements FragmentActiv
 
                 long biayaTagihValue = Long.parseLong(biayaTagih);
 
-                if (biayaTagihValue == 0 || biayaTagihValue == 10000) {
+                if (biayaTagihValue == 0 || biayaTagihValue == Long.parseLong(BIAYA_TAGIH_DEFAULT)) {
 
                 } else {
-                    etBiayaTagih.setError(getString(R.string.error_coll_fee_range));
+                    etBiayaTagih.setError(getString(R.string.error_coll_fee_ranges, BIAYA_TAGIH_DEFAULT));
                     focusView = etBiayaTagih;
                     cancel = true;
                 }
@@ -696,7 +733,7 @@ public class ActivityPaymentEntri extends BasicActivity implements FragmentActiv
                 realm.copyToRealmOrUpdate(trnRVB);
 
                 // just in case re-entry need to query
-                TrnRVColl trnRVColl = isExists(realm);
+                TrnRVColl trnRVColl = isExists(realm, contractNo);
 
                 if (trnRVColl == null) {
 
@@ -844,16 +881,22 @@ public class ActivityPaymentEntri extends BasicActivity implements FragmentActiv
     public void onTakePoA() {
         PoAUtil.callCameraIntent(this, collectorId, ldvNo, contractNo);
     }
-
+*/
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
 
         // data will return a null intent and the picture is in the URI that you passed in.
-        if (resultCode != RESULT_OK) {
-            return;
-        }
+        if (requestCode == 66) {
 
+            if (resultCode != RESULT_OK) {
+                //brarti user cancel poa, maka harus direset isinya
+                resetForm();
+                return;
+            }
+
+        }
+/*
         File file = PoAUtil.postCameraIntoCache(this, collectorId, contractNo);
 
         if (file != null) {
@@ -861,9 +904,8 @@ public class ActivityPaymentEntri extends BasicActivity implements FragmentActiv
             flTakePhoto.setVisibility(View.GONE);
             svMain.setVisibility(View.VISIBLE);
         }
-
+*/
     }
-    */
 
 }
 

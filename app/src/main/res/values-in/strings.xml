@@ -42,6 +42,7 @@
     <string name="spinner_please_select"><![CDATA[<Please select>]]></string>
     <string name="error_invalid_phone">Nomor telepon tidak valid</string>
     <string name="error_coll_fee_range">Input dengan nilai 0 atau 10000</string>
+    <string name="error_coll_fee_ranges">Input dengan nilai 0 atau %1$s</string>
     <string name="error_ptp_max_month">Janji bayar harus bulan berjalan</string>
     <string name="error_ptp_end_month">Janji bayar tidak bisa diakhir bulan</string>
     <string name="error_sync_failed_with_msg">Sinkronisasi Gagal.\n%1$s</string>

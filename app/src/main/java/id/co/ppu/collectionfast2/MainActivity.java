@@ -173,59 +173,65 @@ public class MainActivity extends ChatActivity
             promptSnackBar("WARNING! You're currently signed in as DEMO. Make sure you're OFFLINE");
         }
 
-        // handle mobile setup
-        final ProgressDialog mProgressDialog = Utility.createAndShowProgressDialog(this, getString(R.string.message_please_wait));
+        if (!NetUtil.isConnected(this)
+                && DemoUtil.isDemo(this)) {
 
-        ApiInterface fastService =
-                ServiceGenerator.createService(ApiInterface.class, Utility.buildUrl(Storage.getPreferenceAsInt(getApplicationContext(), Storage.KEY_SERVER_ID, 0)));
+        } else {
+            // handle mobile setup
+            final ProgressDialog mProgressDialog = Utility.createAndShowProgressDialog(this, getString(R.string.message_please_wait));
 
-        Call<ResponseGetMobileConfig> call = fastService.getMobileConfig();
-        call.enqueue(new Callback<ResponseGetMobileConfig>() {
-            @Override
-            public void onResponse(Call<ResponseGetMobileConfig> call, Response<ResponseGetMobileConfig> response) {
-                Utility.dismissDialog(mProgressDialog);
+            ApiInterface fastService =
+                    ServiceGenerator.createService(ApiInterface.class, Utility.buildUrl(Storage.getPreferenceAsInt(getApplicationContext(), Storage.KEY_SERVER_ID, 0)));
 
-                if (response.isSuccessful()) {
-                    final ResponseGetMobileConfig respGetMobileCfg = response.body();
+            Call<ResponseGetMobileConfig> call = fastService.getMobileConfig();
+            call.enqueue(new Callback<ResponseGetMobileConfig>() {
+                @Override
+                public void onResponse(Call<ResponseGetMobileConfig> call, Response<ResponseGetMobileConfig> response) {
+                    Utility.dismissDialog(mProgressDialog);
 
-                    if (respGetMobileCfg == null) {
-                        // silent
-                        return;
-                    }
+                    if (response.isSuccessful()) {
+                        final ResponseGetMobileConfig respGetMobileCfg = response.body();
 
-                    if (respGetMobileCfg.getError() != null) {
-                        // silent
-                    } else {
+                        if (respGetMobileCfg == null) {
+                            // silent
+                            return;
+                        }
 
-                        if (respGetMobileCfg.getData() == null) {
+                        if (respGetMobileCfg.getError() != null) {
                             // silent
                         } else {
-                            realm.executeTransaction(new Realm.Transaction() {
-                                @Override
-                                public void execute(Realm realm) {
-                                    realm.copyToRealmOrUpdate(respGetMobileCfg.getData());
-                                }
-                            });
 
-                            if (isGPSMandatory(realm)) {
-                                if (!id.co.ppu.collectionfast2.location.Location.isLocationDetected(MainActivity.this)) {
-                                    showSnackBar(getString(R.string.message_no_gps));
-                                    id.co.ppu.collectionfast2.location.Location.pleaseTurnOnGPS(MainActivity.this);
+                            if (respGetMobileCfg.getData() == null) {
+                                // silent
+                            } else {
+                                realm.executeTransaction(new Realm.Transaction() {
+                                    @Override
+                                    public void execute(Realm realm) {
+                                        realm.copyToRealmOrUpdate(respGetMobileCfg.getData());
+                                    }
+                                });
+
+                                if (isGPSMandatory(realm)) {
+                                    if (!id.co.ppu.collectionfast2.location.Location.isLocationDetected(MainActivity.this)) {
+                                        showSnackBar(getString(R.string.message_no_gps));
+                                        id.co.ppu.collectionfast2.location.Location.pleaseTurnOnGPS(MainActivity.this);
+                                    }
                                 }
                             }
                         }
+                    } else {
+                        // silent
                     }
-                } else {
-                    // silent
                 }
-            }
 
-            @Override
-            public void onFailure(Call<ResponseGetMobileConfig> call, Throwable t) {
-                Utility.dismissDialog(mProgressDialog);
+                @Override
+                public void onFailure(Call<ResponseGetMobileConfig> call, Throwable t) {
+                    Utility.dismissDialog(mProgressDialog);
 
-            }
-        });
+                }
+            });
+
+        }
 
         String androidId = getAndroidToken();
 
@@ -1036,8 +1042,6 @@ public class MainActivity extends ChatActivity
 
         fillRequest(Utility.ACTION_GET_LKP, requestLKP);
 
-        final ProgressDialog mProgressDialog = Utility.createAndShowProgressDialog(this, "Getting your LKP from server.\nPlease wait...");
-
         if (!NetUtil.isConnected(this)
                 && DemoUtil.isDemo(this)) {
 
@@ -1051,8 +1055,13 @@ public class MainActivity extends ChatActivity
                 }
             });
 
+            if (listener != null)
+                listener.onSuccess();
+
             return;
         }
+
+        final ProgressDialog mProgressDialog = Utility.createAndShowProgressDialog(this, "Getting your LKP from server.\nPlease wait...");
 
         ApiInterface fastService =
                 ServiceGenerator.createService(ApiInterface.class, Utility.buildUrl(Storage.getPreferenceAsInt(getApplicationContext(), Storage.KEY_SERVER_ID, 0)));
@@ -1533,6 +1542,15 @@ public class MainActivity extends ChatActivity
             }
         }
 
+        /* propose cancel, dipindah di activitypaymententri saat user pilih kontrak
+        Intent i = new Intent((this), ActivityPoA.class);
+
+        i.putExtra(ActivityPoA.PARAM_COLLECTOR_ID, collectorId);
+        i.putExtra(ActivityPoA.PARAM_LDV_NO, trnLDVHeader.getLdvNo());
+
+        startActivityForResult(i, 67);
+        */
+
         Intent i = new Intent(this, ActivityPaymentEntri.class);
         // DO NOT SEND ANY PARAMs !
         startActivity(i);
@@ -1588,6 +1606,12 @@ public class MainActivity extends ChatActivity
                     DisplayTrnLDVDetails dtl = new Gson().fromJson(json, DisplayTrnLDVDetails.class);
                     showLKPDetail(dtl);
                 }
+                break;
+            case 67:
+                Intent i = new Intent(this, ActivityPaymentEntri.class);
+//                         DO NOT SEND ANY PARAMs !
+                startActivity(i);
+
                 break;
 
         }

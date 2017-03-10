@@ -61,9 +61,9 @@ public class ActivityPoA extends BasicActivity {
 
         Bundle extras = getIntent().getExtras();
         if (extras != null) {
-            this.lkpDetail = extras.getString(PARAM_LKP_DETAIL);
+            this.lkpDetail = extras.getString(PARAM_LKP_DETAIL);        // bisa kosong di paymententri
             this.collCode = extras.getString(PARAM_COLLECTOR_ID);
-            this.contractNo = extras.getString(PARAM_CONTRACT_NO);
+            this.contractNo = extras.getString(PARAM_CONTRACT_NO);  // bisa kosong di paymententry
             this.ldvNo = extras.getString(PARAM_LDV_NO);
         }
 

@@ -23,6 +23,7 @@ import id.co.ppu.collectionfast2.pojo.trn.TrnBastbj;
 import id.co.ppu.collectionfast2.pojo.trn.TrnCollectAddr;
 import id.co.ppu.collectionfast2.pojo.trn.TrnCollectAddrPK;
 import id.co.ppu.collectionfast2.pojo.trn.TrnContractBuckets;
+import id.co.ppu.collectionfast2.pojo.trn.TrnContractBucketsPK;
 import id.co.ppu.collectionfast2.pojo.trn.TrnLDVComments;
 import id.co.ppu.collectionfast2.pojo.trn.TrnLDVDetails;
 import id.co.ppu.collectionfast2.pojo.trn.TrnLDVDetailsPK;
@@ -117,7 +118,15 @@ public class DemoUtil {
         return obj;
     }
 
-    private static TrnLDVDetails generateTrnLDVDetail(String ldvNo, long seqNo, String period, String contractNo, String custNo, String custName, Long ovdInstNo, Date ovdDueDate, Date dueDate, Long instNo, Long prncAmbc, Long intrAmbc, Long penaltyAmbc, Long prncAC, Long intrAC, Long penaltyAC, String ldvFlag, String workStatus, Long prncOTS, Date startedTimestamp, String createdBy, Date createdTimestamp, String occupation, String subOccupation, Long monthInst, Long daysIntrAmbc, Long collectionFee, Date lastPaidDate, Long dpd) {
+    private static TrnLDVDetails generateTrnLDVDetail(String ldvNo, long seqNo, String period
+                                                , String contractNo, String custNo, String custName
+                                                , Long ovdInstNo, Date ovdDueDate, Date dueDate
+                                                , Long instNo, Long prncAmbc, Long intrAmbc, Long penaltyAmbc
+                                                , Long prncAC, Long intrAC, Long penaltyAC, String ldvFlag
+                                                , String workStatus, Long prncOTS, Date startedTimestamp
+                                                , String createdBy, Date createdTimestamp, String occupation
+                                                , String subOccupation, Long monthInst, Long daysIntrAmbc
+                                                , Long collectionFee, Date lastPaidDate, Long dpd) {
         TrnLDVDetails obj = new TrnLDVDetails();
 
         TrnLDVDetailsPK pk = new TrnLDVDetailsPK();
@@ -477,7 +486,13 @@ public class DemoUtil {
         List<TrnBastbj> bastbjs = new ArrayList<TrnBastbj>();
         data.setBastbj(bastbjs);
 
+        String supervisorId = "21080093";
         List<TrnContractBuckets> buckets = new ArrayList<TrnContractBuckets>();
+        buckets.add(generateTrnContractBucket(period, "11000000327715", officeCode, supervisorId, collCode, "0000021706", "MAPURO", 33L, 18L, Utility.convertStringToDate("20170220", "yyyyMMdd"), Utility.convertStringToDate("20170218", "yyyyMMdd"), Utility.convertStringToDate("20170309", "yyyyMMdd"), 19L, -20L, 441279L, 368721L, 423768L, null, 4000L, 9347017L, "S", startedTimestamp, createdBy, createdTimestamp, "1100017J007513", 423768L, 386232L, 10000L, "K"));
+
+        buckets.add(generateTrnContractBucket(period, "11000000470415", officeCode, supervisorId, collCode, "0000022491", "ZULKIFLI", 26L, 14L, Utility.convertStringToDate("20170206", "yyyyMMdd"), Utility.convertStringToDate("20170206", "yyyyMMdd"), Utility.convertStringToDate("20170304", "yyyyMMdd"), 15L, -4L, 516967L, 112087L, 495983L, null, 8500L, 8367494L, "A", startedTimestamp, createdBy, createdTimestamp, "1201017R002195", 495983L, 354017L, 10000L, "K"));
+
+        buckets.add(generateTrnContractBucket(period, "11000000523316", officeCode, supervisorId, collCode, "0000028314", "RASIMAN", 33L, 14L, Utility.convertStringToDate("20170209", "yyyyMMdd"), Utility.convertStringToDate("20170206", "yyyyMMdd"), Utility.convertStringToDate("20170306", "yyyyMMdd"), 2L, -6L, 977696L, 1116304L, 941163L, null, 0L, 29700000L, "W", startedTimestamp, createdBy, createdTimestamp, "1100017R003548", 941163L, 1152837L, 10000L, "K"));
         data.setBuckets(buckets);
 
         List<HistInstallments> histInstallments = new ArrayList<HistInstallments>();
@@ -509,6 +524,54 @@ public class DemoUtil {
 
         return data;
 
+    }
+
+    private static TrnContractBuckets generateTrnContractBucket(String period, String contractNo, String officeCode, String supervisorId, String collCode, String custNo, String custName
+            , Long top, Long instNo, Date dueDate, Date paidDate, Date ovdDueDate, Long ovdInstNo, Long dpd, Long prncAmt, Long intrAmt, Long prncAC, Long intrAC, Long penaltyAC, Long prncOTS, String lkpStatus, Date startedTimestamp, String createdBy, Date createdTimestamp, String rvNo, Long prncAmbc, Long intrAmbc, Long collectionFee, String platform) {
+        TrnContractBuckets trn = new TrnContractBuckets();
+
+        TrnContractBucketsPK pk = new TrnContractBucketsPK();
+        pk.setContractNo(contractNo);
+        pk.setOfficeCode(officeCode);
+        pk.setPeriod(period);
+        trn.setPk(pk);
+
+        trn.setCollectionFee(collectionFee);
+        trn.setCollectorId(collCode);
+        trn.setContractStatus("AC");
+        trn.setCustName(custName);
+        trn.setCustNo(custNo);
+        trn.setDpd(dpd);
+        trn.setDueDate(dueDate);
+        trn.setInstNo(instNo);
+        trn.setIntrAc(intrAC);
+        trn.setIntrAmt(intrAmt);
+        trn.setIntrAMBC(intrAmbc);
+
+        trn.setDanaSosial(0L);
+        trn.setLkpStatus(lkpStatus);
+        trn.setOvdDueDate(ovdDueDate);
+        trn.setOvdInstNo(ovdInstNo);
+        trn.setPlatform(platform);
+
+        trn.setDpd(dpd);
+        trn.setPenaltyAC(penaltyAC);
+        trn.setPaidDate(paidDate);
+
+        trn.setPrncAc(prncAC);
+        trn.setPrncAMBC(prncAmbc);
+        trn.setPrncAmt(prncAmt);
+        trn.setPrncOTS(prncOTS);
+
+        trn.setRvNo(rvNo);
+        trn.setSupervisorId(supervisorId);
+        trn.setTop(top);
+
+        trn.setStartedTimestamp(startedTimestamp);
+        trn.setCreatedBy(createdBy);
+        trn.setCreatedTimestamp(createdTimestamp);
+
+        return trn;
     }
 
     private static TrnChatContact generateTrnChatContact(String collCode, String nickName, String room, String statusMsg) {

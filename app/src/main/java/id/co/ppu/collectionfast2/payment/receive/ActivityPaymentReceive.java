@@ -237,8 +237,8 @@ public class ActivityPaymentReceive extends BasicActivity {
             cancel = true;
         }
 
-        final String rvbNo = spNoRVB.getSelectedItem().toString(); // contoh: 0202201721120478 (16 digit)
-        TrnRVB selectedRVB = realm.where(TrnRVB.class)
+        final String rvbNo = spNoRVB.getSelectedItem() == null ? null : spNoRVB.getSelectedItem().toString(); // contoh: 0202201721120478 (16 digit)
+        TrnRVB selectedRVB = rvbNo == null ? null : realm.where(TrnRVB.class)
                 .equalTo("rvbNo", rvbNo)
                 .findFirst();
 
