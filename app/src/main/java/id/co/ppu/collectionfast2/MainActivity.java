@@ -3057,13 +3057,6 @@ public class MainActivity extends ChatActivity
      */
     private int uploadPoAOneByOne(OnSuccessError listener) {
 
-        File[] poaFilesBuffer = PoAUtil.getPoAFiles();
-        if (poaFilesBuffer == null || poaFilesBuffer.length < 1) {
-            if (listener != null)
-                listener.onFailure(new RuntimeException("Photo On Arrival missing!"));
-            return 0;
-        }
-
         List<TrnFlagTimestamp> list = new ArrayList<>();
         Realm r = Realm.getDefaultInstance();
         try {
@@ -3075,11 +3068,13 @@ public class MainActivity extends ChatActivity
 
         // validate
         String errorMsg = "Cannot send PoA to Server";
-        boolean valid = true;
 
         // surely, data is more important
         if (list.size() < 1) {
-            valid = false;
+            if (listener != null)
+                listener.onSuccess("Nothing PoA sent");
+
+            return 0;
         }
 
         /*
@@ -3093,13 +3088,6 @@ public class MainActivity extends ChatActivity
         }
         */
 
-        if (!valid) {
-            if (listener != null)
-                listener.onFailure(new RuntimeException("Nothing PoA sent"));
-
-            return 0;
-        }
-
         /*
         if (list.size() != poaFiles.length) {
             // send error to server
@@ -3112,6 +3100,15 @@ public class MainActivity extends ChatActivity
             valid = false;
         } else
         */
+        File[] poaFilesBuffer = PoAUtil.getPoAFiles();
+        if (poaFilesBuffer == null || poaFilesBuffer.length < 1) {
+            if (listener != null)
+                listener.onFailure(new RuntimeException("Photo On Arrival missing!"));
+
+            return 0;
+        }
+
+        boolean valid = true;
 
         File[] poaFiles = new File[list.size()];
         for (int i = 0; i < list.size(); i++) {

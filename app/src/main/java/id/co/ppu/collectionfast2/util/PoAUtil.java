@@ -284,6 +284,11 @@ public class PoAUtil {
             // getPoAFile(null, collCode, contractNo)
         }
 
+        realm.beginTransaction();
+        boolean b = all.deleteAllFromRealm();
+        realm.commitTransaction();
+
+
     }
 
     /**
