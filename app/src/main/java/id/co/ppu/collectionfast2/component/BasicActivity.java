@@ -1,19 +1,26 @@
 package id.co.ppu.collectionfast2.component;
 
+import android.app.AlertDialog;
+import android.content.Context;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.res.Configuration;
 import android.content.res.Resources;
 import android.os.Bundle;
 import android.support.v7.app.AppCompatActivity;
+import android.telephony.TelephonyManager;
 import android.text.TextUtils;
 import android.view.MenuItem;
+import android.widget.Toast;
 
 import com.google.firebase.iid.FirebaseInstanceId;
 
+import java.lang.reflect.Method;
 import java.util.Date;
 import java.util.Locale;
 
 import id.co.ppu.collectionfast2.R;
+import id.co.ppu.collectionfast2.listener.OnRootListener;
 import id.co.ppu.collectionfast2.pojo.ServerInfo;
 import id.co.ppu.collectionfast2.pojo.UserData;
 import id.co.ppu.collectionfast2.pojo.master.MstMobileSetup;
@@ -26,6 +33,7 @@ import id.co.ppu.collectionfast2.rest.request.RequestBasic;
 import id.co.ppu.collectionfast2.settings.SettingsActivity;
 import id.co.ppu.collectionfast2.util.DataUtil;
 import id.co.ppu.collectionfast2.util.PoAUtil;
+import id.co.ppu.collectionfast2.util.RootUtil;
 import id.co.ppu.collectionfast2.util.Storage;
 import id.co.ppu.collectionfast2.util.Utility;
 import io.realm.Realm;
@@ -185,6 +193,24 @@ public class BasicActivity extends AppCompatActivity {
         return androidId;
     }
 
+    protected String getDebugInfo() {
+        TelephonyManager mngr = (TelephonyManager)getSystemService(Context.TELEPHONY_SERVICE);
+
+        StringBuffer sb = new StringBuffer();
+        sb.append("imei=").append(mngr.getDeviceId());
+        try {
+            Class<?> c = Class.forName("android.os.SystemProperties");
+            Method get = c.getMethod("get", String.class);
+            String serial1 = (String) get.invoke(c, "ril.serialnumber");
+            sb.append(",").append("deviceSN=").append(serial1);
+        } catch (Exception ignored) {
+            ignored.printStackTrace();
+        }
+
+        return sb.toString();
+
+    }
+
     //http://www.sureshjoshi.com/mobile/changing-android-locale-programmatically/
     protected boolean changeLocale(String language) {
         Locale locale = new Locale(language);
@@ -198,6 +224,64 @@ public class BasicActivity extends AppCompatActivity {
         resources.updateConfiguration(configuration, resources.getDisplayMetrics());
 
         return true;
+    }
+
+    protected void checkRooted(final OnRootListener listener) {
+        if (!RootUtil.isDeviceRooted()) {
+
+            if (listener != null)
+                listener.asPureDevice();
+
+            return;
+        }
+
+        Toast.makeText(this, getString(R.string.error_rooted), Toast.LENGTH_SHORT).show();
+
+        if (!Utility.developerMode) {
+
+            if (listener != null) {
+                resetData();
+
+                listener.asRootDevice();
+            }
+
+            return;
+        }
+
+        AlertDialog.Builder alertDialogBuilder = new AlertDialog.Builder(this);
+        alertDialogBuilder.setTitle("Rooted");
+
+        String msg = "Bypass validation ?\nYES to skip, NO to reset data.";
+
+        alertDialogBuilder.setMessage(msg);
+
+        alertDialogBuilder.setPositiveButton("YES", new DialogInterface.OnClickListener() {
+
+            @Override
+            public void onClick(DialogInterface dialog, int which) {
+                dialog.dismiss();
+
+                if (listener != null)
+                    listener.asPureDevice();
+            }
+        });
+
+        alertDialogBuilder.setNegativeButton("NO", new DialogInterface.OnClickListener() {
+
+            @Override
+            public void onClick(DialogInterface dialog, int which) {
+
+                dialog.dismiss();
+
+                resetData();
+
+                if (listener != null)
+                    listener.asRootDevice();
+            }
+        });
+
+        alertDialogBuilder.show();
+
     }
 
 }

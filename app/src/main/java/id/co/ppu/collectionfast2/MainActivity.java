@@ -274,7 +274,7 @@ public class MainActivity extends ChatActivity
 
             MenuItem miChats = mn.findItem(R.id.nav_chats);
             if (miChats != null) {
-//                miChats.setVisible(Utility.developerMode);
+                miChats.setVisible(Utility.developerMode);
             }
 
             MenuItem miReset = mn.findItem(R.id.nav_reset);

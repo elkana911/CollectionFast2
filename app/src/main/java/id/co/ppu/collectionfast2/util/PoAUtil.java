@@ -270,7 +270,7 @@ public class PoAUtil {
     public static void cancel(Realm realm, String collCode, String ldvNo, String contractNo){
         RealmResults<TrnFlagTimestamp> all = realm.where(TrnFlagTimestamp.class)
                 .equalTo("pk.contractNo", contractNo)
-                .equalTo("ldvNo", ldvNo)
+                .equalTo("pk.ldvNo", ldvNo)
                 .equalTo("pk.collCode", collCode)
                 .findAll();
 

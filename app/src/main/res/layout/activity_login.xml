@@ -76,12 +76,12 @@
                     <ImageView
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:src="@mipmap/radana_leaf1" />
+                        android:src="@mipmap/radana_leaf2" />
 
                     <ImageView
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:src="@mipmap/radana_leaf2" />
+                        android:src="@mipmap/radana_leaf1" />
 
                 </RelativeLayout>
 

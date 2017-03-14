@@ -13,7 +13,6 @@ import android.preference.PreferenceManager;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.v7.app.AlertDialog;
-import android.telephony.TelephonyManager;
 import android.text.TextUtils;
 import android.util.Log;
 import android.util.TypedValue;
@@ -38,7 +37,6 @@ import com.google.android.gms.appindexing.Thing;
 import com.google.android.gms.common.api.GoogleApiClient;
 
 import java.io.IOException;
-import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
@@ -46,6 +44,7 @@ import java.util.List;
 import butterknife.BindView;
 import butterknife.ButterKnife;
 import butterknife.OnClick;
+import butterknife.OnLongClick;
 import id.co.ppu.collectionfast2.BuildConfig;
 import id.co.ppu.collectionfast2.MainActivity;
 import id.co.ppu.collectionfast2.R;
@@ -288,32 +287,11 @@ public class LoginActivity extends BasicActivity {
             btnGetLKPUser.setVisibility(View.VISIBLE);
             tvDebug.setVisibility(View.VISIBLE);
 
-            TelephonyManager mngr = (TelephonyManager)getSystemService(Context.TELEPHONY_SERVICE);
-
-            StringBuffer sb = new StringBuffer();
-            sb.append("imei=").append(mngr.getDeviceId());
-            try {
-                Class<?> c = Class.forName("android.os.SystemProperties");
-                Method get = c.getMethod("get", String.class);
-                String serial1 = (String) get.invoke(c, "ril.serialnumber");
-                sb.append(",").append("deviceSN=").append(serial1);
-            } catch (Exception ignored) {
-                ignored.printStackTrace();
-            }
-
-            tvDebug.setText(sb.toString());
+            tvDebug.setText(getDebugInfo());
         }
     }
 
-    @OnClick(R.id.sign_in_button)
-    public void onSignInClick() {
-
-        if (RootUtil.isDeviceRooted()) {
-            Utility.showDialog(this, "Rooted", getString(R.string.error_rooted));
-            resetData();
-            return;
-        }
-
+    private void signIn() {
         try {
 
             String selectedServer = Utility.getServerName(spServers.getSelectedItemPosition());
@@ -362,6 +340,20 @@ public class LoginActivity extends BasicActivity {
             e.printStackTrace();
         }
 
+    }
+
+    @OnClick(R.id.sign_in_button)
+    public void onSignInClick() {
+
+        if (RootUtil.isDeviceRooted()) {
+            if (!Utility.developerMode) {
+                Utility.showDialog(this, "Rooted", getString(R.string.error_rooted));
+                resetData();
+                return;
+            }
+        }
+
+        signIn();
     }
 
     private void attemptLogin() throws Exception {
@@ -855,6 +847,14 @@ public class LoginActivity extends BasicActivity {
             }
         });
 
+    }
+
+
+    @OnLongClick(R.id.rlRadana)
+    public boolean onLongClickRadana(View view) {
+        Toast.makeText(this, getDebugInfo(), Toast.LENGTH_SHORT).show();
+
+        return true;
     }
 
     /**

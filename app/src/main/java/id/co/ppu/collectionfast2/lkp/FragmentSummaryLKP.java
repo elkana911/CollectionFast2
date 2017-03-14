@@ -170,7 +170,9 @@ public class FragmentSummaryLKP extends Fragment {
 
         etARStaff.setText(userData.getFullName());
 
-        long targetPenerimaan = header.getPrncAMBC() + header.getIntrAMBC();
+        long targetPenerimaan = (header.getPrncAMBC() == null ? 0L : header.getPrncAMBC())
+                    + (header.getIntrAMBC() == null ? 0L : header.getIntrAMBC());
+
         etTargetPenerimaan.setText(Utility.convertLongToRupiah(targetPenerimaan));
 
         String ldvNo = header.getLdvNo();
