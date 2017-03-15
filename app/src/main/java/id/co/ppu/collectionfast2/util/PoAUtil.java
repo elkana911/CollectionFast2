@@ -95,7 +95,7 @@ public class PoAUtil {
     }
 
     public static void hidePoAFiles() {
-        if (!Utility.developerMode) {
+        if (!Utility.DEVELOPER_MODE) {
             Storage.putNoMediaInto(new File(getPoAPath()));
             Storage.putNoMediaInto(new File(getPoACachePath()));
         }
@@ -397,5 +397,11 @@ public class PoAUtil {
     }
 
 
+    public static void cleanDB(Realm realm) {
+        realm.beginTransaction();
+        realm.where(TrnFlagTimestamp.class)
+                .findAll().deleteAllFromRealm();
+        realm.commitTransaction();
 
+    }
 }

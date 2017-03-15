@@ -43,6 +43,7 @@ import id.co.ppu.collectionfast2.pojo.ServerInfo;
 import id.co.ppu.collectionfast2.pojo.UserConfig;
 import id.co.ppu.collectionfast2.pojo.UserData;
 import id.co.ppu.collectionfast2.pojo.master.MstParam;
+import id.co.ppu.collectionfast2.pojo.sync.SyncTrnRVB;
 import id.co.ppu.collectionfast2.pojo.sync.SyncTrnRVColl;
 import id.co.ppu.collectionfast2.pojo.trn.TrnCollPos;
 import id.co.ppu.collectionfast2.pojo.trn.TrnContractBuckets;
@@ -376,7 +377,39 @@ public class ActivityPaymentEntri extends BasicActivity implements FragmentActiv
                 .equalTo("rvbStatus", "OP")
                 .findAllSorted("rvbNo");
 
+        List<TrnRVB> listRVB = new ArrayList<>(); //realm.copyFromRealm(openRVBList);
+
+        // apakah ada juga di table sync ?
+        for (TrnRVB obj : openRVBList) {
+            SyncTrnRVB _syncTrnRVB = realm.where(SyncTrnRVB.class)
+                    .equalTo("rvbNo", obj.getRvbNo())
+                    .findFirst();
+
+            if (_syncTrnRVB != null)
+                continue;
+
+            listRVB.add(realm.copyFromRealm(obj));
+        }
+
+
+        RVBAdapter adapterRVB = new RVBAdapter(this, android.R.layout.simple_spinner_item, listRVB);
+
+        TrnRVB hint = new TrnRVB();
+        hint.setRvbNo(getString(R.string.spinner_please_select));
+        adapterRVB.insert(hint, 0);
+        spNoRVB.setAdapter(adapterRVB);
+    }
+
+    private void buildRVB_Old() {
+        spNoRVB.setAdapter(null);
+
+        RealmResults<TrnRVB> openRVBList = realm.where(TrnRVB.class)
+                .equalTo("rvbStatus", "OP")
+                .findAllSorted("rvbNo");
+
         List<TrnRVB> listRVB = realm.copyFromRealm(openRVBList);
+
+
         RVBAdapter adapterRVB = new RVBAdapter(this, android.R.layout.simple_spinner_item, listRVB);
 
         TrnRVB hint = new TrnRVB();
@@ -521,6 +554,7 @@ public class ActivityPaymentEntri extends BasicActivity implements FragmentActiv
         boolean editMode = isExists(this.realm, contractNo) != null;
 
         // reset errors
+        etContractNo.setError(null);
         etPenerimaan.setError(null);
         etDenda.setError(null);
         etDendaBerjalan.setError(null);
@@ -536,6 +570,17 @@ public class ActivityPaymentEntri extends BasicActivity implements FragmentActiv
         final String denda = etDenda.getText().toString().trim();
         final String dendaBerjalan = etDendaBerjalan.getText().toString().trim();
         final String biayaTagih = etBiayaTagih.getText().toString().trim();
+
+        // avoid user sengaja entri no contract ngaco
+        DisplayTrnContractBuckets displayTrnContractBuckets = realm.where(DisplayTrnContractBuckets.class)
+                .equalTo("contractNo", contractNo)
+                .findFirst();
+
+        if (displayTrnContractBuckets == null) {
+            etContractNo.setError("Invalid Contract Number");
+            focusView = etContractNo;
+            cancel = true;
+        }
 
         if (etCatatan.getText().toString().length() > 300) {
             etCatatan.setError("Should not over " + 300);
@@ -650,7 +695,7 @@ public class ActivityPaymentEntri extends BasicActivity implements FragmentActiv
         // TODO: check lagi kalo ada di daftar LKP dan workstatus nya belum bayar ("V") jgn entri disini
         RealmResults<TrnLDVDetails> lkpDtls = realm.where(TrnLDVDetails.class)
                 .equalTo("pk.ldvNo", ldvNo)
-                .equalTo("contractNo", etContractNo.getText().toString())
+                .equalTo("contractNo", contractNo)
                 .equalTo("createdBy", createdBy)
                 .notEqualTo("workStatus", "W")
                 .findAll();

@@ -44,15 +44,15 @@ import okhttp3.HttpUrl;
 public class Utility {
 
     // TODO: always check version inside gradle on production
-    public final static boolean developerMode = true;
+    public final static boolean DEVELOPER_MODE = false;
 
-    public final static String DATE_EXPIRED_YYYYMMDD = developerMode ? "20201231" : "20361231"; // 20 years
+    public final static String DATE_EXPIRED_YYYYMMDD = DEVELOPER_MODE ? "20201231" : "20361231"; // 20 years
 
     public final static String SERVER_DEV_NAME = "dev-fast-mobile";
     public final static String SERVER_DEV_IP = "202.51.118.70";
     public final static String SERVER_DEV_PORT = "7002";
 
-    public static String[][] servers = {
+    public static String[][] SERVERS = {
 //            {"local-server", "10.212.0.184", "8090"}
 //            {"local-server", "192.168.10.109", "8090"} // kelapa gading
 //            {"local-server", "192.168.0.9", "8090"}
@@ -61,10 +61,10 @@ public class Utility {
             ,{"fast-mobile", "cmobile.radanafinance.co.id", "7001"}
             ,{"fast-mobile2", "c1mobile.radanafinance.co.id", "7001"}
     };
-    public final static int NETWORK_TIMEOUT_MINUTES = developerMode ? 1 : 3 ;
+    public final static int NETWORK_TIMEOUT_MINUTES = DEVELOPER_MODE ? 1 : 3 ;
 
-    public final static int CYCLE_CHAT_STATUS_MILLISEC = (developerMode ? 3 : 15) * 60 * 1000;
-    public final static int CYCLE_CHAT_QUEUE_MILLISEC = (developerMode ? 2 : 3) * 1000;
+    public final static int CYCLE_CHAT_STATUS_MILLISEC = (DEVELOPER_MODE ? 3 : 15) * 60 * 1000;
+    public final static int CYCLE_CHAT_QUEUE_MILLISEC = (DEVELOPER_MODE ? 2 : 3) * 1000;
 /*
     // for load balancing support, cancelled.
     public final static String[][] ipServers4LB = {
@@ -77,7 +77,7 @@ public class Utility {
     };
 */
 
-//    public final static String[][] servers = {{"local-server", "10.100.100.77", "8090"}
+//    public final static String[][] SERVERS = {{"local-server", "10.100.100.77", "8090"}
 //            ,{"fast-mobile", "cmobile.radanafinance.co.id", "7001"}
 //    };
 //
@@ -109,13 +109,13 @@ public class Utility {
     public static final String FONT_SAMSUNG = "SamsungSharpSans-Regular.ttf";
 
     public static String getServerName(int serverId) {
-        String[] s = servers[serverId];
+        String[] s = SERVERS[serverId];
         return s[0];
     }
 
     public static int getServerID(String serverName) {
-        for (int i = 0; i < servers.length; i++) {
-            if (servers[i][0].equalsIgnoreCase(serverName)) {
+        for (int i = 0; i < SERVERS.length; i++) {
+            if (SERVERS[i][0].equalsIgnoreCase(serverName)) {
                 return i;
             }
         }
@@ -126,10 +126,10 @@ public class Utility {
 
         if (serverChoice < 0)
             serverChoice = 0;
-        if (serverChoice > servers.length-1)
-            serverChoice = servers.length-1;
+        if (serverChoice > SERVERS.length-1)
+            serverChoice = SERVERS.length-1;
 
-        String[] server = servers[serverChoice];   // just change this
+        String[] server = SERVERS[serverChoice];   // just change this
 
         HttpUrl.Builder url = new HttpUrl.Builder()
                 .scheme("http")
@@ -579,7 +579,7 @@ public class Utility {
         int versionCode = BuildConfig.VERSION_CODE;
         String versionName = BuildConfig.VERSION_NAME;
 
-        sb.append(",").append("dev=").append(developerMode);
+        sb.append(",").append("dev=").append(DEVELOPER_MODE);
         sb.append(",").append("versionCode=").append(versionCode);
         sb.append(",").append("versionName=").append(versionName);
         sb.append(",").append("versionAPI=").append(android.os.Build.VERSION.SDK_INT);

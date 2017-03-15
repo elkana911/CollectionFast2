@@ -237,11 +237,7 @@ public class FragmentLKPList extends Fragment {
         }
         */
 
-        final ProgressDialog mProgressDialog = new ProgressDialog(getContext());
-        mProgressDialog.setIndeterminate(true);
-        mProgressDialog.setCancelable(false);
-        mProgressDialog.setMessage(getString(R.string.message_please_wait));
-        mProgressDialog.show();
+        final ProgressDialog mProgressDialog = Utility.createAndShowProgressDialog(getContext(), getString(R.string.message_please_wait));
 
         try {
             DataUtil.retrieveServerInfo(collectorCode, this.realm, getContext(), new OnPostRetrieveServerInfo() {

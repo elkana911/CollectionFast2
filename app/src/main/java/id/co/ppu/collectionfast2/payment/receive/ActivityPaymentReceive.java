@@ -22,6 +22,7 @@ import id.co.ppu.collectionfast2.location.Location;
 import id.co.ppu.collectionfast2.pojo.ServerInfo;
 import id.co.ppu.collectionfast2.pojo.UserData;
 import id.co.ppu.collectionfast2.pojo.master.MstParam;
+import id.co.ppu.collectionfast2.pojo.sync.SyncTrnRVB;
 import id.co.ppu.collectionfast2.pojo.sync.SyncTrnRVColl;
 import id.co.ppu.collectionfast2.pojo.trn.TrnCollPos;
 import id.co.ppu.collectionfast2.pojo.trn.TrnFlagTimestamp;
@@ -170,12 +171,25 @@ public class ActivityPaymentReceive extends BasicActivity {
 //            svMain.setVisibility(View.VISIBLE);
 
         } else {
-            RealmResults<TrnRVB> trnRVBs = this.realm.where(TrnRVB.class)
+            RealmResults<TrnRVB> openRVBList = this.realm.where(TrnRVB.class)
                     .equalTo("rvbStatus", "OP")
                     .equalTo("rvbOnHand", collectorId)
                     .findAllSorted("rvbNo");
 
-            adapterRVB = new RVBAdapter(this, android.R.layout.simple_spinner_item, this.realm.copyFromRealm(trnRVBs));
+            // apakah ada juga di table sync ?
+            List<TrnRVB> listRVB = new ArrayList<>();
+            for (TrnRVB obj : openRVBList) {
+                SyncTrnRVB _syncTrnRVB = realm.where(SyncTrnRVB.class)
+                        .equalTo("rvbNo", obj.getRvbNo())
+                        .findFirst();
+
+                if (_syncTrnRVB != null)
+                    continue;
+
+                listRVB.add(realm.copyFromRealm(obj));
+            }
+
+            adapterRVB = new RVBAdapter(this, android.R.layout.simple_spinner_item, listRVB);
 
             TrnRVB hint = new TrnRVB();
             hint.setRvbNo(getString(R.string.spinner_please_select));

@@ -239,25 +239,25 @@ public class LoginActivity extends BasicActivity {
         String portDev = Storage.getPreference(getApplicationContext(), Storage.KEY_SERVER_DEV_PORT);
 
         if (TextUtils.isEmpty(ipDev))
-            ipDev = Utility.SERVER_DEV_IP; // Utility.servers[Utility.getServerID(Utility.SERVER_DEV_NAME)][1];
+            ipDev = Utility.SERVER_DEV_IP; // Utility.SERVERS[Utility.getServerID(Utility.SERVER_DEV_NAME)][1];
 
         if (TextUtils.isEmpty(portDev))
-            portDev = Utility.SERVER_DEV_PORT; // servers[Utility.getServerID(Utility.SERVER_DEV_NAME)][2];
+            portDev = Utility.SERVER_DEV_PORT; // SERVERS[Utility.getServerID(Utility.SERVER_DEV_NAME)][2];
 
         etServerDevIP.setText(ipDev);
         etServerDevPort.setText(portDev);
 
         List<String> servers = new ArrayList<>();
-        for (int i = 0; i < Utility.servers.length; i++) {
+        for (int i = 0; i < Utility.SERVERS.length; i++) {
 
-            if (!Utility.developerMode) {
-                if (Utility.servers[i][0].startsWith("local")
-                        || Utility.servers[i][0].startsWith("dev-")
+            if (!Utility.DEVELOPER_MODE) {
+                if (Utility.SERVERS[i][0].startsWith("local")
+                        || Utility.SERVERS[i][0].startsWith("dev-")
                         )
                     continue;
             }
 
-            servers.add(Utility.servers[i][0]);
+            servers.add(Utility.SERVERS[i][0]);
         }
 
         ServerAdapter arrayAdapter = new ServerAdapter(this, android.R.layout.simple_spinner_item, servers);
@@ -283,7 +283,7 @@ public class LoginActivity extends BasicActivity {
         int x = Storage.getPreferenceAsInt(getApplicationContext(), Storage.KEY_SERVER_ID, 0);
         Utility.setSpinnerAsString(spServers, Utility.getServerName(x));
 
-        if (Utility.developerMode) {
+        if (Utility.DEVELOPER_MODE) {
             btnGetLKPUser.setVisibility(View.VISIBLE);
             tvDebug.setVisibility(View.VISIBLE);
 
@@ -297,8 +297,8 @@ public class LoginActivity extends BasicActivity {
             String selectedServer = Utility.getServerName(spServers.getSelectedItemPosition());
             if (selectedServer.startsWith("dev")) {
                 int id = Utility.getServerID(selectedServer);
-                Utility.servers[id][1] = etServerDevIP.getText().toString();
-                Utility.servers[id][2] = etServerDevPort.getText().toString();
+                Utility.SERVERS[id][1] = etServerDevIP.getText().toString();
+                Utility.SERVERS[id][2] = etServerDevPort.getText().toString();
             }
 
             final ProgressDialog mProgressDialog = Utility.createAndShowProgressDialog(this, "Checking version...");
@@ -346,7 +346,7 @@ public class LoginActivity extends BasicActivity {
     public void onSignInClick() {
 
         if (RootUtil.isDeviceRooted()) {
-            if (!Utility.developerMode) {
+            if (!Utility.DEVELOPER_MODE) {
                 Utility.showDialog(this, "Rooted", getString(R.string.error_rooted));
                 resetData();
                 return;

@@ -269,27 +269,27 @@ public class MainActivity extends ChatActivity
         if (mn != null) {
             MenuItem miDeveloper = mn.findItem(R.id.nav_developer);
             if (miDeveloper != null) {
-                miDeveloper.setVisible(Utility.developerMode);
+                miDeveloper.setVisible(Utility.DEVELOPER_MODE);
             }
 
             MenuItem miChats = mn.findItem(R.id.nav_chats);
             if (miChats != null) {
-                miChats.setVisible(Utility.developerMode);
+                miChats.setVisible(Utility.DEVELOPER_MODE);
             }
 
             MenuItem miReset = mn.findItem(R.id.nav_reset);
             if (miReset != null) {
-//                miReset.setVisible(Utility.developerMode);
+//                miReset.setVisible(Utility.DEVELOPER_MODE);
             }
 
             MenuItem miSyncRVB = mn.findItem(R.id.nav_getRvb);
             if (miSyncRVB != null) {
-                miSyncRVB.setVisible(Utility.developerMode);
+                miSyncRVB.setVisible(Utility.DEVELOPER_MODE);
             }
 
             MenuItem miManualSync = mn.findItem(R.id.nav_manualSync);
             if (miManualSync != null) {
-                miManualSync.setVisible(Utility.developerMode);
+                miManualSync.setVisible(Utility.DEVELOPER_MODE);
             }
             // set custom font
             for (int i = 0; i < mn.size(); i++) {
@@ -1842,7 +1842,7 @@ public class MainActivity extends ChatActivity
 
                     Log.e("eric.onFailure", t.getMessage(), t);
                     if (t instanceof ConnectException) {
-                        if (Utility.developerMode)
+                        if (Utility.DEVELOPER_MODE)
                             Utility.showDialog(MainActivity.this, "No Connection", t.getMessage());
                         else
                             Utility.showDialog(MainActivity.this, "No Connection", getString(R.string.error_contact_admin));
@@ -1978,7 +1978,7 @@ public class MainActivity extends ChatActivity
 
                     Log.e("eric.onFailure", t.getMessage(), t);
                     if (t instanceof ConnectException) {
-                        if (Utility.developerMode)
+                        if (Utility.DEVELOPER_MODE)
                             Utility.showDialog(MainActivity.this, "No Connection", t.getMessage());
                         else
                             Utility.showDialog(MainActivity.this, "No Connection", getString(R.string.error_contact_admin));
@@ -2710,15 +2710,11 @@ public class MainActivity extends ChatActivity
                 uploadPoAOneByOne(new OnSuccessError() {
                     @Override
                     public void onSuccess(String msg) {
-                        PoAUtil.cleanPoACache();
-//                        PoAUtil.cleanPoA();
-
-                        realm.beginTransaction();
-                        realm.where(TrnFlagTimestamp.class)
-                                .findAll().deleteAllFromRealm();
-                        realm.commitTransaction();
-
                         mProgressDialog.setMessage(getString(R.string.message_sync_data_wait));
+
+                        PoAUtil.cleanPoACache();
+
+                        PoAUtil.cleanDB(realm);
 
                         // override demo user
                         if (!NetUtil.isConnected(MainActivity.this)
@@ -2755,6 +2751,7 @@ public class MainActivity extends ChatActivity
                         call.enqueue(new Callback<ResponseSync>() {
                             @Override
                             public void onResponse(Call<ResponseSync> call, Response<ResponseSync> response) {
+
                                 if (!response.isSuccessful()) {
 
                                     ResponseBody errorBody = response.errorBody();
@@ -2829,7 +2826,7 @@ public class MainActivity extends ChatActivity
                                 }
 
                                 if (t instanceof ConnectException) {
-                                    Utility.showDialog(MainActivity.this, "No Connection", Utility.developerMode ? t.getMessage() : getString(R.string.error_contact_admin));
+                                    Utility.showDialog(MainActivity.this, "No Connection", Utility.DEVELOPER_MODE ? t.getMessage() : getString(R.string.error_contact_admin));
                                 }
 
                                 if (listener != null)

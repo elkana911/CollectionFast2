@@ -237,7 +237,7 @@ public class BasicActivity extends AppCompatActivity {
 
         Toast.makeText(this, getString(R.string.error_rooted), Toast.LENGTH_SHORT).show();
 
-        if (!Utility.developerMode) {
+        if (!Utility.DEVELOPER_MODE) {
 
             if (listener != null) {
                 resetData();
