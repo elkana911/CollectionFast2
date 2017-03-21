@@ -121,13 +121,37 @@
                         android:text="No STNK" />
                 </RadioGroup>
 
-                <com.weiwangcn.betterspinner.library.material.MaterialBetterSpinner
+                <!--com.weiwangcn.betterspinner.library.material.MaterialBetterSpinner
                     android:id="@+id/spBASTK"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:hint="BASTK"
                     android:textColorHint="#05ab9a"
-                    app:met_floatingLabel="normal" />
+                    app:met_floatingLabel="normal" /-->
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal"
+                    android:paddingTop="10dp"
+                    android:paddingBottom="4dp"
+                    >
+                    <TextView
+                        android:layout_gravity="center_vertical"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:textAppearance="@style/Base.TextAppearance.AppCompat.Medium"
+                        android:text="BASTK : "/>
+
+                    <Spinner
+                        android:id="@+id/spBASTKs"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content" />
+                </LinearLayout>
+
+                <View
+                    android:layout_width="match_parent"
+                    android:layout_height="0.5dp"
+                    android:background="@android:color/darker_gray"/>
 
                 <android.support.design.widget.TextInputLayout
                     android:layout_width="match_parent"

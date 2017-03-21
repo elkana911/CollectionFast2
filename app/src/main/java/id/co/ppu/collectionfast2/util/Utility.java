@@ -44,7 +44,7 @@ import okhttp3.HttpUrl;
 public class Utility {
 
     // TODO: always check version inside gradle on production
-    public final static boolean DEVELOPER_MODE = false;
+    public final static boolean DEVELOPER_MODE = true;
 
     public final static String DATE_EXPIRED_YYYYMMDD = DEVELOPER_MODE ? "20201231" : "20361231"; // 20 years
 
@@ -53,10 +53,9 @@ public class Utility {
     public final static String SERVER_DEV_PORT = "7002";
 
     public static String[][] SERVERS = {
-//            {"local-server", "10.212.0.184", "8090"}
+//            {"local-server", "10.212.0.144", "8090"}
 //            {"local-server", "192.168.10.109", "8090"} // kelapa gading
-//            {"local-server", "192.168.0.9", "8090"}
-            {"local-server", "192.168.0.11", "8090"} //faraday
+            {"local-server", "192.168.0.8", "8090"}
             ,{SERVER_DEV_NAME, SERVER_DEV_IP, SERVER_DEV_PORT}
             ,{"fast-mobile", "cmobile.radanafinance.co.id", "7001"}
             ,{"fast-mobile2", "c1mobile.radanafinance.co.id", "7001"}

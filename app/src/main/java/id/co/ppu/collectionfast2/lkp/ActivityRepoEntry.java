@@ -12,10 +12,9 @@ import android.view.ViewGroup;
 import android.widget.ArrayAdapter;
 import android.widget.EditText;
 import android.widget.RadioButton;
+import android.widget.Spinner;
 import android.widget.TextView;
 import android.widget.Toast;
-
-import com.weiwangcn.betterspinner.library.material.MaterialBetterSpinner;
 
 import java.util.Date;
 import java.util.List;
@@ -76,8 +75,11 @@ public class ActivityRepoEntry extends BasicActivity {
     @BindView(R.id.radioNoSTNK)
     RadioButton radioNoSTNK;
 
-    @BindView(R.id.spBASTK)
-    MaterialBetterSpinner spBASTK;
+//    @BindView(R.id.spBASTK)
+//    MaterialBetterSpinner spBASTK;
+
+    @BindView(R.id.spBASTKs)
+    Spinner spBASTKs;
 
     @BindView(R.id.flTakePhoto)
     View flTakePhoto;
@@ -131,8 +133,8 @@ public class ActivityRepoEntry extends BasicActivity {
         UserConfig userConfig = this.realm.where(UserConfig.class).findFirst();
 
         RealmResults<TrnBastbj> bastbjs = this.realm.where(TrnBastbj.class).equalTo("bastbjStatus", "OP").findAll();
-        BastkAdapter bastkAdapter = new BastkAdapter(this, android.R.layout.simple_spinner_item, bastbjs);
-        spBASTK.setAdapter(bastkAdapter);
+        BastkAdapter adapterBastk = new BastkAdapter(this, android.R.layout.simple_spinner_item, bastbjs);
+        spBASTKs.setAdapter(adapterBastk);
 
         TrnRepo trnRepo = this.realm.where(TrnRepo.class)
                 .equalTo("contractNo", contractNo)
@@ -142,7 +144,15 @@ public class ActivityRepoEntry extends BasicActivity {
         if (trnRepo != null) {
             etKomentar.setText(trnRepo.getRepoComments());
             etKodeTarik.setText(trnRepo.getRepoNo());
-            spBASTK.setText(trnRepo.getBastbjNo());
+
+            String bastBjNo = trnRepo.getBastbjNo();
+            for (int i = 0; i < adapterBastk.getCount(); i++) {
+                if (bastBjNo.equals(adapterBastk.getItem(i).getBastbjNo())) {
+                    spBASTKs.setSelection(i);
+                    break;
+                }
+            }
+//            spBASTK.setText(trnRepo.getBastbjNo());
 
             radioSTNK.setChecked(trnRepo.getStnkStatus() != null && trnRepo.getStnkStatus().equals("Y"));
             radioNoSTNK.setChecked(trnRepo.getStnkStatus() == null || !trnRepo.getStnkStatus().equals("Y"));
@@ -188,7 +198,7 @@ public class ActivityRepoEntry extends BasicActivity {
         boolean cancel = false;
         View focusView = null;
         final String contractNo = etContractNo.getText().toString();
-        final String bastbjNo = spBASTK.getText().toString();
+        final String bastbjNo = spBASTKs.getSelectedItem().toString();
         final String repoNo = etKodeTarik.getText().toString();
         final String komentar = etKomentar.getText().toString();
 
@@ -213,8 +223,9 @@ public class ActivityRepoEntry extends BasicActivity {
         }
 
         if (TextUtils.isEmpty(bastbjNo)) {
-            spBASTK.setError(getString(R.string.error_field_required));
-            focusView = spBASTK;
+//            spBASTKs.setError(getString(R.string.error_field_required));
+            Toast.makeText(this, "Please select BASTK", Toast.LENGTH_SHORT).show();
+            focusView = spBASTKs;
             cancel = true;
         }
 
@@ -413,7 +424,7 @@ public class ActivityRepoEntry extends BasicActivity {
         public View getView(int position, View convertView, ViewGroup parent) {
             TextView tv = new TextView(this.ctx);
 //            TextView tv = (TextView) convertView.findViewById(R.id.nama);
-            tv.setPadding(10, 10, 10, 10);
+            tv.setPadding(10, 20, 10, 20);
             tv.setTextColor(Color.BLACK);
             tv.setText(list.get(position).getBastbjNo());
             tv.setTextSize(TypedValue.COMPLEX_UNIT_DIP, 16);
@@ -424,7 +435,7 @@ public class ActivityRepoEntry extends BasicActivity {
         @Override
         public View getDropDownView(int position, View convertView, ViewGroup parent) {
             TextView label = new TextView(this.ctx);
-            label.setPadding(10, 10, 10, 10);
+            label.setPadding(10, 20, 10, 20);
             label.setText(list.get(position).getBastbjNo());
             label.setTextSize(TypedValue.COMPLEX_UNIT_DIP, 16);
 

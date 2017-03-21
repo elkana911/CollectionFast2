@@ -6,16 +6,19 @@ import android.graphics.BitmapFactory;
 import android.net.Uri;
 import android.os.Environment;
 import android.provider.MediaStore;
+import android.support.v4.content.FileProvider;
 import android.util.Log;
 
 import java.io.File;
 import java.io.FileFilter;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
+import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.util.Date;
 
+import id.co.ppu.collectionfast2.BuildConfig;
 import id.co.ppu.collectionfast2.component.BasicActivity;
 import id.co.ppu.collectionfast2.location.Location;
 import id.co.ppu.collectionfast2.pojo.trn.TrnFlagTimestamp;
@@ -301,18 +304,33 @@ public class PoAUtil {
      * @see #commit(BasicActivity, String, String, String)
      */
     public static void callCameraIntent(BasicActivity activity, String collCode, String ldvNo, String contractNo) {
+
         Intent takePicture = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
 
         hidePoAFiles();
 
         // prepare the Uri
-        File cacheFile = getPoACacheFile(activity, collCode, contractNo);
+        File cacheFile = getPoACacheFile(activity, collCode, contractNo);   ///storage/emulated/0/RadanaCache/cache/poaDefault_demo_71000000008115.jpg
 
         // clean up the last one
         if (cacheFile.exists())
             cacheFile.delete();
 
-        takePicture.putExtra(MediaStore.EXTRA_OUTPUT, Uri.fromFile(cacheFile));
+        try {
+            // must create file first
+            cacheFile.getParentFile().mkdirs();
+            cacheFile.createNewFile();
+        } catch (IOException e) {
+            e.printStackTrace();
+            return;
+        }
+
+        Uri uriSavedImage = null; // content://id.co.ppu.collectionfast2.provider/external_files/RadanaCache/cache/poaDefault_demo_71000000008115.jpg
+        uriSavedImage = FileProvider.getUriForFile(activity,
+                BuildConfig.APPLICATION_ID + ".provider",
+                cacheFile);
+
+        takePicture.putExtra(MediaStore.EXTRA_OUTPUT, uriSavedImage);
 
         activity.startActivityForResult(takePicture, 1);//zero can be replaced with any action code
 
@@ -356,13 +374,7 @@ public class PoAUtil {
     public static File postCameraIntoCache(BasicActivity activity, String collCode, String contractNo) {
         File cacheFile = PoAUtil.getPoACacheFile(activity, collCode, contractNo); // /storage/emulated/0/RadanaCache/cache/poaVstRslt_demo_71000000008115.jpg
 
-        Uri uriSavedImage = Uri.fromFile(cacheFile); // file:///storage/emulated/0/RadanaCache/cache/poaVstRslt_demo_71000000008115.jpg
-
-        Bitmap bitmap;
         try {
-            bitmap = MediaStore.Images.Media.getBitmap(activity.getContentResolver(), uriSavedImage);
-
-            if (bitmap != null) {
                 //compressing
                 InputStream in = new FileInputStream(cacheFile);
                 Bitmap bm2 = BitmapFactory.decodeStream(in);
@@ -388,7 +400,6 @@ public class PoAUtil {
                 //utk tes bisa ga uploadnya. kalo udah tlg dihapus. commit harusnya dilakukan setelah save data success
 //                boolean ok = PoAUtil.commitPhotoOnArrival(constructPoAFilename());
 
-            }
         } catch (Exception e) {
             e.printStackTrace();
         }

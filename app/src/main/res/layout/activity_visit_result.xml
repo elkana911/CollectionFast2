@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:tools="http://schemas.android.com/tools"
     xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
     android:id="@+id/activity_visit_result"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
@@ -296,9 +296,9 @@
 
                 <Button
                     android:id="@+id/btnSave"
+                    style="@style/Widget.AppCompat.Button.Colored"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    style="@style/Widget.AppCompat.Button.Colored"
                     android:text="Save" />
 
                 <Button
@@ -319,14 +319,14 @@
 
     <FrameLayout
         android:id="@+id/flTakePhoto"
-        android:visibility="gone"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:layout_marginBottom="@dimen/activity_vertical_margin"
         android:layout_marginLeft="@dimen/activity_horizontal_margin"
         android:layout_marginRight="@dimen/activity_horizontal_margin"
         android:layout_marginTop="@dimen/activity_vertical_margin"
-        android:background="@drawable/rounded_shade_shape">
+        android:background="@drawable/rounded_shade_shape"
+        android:visibility="gone">
 
         <LinearLayout
             android:id="@+id/llTakePhoto"
@@ -351,6 +351,7 @@
                     app:pulse_interpolator="Accelerate"
                     app:pulse_repeat="0"
                     app:pulse_startFromScratch="false">
+
                     <ImageView
                         android:layout_width="match_parent"
                         android:layout_height="match_parent"

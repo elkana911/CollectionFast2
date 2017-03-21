@@ -19,7 +19,7 @@
             android:layout_centerHorizontal="true"
             android:gravity="center"
             android:background="@drawable/circle_shape"
-            android:textStyle="bold|italic"
+            android:textStyle="bold"
             android:textColor="@android:color/white"
             android:text="ET"
             android:textAppearance="@android:style/TextAppearance.DeviceDefault.Large"/>

@@ -8,6 +8,7 @@ import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.pm.PackageManager;
+import android.graphics.BitmapFactory;
 import android.graphics.Typeface;
 import android.graphics.drawable.Drawable;
 import android.location.Location;
@@ -24,6 +25,7 @@ import android.support.v4.app.ActivityCompat;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentTransaction;
 import android.support.v4.content.ContextCompat;
+import android.support.v4.content.FileProvider;
 import android.support.v4.graphics.drawable.DrawableCompat;
 import android.support.v4.view.GravityCompat;
 import android.support.v4.view.MenuItemCompat;
@@ -55,7 +57,10 @@ import com.google.android.gms.maps.model.LatLng;
 import com.google.gson.Gson;
 
 import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
 import java.io.IOException;
+import java.io.InputStream;
 import java.net.ConnectException;
 import java.util.ArrayList;
 import java.util.Calendar;
@@ -119,6 +124,7 @@ import id.co.ppu.collectionfast2.util.NetUtil;
 import id.co.ppu.collectionfast2.util.PoAUtil;
 import id.co.ppu.collectionfast2.util.RootUtil;
 import id.co.ppu.collectionfast2.util.Storage;
+import id.co.ppu.collectionfast2.util.UserUtil;
 import id.co.ppu.collectionfast2.util.Utility;
 import io.realm.Realm;
 import io.realm.RealmAsyncTask;
@@ -148,6 +154,8 @@ public class MainActivity extends ChatActivity
 
     private boolean viewIsAtHome;
     private Menu menu;
+
+    private String mCurrentProfilePhotoPath;
 
     private PendingIntent pendingIntent;
 
@@ -335,7 +343,32 @@ public class MainActivity extends ChatActivity
                         if (item == 0) {
                             // from camera
                             Intent takePicture = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
-                            startActivityForResult(takePicture, 44);//zero can be replaced with any action code
+
+                            // Ensure that there's a camera activity to handle the intent
+                            if (takePicture.resolveActivity(getPackageManager()) != null) {
+
+                                // Create the File where the photo should go
+                                File photoFile = null;
+                                try {
+                                    photoFile = UserUtil.createTempFileForProfilePic(MainActivity.this);  // /storage/emulated/0/Android/data/com.example.eric.cameranougat/files/Pictures/JPEG_20170318_113520_474001886.jpg
+                                } catch (IOException ex) {
+                                    // Error occurred while creating the File
+                                    return;
+                                }
+                                // Continue only if the File was successfully created
+                                if (photoFile != null) {
+
+                                    mCurrentProfilePhotoPath = photoFile.getAbsolutePath();
+
+                                    Uri photoURI = FileProvider.getUriForFile(MainActivity.this,
+                                            BuildConfig.APPLICATION_ID + ".provider",
+                                            photoFile);
+                                    takePicture.putExtra(MediaStore.EXTRA_OUTPUT, photoURI);
+                                    startActivityForResult(takePicture, 44);
+                                }
+
+                            }
+
                         } else if (item == 1) {
                             // from gallery
                             Intent pickPhoto = new Intent(Intent.ACTION_PICK,
@@ -1222,6 +1255,15 @@ public class MainActivity extends ChatActivity
                 i.putExtra(ActivityPoA.PARAM_LKP_DETAIL, json);
                 i.putExtra(ActivityPoA.PARAM_COLLECTOR_ID, dtl.getCollId());
                 i.putExtra(ActivityPoA.PARAM_CONTRACT_NO, dtl.getContractNo());
+                i.putExtra(ActivityPoA.PARAM_CUSTOMER_NAME, dtl.getCustName());
+
+                String alamat = null;
+                if (detail.getAddress() != null) {
+                    alamat = "Kel/Kec: " +detail.getAddress().getCollKel() + "/" + detail
+                    .getAddress().getCollKec();
+                }
+
+                i.putExtra(ActivityPoA.PARAM_CUSTOMER_ADDR, alamat);
                 i.putExtra(ActivityPoA.PARAM_LDV_NO, dtl.getLdvNo());
 
                 startActivityForResult(i, 66);
@@ -1579,6 +1621,33 @@ public class MainActivity extends ChatActivity
                 */
                 break;
             case 44:
+                // Show the thumbnail on ImageView
+                final Uri imageUri = Uri.parse(mCurrentProfilePhotoPath); // /storage/emulated/0/Android/data/com.example.eric.cameranougat/files/Pictures/JPEG_20170318_201833_1993305013.jpg
+                File file = new File(imageUri.getPath());   // /storage/emulated/0/Android/data/com.example.eric.cameranougat/files/Pictures/JPEG_20170318_201833_1993305013.jpg
+                try {
+                    InputStream ims = new FileInputStream(file);
+
+                    View v = navigationView.getHeaderView(0);
+                    final ImageView imageView = ButterKnife.findById(v, R.id.imageView);
+
+                    imageView.setImageBitmap(BitmapFactory.decodeStream(ims));
+                } catch (FileNotFoundException e) {
+                    return;
+                }
+
+                this.realm.executeTransactionAsync(new Realm.Transaction() {
+                    @Override
+                    public void execute(Realm realm) {
+                        UserConfig userConfig = realm.where(UserConfig.class).findFirst();
+                        if (userConfig != null) {
+                            userConfig.setPhotoProfileUri(imageUri.toString());
+                        }
+
+                        realm.copyToRealmOrUpdate(userConfig);
+                    }
+                });
+
+                break;
             case 55:
                 View v = navigationView.getHeaderView(0);
                 final ImageView imageView = ButterKnife.findById(v, R.id.imageView);

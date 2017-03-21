@@ -59,7 +59,7 @@
     <id.co.ppu.collectionfast2.component.RealmSearchView
         android:id="@+id/contacts"
         android:layout_width="match_parent"
-        android:layout_height="match_parent"
+        android:layout_height="match_parent" app:rsvAddFooterText="@string/app_name"
         app:rsvHint="@string/search_hint" />
 
 </LinearLayout>

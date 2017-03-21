@@ -260,4 +260,8 @@
     <string name="msg_no_contracts">No Contracts found</string>
     <string name="label_prev_contract">"Previous Contracts: "</string>
     <string name="label_today_contract">"Today Contracts: "</string>
+
+    <string name="error_uncleaned_exit">Sorry, You are not logged out correctly last time.\nPlease refresh your LKP</string>
+    <string name="error_permit_mandatory">You need to allow requested access to continue.</string>
+    <string name="error_permit_camera_location">You need to allow access to Camera And Location to continue.</string>
 </resources>

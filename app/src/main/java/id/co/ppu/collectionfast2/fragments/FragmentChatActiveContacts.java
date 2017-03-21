@@ -2,6 +2,7 @@ package id.co.ppu.collectionfast2.fragments;
 
 import android.content.Context;
 import android.graphics.Color;
+import android.graphics.Typeface;
 import android.graphics.drawable.Drawable;
 import android.graphics.drawable.GradientDrawable;
 import android.os.Build;
@@ -333,7 +334,9 @@ public class FragmentChatActiveContacts extends Fragment {
             tvStatus.setText(detail.getStatusMsg());
 
             TextView tvContactShortName = dataViewHolder.tvContactShortName;
-            tvContactShortName.setText(Utility.getFirstTwoChars(detail.getNickName()));
+            tvContactShortName.setText(Utility.getFirstTwoChars(detail.getNickName()).toUpperCase());
+            Typeface font = Typeface.createFromAsset(getActivity().getAssets(), Utility.FONT_SAMSUNG);
+            tvContactShortName.setTypeface(font);
 
             // http://stackoverflow.com/questions/17823451/set-android-shape-color-programmatically
             Drawable background = tvContactShortName.getBackground();
@@ -375,6 +378,8 @@ public class FragmentChatActiveContacts extends Fragment {
                     resColor = R.color.chatContact15;
 
                 shapeDrawable.setColor(ContextCompat.getColor(getContext(), resColor));
+
+                contactName.setTextColor(ContextCompat.getColor(getContext(), resColor));
             }
 
         }

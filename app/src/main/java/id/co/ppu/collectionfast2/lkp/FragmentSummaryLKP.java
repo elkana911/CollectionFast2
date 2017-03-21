@@ -14,9 +14,8 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ArrayAdapter;
 import android.widget.EditText;
+import android.widget.Spinner;
 import android.widget.TextView;
-
-import com.weiwangcn.betterspinner.library.material.MaterialBetterSpinner;
 
 import java.util.Date;
 import java.util.List;
@@ -58,8 +57,8 @@ public class FragmentSummaryLKP extends Fragment {
     @BindView(R.id.etARStaff)
     EditText etARStaff;
 
-    @BindView(R.id.spWorkFlag)
-    MaterialBetterSpinner spWorkFlag;
+    @BindView(R.id.spWorkFlags)
+    Spinner spWorkFlags;
 
     // table
     @BindView(R.id.etTargetPenerimaan)
@@ -209,7 +208,8 @@ public class FragmentSummaryLKP extends Fragment {
     private void buildWorkFlag() {
         RealmResults<MstLDVStatus> list = this.realm.where(MstLDVStatus.class).findAll();
         WorkFlagAdapter workFlagAdapter = new WorkFlagAdapter(getContext(), android.R.layout.simple_spinner_item, list);
-        spWorkFlag.setAdapter(workFlagAdapter);
+
+        spWorkFlags.setAdapter(workFlagAdapter);
 
     }
 
@@ -291,8 +291,10 @@ public class FragmentSummaryLKP extends Fragment {
         @Override
         public View getDropDownView(int position, View convertView, ViewGroup parent) {
             TextView label = new TextView(this.ctx);
-            label.setTextColor(Color.BLACK);
+//            label.setTextColor(Color.BLACK);
             label.setText(list.get(position).getStatusDesc());
+            label.setPadding(10, 20, 10, 20);
+            label.setTextSize(TypedValue.COMPLEX_UNIT_DIP, 16);
 
             return label;
         }

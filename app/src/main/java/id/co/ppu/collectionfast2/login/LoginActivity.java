@@ -4,12 +4,11 @@ import android.app.ProgressDialog;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
-import android.content.SharedPreferences;
+import android.content.pm.PackageManager;
 import android.content.res.Configuration;
 import android.graphics.Color;
 import android.net.Uri;
 import android.os.Bundle;
-import android.preference.PreferenceManager;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.v7.app.AlertDialog;
@@ -65,6 +64,7 @@ import id.co.ppu.collectionfast2.rest.response.ResponseServerInfo;
 import id.co.ppu.collectionfast2.rest.response.ResponseUserPwd;
 import id.co.ppu.collectionfast2.util.DataUtil;
 import id.co.ppu.collectionfast2.util.DemoUtil;
+import id.co.ppu.collectionfast2.util.DeviceUtil;
 import id.co.ppu.collectionfast2.util.NetUtil;
 import id.co.ppu.collectionfast2.util.RootUtil;
 import id.co.ppu.collectionfast2.util.Storage;
@@ -150,11 +150,11 @@ public class LoginActivity extends BasicActivity {
             boolean b = DataUtil.isMasterDataDownloaded(this, this.realm);
         }
 
-//        Animation animZoomIn = AnimationUtils.loadAnimation(this, R.anim.zoom_in);
-//        imageLogo.startAnimation(animZoomIn);
-
         tilUsername.startAnimation(AnimationUtils.loadAnimation(this, R.anim.slide_in_left));
         tilPassword.startAnimation(AnimationUtils.loadAnimation(this, R.anim.slide_in_right));
+
+
+        DeviceUtil.askPhoneAndStoragePermission(this);
 
     }
 
@@ -177,75 +177,14 @@ public class LoginActivity extends BasicActivity {
             imageLogo.setVisibility(View.GONE);
         }
 
-        //  Declare a new thread to do a preference check
-        Thread t = new Thread(new Runnable() {
-            @Override
-            public void run() {
-                //  Initialize SharedPreferences
-                SharedPreferences getPrefs = PreferenceManager
-                        .getDefaultSharedPreferences(getBaseContext());
-
-                //  Create a new boolean and preference and set it to true
-                boolean isFirstStart = false;// getPrefs.getBoolean("firstStart", true);
-
-                //  If the activity has never started before...
-                if (isFirstStart) {
-
-                    //  Launch app intro
-                    Intent i = new Intent(LoginActivity.this, WelcomeActivity.class);
-                    startActivity(i);
-
-                    //  Make a new preferences editor
-                    SharedPreferences.Editor e = getPrefs.edit();
-
-                    //  Edit preference to make it false because we don't want this to run again
-//                    e.putBoolean("firstStart", false);
-
-                    //  Apply changes
-                    e.apply();
-                }
-            }
-        });
-        // Start the thread
-        t.start();
-
-        UserData prevUserData = (UserData) Storage.getObjPreference(getApplicationContext(), Storage.KEY_USER, UserData.class);
-
-//        String lastUsername = Storage.getPreference(getApplicationContext(), Storage.KEY_USER_NAME_LAST);
-        if (prevUserData != null)
-            mUserNameView.setText(prevUserData.getUserId());
-
-        String password_rem = Storage.getPreference(getApplicationContext(), Storage.KEY_PASSWORD_REMEMBER);
-        if (!TextUtils.isEmpty(password_rem)) {
-            if (password_rem.equalsIgnoreCase("true")) {
-                cbRememberPwd.setChecked(true);
-
-                // load user & password
-                String lastPwd = Storage.getPreference(getApplicationContext(), Storage.KEY_PASSWORD_LAST);
-
-                String username = mUserNameView.getText().toString();
-                if (prevUserData != null && username.equalsIgnoreCase(prevUserData.getUserId())) {
-                    mPasswordView.setText(lastPwd);
-                } else
-                    mPasswordView.setText(null);
-            }
+        if (Utility.DEVELOPER_MODE) {
+            btnGetLKPUser.setVisibility(View.VISIBLE);
+            tvDebug.setVisibility(View.VISIBLE);
         }
 
-        // ATTENTION: This was auto-generated to implement the App Indexing API.
+            // ATTENTION: This was auto-generated to implement the App Indexing API.
         // See https://g.co/AppIndexing/AndroidStudio for more information.
         client = new GoogleApiClient.Builder(this).addApi(AppIndex.API).build();
-
-        String ipDev = Storage.getPreference(getApplicationContext(), Storage.KEY_SERVER_DEV_IP);
-        String portDev = Storage.getPreference(getApplicationContext(), Storage.KEY_SERVER_DEV_PORT);
-
-        if (TextUtils.isEmpty(ipDev))
-            ipDev = Utility.SERVER_DEV_IP; // Utility.SERVERS[Utility.getServerID(Utility.SERVER_DEV_NAME)][1];
-
-        if (TextUtils.isEmpty(portDev))
-            portDev = Utility.SERVER_DEV_PORT; // SERVERS[Utility.getServerID(Utility.SERVER_DEV_NAME)][2];
-
-        etServerDevIP.setText(ipDev);
-        etServerDevPort.setText(portDev);
 
         List<String> servers = new ArrayList<>();
         for (int i = 0; i < Utility.SERVERS.length; i++) {
@@ -280,15 +219,43 @@ public class LoginActivity extends BasicActivity {
             }
         });
 
+        UserData prevUserData = (UserData) Storage.getObjPreference(getApplicationContext(), Storage.KEY_USER, UserData.class);
+
+//        String lastUsername = Storage.getPreference(getApplicationContext(), Storage.KEY_USER_NAME_LAST);
+        if (prevUserData != null)
+            mUserNameView.setText(prevUserData.getUserId());
+
+        String password_rem = Storage.getPreference(getApplicationContext(), Storage.KEY_PASSWORD_REMEMBER);
+        if (!TextUtils.isEmpty(password_rem)) {
+            if (password_rem.equalsIgnoreCase("true")) {
+                cbRememberPwd.setChecked(true);
+
+                // load user & password
+                String lastPwd = Storage.getPreference(getApplicationContext(), Storage.KEY_PASSWORD_LAST);
+
+                String username = mUserNameView.getText().toString();
+                if (prevUserData != null && username.equalsIgnoreCase(prevUserData.getUserId())) {
+                    mPasswordView.setText(lastPwd);
+                } else
+                    mPasswordView.setText(null);
+            }
+        }
+
+        String ipDev = Storage.getPreference(getApplicationContext(), Storage.KEY_SERVER_DEV_IP);
+        String portDev = Storage.getPreference(getApplicationContext(), Storage.KEY_SERVER_DEV_PORT);
+
+        if (TextUtils.isEmpty(ipDev))
+            ipDev = Utility.SERVER_DEV_IP; // Utility.SERVERS[Utility.getServerID(Utility.SERVER_DEV_NAME)][1];
+
+        if (TextUtils.isEmpty(portDev))
+            portDev = Utility.SERVER_DEV_PORT; // SERVERS[Utility.getServerID(Utility.SERVER_DEV_NAME)][2];
+
+        etServerDevIP.setText(ipDev);
+        etServerDevPort.setText(portDev);
+
         int x = Storage.getPreferenceAsInt(getApplicationContext(), Storage.KEY_SERVER_ID, 0);
         Utility.setSpinnerAsString(spServers, Utility.getServerName(x));
 
-        if (Utility.DEVELOPER_MODE) {
-            btnGetLKPUser.setVisibility(View.VISIBLE);
-            tvDebug.setVisibility(View.VISIBLE);
-
-            tvDebug.setText(getDebugInfo());
-        }
     }
 
     private void signIn() {
@@ -353,7 +320,9 @@ public class LoginActivity extends BasicActivity {
             }
         }
 
-        signIn();
+        DeviceUtil.askCameraContactsAndLocationPermission(this);
+
+//        signIn();
     }
 
     private void attemptLogin() throws Exception {
@@ -800,8 +769,8 @@ public class LoginActivity extends BasicActivity {
         if (TextUtils.isEmpty(logoutDate)) {
             resetData();
 
-            Utility.showDialog(this, "Logout Warning", "Sorry, You are not logged out correctly last time.\n" +
-                    "Please refresh your LKP");
+            Utility.showDialog(this, "Logout Warning", getString(R.string.error_uncleaned_exit));
+            return;
         }
 
         UserData prevUserData = (UserData) Storage.getObjPreference(getApplicationContext(), Storage.KEY_USER, UserData.class);
@@ -891,6 +860,37 @@ public class LoginActivity extends BasicActivity {
         // See https://g.co/AppIndexing/AndroidStudio for more information.
         AppIndex.AppIndexApi.end(client, getIndexApiAction());
         client.disconnect();
+    }
+
+    @Override
+    public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
+        switch (requestCode) {
+            case DeviceUtil.MY_PERMISSIONS_REQUEST_PHONE_AND_STORAGE:{
+                if (grantResults.length > 1 && grantResults[0] == PackageManager.PERMISSION_GRANTED
+                        && grantResults[1] == PackageManager.PERMISSION_GRANTED) {
+                    if (Utility.DEVELOPER_MODE) {
+                        // need permission phone state
+                        tvDebug.setText(getDebugInfo());
+                    }
+
+                } else {
+                    finish();
+                }
+
+                return;
+            }
+            case DeviceUtil.MY_PERMISSIONS_REQUEST_CAMERA_AND_CONTACTS_AND_LOCATION: {
+                if (grantResults.length > 2 && grantResults[0] == PackageManager.PERMISSION_GRANTED
+                        && grantResults[1] == PackageManager.PERMISSION_GRANTED
+                        && grantResults[2] == PackageManager.PERMISSION_GRANTED) {
+                    signIn();
+                } else {
+                    Toast.makeText(this, getString(R.string.error_permit_mandatory), Toast.LENGTH_LONG).show();
+                }
+
+                return;
+            }
+        }
     }
 
     public class ServerAdapter extends ArrayAdapter<String> {

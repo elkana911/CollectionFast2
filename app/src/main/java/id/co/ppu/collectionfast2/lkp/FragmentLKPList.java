@@ -5,6 +5,9 @@ import android.app.ProgressDialog;
 import android.content.Context;
 import android.content.Intent;
 import android.graphics.Color;
+import android.graphics.Typeface;
+import android.graphics.drawable.Drawable;
+import android.graphics.drawable.GradientDrawable;
 import android.os.Build;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
@@ -548,6 +551,7 @@ public class FragmentLKPList extends Fragment {
 
             dataViewHolder.llRowLKP.setBackgroundColor(Color.WHITE);    // must
             dataViewHolder.ivCancelSync.setVisibility(View.GONE);
+            dataViewHolder.tvContactShortName.setVisibility(View.GONE);
 
             if (detail.getWorkStatus().equalsIgnoreCase("V")) {
                 dataViewHolder.llRowLKP.setBackgroundColor(ContextCompat.getColor(getContext(), R.color.colorLKPYellow));
@@ -559,6 +563,8 @@ public class FragmentLKPList extends Fragment {
                 dataViewHolder.llRowLKP.setBackgroundColor(ContextCompat.getColor(getContext(), R.color.colorLKPGreen));
                 dataViewHolder.ivCancelSync.setVisibility(View.GONE);
             }
+
+            dataViewHolder.tvContactShortName.setVisibility(dataViewHolder.ivCancelSync.getVisibility() == View.VISIBLE ? View.GONE : View.VISIBLE);
 
             TextView custName = dataViewHolder.tvCustName;
             /* ga cocok
@@ -575,6 +581,55 @@ public class FragmentLKPList extends Fragment {
             TextView tvKelKec = dataViewHolder.tvKelKec;
             if (detail.getAddress() != null) {
                 tvKelKec.setText("Kel/Kec: " +detail.getAddress().getCollKel() + "/" + detail.getAddress().getCollKec());
+            }
+
+            TextView tvContactShortName = dataViewHolder.tvContactShortName;
+            tvContactShortName.setText(Utility.getFirstTwoChars(detail.getCustName()).toUpperCase());
+            Typeface font = Typeface.createFromAsset(getActivity().getAssets(), Utility.FONT_SAMSUNG);
+            tvContactShortName.setTypeface(font);
+
+            // http://stackoverflow.com/questions/17823451/set-android-shape-color-programmatically
+            Drawable background = tvContactShortName.getBackground();
+            if (background instanceof GradientDrawable) {
+                // cast to 'ShapeDrawable'
+                GradientDrawable shapeDrawable = (GradientDrawable) background;
+
+                position %= 15;
+
+                int resColor = R.color.chatContact1;
+
+                if (position == 1)
+                    resColor = R.color.chatContact2;
+                else if (position == 2)
+                    resColor = R.color.chatContact3;
+                else if (position == 3)
+                    resColor = R.color.chatContact4;
+                else if (position == 4)
+                    resColor = R.color.chatContact5;
+                else if (position == 5)
+                    resColor = R.color.chatContact6;
+                else if (position == 6)
+                    resColor = R.color.chatContact7;
+                else if (position == 7)
+                    resColor = R.color.chatContact8;
+                else if (position == 8)
+                    resColor = R.color.chatContact9;
+                else if (position == 9)
+                    resColor = R.color.chatContact10;
+                else if (position == 10)
+                    resColor = R.color.chatContact11;
+                else if (position == 11)
+                    resColor = R.color.chatContact12;
+                else if (position == 12)
+                    resColor = R.color.chatContact13;
+                else if (position == 13)
+                    resColor = R.color.chatContact14;
+                else if (position == 14)
+                    resColor = R.color.chatContact15;
+
+                shapeDrawable.setColor(ContextCompat.getColor(getContext(), resColor));
+
+                custName.setTextColor(ContextCompat.getColor(getContext(), resColor));
             }
 
 
@@ -610,6 +665,9 @@ public class FragmentLKPList extends Fragment {
 
             @BindView(R.id.tvKelKec)
             TextView tvKelKec;
+
+            @BindView(R.id.tvContactShortName)
+            TextView tvContactShortName;
 
             public DataViewHolder(FrameLayout container) {
                 super(container);

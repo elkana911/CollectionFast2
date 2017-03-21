@@ -7,6 +7,6 @@
         android:color="#9f0000"/>
 
     <size
-        android:width="50dp"
-        android:height="50dp"/>
+        android:width="@dimen/circle_contact_shape"
+        android:height="@dimen/circle_contact_shape"/>
 </shape>

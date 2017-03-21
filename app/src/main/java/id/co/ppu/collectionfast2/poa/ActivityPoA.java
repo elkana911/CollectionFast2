@@ -24,17 +24,20 @@ public class ActivityPoA extends BasicActivity {
 
     public static final String PARAM_LKP_DETAIL = "lkp.detail";
     public static final String PARAM_COLLECTOR_ID = "collector.id";
+    public static final String PARAM_CUSTOMER_NAME = "customer.name";
+    public static final String PARAM_CUSTOMER_ADDR = "customer.address";
     public static final String PARAM_CONTRACT_NO = "customer.contractNo";
     public static final String PARAM_LDV_NO = "ldvNo";
 
     private String lkpDetail = null;
     private String collCode = null;
     private String contractNo = null;
-    private String ldvNo = null;
+    private String custAddr = null;
+    private String custName = null;
 
+    private String ldvNo = null;
     @BindView(R.id.ivCamera)
     ImageView ivCamera;
-
     @BindView(R.id.pulsator)
     PulsatorLayout pulsator;
 
@@ -54,17 +57,22 @@ public class ActivityPoA extends BasicActivity {
 
         ButterKnife.bind(this);
 
-        if (getSupportActionBar() != null) {
-            getSupportActionBar().setDisplayHomeAsUpEnabled(true);
-            getSupportActionBar().setHomeButtonEnabled(true);
-        }
-
         Bundle extras = getIntent().getExtras();
         if (extras != null) {
             this.lkpDetail = extras.getString(PARAM_LKP_DETAIL);        // bisa kosong di paymententri
             this.collCode = extras.getString(PARAM_COLLECTOR_ID);
             this.contractNo = extras.getString(PARAM_CONTRACT_NO);  // bisa kosong di paymententry
+            this.custName = extras.getString(PARAM_CUSTOMER_NAME);
+            this.custAddr = extras.getString(PARAM_CUSTOMER_ADDR);
             this.ldvNo = extras.getString(PARAM_LDV_NO);
+
+            setTitle(custName);
+        }
+
+        if (getSupportActionBar() != null) {
+            getSupportActionBar().setDisplayHomeAsUpEnabled(true);
+            getSupportActionBar().setHomeButtonEnabled(true);
+            getSupportActionBar().setSubtitle(this.custAddr);
         }
 
 
@@ -73,6 +81,7 @@ public class ActivityPoA extends BasicActivity {
 
     @OnClick(R.id.llTakePhoto)
     public void onTakePoA() {
+
         PoAUtil.callCameraIntent(this, collCode, ldvNo, contractNo);
     }
 
@@ -92,4 +101,5 @@ public class ActivityPoA extends BasicActivity {
             finish();
         }
     }
+
 }

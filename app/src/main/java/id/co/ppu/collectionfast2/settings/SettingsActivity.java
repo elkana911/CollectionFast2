@@ -43,6 +43,8 @@ public class SettingsActivity extends AppCompatPreferenceActivity {
 
         if (id == android.R.id.home) {
             finish();
+            return true;    // solve tablet problem
+
         }
         return super.onOptionsItemSelected(item);
     }

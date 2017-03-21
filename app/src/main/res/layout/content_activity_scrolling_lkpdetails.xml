@@ -13,413 +13,426 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_margin="@dimen/text_margin"
-        android:layoutAnimation="@anim/layout_slide_up"
         android:orientation="vertical"
         android:paddingBottom="16dp">
 
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:orientation="horizontal">
+            android:layoutAnimation="@anim/layout_slide_up"
+            android:orientation="vertical">
 
-            <android.support.design.widget.TextInputLayout
-                android:layout_width="0dp"
-                android:layout_height="wrap_content"
-                android:layout_weight="0.7">
-
-                <AutoCompleteTextView
-                    android:id="@+id/etContractNo"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:clickable="false"
-                    android:focusable="false"
-                    android:focusableInTouchMode="false"
-                    android:hint="Contract No"
-                    android:maxLines="1"
-                    android:textColor="@android:color/tertiary_text_dark" />
-            </android.support.design.widget.TextInputLayout>
-
-            <android.support.design.widget.TextInputLayout
-                android:layout_width="0dp"
-                android:layout_height="wrap_content"
-                android:layout_weight="0.3">
-
-                <AutoCompleteTextView
-                    android:id="@+id/etPlatform"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:clickable="false"
-                    android:focusable="false"
-                    android:focusableInTouchMode="false"
-                    android:gravity="end"
-                    android:hint="Platform"
-                    android:maxLines="1"
-                    android:textColor="@android:color/tertiary_text_dark" />
-            </android.support.design.widget.TextInputLayout>
-        </LinearLayout>
-
-
-        <android.support.design.widget.TextInputLayout
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:visibility="gone">
-
-            <AutoCompleteTextView
-                android:id="@+id/etCustName"
+            <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:hint="Customer Name"
-                android:maxLines="1" />
-        </android.support.design.widget.TextInputLayout>
+                android:orientation="horizontal">
 
-        <android.support.design.widget.TextInputLayout
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content">
+                <android.support.design.widget.TextInputLayout
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="0.7">
 
-            <AutoCompleteTextView
-                android:id="@+id/etPhone"
+                    <AutoCompleteTextView
+                        android:id="@+id/etContractNo"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:clickable="false"
+                        android:focusable="false"
+                        android:focusableInTouchMode="false"
+                        android:hint="Contract No"
+                        android:maxLines="1"
+                        android:textColor="@android:color/tertiary_text_dark" />
+                </android.support.design.widget.TextInputLayout>
+
+                <android.support.design.widget.TextInputLayout
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="0.3">
+
+                    <AutoCompleteTextView
+                        android:id="@+id/etPlatform"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:clickable="false"
+                        android:focusable="false"
+                        android:focusableInTouchMode="false"
+                        android:gravity="end"
+                        android:hint="Platform"
+                        android:maxLines="1"
+                        android:textColor="@android:color/tertiary_text_dark" />
+                </android.support.design.widget.TextInputLayout>
+            </LinearLayout>
+
+
+            <android.support.design.widget.TextInputLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:autoLink="phone"
-                android:focusable="false"
-                android:focusableInTouchMode="false"
-                android:hint="Phone No"
-                android:maxLines="1" />
-        </android.support.design.widget.TextInputLayout>
-
-        <LinearLayout
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:orientation="horizontal">
-
-            <android.support.design.widget.TextInputLayout
-                android:layout_width="0dp"
-                android:layout_height="wrap_content"
-                android:layout_weight="0.7">
-
-                <EditText
-                    android:id="@+id/etAddress"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:clickable="false"
-                    android:focusable="false"
-                    android:focusableInTouchMode="false"
-                    android:hint="Address"
-                    android:maxLines="3"
-                    android:textColor="@android:color/tertiary_text_dark" />
-            </android.support.design.widget.TextInputLayout>
-
-            <RadioGroup
-                android:layout_width="0dp"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="16dp"
-                android:layout_weight="0.3">
-
-                <RadioButton
-                    android:id="@+id/radioHome"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:checked="true"
-                    android:text="Home"
-                    android:textAppearance="@android:style/TextAppearance.DeviceDefault.Small" />
-
-                <RadioButton
-                    android:id="@+id/radioOffice"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="Office"
-                    android:textAppearance="@android:style/TextAppearance.DeviceDefault.Small" />
-            </RadioGroup>
-
-        </LinearLayout>
-
-        <LinearLayout
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:orientation="horizontal">
-
-            <android.support.design.widget.TextInputLayout
-                android:layout_width="0dp"
-                android:layout_height="wrap_content"
-                android:layout_weight="0.5">
+                android:visibility="gone">
 
                 <AutoCompleteTextView
-                    android:id="@+id/etKelurahan"
+                    android:id="@+id/etCustName"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:clickable="false"
-                    android:focusable="false"
-                    android:focusableInTouchMode="false"
-                    android:hint="Kelurahan"
-                    android:maxLines="1"
-                    android:textAppearance="@android:style/TextAppearance.DeviceDefault.Small"
-                    android:textColor="@android:color/tertiary_text_dark" />
+                    android:hint="Customer Name"
+                    android:maxLines="1" />
             </android.support.design.widget.TextInputLayout>
 
             <android.support.design.widget.TextInputLayout
-                android:layout_width="0dp"
-                android:layout_height="wrap_content"
-                android:layout_weight="0.5">
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content">
 
                 <AutoCompleteTextView
-                    android:id="@+id/etKecamatan"
+                    android:id="@+id/etPhone"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:clickable="false"
+                    android:autoLink="phone"
                     android:focusable="false"
                     android:focusableInTouchMode="false"
-                    android:hint="Kecamatan"
-                    android:maxLines="1"
-                    android:textAppearance="@android:style/TextAppearance.DeviceDefault.Small"
-                    android:textColor="@android:color/tertiary_text_dark" />
+                    android:hint="Phone No"
+                    android:maxLines="1" />
             </android.support.design.widget.TextInputLayout>
 
-        </LinearLayout>
-
-        <android.support.design.widget.TextInputLayout
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content">
-
-            <EditText
-                android:id="@+id/etTglAkhirByr"
+            <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:clickable="false"
-                android:focusable="false"
-                android:focusableInTouchMode="false"
-                android:gravity="right"
-                android:hint="Tgl Terakhir Bayar"
-                android:maxLines="1" />
-        </android.support.design.widget.TextInputLayout>
+                android:orientation="horizontal">
 
-        <LinearLayout
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:orientation="horizontal">
-
-            <android.support.design.widget.TextInputLayout
-                android:layout_width="0dp"
-                android:layout_height="wrap_content"
-                android:layout_weight="0.5">
-
-                <EditText
-                    android:id="@+id/etNoAngsuranBayar"
-                    android:layout_width="match_parent"
+                <android.support.design.widget.TextInputLayout
+                    android:layout_width="0dp"
                     android:layout_height="wrap_content"
-                    android:clickable="false"
-                    android:focusable="false"
-                    android:focusableInTouchMode="false"
-                    android:hint="No Angsuran Terbayar"
-                    android:maxLines="1"
-                    android:textColor="@android:color/tertiary_text_dark" />
-            </android.support.design.widget.TextInputLayout>
+                    android:layout_weight="0.7">
 
-            <android.support.design.widget.TextInputLayout
-                android:layout_width="0dp"
-                android:layout_height="wrap_content"
-                android:layout_weight="0.5">
+                    <EditText
+                        android:id="@+id/etAddress"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:clickable="false"
+                        android:focusable="false"
+                        android:focusableInTouchMode="false"
+                        android:hint="Address"
+                        android:maxLines="3"
+                        android:textColor="@android:color/tertiary_text_dark" />
+                </android.support.design.widget.TextInputLayout>
 
-                <EditText
-                    android:id="@+id/etLamaHari"
-                    android:layout_width="match_parent"
+                <RadioGroup
+                    android:layout_width="0dp"
                     android:layout_height="wrap_content"
-                    android:clickable="false"
-                    android:focusable="false"
-                    android:focusableInTouchMode="false"
-                    android:gravity="right"
-                    android:hint="Lama Hari"
-                    android:inputType="number"
-                    android:maxLines="1"
-                    android:textColor="@android:color/tertiary_text_dark" />
-            </android.support.design.widget.TextInputLayout>
+                    android:layout_marginTop="16dp"
+                    android:layout_weight="0.3">
 
-        </LinearLayout>
+                    <RadioButton
+                        android:id="@+id/radioHome"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:checked="true"
+                        android:text="Home"
+                        android:textAppearance="@android:style/TextAppearance.DeviceDefault.Small" />
 
-        <LinearLayout
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:orientation="horizontal">
+                    <RadioButton
+                        android:id="@+id/radioOffice"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Office"
+                        android:textAppearance="@android:style/TextAppearance.DeviceDefault.Small" />
+                </RadioGroup>
 
-            <android.support.design.widget.TextInputLayout
-                android:layout_width="0dp"
-                android:layout_height="wrap_content"
-                android:layout_weight="0.5">
+            </LinearLayout>
 
-                <EditText
-                    android:id="@+id/etSisaPokok"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:clickable="false"
-                    android:focusable="false"
-                    android:focusableInTouchMode="false"
-                    android:hint="Sisa Pokok"
-                    android:maxLines="1"
-                    android:textColor="@android:color/tertiary_text_dark" />
-            </android.support.design.widget.TextInputLayout>
-
-            <android.support.design.widget.TextInputLayout
-                android:layout_width="0dp"
-                android:layout_height="wrap_content"
-                android:layout_weight="0.5">
-
-                <EditText
-                    android:id="@+id/etAngsuran"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:clickable="false"
-                    android:focusable="false"
-                    android:focusableInTouchMode="false"
-                    android:gravity="right"
-                    android:hint="Angsuran"
-                    android:inputType="number"
-                    android:maxLines="1"
-                    android:textColor="@android:color/tertiary_text_dark" />
-            </android.support.design.widget.TextInputLayout>
-        </LinearLayout>
-
-        <android.support.design.widget.TextInputLayout
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content">
-
-            <EditText
-                android:id="@+id/etTargetTagih"
+            <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:clickable="false"
-                android:focusable="false"
-                android:focusableInTouchMode="false"
-                android:gravity="right"
-                android:hint="Target Tagih"
-                android:maxLines="1"
-                android:textStyle="bold" />
-        </android.support.design.widget.TextInputLayout>
+                android:orientation="horizontal">
 
-        <LinearLayout
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:orientation="horizontal">
-
-            <android.support.design.widget.TextInputLayout
-                android:layout_width="0dp"
-                android:layout_height="wrap_content"
-                android:layout_weight="0.5">
-
-                <EditText
-                    android:id="@+id/etDenda"
-                    android:layout_width="match_parent"
+                <android.support.design.widget.TextInputLayout
+                    android:layout_width="0dp"
                     android:layout_height="wrap_content"
-                    android:clickable="false"
-                    android:focusable="false"
-                    android:focusableInTouchMode="false"
-                    android:hint="Denda"
-                    android:maxLines="1"
-                    android:textColor="@android:color/tertiary_text_dark" />
-            </android.support.design.widget.TextInputLayout>
+                    android:layout_weight="0.5">
 
-            <android.support.design.widget.TextInputLayout
-                android:layout_width="0dp"
-                android:layout_height="wrap_content"
-                android:layout_weight="0.5">
+                    <AutoCompleteTextView
+                        android:id="@+id/etKelurahan"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:clickable="false"
+                        android:focusable="false"
+                        android:focusableInTouchMode="false"
+                        android:hint="Kelurahan"
+                        android:maxLines="1"
+                        android:textAppearance="@android:style/TextAppearance.DeviceDefault.Small"
+                        android:textColor="@android:color/tertiary_text_dark" />
+                </android.support.design.widget.TextInputLayout>
 
-                <EditText
-                    android:id="@+id/etDendaBerjalan"
-                    android:layout_width="match_parent"
+                <android.support.design.widget.TextInputLayout
+                    android:layout_width="0dp"
                     android:layout_height="wrap_content"
-                    android:clickable="false"
-                    android:focusable="false"
-                    android:focusableInTouchMode="false"
-                    android:gravity="right"
-                    android:hint="Denda Berjalan"
-                    android:maxLines="1"
-                    android:textColor="@android:color/tertiary_text_dark" />
-            </android.support.design.widget.TextInputLayout>
+                    android:layout_weight="0.5">
 
-        </LinearLayout>
+                    <AutoCompleteTextView
+                        android:id="@+id/etKecamatan"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:clickable="false"
+                        android:focusable="false"
+                        android:focusableInTouchMode="false"
+                        android:hint="Kecamatan"
+                        android:maxLines="1"
+                        android:textAppearance="@android:style/TextAppearance.DeviceDefault.Small"
+                        android:textColor="@android:color/tertiary_text_dark" />
+                </android.support.design.widget.TextInputLayout>
 
-        <LinearLayout
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:orientation="horizontal">
+            </LinearLayout>
 
             <android.support.design.widget.TextInputLayout
-                android:layout_weight="0.5"
-                android:layout_width="0dp"
+                android:layout_width="match_parent"
                 android:layout_height="wrap_content">
 
                 <EditText
-                    android:id="@+id/etDanaSosial"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:clickable="false"
-                    android:focusable="false"
-                    android:focusableInTouchMode="false"
-                    android:gravity="end"
-                    android:hint="Dana Sosial"
-                    android:inputType="number"
-                    android:maxLines="1"
-                    android:textColor="@android:color/tertiary_text_dark" />
-            </android.support.design.widget.TextInputLayout>
-
-            <android.support.design.widget.TextInputLayout
-                android:layout_weight="0.5"
-                android:layout_width="0dp"
-                android:layout_height="wrap_content">
-
-                <EditText
-                    android:id="@+id/etBiayaTagih"
+                    android:id="@+id/etTglAkhirByr"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:clickable="false"
                     android:focusable="false"
                     android:focusableInTouchMode="false"
                     android:gravity="right"
-                    android:hint="Biaya Tagih"
-                    android:inputType="number"
-                    android:maxLines="1"
-                    android:textColor="@android:color/tertiary_text_dark" />
+                    android:hint="Tgl Terakhir Bayar"
+                    android:maxLines="1" />
             </android.support.design.widget.TextInputLayout>
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal">
+
+                <android.support.design.widget.TextInputLayout
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="0.5">
+
+                    <EditText
+                        android:id="@+id/etNoAngsuranBayar"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:clickable="false"
+                        android:focusable="false"
+                        android:focusableInTouchMode="false"
+                        android:hint="No Angsuran Terbayar"
+                        android:maxLines="1"
+                        android:textColor="@android:color/tertiary_text_dark" />
+                </android.support.design.widget.TextInputLayout>
+
+                <android.support.design.widget.TextInputLayout
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="0.5">
+
+                    <EditText
+                        android:id="@+id/etLamaHari"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:clickable="false"
+                        android:focusable="false"
+                        android:focusableInTouchMode="false"
+                        android:gravity="right"
+                        android:hint="Lama Hari"
+                        android:inputType="number"
+                        android:maxLines="1"
+                        android:textColor="@android:color/tertiary_text_dark" />
+                </android.support.design.widget.TextInputLayout>
+
+            </LinearLayout>
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal">
+
+                <android.support.design.widget.TextInputLayout
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="0.5">
+
+                    <EditText
+                        android:id="@+id/etSisaPokok"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:clickable="false"
+                        android:focusable="false"
+                        android:focusableInTouchMode="false"
+                        android:hint="Sisa Pokok"
+                        android:maxLines="1"
+                        android:textColor="@android:color/tertiary_text_dark" />
+                </android.support.design.widget.TextInputLayout>
+
+                <android.support.design.widget.TextInputLayout
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="0.5">
+
+                    <EditText
+                        android:id="@+id/etAngsuran"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:clickable="false"
+                        android:focusable="false"
+                        android:focusableInTouchMode="false"
+                        android:gravity="right"
+                        android:hint="Angsuran"
+                        android:inputType="number"
+                        android:maxLines="1"
+                        android:textColor="@android:color/tertiary_text_dark" />
+                </android.support.design.widget.TextInputLayout>
+            </LinearLayout>
+
+            <android.support.design.widget.TextInputLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content">
+
+                <EditText
+                    android:id="@+id/etTargetTagih"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:clickable="false"
+                    android:focusable="false"
+                    android:focusableInTouchMode="false"
+                    android:gravity="right"
+                    android:hint="Target Tagih"
+                    android:maxLines="1"
+                    android:textStyle="bold" />
+            </android.support.design.widget.TextInputLayout>
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal">
+
+                <android.support.design.widget.TextInputLayout
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="0.5">
+
+                    <EditText
+                        android:id="@+id/etDenda"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:clickable="false"
+                        android:focusable="false"
+                        android:focusableInTouchMode="false"
+                        android:hint="Denda"
+                        android:maxLines="1"
+                        android:textColor="@android:color/tertiary_text_dark" />
+                </android.support.design.widget.TextInputLayout>
+
+                <android.support.design.widget.TextInputLayout
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="0.5">
+
+                    <EditText
+                        android:id="@+id/etDendaBerjalan"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:clickable="false"
+                        android:focusable="false"
+                        android:focusableInTouchMode="false"
+                        android:gravity="right"
+                        android:hint="Denda Berjalan"
+                        android:maxLines="1"
+                        android:textColor="@android:color/tertiary_text_dark" />
+                </android.support.design.widget.TextInputLayout>
+
+            </LinearLayout>
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal">
+
+                <android.support.design.widget.TextInputLayout
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="0.5">
+
+                    <EditText
+                        android:id="@+id/etDanaSosial"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:clickable="false"
+                        android:focusable="false"
+                        android:focusableInTouchMode="false"
+                        android:gravity="end"
+                        android:hint="Dana Sosial"
+                        android:inputType="number"
+                        android:maxLines="1"
+                        android:textColor="@android:color/tertiary_text_dark" />
+                </android.support.design.widget.TextInputLayout>
+
+                <android.support.design.widget.TextInputLayout
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="0.5">
+
+                    <EditText
+                        android:id="@+id/etBiayaTagih"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:clickable="false"
+                        android:focusable="false"
+                        android:focusableInTouchMode="false"
+                        android:gravity="right"
+                        android:hint="Biaya Tagih"
+                        android:inputType="number"
+                        android:maxLines="1"
+                        android:textColor="@android:color/tertiary_text_dark" />
+                </android.support.design.widget.TextInputLayout>
+            </LinearLayout>
         </LinearLayout>
 
-        <Button
-            android:id="@+id/btnPaymentReceive"
-            style="@style/Widget.AppCompat.Button.Colored"
+        <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginTop="12dp"
-            android:text="PAYMENT RECEIVE" />
+            android:orientation="vertical">
+
+            <Button
+                android:id="@+id/btnPaymentReceive"
+                style="@style/Widget.AppCompat.Button.Colored"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="12dp"
+                android:text="PAYMENT RECEIVE" />
 
 
-        <Button
-            android:id="@+id/btnVisitResultEntry"
-            style="@style/Widget.AppCompat.Button.Colored"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:text="VISIT RESULT ENTRY" />
+            <Button
+                android:id="@+id/btnVisitResultEntry"
+                style="@style/Widget.AppCompat.Button.Colored"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="VISIT RESULT ENTRY" />
 
-        <Button
-            android:id="@+id/btnRepoEntry"
-            style="@style/Widget.AppCompat.Button.Colored"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:text="REPO ENTRY" />
+            <Button
+                android:id="@+id/btnRepoEntry"
+                style="@style/Widget.AppCompat.Button.Colored"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="REPO ENTRY" />
 
-        <Button
-            android:id="@+id/btnVehicleInfo"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:text="VEHICLE INFO" />
+            <Button
+                android:id="@+id/btnVehicleInfo"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="VEHICLE INFO" />
 
-        <Button
-            android:id="@+id/btnPaymentHist"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:text="PAYMENT HISTORY" />
+            <Button
+                android:id="@+id/btnPaymentHist"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="PAYMENT HISTORY" />
 
-        <Button
-            android:id="@+id/btnChangeAddr"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:text="CHANGE ADDRESS" />
+            <Button
+                android:id="@+id/btnChangeAddr"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="CHANGE ADDRESS" />
+
+        </LinearLayout>
     </LinearLayout>
 
 </android.support.v4.widget.NestedScrollView>
