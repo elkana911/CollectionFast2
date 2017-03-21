@@ -921,7 +921,7 @@ public class MainActivity extends ChatActivity
 
             title = "Summary LKP";
         } else if (viewId == R.id.nav_chats) {
-            fab.setImageDrawable(AppCompatDrawableManager.get().getDrawable(MainActivity.this, R.drawable.ic_send_black_24dp));
+            fab.setImageDrawable(AppCompatDrawableManager.get().getDrawable(MainActivity.this, R.drawable.ic_edit_black_24dp));
 
             fragment = new FragmentChatActiveContacts();
 
@@ -1078,7 +1078,7 @@ public class MainActivity extends ChatActivity
         if (!NetUtil.isConnected(this)
                 && DemoUtil.isDemo(this)) {
 
-            final LKPData lkpData = DemoUtil.buildLKP(new Date(), currentUser.getUserId(), currentUser.getBranchId(), createdBy);
+            final LKPData lkpData = DemoUtil.buildLKP(lkpDate, currentUser.getUserId(), currentUser.getBranchId(), createdBy);
             currentLDVNo = lkpData.getHeader().getLdvNo();
 
             realm.executeTransaction(new Realm.Transaction() {
@@ -1246,8 +1246,15 @@ public class MainActivity extends ChatActivity
         if (detail instanceof RealmObject) {
             DisplayTrnLDVDetails dtl = this.realm.copyFromRealm(detail);
 
-            // always call POA if not synced / edited
-            if (dtl.getWorkStatus().equals("A")) {
+            Date serverDate = this.realm.where(ServerInfo.class).findFirst().getServerDate();
+            boolean isLKPInquiry = !dtl.getCreatedBy().equals("JOB" + Utility.convertDateToString(serverDate, "yyyyMMdd"));
+
+            // always call POA if not synced / edited / close batch
+            if (dtl.getWorkStatus().equals("A")
+                    && !DataUtil.isLDVHeaderClosed(this.realm, detail.getContractNo())
+                    // kalo lkpinquiry ga
+                    && !isLKPInquiry
+                    ) {
                 Intent i = new Intent((this), ActivityPoA.class);
 
                 String json = new Gson().toJson(dtl);
@@ -1259,8 +1266,8 @@ public class MainActivity extends ChatActivity
 
                 String alamat = null;
                 if (detail.getAddress() != null) {
-                    alamat = "Kel/Kec: " +detail.getAddress().getCollKel() + "/" + detail
-                    .getAddress().getCollKec();
+                    alamat = "Kel/Kec: " + detail.getAddress().getCollKel() + "/" + detail
+                            .getAddress().getCollKec();
                 }
 
                 i.putExtra(ActivityPoA.PARAM_CUSTOMER_ADDR, alamat);
@@ -1725,6 +1732,30 @@ public class MainActivity extends ChatActivity
     }
 
     private void closeBatchYesterday(boolean showDialog, final OnSuccessError listener) {
+
+        // override demo user
+        if (!NetUtil.isConnected(MainActivity.this)
+                && DemoUtil.isDemo(MainActivity.this)) {
+
+            resetData();
+
+            AlertDialog.Builder alertDialogBuilder = new AlertDialog.Builder(MainActivity.this);
+            alertDialogBuilder.setTitle("");
+            alertDialogBuilder.setMessage("Close Batch success.\nPlease relogin.");
+            alertDialogBuilder.setPositiveButton("Ok", new DialogInterface.OnClickListener() {
+
+                @Override
+                public void onClick(DialogInterface dialog, int which) {
+                    backToLoginScreen();
+                }
+            });
+
+            alertDialogBuilder.show();
+
+            return;
+        }
+
+
         final ProgressDialog mProgressDialog = new ProgressDialog(this);
 
         if (showDialog) {
@@ -1810,8 +1841,6 @@ public class MainActivity extends ChatActivity
 
         if (syncLdvHeader.anyDataToSync()) {
 
-            final ProgressDialog mProgressDialog = Utility.createAndShowProgressDialog(this, getString(R.string.message_please_wait));
-
             final RequestSyncLKP req = new RequestSyncLKP();
             req.setLdvHeader(syncLdvHeader.getDataToSync());
 
@@ -1820,7 +1849,6 @@ public class MainActivity extends ChatActivity
             // override demo user
             if (!NetUtil.isConnected(MainActivity.this)
                     && DemoUtil.isDemo(MainActivity.this)) {
-                Utility.dismissDialog(mProgressDialog);
 
                 if (req.getLdvHeader() != null && req.getLdvHeader().size() > 0) {
                     syncLdvHeader.syncData();
@@ -1843,6 +1871,8 @@ public class MainActivity extends ChatActivity
 
                 return;
             }
+
+            final ProgressDialog mProgressDialog = Utility.createAndShowProgressDialog(this, getString(R.string.message_please_wait));
 
             ApiInterface fastService =
                     ServiceGenerator.createService(ApiInterface.class, Utility.buildUrl(Storage.getPreferenceAsInt(getApplicationContext(), Storage.KEY_SERVER_ID, 0)));
@@ -1969,10 +1999,11 @@ public class MainActivity extends ChatActivity
         if (syncLdvHeader.anyDataToSync()) {
 
             final ProgressDialog mProgressDialog = new ProgressDialog(this);
+            mProgressDialog.setIndeterminate(true);
+            mProgressDialog.setCancelable(false);
+            mProgressDialog.setMessage(getString(R.string.message_please_wait));
+
             if (showDialog) {
-                mProgressDialog.setIndeterminate(true);
-                mProgressDialog.setCancelable(false);
-                mProgressDialog.setMessage(getString(R.string.message_please_wait));
                 mProgressDialog.show();
             }
 
@@ -3184,7 +3215,7 @@ public class MainActivity extends ChatActivity
 
             for (File file : poaFilesBuffer) {
                 if (file.getName().equals(trn.getFileName())) {
-                    ada = file ;
+                    ada = file;
                     break;
                 }
             }

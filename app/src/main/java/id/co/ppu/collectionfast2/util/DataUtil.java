@@ -11,6 +11,8 @@ import java.io.IOException;
 import java.util.Date;
 import java.util.Set;
 
+import id.co.ppu.collectionfast2.exceptions.ContractNotFoundException;
+import id.co.ppu.collectionfast2.exceptions.LKPNotFoundException;
 import id.co.ppu.collectionfast2.exceptions.NoConnectionException;
 import id.co.ppu.collectionfast2.listener.OnPostRetrieveServerInfo;
 import id.co.ppu.collectionfast2.pojo.DisplayTrnContractBuckets;
@@ -857,6 +859,31 @@ public class DataUtil {
 //        d = bgRealm.where(TrnFlagTimestamp.class).findAll().deleteAllFromRealm();
 //        bgRealm.copyToRealmOrUpdate(data.getFlagTimestamps());
 
+    }
+
+    public static TrnLDVHeader getLDVHeaderByContract(Realm realm, String contractNo) throws ContractNotFoundException, LKPNotFoundException{
+        TrnLDVDetails dtl = realm.where(TrnLDVDetails.class)
+                .equalTo("contractNo", contractNo)
+                .findFirst();
+
+        if (dtl == null)
+            throw new ContractNotFoundException("Contract " + contractNo + " not found");
+
+        TrnLDVHeader trnLDVHeader = realm.where(TrnLDVHeader.class)
+                .equalTo("ldvNo", dtl.getPk().getLdvNo())
+                .findFirst();
+
+        if (trnLDVHeader == null)
+            throw new LKPNotFoundException("LDV " + dtl.getPk().getLdvNo() + " for contract " + contractNo + " not found");
+
+        return trnLDVHeader;
+
+    }
+
+    public static boolean isLDVHeaderClosed(Realm realm, String contractNo) throws ContractNotFoundException, LKPNotFoundException{
+        TrnLDVHeader trnLDVHeader = getLDVHeaderByContract(realm, contractNo);
+
+        return trnLDVHeader != null && trnLDVHeader.getCloseBatch() != null && trnLDVHeader.getCloseBatch().equals("Y");
     }
 }
 

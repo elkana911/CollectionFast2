@@ -379,7 +379,8 @@ public class DemoUtil {
         LKPData data = new LKPData();
         TrnLDVHeader header = new TrnLDVHeader();
 
-        header.setLdvNo("7100020160829026160172");
+        header.setLdvNo("71000" + Utility.convertDateToString(lkpDate, "yyyyMMdd") + "026160172");
+//        header.setLdvNo("7100020160829026160172");
         header.setLdvDate(lkpDate);
         header.setOfficeCode(officeCode);
         header.setCollCode(collCode);
@@ -505,12 +506,15 @@ public class DemoUtil {
         data.setRepo(repos);
 
         List<TrnRVB> rvbs = new ArrayList<TrnRVB>();
-        rvbs.add(generateTrnRVB("7100016K1183025", officeCode, collCode, createdBy, createdTimestamp));
-        rvbs.add(generateTrnRVB("7100016K1183026", officeCode, collCode, createdBy, createdTimestamp));
-        rvbs.add(generateTrnRVB("7100016K1183027", officeCode, collCode, createdBy, createdTimestamp));
-        rvbs.add(generateTrnRVB("7100016K1183028", officeCode, collCode, createdBy, createdTimestamp));
-        rvbs.add(generateTrnRVB("7100016K1183722", officeCode, collCode, createdBy, createdTimestamp));
-        rvbs.add(generateTrnRVB("7100016K1183723", officeCode, collCode, createdBy, createdTimestamp));
+        // hanya berlaku non lkp inquiry
+        if (Utility.isSameDay(lkpDate, new Date())) {
+            rvbs.add(generateTrnRVB("7100016K1183025", officeCode, collCode, createdBy, createdTimestamp));
+            rvbs.add(generateTrnRVB("7100016K1183026", officeCode, collCode, createdBy, createdTimestamp));
+            rvbs.add(generateTrnRVB("7100016K1183027", officeCode, collCode, createdBy, createdTimestamp));
+            rvbs.add(generateTrnRVB("7100016K1183028", officeCode, collCode, createdBy, createdTimestamp));
+            rvbs.add(generateTrnRVB("7100016K1183722", officeCode, collCode, createdBy, createdTimestamp));
+            rvbs.add(generateTrnRVB("7100016K1183723", officeCode, collCode, createdBy, createdTimestamp));
+        }
         data.setRvb(rvbs);
 
         List<TrnRVColl> rvColls = new ArrayList<TrnRVColl>();
@@ -590,9 +594,9 @@ public class DemoUtil {
 
         List<TrnChatContact> dummyData = new ArrayList<>();
 
-        dummyData.add(generateTrnChatContact("11111111", "Satu", "123", "Available"));
-        dummyData.add(generateTrnChatContact("22222222", "Dua", "123", "Semangatttt"));
-        dummyData.add(generateTrnChatContact("33333333", "Tiga", "123", "Aku galau"));
+        dummyData.add(generateTrnChatContact("10462478", "Leo Nardo Hutabarat", "123", "Available"));
+        dummyData.add(generateTrnChatContact("29846289", "Michelle Duo", "123", "Semangatttt"));
+        dummyData.add(generateTrnChatContact("38501527", "Fransisco Torrent", "123", "Ha ha ha"));
 
         return dummyData;
     }

@@ -744,14 +744,18 @@ public abstract class ChatActivity extends SyncActivity implements FragmentChatA
 
     @Override
     public void isOffline(String collCode, final OnSuccessError listener) {
-        if (!NetUtil.isConnected(this)) {
-            return;
-        }
-
         RequestChatStatus req = new RequestChatStatus();
         req.setCollCode(collCode);
         req.setStatus(null);
         req.setMessage(null);
+
+        if (!NetUtil.isConnected(this)) {
+            if (listener != null) {
+                listener.onFailure(new RuntimeException("No Connection"));
+            }
+
+            return;
+        }
 
         Call<ResponseBody> call = getAPIService().checkStatus(req);
         call.enqueue(new Callback<ResponseBody>() {
@@ -794,17 +798,7 @@ public abstract class ChatActivity extends SyncActivity implements FragmentChatA
                 } catch (IOException e) {
                     e.printStackTrace();
                 }
-                /*
-                Realm r = Realm.getDefaultInstance();
-                try {
-                    r.beginTransaction();
-                    r.delete(TrnChatContact.class);
-                    r.commitTransaction();
-                } finally {
-                    if (r != null)
-                        r.close();
-                }
-*/
+
                 if (listener != null)
                     listener.onSuccess(null);
             }

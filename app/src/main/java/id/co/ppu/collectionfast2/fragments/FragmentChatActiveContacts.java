@@ -140,11 +140,14 @@ public class FragmentChatActiveContacts extends Fragment {
             public void onSuccess(String msg) {
 //                if (listAdapter != null)
 //                    listAdapter.notifyDataSetChanged();
+                tvSeparator.setText("" + listAdapter.getItemCount() + " CONTACTS");
 
             }
 
             @Override
             public void onFailure(Throwable throwable) {
+                tvSeparator.setText("" + listAdapter.getItemCount() + " CONTACTS");
+
                 if (throwable == null) {
                     return;
                 }
