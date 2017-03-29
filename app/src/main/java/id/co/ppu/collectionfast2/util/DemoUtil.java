@@ -119,14 +119,14 @@ public class DemoUtil {
     }
 
     private static TrnLDVDetails generateTrnLDVDetail(String ldvNo, long seqNo, String period
-                                                , String contractNo, String custNo, String custName
-                                                , Long ovdInstNo, Date ovdDueDate, Date dueDate
-                                                , Long instNo, Long prncAmbc, Long intrAmbc, Long penaltyAmbc
-                                                , Long prncAC, Long intrAC, Long penaltyAC, String ldvFlag
-                                                , String workStatus, Long prncOTS, Date startedTimestamp
-                                                , String createdBy, Date createdTimestamp, String occupation
-                                                , String subOccupation, Long monthInst, Long daysIntrAmbc
-                                                , Long collectionFee, Date lastPaidDate, Long dpd) {
+            , String contractNo, String custNo, String custName
+            , Long ovdInstNo, Date ovdDueDate, Date dueDate
+            , Long instNo, Long prncAmbc, Long intrAmbc, Long penaltyAmbc
+            , Long prncAC, Long intrAC, Long penaltyAC, String ldvFlag
+            , String workStatus, Long prncOTS, Date startedTimestamp
+            , String createdBy, Date createdTimestamp, String occupation
+            , String subOccupation, Long monthInst, Long daysIntrAmbc
+            , Long collectionFee, Date lastPaidDate, Long dpd) {
         TrnLDVDetails obj = new TrnLDVDetails();
 
         TrnLDVDetailsPK pk = new TrnLDVDetailsPK();
@@ -489,11 +489,15 @@ public class DemoUtil {
 
         String supervisorId = "21080093";
         List<TrnContractBuckets> buckets = new ArrayList<TrnContractBuckets>();
-        buckets.add(generateTrnContractBucket(period, "11000000327715", officeCode, supervisorId, collCode, "0000021706", "MAPURO", 33L, 18L, Utility.convertStringToDate("20170220", "yyyyMMdd"), Utility.convertStringToDate("20170218", "yyyyMMdd"), Utility.convertStringToDate("20170309", "yyyyMMdd"), 19L, -20L, 441279L, 368721L, 423768L, null, 4000L, 9347017L, "S", startedTimestamp, createdBy, createdTimestamp, "1100017J007513", 423768L, 386232L, 10000L, "K"));
+        // hanya berlaku non lkp inquiry
+        if (Utility.isSameDay(lkpDate, new Date())) {
 
-        buckets.add(generateTrnContractBucket(period, "11000000470415", officeCode, supervisorId, collCode, "0000022491", "ZULKIFLI", 26L, 14L, Utility.convertStringToDate("20170206", "yyyyMMdd"), Utility.convertStringToDate("20170206", "yyyyMMdd"), Utility.convertStringToDate("20170304", "yyyyMMdd"), 15L, -4L, 516967L, 112087L, 495983L, null, 8500L, 8367494L, "A", startedTimestamp, createdBy, createdTimestamp, "1201017R002195", 495983L, 354017L, 10000L, "K"));
+            buckets.add(generateTrnContractBucket(period, "11000000327715", officeCode, supervisorId, collCode, "0000021706", "MAPURO", 33L, 18L, Utility.convertStringToDate("20170220", "yyyyMMdd"), Utility.convertStringToDate("20170218", "yyyyMMdd"), Utility.convertStringToDate("20170309", "yyyyMMdd"), 19L, -20L, 441279L, 368721L, 423768L, null, 4000L, 9347017L, "S", startedTimestamp, createdBy, createdTimestamp, "1100017J007513", 423768L, 386232L, 10000L, "K"));
 
-        buckets.add(generateTrnContractBucket(period, "11000000523316", officeCode, supervisorId, collCode, "0000028314", "RASIMAN", 33L, 14L, Utility.convertStringToDate("20170209", "yyyyMMdd"), Utility.convertStringToDate("20170206", "yyyyMMdd"), Utility.convertStringToDate("20170306", "yyyyMMdd"), 2L, -6L, 977696L, 1116304L, 941163L, null, 0L, 29700000L, "W", startedTimestamp, createdBy, createdTimestamp, "1100017R003548", 941163L, 1152837L, 10000L, "K"));
+            buckets.add(generateTrnContractBucket(period, "11000000470415", officeCode, supervisorId, collCode, "0000022491", "ZULKIFLI", 26L, 14L, Utility.convertStringToDate("20170206", "yyyyMMdd"), Utility.convertStringToDate("20170206", "yyyyMMdd"), Utility.convertStringToDate("20170304", "yyyyMMdd"), 15L, -4L, 516967L, 112087L, 495983L, null, 8500L, 8367494L, "A", startedTimestamp, createdBy, createdTimestamp, "1201017R002195", 495983L, 354017L, 10000L, "K"));
+
+            buckets.add(generateTrnContractBucket(period, "11000000523316", officeCode, supervisorId, collCode, "0000028314", "RASIMAN", 33L, 14L, Utility.convertStringToDate("20170209", "yyyyMMdd"), Utility.convertStringToDate("20170206", "yyyyMMdd"), Utility.convertStringToDate("20170306", "yyyyMMdd"), 2L, -6L, 977696L, 1116304L, 941163L, null, 0L, 29700000L, "W", startedTimestamp, createdBy, createdTimestamp, "1100017R003548", 941163L, 1152837L, 10000L, "K"));
+        }
         data.setBuckets(buckets);
 
         List<HistInstallments> histInstallments = new ArrayList<HistInstallments>();

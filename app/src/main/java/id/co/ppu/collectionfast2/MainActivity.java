@@ -8,6 +8,7 @@ import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.pm.PackageManager;
+import android.content.pm.ResolveInfo;
 import android.graphics.BitmapFactory;
 import android.graphics.Typeface;
 import android.graphics.drawable.Drawable;
@@ -364,6 +365,14 @@ public class MainActivity extends ChatActivity
                                             BuildConfig.APPLICATION_ID + ".provider",
                                             photoFile);
                                     takePicture.putExtra(MediaStore.EXTRA_OUTPUT, photoURI);
+
+                                    // fix kitkat
+                                    List<ResolveInfo> resInfoList = MainActivity.this.getPackageManager().queryIntentActivities(takePicture, PackageManager.MATCH_DEFAULT_ONLY);
+                                    for (ResolveInfo resolveInfo : resInfoList) {
+                                        String packageName = resolveInfo.activityInfo.packageName;
+                                        MainActivity.this.grantUriPermission(packageName, photoURI, Intent.FLAG_GRANT_WRITE_URI_PERMISSION | Intent.FLAG_GRANT_READ_URI_PERMISSION);
+                                    }
+
                                     startActivityForResult(takePicture, 44);
                                 }
 
@@ -1630,7 +1639,7 @@ public class MainActivity extends ChatActivity
             case 44:
                 // Show the thumbnail on ImageView
                 final Uri imageUri = Uri.parse(mCurrentProfilePhotoPath); // /storage/emulated/0/Android/data/com.example.eric.cameranougat/files/Pictures/JPEG_20170318_201833_1993305013.jpg
-                File file = new File(imageUri.getPath());   // /storage/emulated/0/Android/data/com.example.eric.cameranougat/files/Pictures/JPEG_20170318_201833_1993305013.jpg
+                File file = new File(imageUri.getPath());                 // /storage/emulated/0/Android/data/com.example.eric.cameranougat/files/Pictures/JPEG_20170318_201833_1993305013.jpg
                 try {
                     InputStream ims = new FileInputStream(file);
 

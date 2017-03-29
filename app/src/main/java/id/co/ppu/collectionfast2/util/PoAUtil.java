@@ -1,6 +1,8 @@
 package id.co.ppu.collectionfast2.util;
 
 import android.content.Intent;
+import android.content.pm.PackageManager;
+import android.content.pm.ResolveInfo;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.net.Uri;
@@ -17,6 +19,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.util.Date;
+import java.util.List;
 
 import id.co.ppu.collectionfast2.BuildConfig;
 import id.co.ppu.collectionfast2.component.BasicActivity;
@@ -331,6 +334,12 @@ public class PoAUtil {
                 cacheFile);
 
         takePicture.putExtra(MediaStore.EXTRA_OUTPUT, uriSavedImage);
+
+        List<ResolveInfo> resInfoList = activity.getPackageManager().queryIntentActivities(takePicture, PackageManager.MATCH_DEFAULT_ONLY);
+        for (ResolveInfo resolveInfo : resInfoList) {
+            String packageName = resolveInfo.activityInfo.packageName;
+            activity.grantUriPermission(packageName, uriSavedImage, Intent.FLAG_GRANT_WRITE_URI_PERMISSION | Intent.FLAG_GRANT_READ_URI_PERMISSION);
+        }
 
         activity.startActivityForResult(takePicture, 1);//zero can be replaced with any action code
 

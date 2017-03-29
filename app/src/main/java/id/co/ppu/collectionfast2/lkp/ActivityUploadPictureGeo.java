@@ -3,12 +3,16 @@ package id.co.ppu.collectionfast2.lkp;
 import android.app.ProgressDialog;
 import android.content.DialogInterface;
 import android.content.Intent;
+import android.content.pm.PackageManager;
+import android.content.pm.ResolveInfo;
 import android.graphics.drawable.Drawable;
 import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
+import android.os.Environment;
 import android.provider.MediaStore;
 import android.support.graphics.drawable.VectorDrawableCompat;
+import android.support.v4.content.FileProvider;
 import android.support.v7.app.AlertDialog;
 import android.util.Base64;
 import android.util.Log;
@@ -19,14 +23,17 @@ import android.widget.Toast;
 import com.jakewharton.picasso.OkHttp3Downloader;
 import com.squareup.picasso.Picasso;
 
+import java.io.File;
 import java.io.IOException;
 import java.util.Date;
+import java.util.List;
 import java.util.UUID;
 import java.util.concurrent.TimeUnit;
 
 import butterknife.BindView;
 import butterknife.ButterKnife;
 import butterknife.OnClick;
+import id.co.ppu.collectionfast2.BuildConfig;
 import id.co.ppu.collectionfast2.R;
 import id.co.ppu.collectionfast2.component.BasicActivity;
 import id.co.ppu.collectionfast2.listener.OnSuccessError;
@@ -53,6 +60,9 @@ import retrofit2.Response;
 /**
  * Cara yg lama, upload sync terpisah dari sinkronisasi utama.
  * ide baru adalah upload sync digabung dengan sinkronisasi utama, tp sepertinya akan memperlambat jd cara lama masih kupakai dulu
+ *
+ * Photo hanya tersedia 4 saja, yg masing2 dibuat id = picture4  utk menandakan foto ke-empat
+ * each imageView has a tag: an URI
  */
 public class ActivityUploadPictureGeo extends BasicActivity {
     public static final String PARAM_CONTRACT_NO = "customer.contractNo";
@@ -65,6 +75,8 @@ public class ActivityUploadPictureGeo extends BasicActivity {
     private String collectorId = null;
     private String ldvNo = null;
     private String officeCode = null;
+
+    private String mCurrentProfilePhotoPath;
 
     private ProgressDialog mProgressDialog = null;
 
@@ -189,15 +201,27 @@ public class ActivityUploadPictureGeo extends BasicActivity {
                     .downloader(new OkHttp3Downloader(client))
                     .build();
             pic.setIndicatorsEnabled(true);
-            if (trnPhoto1.getFilename().startsWith("content")) {
+            if (trnPhoto1.getFilename().startsWith("content")
+                    ) {
                 Uri uri = Uri.parse(trnPhoto1.getFilename().toString());
                 pic.load(uri).into(view);
 
                 view.setTag(uri);
 
-            } else
+            }else if (trnPhoto1.getFilename().startsWith("/storage")) {
+                Uri uri = Uri.parse(trnPhoto1.getFilename().toString());
+                File file = new File(uri.getPath());
+
+                pic.load(file).into(view);
+
+                view.setTag(uri);
+
+            } else {
                 pic.load(convertPictureIDToUrl(trnPhoto1.getPhotoId()))
                         .into(view);
+
+                // no need to set tag, because the picture came from server
+            }
 
         }
 
@@ -221,6 +245,11 @@ public class ActivityUploadPictureGeo extends BasicActivity {
 
     }
 
+    /**
+     *
+     * @param pictureId picture4
+     * @return
+     */
     private String convertPictureIDToUrl(String pictureId) {
         HttpUrl httpUrl = Utility.buildUrl(Storage.getPreferenceAsInt(this, Storage.KEY_SERVER_ID, 0));
         String fixUrl = httpUrl.toString();
@@ -243,7 +272,41 @@ public class ActivityUploadPictureGeo extends BasicActivity {
                 if (item == 0) {
                     // from camera
                     Intent takePicture = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
-                    startActivityForResult(takePicture, returnCodeFromCamera);//zero can be replaced with any action code
+
+                    // Ensure that there's a camera activity to handle the intent
+                    if (takePicture.resolveActivity(getPackageManager()) != null) {
+
+                        // Create the File where the photo should go
+                        File photoFile = null;
+                        try {
+                            photoFile = File.createTempFile("JPEG_" + Utility.convertDateToString(new Date(), "yyyyMMdd_HHmmss"),  ".jpg", getExternalFilesDir(Environment.DIRECTORY_PICTURES) );
+
+                        } catch (IOException ex) {
+                            // Error occurred while creating the File
+                            return;
+                        }
+                        // Continue only if the File was successfully created
+                        if (photoFile != null) {
+                            mCurrentProfilePhotoPath = photoFile.getAbsolutePath();
+
+                            Uri photoURI = FileProvider.getUriForFile(ActivityUploadPictureGeo.this,
+                                    BuildConfig.APPLICATION_ID + ".provider",
+                                    photoFile);
+                            takePicture.putExtra(MediaStore.EXTRA_OUTPUT, photoURI);
+
+                            // fix kitkat
+                            List<ResolveInfo> resInfoList = ActivityUploadPictureGeo.this.getPackageManager().queryIntentActivities(takePicture, PackageManager.MATCH_DEFAULT_ONLY);
+                            for (ResolveInfo resolveInfo : resInfoList) {
+                                String packageName = resolveInfo.activityInfo.packageName;
+                                ActivityUploadPictureGeo.this.grantUriPermission(packageName, photoURI, Intent.FLAG_GRANT_WRITE_URI_PERMISSION | Intent.FLAG_GRANT_READ_URI_PERMISSION);
+                            }
+
+                            startActivityForResult(takePicture, returnCodeFromCamera);//zero can be replaced with any action code
+                        }
+
+                    }
+
+
                 } else if (item == 1) {
                     // from gallery
                     Intent pickPhoto = new Intent(Intent.ACTION_PICK,
@@ -522,14 +585,13 @@ public class ActivityUploadPictureGeo extends BasicActivity {
     protected void onActivityResult(int requestCode, int resultCode, Intent imageReturnedIntent) {
         super.onActivityResult(requestCode, resultCode, imageReturnedIntent);
 
-
         if (resultCode != RESULT_OK) {
             return;
         }
 
-        Uri selectedImage = imageReturnedIntent.getData();
-
         ImageView targetImage = null;
+        Uri selectedImage = null;
+
         switch (requestCode) {
             case 0:
             case 1:
@@ -552,9 +614,33 @@ public class ActivityUploadPictureGeo extends BasicActivity {
         if (targetImage == null)
             return;
 
-        Picasso.with(this)
-                .load(selectedImage)
-                .into(targetImage);
+        // kalo genap brarti camera
+        // kalo ganjil brarti gallery
+        if (requestCode % 2 == 0) {
+            selectedImage = Uri.parse(mCurrentProfilePhotoPath);
+
+            File file = new File(selectedImage.getPath());
+
+            Picasso.with(this)
+                    .load(file)
+                    .into(targetImage);
+        } else {
+            selectedImage = imageReturnedIntent.getData();
+
+            Picasso.with(this)
+                    .load(selectedImage)
+                    .into(targetImage);
+
+        }
+
+//        Uri selectedImage = imageReturnedIntent.getData();
+//        selectedImage = Uri.parse(mCurrentProfilePhotoPath);
+
+//        File file = new File(selectedImage.getPath());
+//
+//        Picasso.with(this)
+//                .load(file)
+//                .into(targetImage);
 
         targetImage.setTag(selectedImage);
 

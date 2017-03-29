@@ -29,10 +29,10 @@
     <string name="error_offline">Periksa koneksi internet</string>
     <string name="title_activity_lkp_form">LKP Detail</string>
 
-    <string name="warning_close_batch">Server date changed. Please Close Batch.</string>
+    <string name="warning_close_batch">Tanggal server berubah. Mohon lakukan proses Close Batch.</string>
     <string name="search_hint">Search</string>
 
-    <string name="error_online_required">Proses membutuhkan koneksi internet\nPastikan Flight Mode dalam kondisi off</string>
+    <string name="error_online_required">Proses ini membutuhkan koneksi internet\nPastikan tidak dalam kondisi Flight Mode</string>
     <string name="error_select_rvb">Mohon pilih RVB</string>
     <string name="error_amount_too_small">Nilai terlalu kecil</string>
     <string name="error_amount_too_large">Nilai terlalu besar</string>
@@ -55,7 +55,7 @@
     <string name="message_no_photo_arrival_taken">Gagal mendapatkan foto Customer di awal entri. Pastikan akses ke Camera diijinkan.</string>
     <string name="message_sync_photo_wait">Sync Photo sedang diproses...</string>
     <string name="message_sync_data_wait">Sync Data sedang diproses...</string>
-    <string name="error_expired_warning">Aplikasi akan expired dalam hitunga hari.\nHubungi Administrator.</string>
+    <string name="error_expired_warning">Aplikasi akan kadaluarsa dalam hitunga hari.\nHubungi Administrator.</string>
     <string name="text_takephoto_beforeentri">Mohon ambil Foto \nsaat Anda tiba di lokasi</string>
     <string name="msg_no_contracts">Tidak ada Kontrak</string>
     <string name="label_prev_contract">"Kontrak Sebelumnya: "</string>
