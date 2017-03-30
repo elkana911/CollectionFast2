@@ -986,6 +986,7 @@ public class MainActivity extends ChatActivity
             getSupportActionBar().setSubtitle(currentUser.getFullName());
             getSupportActionBar().setDisplayUseLogoEnabled(true);
             getSupportActionBar().setDisplayShowHomeEnabled(true);
+            getSupportActionBar().setElevation(0);
         }
 
         drawer.closeDrawer(GravityCompat.START);

@@ -7,13 +7,12 @@ import android.view.animation.Animation;
 import android.view.animation.AnimationUtils;
 import android.widget.ImageView;
 
-import java.io.File;
-
 import butterknife.BindView;
 import butterknife.ButterKnife;
 import butterknife.OnClick;
 import id.co.ppu.collectionfast2.R;
 import id.co.ppu.collectionfast2.component.BasicActivity;
+import id.co.ppu.collectionfast2.util.NetUtil;
 import id.co.ppu.collectionfast2.util.PoAUtil;
 import pl.bclogic.pulsator4droid.library.PulsatorLayout;
 
@@ -73,6 +72,7 @@ public class ActivityPoA extends BasicActivity {
             getSupportActionBar().setDisplayHomeAsUpEnabled(true);
             getSupportActionBar().setHomeButtonEnabled(true);
             getSupportActionBar().setSubtitle(this.custAddr);
+            getSupportActionBar().setElevation(0);
         }
 
 
@@ -82,7 +82,17 @@ public class ActivityPoA extends BasicActivity {
     @OnClick(R.id.llTakePhoto)
     public void onTakePoA() {
 
-        PoAUtil.callCameraIntent(this, collCode, ldvNo, contractNo);
+        try {
+            PoAUtil.callCameraIntent(this, collCode, ldvNo, contractNo);
+        } catch (Exception e) {
+            e.printStackTrace();
+
+            StringBuffer message2 = new StringBuffer("ldvNo=");
+            message2.append(ldvNo);
+            message2.append("contractNo=").append(contractNo);
+
+            NetUtil.syncLogError(getBaseContext(), realm, collCode, "Pra PoA", e.getMessage(), message2.toString());
+        }
     }
 
     @Override
@@ -93,17 +103,27 @@ public class ActivityPoA extends BasicActivity {
             return;
         }
 
-        File file = PoAUtil.postCameraIntoCache(this, collCode, contractNo);// /storage/emulated/0/RadanaCache/cache/poaDefault_demo_71000000008115.jpg
+        pulsator.stop();
 
-        if (file != null) {
-            pulsator.stop();
+        Intent dataReturn = new Intent();
+        dataReturn.putExtra(PARAM_LKP_DETAIL, lkpDetail);
 
-            Intent dataReturn = new Intent();
-            dataReturn.putExtra(PARAM_LKP_DETAIL, lkpDetail);
+        try {
+            PoAUtil.postCameraIntoCache(this, collCode, contractNo);// /storage/emulated/0/RadanaCache/cache/poaDefault_demo_71000000008115.jpg
+
             setResult(RESULT_OK, dataReturn);
 
-            finish();
+        } catch (Exception e) {
+            e.printStackTrace();
+
+            StringBuffer message2 = new StringBuffer("ldvNo=");
+            message2.append(ldvNo);
+            message2.append("contractNo=").append(contractNo);
+
+            NetUtil.syncLogError(getBaseContext(), realm, collCode, "Post PoA", e.getMessage(), message2.toString());
         }
+
+        finish();
     }
 
 }

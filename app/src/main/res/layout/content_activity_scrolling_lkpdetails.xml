@@ -402,14 +402,14 @@
 
             <Button
                 android:id="@+id/btnVisitResultEntry"
-                style="@style/Widget.AppCompat.Button.Colored"
+                android:theme="@style/AppTheme.Button.VisitResult"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:text="VISIT RESULT ENTRY" />
 
             <Button
                 android:id="@+id/btnRepoEntry"
-                style="@style/Widget.AppCompat.Button.Colored"
+                android:theme="@style/AppTheme.Button.Repo"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:text="REPO ENTRY" />

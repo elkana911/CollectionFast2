@@ -10,8 +10,7 @@
     <ScrollView
         android:id="@+id/svMain"
         android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        >
+        android:layout_height="match_parent">
 
         <LinearLayout
             android:layout_width="match_parent"
@@ -21,10 +20,11 @@
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:background="@color/colorPrimaryDark"
+                android:background="@color/colorPrimaryRepo"
                 android:orientation="vertical"
-                android:paddingRight="@dimen/activity_horizontal_margin"
-                android:paddingTop="@dimen/activity_vertical_margin">
+                android:paddingEnd="@dimen/activity_horizontal_margin"
+                android:paddingStart="@dimen/activity_horizontal_margin"
+                android:paddingTop="@dimen/activity_horizontal_margin">
 
                 <android.support.design.widget.TextInputLayout
                     android:layout_width="match_parent"
@@ -40,55 +40,59 @@
                         android:focusableInTouchMode="false"
                         android:hint="Contract No"
                         android:maxLines="1"
-                        android:singleLine="true"
                         android:textColor="@android:color/primary_text_dark" />
                 </android.support.design.widget.TextInputLayout>
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal">
+
+                    <android.support.design.widget.TextInputLayout
+                        android:layout_width="0dp"
+                        android:layout_weight="0.6"
+                        android:layout_height="wrap_content"
+                        android:textColorHint="@android:color/primary_text_dark">
+
+                        <EditText
+                            android:id="@+id/etPAL"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:clickable="false"
+                            android:focusable="false"
+                            android:focusableInTouchMode="false"
+                            android:hint="PAL"
+                            android:maxLines="1"
+                            android:singleLine="true"
+                            android:textColor="@android:color/primary_text_dark" />
+                    </android.support.design.widget.TextInputLayout>
+
+                    <android.support.design.widget.TextInputLayout
+                        android:layout_width="0dp"
+                        android:layout_weight="0.4"
+                        android:layout_height="wrap_content"
+                        android:textColorHint="@android:color/primary_text_dark">
+
+                        <EditText
+                            android:id="@+id/etTglTransaksi"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:clickable="false"
+                            android:focusable="false"
+                            android:focusableInTouchMode="false"
+                            android:gravity="end"
+                            android:hint="Tgl Transaksi"
+                            android:maxLines="1"
+                            android:textColor="@android:color/primary_text_dark" />
+                    </android.support.design.widget.TextInputLayout>
+
+
+                </LinearLayout>
 
                 <android.support.design.widget.TextInputLayout
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:textColorHint="@android:color/primary_text_dark">
-
-                    <EditText
-                        android:id="@+id/etPAL"
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:clickable="false"
-                        android:focusable="false"
-                        android:focusableInTouchMode="false"
-                        android:hint="PAL"
-                        android:maxLines="1"
-                        android:singleLine="true"
-                        android:textColor="@android:color/primary_text_dark" />
-                </android.support.design.widget.TextInputLayout>
-
-                <android.support.design.widget.TextInputLayout
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:textColorHint="@android:color/primary_text_dark">
-
-                    <EditText
-                        android:id="@+id/etTglTransaksi"
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:clickable="false"
-                        android:focusable="false"
-                        android:focusableInTouchMode="false"
-                        android:hint="Tgl Transaksi"
-                        android:maxLines="1"
-                        android:textColor="@android:color/primary_text_dark" />
-                </android.support.design.widget.TextInputLayout>
-            </LinearLayout>
-
-            <LinearLayout
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_margin="@dimen/text_margin"
-                android:orientation="vertical">
-
-                <android.support.design.widget.TextInputLayout
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content">
 
                     <EditText
                         android:id="@+id/etKodeTarik"
@@ -98,8 +102,20 @@
                         android:focusable="false"
                         android:focusableInTouchMode="false"
                         android:hint="Kode Tarik"
-                        android:maxLines="1" />
+                        android:gravity="end"
+                        android:maxLines="1"
+                        android:textColor="@android:color/primary_text_dark"
+                        />
                 </android.support.design.widget.TextInputLayout>
+
+            </LinearLayout>
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_margin="@dimen/text_margin"
+                android:layoutAnimation="@anim/layout_slide_up"
+                android:orientation="vertical">
 
                 <RadioGroup
                     android:layout_width="match_parent"
@@ -132,15 +148,15 @@
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:orientation="horizontal"
-                    android:paddingTop="10dp"
                     android:paddingBottom="4dp"
-                    >
+                    android:paddingTop="10dp">
+
                     <TextView
-                        android:layout_gravity="center_vertical"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:textAppearance="@style/Base.TextAppearance.AppCompat.Medium"
-                        android:text="BASTK : "/>
+                        android:layout_gravity="center_vertical"
+                        android:text="BASTK : "
+                        android:textAppearance="@style/Base.TextAppearance.AppCompat.Medium" />
 
                     <Spinner
                         android:id="@+id/spBASTKs"
@@ -151,7 +167,7 @@
                 <View
                     android:layout_width="match_parent"
                     android:layout_height="0.5dp"
-                    android:background="@android:color/darker_gray"/>
+                    android:background="@android:color/darker_gray" />
 
                 <android.support.design.widget.TextInputLayout
                     android:layout_width="match_parent"
@@ -166,11 +182,18 @@
 
                 </android.support.design.widget.TextInputLayout>
 
+            </LinearLayout>
+
+            <LinearLayout
+                android:layout_margin="@dimen/text_margin"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical">
                 <Button
                     android:id="@+id/btnSave"
+                    style="@style/Widget.AppCompat.Button.Colored"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    style="@style/Widget.AppCompat.Button.Colored"
                     android:text="Save" />
 
                 <Button
@@ -185,28 +208,28 @@
                     android:layout_height="wrap_content"
                     android:text="Payment History" />
 
+
             </LinearLayout>
         </LinearLayout>
     </ScrollView>
 
     <FrameLayout
         android:id="@+id/flTakePhoto"
-        android:visibility="gone"
-        android:background="@drawable/rounded_shade_shape"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:layout_marginBottom="@dimen/activity_vertical_margin"
         android:layout_marginLeft="@dimen/activity_horizontal_margin"
         android:layout_marginRight="@dimen/activity_horizontal_margin"
         android:layout_marginTop="@dimen/activity_vertical_margin"
-        >
+        android:background="@drawable/rounded_shade_shape"
+        android:visibility="gone">
 
         <LinearLayout
             android:id="@+id/llTakePhoto"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:gravity="center"
             android:layout_gravity="center"
+            android:gravity="center"
             android:orientation="vertical">
 
             <FrameLayout
@@ -224,6 +247,7 @@
                     app:pulse_interpolator="Accelerate"
                     app:pulse_repeat="0"
                     app:pulse_startFromScratch="false">
+
                     <ImageView
                         android:layout_width="match_parent"
                         android:layout_height="match_parent"
@@ -237,8 +261,8 @@
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:textAppearance="?android:attr/textAppearanceMedium"
-                android:text="@string/text_takephoto_beforeentri" />
+                android:text="@string/text_takephoto_beforeentri"
+                android:textAppearance="?android:attr/textAppearanceMedium" />
         </LinearLayout>
     </FrameLayout>
 

@@ -138,6 +138,7 @@ public class ActivityPaymentReceive extends BasicActivity {
             getSupportActionBar().setSubtitle(dtl.getCustName());
             getSupportActionBar().setDisplayHomeAsUpEnabled(true);
             getSupportActionBar().setHomeButtonEnabled(true);
+            getSupportActionBar().setElevation(0);
         }
 
         etContractNo.setText(contractNo);

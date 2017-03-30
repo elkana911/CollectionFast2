@@ -15,7 +15,6 @@ import java.io.File;
 import java.io.FileFilter;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
-import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.util.Date;
@@ -95,7 +94,7 @@ public class PoAUtil {
             jpgFileName = concatAsJpgFilename(POA_VISIT_RESULT_RPC_PREFIX, collCode, contractNo);
         else if (activity instanceof ActivityPoA)
         */
-            jpgFileName = concatAsJpgFilename(POA_DEFAULT_PREFIX, collCode, contractNo);
+        jpgFileName = concatAsJpgFilename(POA_DEFAULT_PREFIX, collCode, contractNo);
 
         return jpgFileName;
     }
@@ -133,6 +132,7 @@ public class PoAUtil {
      * <li>will also moving the cache picture into parent folder</li>
      * </ul>
      * <p>WARNING ! may return false on second commit
+     *
      * @param activity
      * @param collCode
      * @param contractNo
@@ -267,13 +267,12 @@ public class PoAUtil {
     }
 
     /**
-     *
      * @param realm
      * @param collCode
      * @param contractNo
      * @return
      */
-    public static void cancel(Realm realm, String collCode, String ldvNo, String contractNo){
+    public static void cancel(Realm realm, String collCode, String ldvNo, String contractNo) {
         RealmResults<TrnFlagTimestamp> all = realm.where(TrnFlagTimestamp.class)
                 .equalTo("pk.contractNo", contractNo)
                 .equalTo("pk.ldvNo", ldvNo)
@@ -306,7 +305,7 @@ public class PoAUtil {
      * @see #postCameraIntoCache(BasicActivity, String, String)
      * @see #commit(BasicActivity, String, String, String)
      */
-    public static void callCameraIntent(BasicActivity activity, String collCode, String ldvNo, String contractNo) {
+    public static void callCameraIntent(BasicActivity activity, String collCode, String ldvNo, String contractNo) throws Exception {
 
         Intent takePicture = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
 
@@ -319,14 +318,9 @@ public class PoAUtil {
         if (cacheFile.exists())
             cacheFile.delete();
 
-        try {
-            // must create file first
-            cacheFile.getParentFile().mkdirs();
-            cacheFile.createNewFile();
-        } catch (IOException e) {
-            e.printStackTrace();
-            return;
-        }
+        // must create file first
+        cacheFile.getParentFile().mkdirs();
+        cacheFile.createNewFile();
 
         Uri uriSavedImage = null; // content://id.co.ppu.collectionfast2.provider/external_files/RadanaCache/cache/poaDefault_demo_71000000008115.jpg
         uriSavedImage = FileProvider.getUriForFile(activity,
@@ -346,16 +340,12 @@ public class PoAUtil {
         // create temporary data
         TrnFlagTimestamp obj = new TrnFlagTimestamp();
 
-        try {
-            double[] gps = Location.getGPS(activity);
-            final String latitude = String.valueOf(gps[0]);
-            final String longitude = String.valueOf(gps[1]);
+        double[] gps = Location.getGPS(activity);
+        final String latitude = String.valueOf(gps[0]);
+        final String longitude = String.valueOf(gps[1]);
 
-            obj.setLatitude(latitude);
-            obj.setLongitude(longitude);
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
+        obj.setLatitude(latitude);
+        obj.setLongitude(longitude);
 
         obj.setFileName(getPoAFile(activity, collCode, contractNo).getName());
         obj.setCreatedBy(Utility.LAST_UPDATE_BY);
@@ -380,40 +370,35 @@ public class PoAUtil {
      * @see #callCameraIntent(BasicActivity, String, String, String)
      * @see #commit(BasicActivity, String, String, String)
      */
-    public static File postCameraIntoCache(BasicActivity activity, String collCode, String contractNo) {
+    public static File postCameraIntoCache(BasicActivity activity, String collCode, String contractNo) throws Exception {
         File cacheFile = PoAUtil.getPoACacheFile(activity, collCode, contractNo); // /storage/emulated/0/RadanaCache/cache/poaVstRslt_demo_71000000008115.jpg
 
-        try {
-                //compressing
-                InputStream in = new FileInputStream(cacheFile);
-                Bitmap bm2 = BitmapFactory.decodeStream(in);
+        //compressing
+        InputStream in = new FileInputStream(cacheFile);
+        Bitmap bm2 = BitmapFactory.decodeStream(in);
 
-                // flush the compressed as temp file
-                File outputDir = new File(getPoACachePath());   //  /storage/emulated/0/RadanaCache/cache
-                File outputFile = File.createTempFile(POA_PREFIX + "-", ".jpg", outputDir);// /storage/emulated/0/RadanaCache/cache/poa-300549737.jpg
+        // flush the compressed as temp file
+        File outputDir = new File(getPoACachePath());   //  /storage/emulated/0/RadanaCache/cache
+        File outputFile = File.createTempFile(POA_PREFIX + "-", ".jpg", outputDir);// /storage/emulated/0/RadanaCache/cache/poa-300549737.jpg
 
-                OutputStream stream = new FileOutputStream(outputFile);
+        OutputStream stream = new FileOutputStream(outputFile);
 //                bm2.compress(Bitmap.CompressFormat.JPEG, 10, stream); // agak rusak gambarnya
-                bm2.compress(Bitmap.CompressFormat.JPEG, POA_JPG_QUALITY, stream);
-                stream.close();
-                in.close();
+        bm2.compress(Bitmap.CompressFormat.JPEG, POA_JPG_QUALITY, stream);
+        stream.close();
+        in.close();
 
-                // delete original if any
-                if (cacheFile.exists())
-                    cacheFile.delete();
+        // delete original if any
+        if (cacheFile.exists())
+            cacheFile.delete();
 
-                // rename
-                if (outputFile.renameTo(cacheFile))
-                    return cacheFile;
+        // rename
+        outputFile.renameTo(cacheFile);
 
-                //utk tes bisa ga uploadnya. kalo udah tlg dihapus. commit harusnya dilakukan setelah save data success
+        return cacheFile;
+
+        //utk tes bisa ga uploadnya. kalo udah tlg dihapus. commit harusnya dilakukan setelah save data success
 //                boolean ok = PoAUtil.commitPhotoOnArrival(constructPoAFilename());
 
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-
-        return null;
     }
 
 

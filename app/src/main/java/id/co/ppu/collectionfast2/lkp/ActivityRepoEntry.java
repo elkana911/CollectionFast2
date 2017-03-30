@@ -115,6 +115,7 @@ public class ActivityRepoEntry extends BasicActivity {
             getSupportActionBar().setSubtitle(dtl.getCustName());
             getSupportActionBar().setDisplayHomeAsUpEnabled(true);
             getSupportActionBar().setHomeButtonEnabled(true);
+            getSupportActionBar().setElevation(0);
         }
 
         etContractNo.setText(dtl.getContractNo());

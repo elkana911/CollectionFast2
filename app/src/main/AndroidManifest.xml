@@ -69,15 +69,27 @@
             android:label="@string/title_activity_activity_scrolling_lkpdetails"
             android:screenOrientation="portrait"
             android:theme="@style/AppTheme.NoActionBar" />
+
+        <activity
+            android:name=".payment.receive.ActivityPaymentReceive"
+            android:screenOrientation="portrait"
+            android:theme="@style/AppTheme.PaymentRcv"
+            android:windowSoftInputMode="stateHidden" />
+        <activity
+            android:name=".payment.entry.ActivityPaymentEntri"
+            android:screenOrientation="portrait" />
+
         <activity
             android:name=".lkp.ActivityVisitResult"
-            android:screenOrientation="portrait" />
+            android:screenOrientation="portrait"
+            android:theme="@style/AppTheme.VisitResult" />
         <activity
             android:name=".lkp.ActivityChangeAddress"
             android:screenOrientation="portrait" />
         <activity
             android:name=".lkp.ActivityRepoEntry"
-            android:screenOrientation="portrait" />
+            android:screenOrientation="portrait"
+            android:theme="@style/AppTheme.Repo" />
         <activity
             android:name=".lkp.ActivityPaymentHistory"
             android:screenOrientation="portrait" />
@@ -92,13 +104,6 @@
             android:screenOrientation="portrait" />
         <activity
             android:name=".lkp.ActivityVisitResultRPC"
-            android:screenOrientation="portrait" />
-        <activity
-            android:name=".payment.receive.ActivityPaymentReceive"
-            android:screenOrientation="portrait"
-            android:windowSoftInputMode="stateHidden" />
-        <activity
-            android:name=".payment.entry.ActivityPaymentEntri"
             android:screenOrientation="portrait" />
         <activity
             android:name=".lkp.ActivityDetailsLKPSummary"

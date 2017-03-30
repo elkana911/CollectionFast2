@@ -343,12 +343,12 @@ public class ActivityUploadPictureGeo extends BasicActivity {
 
     @OnClick(R.id.ivUpload3)
     public void onClickUpload3() {
-        showDialog(ivUpload2, 4, 5);
+        showDialog(ivUpload3, 4, 5);
     }
 
     @OnClick(R.id.ivUpload4)
     public void onClickUpload4() {
-        showDialog(ivUpload2, 6, 7);
+        showDialog(ivUpload4, 6, 7);
     }
 
     private void uploadPicture(final String picId, ImageView targetImage, boolean skip, final OnSuccessError listener) {

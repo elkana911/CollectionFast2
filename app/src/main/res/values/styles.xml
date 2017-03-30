@@ -13,6 +13,27 @@
         <item name="windowNoTitle">true</item>
     </style>
 
+    <style name="AppTheme.PaymentRcv" parent="Theme.AppCompat.Light.DarkActionBar">
+        <!-- Customize your theme here. -->
+        <item name="colorPrimary">@color/colorPrimaryPaymentRcv</item>
+        <item name="colorPrimaryDark">@color/colorPrimaryPaymentRcv</item>
+        <item name="colorAccent">@color/colorAccent</item>
+    </style>
+
+    <style name="AppTheme.VisitResult" parent="Theme.AppCompat.Light.DarkActionBar">
+        <!-- Customize your theme here. -->
+        <item name="colorPrimary">@color/colorPrimaryVisit</item>
+        <item name="colorPrimaryDark">@color/colorPrimaryVisit</item>
+        <item name="colorAccent">@color/colorAccent</item>
+    </style>
+
+    <style name="AppTheme.Repo" parent="Theme.AppCompat.Light.DarkActionBar">
+        <!-- Customize your theme here. -->
+        <item name="colorPrimary">@color/colorPrimaryRepo</item>
+        <item name="colorPrimaryDark">@color/colorPrimaryRepo</item>
+        <item name="colorAccent">@color/colorAccent</item>
+    </style>
+
     <style name="AppTheme.AppBarOverlay" parent="ThemeOverlay.AppCompat.Dark.ActionBar" />
 
     <style name="AppTheme.PopupOverlay" parent="ThemeOverlay.AppCompat.Light" />
@@ -33,4 +54,15 @@
         <item name="android:textColor">#ffffff</item>
         <item name="android:textStyle">bold|italic</item>
     </style>
+
+    <style name="AppTheme.Button.VisitResult" parent="Base.Widget.AppCompat.Button">
+        <item name="colorButtonNormal">@color/colorPrimaryVisit</item>
+        <item name="android:textColor">#ffffff</item>
+    </style>
+
+    <style name="AppTheme.Button.Repo" parent="Base.Widget.AppCompat.Button">
+        <item name="colorButtonNormal">@color/colorPrimaryRepo</item>
+        <item name="android:textColor">#ffffff</item>
+    </style>
+
 </resources>

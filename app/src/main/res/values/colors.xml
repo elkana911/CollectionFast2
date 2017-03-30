@@ -8,6 +8,10 @@
     <color name="colorPrimary">#3d2698</color>
     <color name="colorPrimaryDark">#28166f</color>
 
+    <color name="colorPrimaryPaymentRcv">#28166f</color>
+    <color name="colorPrimaryVisit">#690609</color>
+    <color name="colorPrimaryRepo">#076855</color>
+
     <color name="colorCancelSyncBG">#96ff40</color>
     <color name="colorCancelSyncTint">#326905</color>
     <color name="colorLKPYellow">#fff64a</color>

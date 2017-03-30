@@ -20,9 +20,10 @@
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:background="@color/colorPrimaryDark"
+                android:background="@color/colorPrimaryVisit"
                 android:orientation="vertical"
-                android:paddingRight="@dimen/activity_horizontal_margin"
+                android:paddingEnd="@dimen/activity_horizontal_margin"
+                android:paddingStart="@dimen/activity_horizontal_margin"
                 android:paddingTop="@dimen/activity_vertical_margin">
 
                 <android.support.design.widget.TextInputLayout
@@ -81,6 +82,7 @@
                             android:focusable="false"
                             android:focusableInTouchMode="false"
                             android:hint="Sub Pekerjaan"
+                            android:gravity="end"
                             android:maxLines="2"
                             android:textAppearance="@android:style/TextAppearance.DeviceDefault.Small"
                             android:textColor="@android:color/primary_text_dark" />
@@ -94,6 +96,7 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_margin="@dimen/text_margin"
+                android:layoutAnimation="@anim/layout_slide_up"
                 android:orientation="vertical">
 
                 <TableLayout
@@ -294,6 +297,13 @@
 
                 </android.support.design.widget.TextInputLayout>
 
+            </LinearLayout>
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_margin="@dimen/text_margin"
+                android:orientation="vertical">
                 <Button
                     android:id="@+id/btnSave"
                     style="@style/Widget.AppCompat.Button.Colored"
