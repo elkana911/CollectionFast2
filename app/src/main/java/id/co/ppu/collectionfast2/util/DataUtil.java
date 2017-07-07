@@ -51,7 +51,7 @@ import id.co.ppu.collectionfast2.pojo.trn.TrnRVB;
 import id.co.ppu.collectionfast2.pojo.trn.TrnRVColl;
 import id.co.ppu.collectionfast2.pojo.trn.TrnRepo;
 import id.co.ppu.collectionfast2.pojo.trn.TrnVehicleInfo;
-import id.co.ppu.collectionfast2.rest.ApiInterface;
+import id.co.ppu.collectionfast2.rest.APInterface;
 import id.co.ppu.collectionfast2.rest.request.RequestZipCode;
 import id.co.ppu.collectionfast2.rest.response.ResponseGetMasterData;
 import id.co.ppu.collectionfast2.rest.response.ResponseGetZipCode;
@@ -255,11 +255,11 @@ public class DataUtil {
 
     public static void retrieveMasterFromServerBackground(Realm realm, Context ctx) throws Exception {
 
-        ApiInterface fastService = Storage.getAPIService();
-//        ApiInterface fastService =
-//                HttpClientBuilder.create(ApiInterface.class, Utility.buildUrl(Storage.getPreferenceAsInt(ctx, Storage.KEY_SERVER_ID, 0)));
+        APInterface api = Storage.getAPIInterface();
+//        APInterface api =
+//                APIClientBuilder.create(APInterface.class, Utility.buildUrl(Storage.getPreferenceAsInt(ctx, Storage.KEY_SERVER_ID, 0)));
 
-        Call<ResponseGetMasterData> callMasterData = fastService.getMasterData();
+        Call<ResponseGetMasterData> callMasterData = api.getMasterData();
 
         // hrs async karena error networkonmainthreadexception
         callMasterData.enqueue(new Callback<ResponseGetMasterData>() {
@@ -309,14 +309,14 @@ public class DataUtil {
 
     public static void retrieveZipCodeFromServerBackground(Realm realm, Context ctx) throws Exception {
 
-        ApiInterface fastService = Storage.getAPIService();
-//        ApiInterface fastService =
-//                HttpClientBuilder.create(ApiInterface.class, Utility.buildUrl(Storage.getPreferenceAsInt(ctx, Storage.KEY_SERVER_ID, 0)));
+        APInterface api = Storage.getAPIInterface();
+//        APInterface api =
+//                APIClientBuilder.create(APInterface.class, Utility.buildUrl(Storage.getPreferenceAsInt(ctx, Storage.KEY_SERVER_ID, 0)));
 
         RequestZipCode requestZipCode = new RequestZipCode();
 //        request.setZipCode("11058");
 
-        Call<ResponseGetZipCode> callZipCode = fastService.getZipCode(requestZipCode);
+        Call<ResponseGetZipCode> callZipCode = api.getZipCode(requestZipCode);
 
         callZipCode.enqueue(new Callback<ResponseGetZipCode>() {
             @Override
@@ -390,11 +390,11 @@ public class DataUtil {
             return;
         }
 
-        ApiInterface fastService = Storage.getAPIService();
-//        ApiInterface fastService =
-//                HttpClientBuilder.create(ApiInterface.class, Utility.buildUrl(Storage.getPreferenceAsInt(ctx, Storage.KEY_SERVER_ID, 0)));
+        APInterface api = Storage.getAPIInterface();
+//        APInterface api =
+//                APIClientBuilder.create(APInterface.class, Utility.buildUrl(Storage.getPreferenceAsInt(ctx, Storage.KEY_SERVER_ID, 0)));
 
-        Call<ResponseServerInfo> call = fastService.getServerInfo();
+        Call<ResponseServerInfo> call = api.getServerInfo();
         call.enqueue(new Callback<ResponseServerInfo>() {
             @Override
             public void onResponse(Call<ResponseServerInfo> call, Response<ResponseServerInfo> response) {

@@ -43,7 +43,7 @@ import retrofit2.http.Query;
 /**
  * Created by Eric on 19-Aug-16.
  */
-public interface ApiInterface {
+public interface APInterface {
 
     @POST("fast/login")
     Call<ResponseLogin> login(@Body RequestLogin request);

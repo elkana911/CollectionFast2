@@ -184,8 +184,8 @@ public abstract class SyncActivity extends MainbaseActivity {
             req.setRvb(trnRVBList);
 
 
-        ApiInterface fastService =
-                HttpClientBuilder.create(ApiInterface.class, Utility.buildUrl(Storage.getPreferenceAsInt(getApplicationContext(), Storage.KEY_SERVER_ID, 0)));
+        APInterface fastService =
+                HttpClientBuilder.create(APInterface.class, Utility.buildUrl(Storage.getPreferenceAsInt(getApplicationContext(), Storage.KEY_SERVER_ID, 0)));
 
         Call<ResponseSync> call = fastService.syncLKP(req);
         call.enqueue(new Callback<ResponseSync>() {

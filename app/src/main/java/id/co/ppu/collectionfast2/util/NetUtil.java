@@ -31,8 +31,8 @@ import id.co.ppu.collectionfast2.pojo.trn.TrnFlagTimestamp;
 import id.co.ppu.collectionfast2.pojo.trn.TrnLDVHeader;
 import id.co.ppu.collectionfast2.pojo.trn.TrnPhoto;
 import id.co.ppu.collectionfast2.pojo.trn.TrnRVB;
-import id.co.ppu.collectionfast2.rest.ApiInterface;
-import id.co.ppu.collectionfast2.rest.HttpClientBuilder;
+import id.co.ppu.collectionfast2.rest.APIClientBuilder;
+import id.co.ppu.collectionfast2.rest.APInterface;
 import id.co.ppu.collectionfast2.rest.request.RequestLogError;
 import id.co.ppu.collectionfast2.rest.request.RequestRVB;
 import id.co.ppu.collectionfast2.rest.request.RequestSyncLocation;
@@ -95,10 +95,12 @@ public class NetUtil {
         }, new Realm.Transaction.OnSuccess() {
             @Override
             public void onSuccess() {
+
                 if (isConnected(ctx)) {
 
-                    ApiInterface fastService =
-                            HttpClientBuilder.create(ApiInterface.class, Utility.buildUrl(Storage.getPrefAsInt(Storage.KEY_SERVER_ID, 0)));
+                    APInterface api =
+                            APIClientBuilder.create(Utility.buildUrl(Storage.getPrefAsInt(Storage.KEY_SERVER_ID, 0)));
+
                     RequestLogError req = new RequestLogError();
 
                     RealmResults<TrnErrorLog> trnErrorLogs = realm.where(TrnErrorLog.class)
@@ -107,7 +109,7 @@ public class NetUtil {
 
                     req.setLogs(realm.copyFromRealm(trnErrorLogs));
 
-                    Call<ResponseBody> call = fastService.logError(req);
+                    Call<ResponseBody> call = api.logError(req);
                     call.enqueue(new Callback<ResponseBody>() {
                         @Override
                         public void onResponse(Call<ResponseBody> call, Response<ResponseBody> response) {
@@ -166,13 +168,12 @@ public class NetUtil {
             return;
         }
 
-        ApiInterface fastService =
-                HttpClientBuilder.create(ApiInterface.class, Utility.buildUrl(Storage.getPrefAsInt(Storage.KEY_SERVER_ID, 0)));
+        APInterface api = APIClientBuilder.create(Utility.buildUrl(Storage.getPrefAsInt(Storage.KEY_SERVER_ID, 0)));
 
         RequestRVB req = new RequestRVB();
         req.setCollectorId(collCode);
 
-        Call<ResponseRVB> call = fastService.getRVB(req);
+        Call<ResponseRVB> call = api.getRVB(req);
         call.enqueue(new Callback<ResponseRVB>() {
             @Override
             public void onResponse(Call<ResponseRVB> call, Response<ResponseRVB> response) {
@@ -290,8 +291,7 @@ public class NetUtil {
                 return;
             }
 
-            ApiInterface fastService =
-                    HttpClientBuilder.create(ApiInterface.class, Utility.buildUrl(Storage.getPrefAsInt(Storage.KEY_SERVER_ID, 0)));
+            APInterface api = APIClientBuilder.create(Utility.buildUrl(Storage.getPrefAsInt(Storage.KEY_SERVER_ID, 0)));
 
             RequestSyncLocation req = new RequestSyncLocation();
 
@@ -301,7 +301,7 @@ public class NetUtil {
 
             req.setList(realm.copyFromRealm(trnCollPoses));
 
-            Call<ResponseBody> call = fastService.syncLocation(req);
+            Call<ResponseBody> call = api.syncLocation(req);
             call.enqueue(new Callback<ResponseBody>() {
                 @Override
                 public void onResponse(Call<ResponseBody> call, Response<ResponseBody> response) {
@@ -358,8 +358,8 @@ public class NetUtil {
                 )
             return false;
 
-        ApiInterface fastService =
-                HttpClientBuilder.create(ApiInterface.class, Utility.buildUrl(Storage.getPreferenceAsInt(ctx, Storage.KEY_SERVER_ID, 0)));
+        APInterface fastService =
+                APIClientBuilder.create(APInterface.class, Utility.buildUrl(Storage.getPreferenceAsInt(ctx, Storage.KEY_SERVER_ID, 0)));
 
         File file4 = new File(DataUtil.getRealPathFromUri(ctx, uri));
 
@@ -468,10 +468,9 @@ public class NetUtil {
                 }
             }
 
-            ApiInterface fastService =
-                    HttpClientBuilder.create(ApiInterface.class, Utility.buildUrl(Storage.getPrefAsInt(Storage.KEY_SERVER_ID, 0)));
+            APInterface api = APIClientBuilder.create(Utility.buildUrl(Storage.getPrefAsInt(Storage.KEY_SERVER_ID, 0)));
 
-            Call<ResponseBody> call = fastService.upload_Photo(body_trnPhoto, body);
+            Call<ResponseBody> call = api.upload_Photo(body_trnPhoto, body);
 
             call.enqueue(callback);
         } catch (IOException e) {
@@ -525,7 +524,7 @@ public class NetUtil {
             return;
         }
 
-        Call<ResponseBody> call = Storage.getAPIService().sendStatus(req);
+        Call<ResponseBody> call = Storage.getAPIInterface().sendStatus(req);
         call.enqueue(new Callback<ResponseBody>() {
             @Override
             public void onResponse(Call<ResponseBody> call, Response<ResponseBody> response) {
@@ -605,10 +604,9 @@ public class NetUtil {
             throw new NoConnectionException();
         }
 
-        ApiInterface fastService =
-                HttpClientBuilder.create(ApiInterface.class, Utility.buildUrl(Storage.getPrefAsInt(Storage.KEY_SERVER_ID, 0)));
+        APInterface api = APIClientBuilder.create(Utility.buildUrl(Storage.getPrefAsInt(Storage.KEY_SERVER_ID, 0)));
 
-        Call<ResponseBody> call = fastService.upload_PhotoOnArrival(body_poaData, bodies);
+        Call<ResponseBody> call = api.upload_PhotoOnArrival(body_poaData, bodies);
 
         call.enqueue(callback);
 
@@ -616,8 +614,7 @@ public class NetUtil {
 
     public static boolean uploadPoA(Context ctx, TrnFlagTimestamp trnFlagTimestamp, File file, OnSuccessError listener) {
 
-        ApiInterface fastService =
-                HttpClientBuilder.create(ApiInterface.class, Utility.buildUrl(Storage.getPrefAsInt(Storage.KEY_SERVER_ID, 0)));
+        APInterface api = APIClientBuilder.create(Utility.buildUrl(Storage.getPrefAsInt(Storage.KEY_SERVER_ID, 0)));
 
         if (!file.canRead()) {
             return false;
@@ -648,7 +645,7 @@ public class NetUtil {
                 return true;
             }
 
-            Call<ResponseBody> call = fastService.upload_PhotoOnArrival(body_trnPoA, body);
+            Call<ResponseBody> call = api.upload_PhotoOnArrival(body_trnPoA, body);
 
             Response<ResponseBody> execute = call.execute();
 
@@ -764,7 +761,7 @@ public class NetUtil {
             return;
         }
 
-        Call<ResponseBody> call = Storage.getAPIService().sendStatus(req);
+        Call<ResponseBody> call = Storage.getAPIInterface().sendStatus(req);
         call.enqueue(new Callback<ResponseBody>() {
             @Override
             public void onResponse(Call<ResponseBody> call, Response<ResponseBody> response) {
@@ -832,7 +829,7 @@ public class NetUtil {
             return;
         }
 
-        Call<ResponseGetOnlineContacts> call = Storage.getAPIService().getOnlineContacts(req);
+        Call<ResponseGetOnlineContacts> call = Storage.getAPIInterface().getOnlineContacts(req);
         call.enqueue(new Callback<ResponseGetOnlineContacts>() {
             @Override
             public void onResponse(Call<ResponseGetOnlineContacts> call, Response<ResponseGetOnlineContacts> response) {
@@ -908,7 +905,7 @@ dangerous code
         req.setStatus(null);
         req.setMessage(null);
 
-        Call<ResponseGetOnlineContacts> call = Storage.getAPIService().getGroupContacts(req);
+        Call<ResponseGetOnlineContacts> call = Storage.getAPIInterface().getGroupContacts(req);
         call.enqueue(new Callback<ResponseGetOnlineContacts>() {
             @Override
             public void onResponse(Call<ResponseGetOnlineContacts> call, Response<ResponseGetOnlineContacts> response) {
@@ -984,7 +981,7 @@ dangerous code
         RequestChatContacts req = new RequestChatContacts();
         req.setCollsCode(collectorsCode);
 
-        Call<ResponseGetOnlineContacts> call = Storage.getAPIService().getChatContacts(req);
+        Call<ResponseGetOnlineContacts> call = Storage.getAPIInterface().getChatContacts(req);
         call.enqueue(new Callback<ResponseGetOnlineContacts>() {
             @Override
             public void onResponse(Call<ResponseGetOnlineContacts> call, Response<ResponseGetOnlineContacts> response) {
@@ -1137,7 +1134,7 @@ dangerous code
                         return;
                     }
 
-                    Call<ResponseBody> call = Storage.getAPIService().sendMessages(req);
+                    Call<ResponseBody> call = Storage.getAPIInterface().sendMessages(req);
                     // ga boleh call.enqueue krn bisa hilang dr memory utk variable2 di atas
                     try {
                         Response<ResponseBody> execute = call.execute();

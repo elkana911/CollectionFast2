@@ -30,7 +30,7 @@ import retrofit2.converter.gson.GsonConverterFactory;
  * Created by Eric on 19-Aug-16.
  * was named ServiceGenerator
  */
-public class HttpClientBuilder {
+public class APIClientBuilder {
     public static final String SERVER_USERNAME = "admin";
     public static final String SERVER_PWD = "4dminMobil3";
 
@@ -40,8 +40,8 @@ public class HttpClientBuilder {
     // probably stackoverflowerror. moved to local
 //    private static OkHttpClient.Builder httpClient = new OkHttpClient.Builder();
 
-    public static ApiInterface create(HttpUrl host) {
-        return create(ApiInterface.class, host, SERVER_USERNAME, SERVER_PWD);
+    public static APInterface create(HttpUrl host) {
+        return create(APInterface.class, host, SERVER_USERNAME, SERVER_PWD);
     }
 
     public static <S> S create(Class<S> api, HttpUrl host) {

@@ -19,8 +19,8 @@ import java.io.OutputStream;
 import java.util.Date;
 
 import id.co.ppu.collectionfast2.pojo.LoginInfo;
-import id.co.ppu.collectionfast2.rest.ApiInterface;
-import id.co.ppu.collectionfast2.rest.HttpClientBuilder;
+import id.co.ppu.collectionfast2.rest.APIClientBuilder;
+import id.co.ppu.collectionfast2.rest.APInterface;
 import io.realm.Realm;
 
 /**
@@ -181,9 +181,8 @@ public class Storage {
         return androidId;
     }
 
-    public static ApiInterface getAPIService() {
-        return
-                HttpClientBuilder.create(ApiInterface.class, Utility.buildUrl(getPrefAsInt(KEY_SERVER_ID, 0)));
+    public static APInterface getAPIInterface() {
+        return APIClientBuilder.create(Utility.buildUrl(getPrefAsInt(KEY_SERVER_ID, 0)));
     }
 
     public static String getLanguageId(Context ctx) {
@@ -244,9 +243,9 @@ public class Storage {
             return androidId;
         }
 
-        public static ApiInterface getAPIService(Context ctx) {
+        public static APInterface getAPIInterface(Context ctx) {
             return
-                    HttpClientBuilder.create(ApiInterface.class, Utility.buildUrl(Storage.getPreferenceAsInt(ctx.getApplicationContext(), Storage.KEY_SERVER_ID, 0)));
+                    APIClientBuilder.create(APInterface.class, Utility.buildUrl(Storage.getPreferenceAsInt(ctx.getApplicationContext(), Storage.KEY_SERVER_ID, 0)));
         }
     */
 

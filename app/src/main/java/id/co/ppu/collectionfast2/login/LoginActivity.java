@@ -55,8 +55,8 @@ import id.co.ppu.collectionfast2.pojo.ServerInfo;
 import id.co.ppu.collectionfast2.pojo.master.MstSecUser;
 import id.co.ppu.collectionfast2.pojo.master.MstUser;
 import id.co.ppu.collectionfast2.pojo.trn.TrnLDVHeader;
-import id.co.ppu.collectionfast2.rest.ApiInterface;
-import id.co.ppu.collectionfast2.rest.HttpClientBuilder;
+import id.co.ppu.collectionfast2.rest.APIClientBuilder;
+import id.co.ppu.collectionfast2.rest.APInterface;
 import id.co.ppu.collectionfast2.rest.request.RequestLogin;
 import id.co.ppu.collectionfast2.rest.response.ResponseLogin;
 import id.co.ppu.collectionfast2.rest.response.ResponseServerInfo;
@@ -129,9 +129,9 @@ public class LoginActivity extends BasicActivity {
      */
     private GoogleApiClient client;
 
-    public ApiInterface getAPIService() {
+    public APInterface getAPIInterface() {
         return
-                HttpClientBuilder.create(ApiInterface.class, Utility.buildUrl(Utility.getServerID(spServers.getSelectedItem().toString())));
+                APIClientBuilder.create(APInterface.class, Utility.buildUrl(Utility.getServerID(spServers.getSelectedItem().toString())));
     }
 
     @Override
@@ -471,9 +471,9 @@ public class LoginActivity extends BasicActivity {
         int versionCode = BuildConfig.VERSION_CODE;
         final String versionName = BuildConfig.VERSION_NAME;
 
-        ApiInterface fastService = getAPIService();
+        APInterface api = getAPIInterface();
 
-        Call<ResponseBody> call = fastService.getAppVersion(versionName);
+        Call<ResponseBody> call = api.getAppVersion(versionName);
 
 //        if return same version then return true
         call.enqueue(new Callback<ResponseBody>() {
@@ -569,9 +569,9 @@ public class LoginActivity extends BasicActivity {
 
     private void retrieveServerInfo(final OnPostRetrieveServerInfo listener) throws Exception {
 
-        ApiInterface fastService = getAPIService();
+        APInterface api = getAPIInterface();
 
-        Call<ResponseServerInfo> call = fastService.getServerInfo();
+        Call<ResponseServerInfo> call = api.getServerInfo();
         call.enqueue(new Callback<ResponseServerInfo>() {
             @Override
             public void onResponse(Call<ResponseServerInfo> call, Response<ResponseServerInfo> response) {
@@ -665,7 +665,7 @@ public class LoginActivity extends BasicActivity {
             retrieveServerInfo(new OnPostRetrieveServerInfo() {
                 @Override
                 public void onSuccess(ServerInfo serverInfo) {
-                    ApiInterface loginService = getAPIService();
+                    APInterface api = getAPIInterface();
 
                     RequestLogin request = new RequestLogin();
                     request.setId(username);
@@ -673,7 +673,7 @@ public class LoginActivity extends BasicActivity {
 
                     fillRequest(Utility.ACTION_LOGIN, request);
 
-                    Call<ResponseLogin> call = loginService.login(request);
+                    Call<ResponseLogin> call = api.login(request);
                     call.enqueue(new Callback<ResponseLogin>() {
                         @Override
                         public void onResponse(Call<ResponseLogin> call, Response<ResponseLogin> response) {
@@ -845,9 +845,9 @@ public class LoginActivity extends BasicActivity {
 
         final ProgressDialog mProgressDialog = Utility.createAndShowProgressDialog(this, "Get Any LKP User...");
 
-        ApiInterface fastService = getAPIService();
+        APInterface api = getAPIInterface();
 
-        Call<ResponseUserPwd> call = fastService.getAnyLKPUser();
+        Call<ResponseUserPwd> call = api.getAnyLKPUser();
         call.enqueue(new Callback<ResponseUserPwd>() {
             @Override
             public void onResponse(Call<ResponseUserPwd> call, Response<ResponseUserPwd> response) {

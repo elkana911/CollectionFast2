@@ -99,7 +99,7 @@ import id.co.ppu.collectionfast2.pojo.trn.TrnLDVHeader;
 import id.co.ppu.collectionfast2.pojo.trn.TrnPhoto;
 import id.co.ppu.collectionfast2.pojo.trn.TrnRVB;
 import id.co.ppu.collectionfast2.pojo.trn.TrnRVColl;
-import id.co.ppu.collectionfast2.rest.ApiInterface;
+import id.co.ppu.collectionfast2.rest.APInterface;
 import id.co.ppu.collectionfast2.rest.request.RequestLKPByDate;
 import id.co.ppu.collectionfast2.rest.request.RequestSyncLKP;
 import id.co.ppu.collectionfast2.rest.request.RequestSyncLocation;
@@ -187,7 +187,7 @@ public class MainActivity extends ChatActivity
             // handle mobile setup
             final ProgressDialog mProgressDialog = Utility.createAndShowProgressDialog(this, getString(R.string.message_please_wait));
 
-            ApiInterface fastService = Storage.getAPIService();
+            APInterface fastService = Storage.getAPIInterface();
 
             Call<ResponseGetMobileConfig> call = fastService.getMobileConfig();
             call.enqueue(new Callback<ResponseGetMobileConfig>() {
@@ -1121,7 +1121,7 @@ public class MainActivity extends ChatActivity
 
         final ProgressDialog mProgressDialog = Utility.createAndShowProgressDialog(this, "Getting your LKP from server.\nPlease wait...");
 
-        ApiInterface fastService = Storage.getAPIService();
+        APInterface fastService = Storage.getAPIInterface();
 
         Call<ResponseGetLKP> call = fastService.getLKPByDate(requestLKP);
         call.enqueue(new Callback<ResponseGetLKP>() {
@@ -1797,7 +1797,7 @@ public class MainActivity extends ChatActivity
             mProgressDialog.show();
         }
 
-        ApiInterface fastService = Storage.getAPIService();
+        APInterface fastService = Storage.getAPIInterface();
 
         Call<ResponseBody> cb = fastService.closeBatchYesterday(collCode);
         cb.enqueue(new Callback<ResponseBody>() {
@@ -1906,7 +1906,7 @@ public class MainActivity extends ChatActivity
 
             final ProgressDialog mProgressDialog = Utility.createAndShowProgressDialog(this, getString(R.string.message_please_wait));
 
-            ApiInterface fastService = Storage.getAPIService();
+            APInterface fastService = Storage.getAPIInterface();
 
             Call<ResponseSync> call = fastService.syncLKP(req);
             call.enqueue(new Callback<ResponseSync>() {
@@ -2044,7 +2044,7 @@ public class MainActivity extends ChatActivity
 
             fillRequest(Utility.ACTION_CLOSEBATCH_PREVIOUS, req);
 
-            ApiInterface fastService = Storage.getAPIService();
+            APInterface fastService = Storage.getAPIInterface();
 
             Call<ResponseSync> call = fastService.syncLKP(req);
             call.enqueue(new Callback<ResponseSync>() {
@@ -2392,7 +2392,7 @@ public class MainActivity extends ChatActivity
 
         }
 
-        ApiInterface fastService = Storage.getAPIService();
+        APInterface fastService = Storage.getAPIInterface();
 
         Call<ResponseBody> call = fastService.syncLocation(req);
         call.enqueue(new Callback<ResponseBody>() {
@@ -2617,7 +2617,7 @@ public class MainActivity extends ChatActivity
 
         fillRequest(Utility.ACTION_CHECK_PAID_LKP, requestLKP);
 
-        ApiInterface fastService = Storage.getAPIService();
+        APInterface fastService = Storage.getAPIInterface();
 
         Call<ResponseGetLKP> call = fastService.getLKPPaidByDate(requestLKP);
         call.enqueue(new Callback<ResponseGetLKP>() {
@@ -2875,7 +2875,7 @@ public class MainActivity extends ChatActivity
                             return;
                         }
 
-                        ApiInterface fastService = Storage.getAPIService();
+                        APInterface fastService = Storage.getAPIInterface();
 
                         Call<ResponseSync> call = fastService.syncLKP(req);
                         call.enqueue(new Callback<ResponseSync>() {

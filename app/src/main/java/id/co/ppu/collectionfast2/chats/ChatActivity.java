@@ -176,7 +176,7 @@ public abstract class ChatActivity extends SyncActivity implements FragmentChatA
                     final RequestChatMsg req = new RequestChatMsg();
                     req.setMsg(r.copyFromRealm(pendings));
 
-                    Call<ResponseBody> call = getAPIService().sendMessages(req);
+                    Call<ResponseBody> call = getAPIInterface().sendMessages(req);
                     // ga boleh call.enqueue krn bisa hilang dr memory utk variable2 di atas
                     try {
                         Response<ResponseBody> execute = call.execute();
@@ -458,7 +458,7 @@ public abstract class ChatActivity extends SyncActivity implements FragmentChatA
 
 
                         // tell sender your message has been open and read, tp masalahnya layar mati jg kesini
-                        Call<ResponseBody> call = Storage.getAPIService().updateMessageStatus(key_uid, Utility.isScreenOff(this) ? ConstChat.MESSAGE_STATUS_DELIVERED : ConstChat.MESSAGE_STATUS_READ_AND_OPENED);
+                        Call<ResponseBody> call = Storage.getAPIInterface().updateMessageStatus(key_uid, Utility.isScreenOff(this) ? ConstChat.MESSAGE_STATUS_DELIVERED : ConstChat.MESSAGE_STATUS_READ_AND_OPENED);
                         call.enqueue(new Callback<ResponseBody>() {
                             @Override
                             public void onResponse(Call<ResponseBody> call, Response<ResponseBody> response) {
@@ -488,7 +488,7 @@ public abstract class ChatActivity extends SyncActivity implements FragmentChatA
                                 }
                             });
                         } else {
-                            Call<ResponseGetChatHistory> call = Storage.getAPIService().getMessage(key_uid);
+                            Call<ResponseGetChatHistory> call = Storage.getAPIInterface().getMessage(key_uid);
                             call.enqueue(new Callback<ResponseGetChatHistory>() {
                                 @Override
                                 public void onResponse(Call<ResponseGetChatHistory> call, Response<ResponseGetChatHistory> response) {
@@ -766,7 +766,7 @@ public abstract class ChatActivity extends SyncActivity implements FragmentChatA
             return;
         }
 
-        Call<ResponseBody> call = Storage.getAPIService().checkStatus(req);
+        Call<ResponseBody> call = Storage.getAPIInterface().checkStatus(req);
         call.enqueue(new Callback<ResponseBody>() {
             @Override
             public void onResponse(Call<ResponseBody> call, Response<ResponseBody> response) {
@@ -840,7 +840,7 @@ public abstract class ChatActivity extends SyncActivity implements FragmentChatA
             final RequestChatMsgStatus req = new RequestChatMsgStatus();
             req.setUid(list);
 
-            Call<ResponseGetChatHistory> call = Storage.getAPIService().checkMessageStatus(req);
+            Call<ResponseGetChatHistory> call = Storage.getAPIInterface().checkMessageStatus(req);
             call.enqueue(new Callback<ResponseGetChatHistory>() {
                 @Override
                 public void onResponse(Call<ResponseGetChatHistory> call, Response<ResponseGetChatHistory> response) {
@@ -893,7 +893,7 @@ public abstract class ChatActivity extends SyncActivity implements FragmentChatA
         if (lastMsg != null)
             req.setLastUid(lastMsg.getUid());
 
-        Call<ResponseGetChatHistory> call = Storage.getAPIService().getChatHistory(req);
+        Call<ResponseGetChatHistory> call = Storage.getAPIInterface().getChatHistory(req);
         call.enqueue(new Callback<ResponseGetChatHistory>() {
             @Override
             public void onResponse(Call<ResponseGetChatHistory> call, Response<ResponseGetChatHistory> response) {

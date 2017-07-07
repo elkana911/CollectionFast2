@@ -40,8 +40,8 @@ import id.co.ppu.collectionfast2.pojo.sync.SyncTrnChangeAddr;
 import id.co.ppu.collectionfast2.pojo.trn.TrnChangeAddr;
 import id.co.ppu.collectionfast2.pojo.trn.TrnChangeAddrPK;
 import id.co.ppu.collectionfast2.pojo.trn.TrnLDVDetails;
-import id.co.ppu.collectionfast2.rest.ApiInterface;
-import id.co.ppu.collectionfast2.rest.HttpClientBuilder;
+import id.co.ppu.collectionfast2.rest.APIClientBuilder;
+import id.co.ppu.collectionfast2.rest.APInterface;
 import id.co.ppu.collectionfast2.rest.request.RequestArea;
 import id.co.ppu.collectionfast2.rest.response.ResponseArea;
 import id.co.ppu.collectionfast2.rest.response.ResponseAreaList;
@@ -197,8 +197,8 @@ public class ActivityChangeAddress extends BasicActivity {
         mProgressDialog.setMessage("Please wait...");
         mProgressDialog.show();
 
-        ApiInterface fastService =
-                HttpClientBuilder.create(ApiInterface.class, Utility.buildUrl(Storage.getPrefAsInt(Storage.KEY_SERVER_ID, 0)));
+        APInterface fastService =
+                APIClientBuilder.create(APInterface.class, Utility.buildUrl(Storage.getPrefAsInt(Storage.KEY_SERVER_ID, 0)));
 
         RequestArea req = new RequestArea();
 
@@ -297,7 +297,7 @@ public class ActivityChangeAddress extends BasicActivity {
         mProgressDialog.setMessage("Please wait...");
         mProgressDialog.show();
 
-        ApiInterface api = HttpClientBuilder.create(Utility.buildUrl(Storage.getPrefAsInt(Storage.KEY_SERVER_ID, 0)));
+        APInterface api = APIClientBuilder.create(Utility.buildUrl(Storage.getPrefAsInt(Storage.KEY_SERVER_ID, 0)));
 
         RequestArea req = new RequestArea();
 

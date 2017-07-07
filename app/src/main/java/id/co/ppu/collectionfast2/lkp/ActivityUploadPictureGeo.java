@@ -41,7 +41,7 @@ import id.co.ppu.collectionfast2.location.Location;
 import id.co.ppu.collectionfast2.pojo.sync.SyncFileUpload;
 import id.co.ppu.collectionfast2.pojo.trn.TrnLDVDetails;
 import id.co.ppu.collectionfast2.pojo.trn.TrnPhoto;
-import id.co.ppu.collectionfast2.rest.HttpClientBuilder;
+import id.co.ppu.collectionfast2.rest.APIClientBuilder;
 import id.co.ppu.collectionfast2.util.NetUtil;
 import id.co.ppu.collectionfast2.util.Storage;
 import id.co.ppu.collectionfast2.util.Utility;
@@ -110,8 +110,8 @@ public class ActivityUploadPictureGeo extends BasicActivity {
     ImageView ivUploadCheck4;
 
     private void setupHttpClient() {
-        String username = HttpClientBuilder.SERVER_USERNAME;
-        String password = HttpClientBuilder.SERVER_PWD;
+        String username = APIClientBuilder.SERVER_USERNAME;
+        String password = APIClientBuilder.SERVER_PWD;
         String credentials = username + ":" + password;
         final String basic =
                 "Basic " + Base64.encodeToString(credentials.getBytes(), Base64.NO_WRAP);

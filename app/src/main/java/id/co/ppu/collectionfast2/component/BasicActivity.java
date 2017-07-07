@@ -42,12 +42,7 @@ public class BasicActivity extends AppCompatActivity {
     public Realm realm;
     protected int mSelectedNavMenuIndex = 0;
 
-//    protected UserData currentUser;
-//    protected LoginInfo currentUser;
-
     public String currentLDVNo = null;
-
-
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -157,12 +152,9 @@ public class BasicActivity extends AppCompatActivity {
         req.setActionName(actionName);
         req.setUserId(getCurrentUserId());
         req.setSysInfo(Utility.buildSysInfoAsCsv(this));
-
-
     }
 
     protected boolean isGPSMandatory(Realm realm) {
-
         MstMobileSetup mobileSetup = realm.where(MstMobileSetup.class)
                 .equalTo("key", "DISABLE_GPS_MDTRY")
                 .findFirst();
@@ -175,9 +167,9 @@ public class BasicActivity extends AppCompatActivity {
     }
 
     /*
-    cek Storage.getAPIService
-        protected ApiInterface getAPIService() {
-            return HttpClientBuilder.create(ApiInterface.class, Utility.buildUrl(Storage.getPreferenceAsInt(getApplicationContext(), Storage.KEY_SERVER_ID, 0)));
+    cek Storage.getAPIInterface
+        protected APInterface getAPIInterface() {
+            return HttpClientBuilder.create(APInterface.class, Utility.buildUrl(Storage.getPreferenceAsInt(getApplicationContext(), Storage.KEY_SERVER_ID, 0)));
 
         }
     cek Storage.getAndroidToken
