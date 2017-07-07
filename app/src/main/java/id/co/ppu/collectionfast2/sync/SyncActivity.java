@@ -185,7 +185,7 @@ public abstract class SyncActivity extends MainbaseActivity {
 
 
         ApiInterface fastService =
-                ServiceGenerator.createService(ApiInterface.class, Utility.buildUrl(Storage.getPreferenceAsInt(getApplicationContext(), Storage.KEY_SERVER_ID, 0)));
+                HttpClientBuilder.create(ApiInterface.class, Utility.buildUrl(Storage.getPreferenceAsInt(getApplicationContext(), Storage.KEY_SERVER_ID, 0)));
 
         Call<ResponseSync> call = fastService.syncLKP(req);
         call.enqueue(new Callback<ResponseSync>() {

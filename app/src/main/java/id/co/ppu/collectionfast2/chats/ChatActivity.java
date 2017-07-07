@@ -42,6 +42,7 @@ import id.co.ppu.collectionfast2.util.ConstChat;
 import id.co.ppu.collectionfast2.util.DataUtil;
 import id.co.ppu.collectionfast2.util.NetUtil;
 import id.co.ppu.collectionfast2.util.NotificationUtils;
+import id.co.ppu.collectionfast2.util.Storage;
 import id.co.ppu.collectionfast2.util.Utility;
 import io.realm.Realm;
 import io.realm.RealmQuery;
@@ -405,6 +406,8 @@ public abstract class ChatActivity extends SyncActivity implements FragmentChatA
             final String key_timestamp = intent.getStringExtra(ConstChat.KEY_TIMESTAMP);
             final String key_status = intent.getStringExtra(ConstChat.KEY_STATUS);
 
+            final String collCode = getCurrentUserId();
+
             if (!TextUtils.isEmpty(key_uid)) {
 
                 if (mSelectedNavMenuIndex != R.id.nav_chats) {
@@ -437,7 +440,7 @@ public abstract class ChatActivity extends SyncActivity implements FragmentChatA
 //                                        msg.setSeqNo(Long.parseLong(key_seqno));
 
                                         msg.setFromCollCode(key_from);
-                                        msg.setToCollCode(currentUser.getUserId());
+                                        msg.setToCollCode(collCode);
 
                                         msg.setMessage(key_msg);
                                         msg.setMessageType(ConstChat.MESSAGE_TYPE_COMMON);
@@ -455,7 +458,7 @@ public abstract class ChatActivity extends SyncActivity implements FragmentChatA
 
 
                         // tell sender your message has been open and read, tp masalahnya layar mati jg kesini
-                        Call<ResponseBody> call = getAPIService().updateMessageStatus(key_uid, Utility.isScreenOff(this) ? ConstChat.MESSAGE_STATUS_DELIVERED : ConstChat.MESSAGE_STATUS_READ_AND_OPENED);
+                        Call<ResponseBody> call = Storage.getAPIService().updateMessageStatus(key_uid, Utility.isScreenOff(this) ? ConstChat.MESSAGE_STATUS_DELIVERED : ConstChat.MESSAGE_STATUS_READ_AND_OPENED);
                         call.enqueue(new Callback<ResponseBody>() {
                             @Override
                             public void onResponse(Call<ResponseBody> call, Response<ResponseBody> response) {
@@ -485,7 +488,7 @@ public abstract class ChatActivity extends SyncActivity implements FragmentChatA
                                 }
                             });
                         } else {
-                            Call<ResponseGetChatHistory> call = getAPIService().getMessage(key_uid);
+                            Call<ResponseGetChatHistory> call = Storage.getAPIService().getMessage(key_uid);
                             call.enqueue(new Callback<ResponseGetChatHistory>() {
                                 @Override
                                 public void onResponse(Call<ResponseGetChatHistory> call, Response<ResponseGetChatHistory> response) {
@@ -516,7 +519,7 @@ public abstract class ChatActivity extends SyncActivity implements FragmentChatA
                             @Override
                             public void execute(Realm realm) {
                                 RealmResults<TrnChatMsg> unreadMessages = realm.where(TrnChatMsg.class)
-                                        .equalTo("fromCollCode", currentUser.getUserId())
+                                        .equalTo("fromCollCode", collCode)
                                         .equalTo("toCollCode", key_from)
                                         .notEqualTo("messageStatus", ConstChat.MESSAGE_STATUS_READ_AND_OPENED)
                                         .findAll();
@@ -545,7 +548,7 @@ public abstract class ChatActivity extends SyncActivity implements FragmentChatA
 
                     if (contact == null) {
                         List<String> collsCode = new ArrayList<>();
-                        collsCode.add(currentUser.getUserId());
+                        collsCode.add(collCode);
                         collsCode.add(key_from);
 
                         NetUtil.chatGetContacts(ChatActivity.this, collsCode, new OnGetChatContactListener() {
@@ -563,7 +566,7 @@ public abstract class ChatActivity extends SyncActivity implements FragmentChatA
                                         .equalTo("collCode", key_from)
                                         .findFirst();
 
-                                String val1 = currentUser.getUserId();
+                                String val1 = collCode;
                                 String val2 = contact.getCollCode();
 
                                 onContactSelected(contact);
@@ -674,12 +677,14 @@ public abstract class ChatActivity extends SyncActivity implements FragmentChatA
     public void onFabClick(View view) {
         final Fragment frag = getSupportFragmentManager().findFragmentById(R.id.content_frame);
 
+        final String collCode = getCurrentUserId();
+
         if (frag != null && frag instanceof FragmentLKPList) {
             ((FragmentLKPList) frag).performClickSync();
         } else if (frag != null && frag instanceof FragmentChatActiveContacts) {
             DialogFragment d = new FragmentChatAllContacts();
             Bundle bundle = new Bundle();
-            bundle.putString(FragmentChatAllContacts.PARAM_USERCODE, currentUser.getUserId());
+            bundle.putString(FragmentChatAllContacts.PARAM_USERCODE, collCode);
             d.setArguments(bundle);
 
             d.show(getSupportFragmentManager(), "dialog");
@@ -692,12 +697,14 @@ public abstract class ChatActivity extends SyncActivity implements FragmentChatA
 
     @Override
     public void onGetGroupContacts(OnGetChatContactListener listener) {
-        NetUtil.chatGetGroupContacts(this, currentUser.getUserId(), listener);
+        final String collCode = getCurrentUserId();
+        NetUtil.chatGetGroupContacts(this, collCode, listener);
     }
 
     @Override
     public void onGetOnlineContacts(OnGetChatContactListener listener) {
-        NetUtil.chatUpdateContacts(this, currentUser.getUserId(), listener);
+        final String collCode = getCurrentUserId();
+        NetUtil.chatUpdateContacts(this, collCode, listener);
     }
 
     @Override
@@ -705,10 +712,12 @@ public abstract class ChatActivity extends SyncActivity implements FragmentChatA
 
         changeFabIcon(R.drawable.ic_send_black_24dp);
 
+        final String collCode = getCurrentUserId();
+
         FragmentChatWith fr = new FragmentChatWith();
 
         Bundle bundle = new Bundle();
-        bundle.putString(FragmentChatWith.PARAM_USERCODE1, currentUser.getUserId());
+        bundle.putString(FragmentChatWith.PARAM_USERCODE1, collCode);
         bundle.putString(FragmentChatWith.PARAM_USERCODE2, contact.getCollCode());
         fr.setArguments(bundle);
 
@@ -757,7 +766,7 @@ public abstract class ChatActivity extends SyncActivity implements FragmentChatA
             return;
         }
 
-        Call<ResponseBody> call = getAPIService().checkStatus(req);
+        Call<ResponseBody> call = Storage.getAPIService().checkStatus(req);
         call.enqueue(new Callback<ResponseBody>() {
             @Override
             public void onResponse(Call<ResponseBody> call, Response<ResponseBody> response) {
@@ -831,7 +840,7 @@ public abstract class ChatActivity extends SyncActivity implements FragmentChatA
             final RequestChatMsgStatus req = new RequestChatMsgStatus();
             req.setUid(list);
 
-            Call<ResponseGetChatHistory> call = getAPIService().checkMessageStatus(req);
+            Call<ResponseGetChatHistory> call = Storage.getAPIService().checkMessageStatus(req);
             call.enqueue(new Callback<ResponseGetChatHistory>() {
                 @Override
                 public void onResponse(Call<ResponseGetChatHistory> call, Response<ResponseGetChatHistory> response) {
@@ -884,7 +893,7 @@ public abstract class ChatActivity extends SyncActivity implements FragmentChatA
         if (lastMsg != null)
             req.setLastUid(lastMsg.getUid());
 
-        Call<ResponseGetChatHistory> call = getAPIService().getChatHistory(req);
+        Call<ResponseGetChatHistory> call = Storage.getAPIService().getChatHistory(req);
         call.enqueue(new Callback<ResponseGetChatHistory>() {
             @Override
             public void onResponse(Call<ResponseGetChatHistory> call, Response<ResponseGetChatHistory> response) {

@@ -25,7 +25,6 @@ import butterknife.ButterKnife;
 import butterknife.OnClick;
 import id.co.ppu.collectionfast2.R;
 import id.co.ppu.collectionfast2.pojo.ServerInfo;
-import id.co.ppu.collectionfast2.pojo.UserData;
 import id.co.ppu.collectionfast2.pojo.master.MstLDVStatus;
 import id.co.ppu.collectionfast2.pojo.trn.TrnLDVDetails;
 import id.co.ppu.collectionfast2.pojo.trn.TrnLDVHeader;
@@ -112,7 +111,7 @@ public class FragmentSummaryLKP extends Fragment {
             return;
         }
 
-        UserData userData = (UserData) Storage.getObjPreference(getContext(), Storage.KEY_USER, UserData.class);
+//        UserData userData = (UserData) Storage.getPreference(Storage.KEY_USER, UserData.class);
 
         // based on collectorcode
         long unitTarget = 0;
@@ -165,9 +164,10 @@ public class FragmentSummaryLKP extends Fragment {
         etTglLKP.setText(DateUtils.formatDateTime(getContext(), serverDate.getTime(), DateUtils.FORMAT_SHOW_DATE | DateUtils.FORMAT_SHOW_YEAR | DateUtils.FORMAT_SHOW_WEEKDAY));
 //        etTglLKP.setText(DateUtils.formatDateTime(getContext(), header.getLdvDate().getTime(), DateUtils.FORMAT_SHOW_DATE | DateUtils.FORMAT_SHOW_YEAR | DateUtils.FORMAT_SHOW_WEEKDAY));
 
-        etCabang.setText(userData.getBranchName());
-
-        etARStaff.setText(userData.getFullName());
+        final String userFullName = Storage.getPref(Storage.KEY_USER_FULLNAME, null);
+        final String userBranchName = Storage.getPref(Storage.KEY_USER_BRANCH_NAME, null);
+        etCabang.setText(userBranchName);
+        etARStaff.setText(userFullName);
 
         long targetPenerimaan = (header.getPrncAMBC() == null ? 0L : header.getPrncAMBC())
                     + (header.getIntrAMBC() == null ? 0L : header.getIntrAMBC());

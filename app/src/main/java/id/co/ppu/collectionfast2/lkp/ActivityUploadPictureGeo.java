@@ -38,11 +38,10 @@ import id.co.ppu.collectionfast2.R;
 import id.co.ppu.collectionfast2.component.BasicActivity;
 import id.co.ppu.collectionfast2.listener.OnSuccessError;
 import id.co.ppu.collectionfast2.location.Location;
-import id.co.ppu.collectionfast2.pojo.UserData;
 import id.co.ppu.collectionfast2.pojo.sync.SyncFileUpload;
 import id.co.ppu.collectionfast2.pojo.trn.TrnLDVDetails;
 import id.co.ppu.collectionfast2.pojo.trn.TrnPhoto;
-import id.co.ppu.collectionfast2.rest.ServiceGenerator;
+import id.co.ppu.collectionfast2.rest.HttpClientBuilder;
 import id.co.ppu.collectionfast2.util.NetUtil;
 import id.co.ppu.collectionfast2.util.Storage;
 import id.co.ppu.collectionfast2.util.Utility;
@@ -111,8 +110,8 @@ public class ActivityUploadPictureGeo extends BasicActivity {
     ImageView ivUploadCheck4;
 
     private void setupHttpClient() {
-        String username = ServiceGenerator.SERVER_USERNAME;
-        String password = ServiceGenerator.SERVER_PWD;
+        String username = HttpClientBuilder.SERVER_USERNAME;
+        String password = HttpClientBuilder.SERVER_PWD;
         String credentials = username + ":" + password;
         final String basic =
                 "Basic " + Base64.encodeToString(credentials.getBytes(), Base64.NO_WRAP);
@@ -154,9 +153,10 @@ public class ActivityUploadPictureGeo extends BasicActivity {
             throw new RuntimeException("collectorId / ldvNo / contractNo cannot null");
         }
 
-        UserData userData = (UserData) Storage.getObjPreference(getApplicationContext(), Storage.KEY_USER, UserData.class);
+//        UserData userData = (UserData) Storage.getPreference(Storage.KEY_USER, UserData.class);
 
-        this.officeCode = userData.getBranchId();
+//        this.officeCode = userData.getBranchId();
+        this.officeCode = Storage.getPref(Storage.KEY_USER_BRANCH_ID, null);
 
         TrnLDVDetails dtl = this.realm.where(TrnLDVDetails.class)
                 .equalTo("contractNo", contractNo)
@@ -251,7 +251,7 @@ public class ActivityUploadPictureGeo extends BasicActivity {
      * @return
      */
     private String convertPictureIDToUrl(String pictureId) {
-        HttpUrl httpUrl = Utility.buildUrl(Storage.getPreferenceAsInt(this, Storage.KEY_SERVER_ID, 0));
+        HttpUrl httpUrl = Utility.buildUrl(Storage.getPrefAsInt(Storage.KEY_SERVER_ID, 0));
         String fixUrl = httpUrl.toString();
 
         if (fixUrl.charAt(fixUrl.length() - 1) != '/') {

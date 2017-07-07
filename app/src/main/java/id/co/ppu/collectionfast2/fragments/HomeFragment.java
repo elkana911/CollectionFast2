@@ -12,7 +12,6 @@ import android.widget.EditText;
 import butterknife.BindView;
 import butterknife.ButterKnife;
 import id.co.ppu.collectionfast2.R;
-import id.co.ppu.collectionfast2.pojo.UserData;
 import id.co.ppu.collectionfast2.util.Storage;
 import id.co.ppu.collectionfast2.util.Utility;
 
@@ -88,16 +87,17 @@ public class HomeFragment extends Fragment {
 
         Utility.setViewGroupFocusable((ViewGroup) view.findViewById(R.id.llFormCollector), false);
 
-        UserData userData = (UserData) Storage.getObjPreference(getContext(), Storage.KEY_USER, UserData.class);
+//        LoginInfo userData = (LoginInfo) Storage.getPreference(Storage.KEY_USER, null);
+//        UserData userData = (UserData) Storage.getObjPreference(getContext(), Storage.KEY_USER, UserData.class);
 
-        etJabatan.setText(userData.getJabatan());
-        etNIKNo.setText(userData.getNik());
-        etCabang.setText(userData.getBranchName());
-        etAddress.setText(userData.getAlamat());
+        etJabatan.setText(Storage.getPref(Storage.KEY_USER_JABATAN, null));
+        etNIKNo.setText(Storage.getPref(Storage.KEY_USER_NIK, null));
+        etCabang.setText(Storage.getPref(Storage.KEY_USER_BRANCH_NAME, null));
+        etAddress.setText(Storage.getPref(Storage.KEY_USER_ADDRESS, null));
 
-        etPhone.setText(userData.getMobilePhone());
-        etCollectorName.setText(userData.getFullName());
-        etEmail.setText(userData.getEmailAddr());
+        etPhone.setText(Storage.getPref(Storage.KEY_USER_MOBILE_PHONE, null));
+        etCollectorName.setText(Storage.getPref(Storage.KEY_USER_FULLNAME, null));
+        etEmail.setText(Storage.getPref(Storage.KEY_USER_EMAIL, null));
 
         etPhone.setMovementMethod(LinkMovementMethod.getInstance());
 

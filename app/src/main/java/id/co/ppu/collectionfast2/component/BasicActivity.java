@@ -9,11 +9,8 @@ import android.content.res.Resources;
 import android.os.Bundle;
 import android.support.v7.app.AppCompatActivity;
 import android.telephony.TelephonyManager;
-import android.text.TextUtils;
 import android.view.MenuItem;
 import android.widget.Toast;
-
-import com.google.firebase.iid.FirebaseInstanceId;
 
 import java.lang.reflect.Method;
 import java.util.Date;
@@ -22,13 +19,10 @@ import java.util.Locale;
 import id.co.ppu.collectionfast2.R;
 import id.co.ppu.collectionfast2.listener.OnRootListener;
 import id.co.ppu.collectionfast2.pojo.ServerInfo;
-import id.co.ppu.collectionfast2.pojo.UserData;
 import id.co.ppu.collectionfast2.pojo.master.MstMobileSetup;
 import id.co.ppu.collectionfast2.pojo.trn.TrnLDVComments;
 import id.co.ppu.collectionfast2.pojo.trn.TrnRVColl;
 import id.co.ppu.collectionfast2.pojo.trn.TrnRepo;
-import id.co.ppu.collectionfast2.rest.ApiInterface;
-import id.co.ppu.collectionfast2.rest.ServiceGenerator;
 import id.co.ppu.collectionfast2.rest.request.RequestBasic;
 import id.co.ppu.collectionfast2.settings.SettingsActivity;
 import id.co.ppu.collectionfast2.util.DataUtil;
@@ -45,10 +39,11 @@ import io.realm.RealmQuery;
  */
 public class BasicActivity extends AppCompatActivity {
 
-    protected Realm realm;
+    public Realm realm;
     protected int mSelectedNavMenuIndex = 0;
 
-    protected UserData currentUser;
+//    protected UserData currentUser;
+//    protected LoginInfo currentUser;
 
     public String currentLDVNo = null;
 
@@ -95,7 +90,7 @@ public class BasicActivity extends AppCompatActivity {
     }
 
     protected void resetData() {
-        Storage.savePreference(getApplicationContext(), Storage.KEY_USER, null);
+//        Storage.savePreference(getApplicationContext(), Storage.KEY_USER, null);
 
         // clean photo arrival cache
         PoAUtil.cleanPoA();
@@ -138,11 +133,11 @@ public class BasicActivity extends AppCompatActivity {
     }
 
     protected String getCurrentUserId() {
-        UserData currentUser = (UserData) Storage.getObjPreference(getApplicationContext(), Storage.KEY_USER, UserData.class);
-        if (currentUser == null)
-            return null;
-
-        return currentUser.getUserId();
+//        UserData currentUser = (UserData) Storage.getObjPreference(getApplicationContext(), Storage.KEY_USER, UserData.class);
+//        if (currentUser == null)
+//            return null;
+        return Storage.getPref(Storage.KEY_USERID, null);
+//        return currentUser.getUserId();
     }
 
     protected void fillRequest(String actionName, RequestBasic req) {
@@ -179,20 +174,22 @@ public class BasicActivity extends AppCompatActivity {
         return !mobileSetup.getValue1().equals("1");
     }
 
-    protected ApiInterface getAPIService() {
-        return ServiceGenerator.createService(ApiInterface.class, Utility.buildUrl(Storage.getPreferenceAsInt(getApplicationContext(), Storage.KEY_SERVER_ID, 0)));
+    /*
+    cek Storage.getAPIService
+        protected ApiInterface getAPIService() {
+            return HttpClientBuilder.create(ApiInterface.class, Utility.buildUrl(Storage.getPreferenceAsInt(getApplicationContext(), Storage.KEY_SERVER_ID, 0)));
 
-    }
-
-    protected String getAndroidToken() {
-        String androidId = Storage.getPreference(getApplicationContext(), Storage.KEY_ANDROID_ID);
-        if (TextUtils.isEmpty(androidId)) {
-            androidId = FirebaseInstanceId.getInstance().getToken();
         }
+    cek Storage.getAndroidToken
+        protected String getAndroidToken() {
+            String androidId = Storage.getPreference(getApplicationContext(), Storage.KEY_ANDROID_ID);
+            if (TextUtils.isEmpty(androidId)) {
+                androidId = FirebaseInstanceId.getInstance().getToken();
+            }
 
-        return androidId;
-    }
-
+            return androidId;
+        }
+    */
     protected String getDebugInfo() {
         TelephonyManager mngr = (TelephonyManager)getSystemService(Context.TELEPHONY_SERVICE);
 

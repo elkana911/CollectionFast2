@@ -585,7 +585,7 @@ public class Utility {
 
         try {
             if (ctx != null) {
-                sb.append(",").append("server=").append(Utility.buildUrl(Storage.getPreferenceAsInt(ctx.getApplicationContext(), Storage.KEY_SERVER_ID, 0)));
+                sb.append(",").append("server=").append(Utility.buildUrl(Storage.getPrefAsInt(Storage.KEY_SERVER_ID, 0)));
 
                 // single sim non dual
                 TelephonyManager mngr = (TelephonyManager)ctx.getSystemService(Context.TELEPHONY_SERVICE);

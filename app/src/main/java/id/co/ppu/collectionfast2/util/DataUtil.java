@@ -17,8 +17,10 @@ import id.co.ppu.collectionfast2.exceptions.NoConnectionException;
 import id.co.ppu.collectionfast2.listener.OnPostRetrieveServerInfo;
 import id.co.ppu.collectionfast2.pojo.DisplayTrnContractBuckets;
 import id.co.ppu.collectionfast2.pojo.LKPData;
+import id.co.ppu.collectionfast2.pojo.LoginInfo;
 import id.co.ppu.collectionfast2.pojo.ServerInfo;
 import id.co.ppu.collectionfast2.pojo.UserConfig;
+import id.co.ppu.collectionfast2.pojo.UserData;
 import id.co.ppu.collectionfast2.pojo.chat.TrnChatMsg;
 import id.co.ppu.collectionfast2.pojo.master.MasterData;
 import id.co.ppu.collectionfast2.pojo.master.MstDelqReasons;
@@ -50,7 +52,6 @@ import id.co.ppu.collectionfast2.pojo.trn.TrnRVColl;
 import id.co.ppu.collectionfast2.pojo.trn.TrnRepo;
 import id.co.ppu.collectionfast2.pojo.trn.TrnVehicleInfo;
 import id.co.ppu.collectionfast2.rest.ApiInterface;
-import id.co.ppu.collectionfast2.rest.ServiceGenerator;
 import id.co.ppu.collectionfast2.rest.request.RequestZipCode;
 import id.co.ppu.collectionfast2.rest.response.ResponseGetMasterData;
 import id.co.ppu.collectionfast2.rest.response.ResponseGetZipCode;
@@ -224,7 +225,7 @@ public class DataUtil {
         }
 
         if (!NetUtil.isConnected(ctx)) {
-            if (DemoUtil.isDemo(ctx)) {
+            if (DemoUtil.isDemo()) {
 
                 realm.executeTransaction(new Realm.Transaction() {
                     @Override
@@ -254,8 +255,9 @@ public class DataUtil {
 
     public static void retrieveMasterFromServerBackground(Realm realm, Context ctx) throws Exception {
 
-        ApiInterface fastService =
-                ServiceGenerator.createService(ApiInterface.class, Utility.buildUrl(Storage.getPreferenceAsInt(ctx, Storage.KEY_SERVER_ID, 0)));
+        ApiInterface fastService = Storage.getAPIService();
+//        ApiInterface fastService =
+//                HttpClientBuilder.create(ApiInterface.class, Utility.buildUrl(Storage.getPreferenceAsInt(ctx, Storage.KEY_SERVER_ID, 0)));
 
         Call<ResponseGetMasterData> callMasterData = fastService.getMasterData();
 
@@ -307,8 +309,9 @@ public class DataUtil {
 
     public static void retrieveZipCodeFromServerBackground(Realm realm, Context ctx) throws Exception {
 
-        ApiInterface fastService =
-                ServiceGenerator.createService(ApiInterface.class, Utility.buildUrl(Storage.getPreferenceAsInt(ctx, Storage.KEY_SERVER_ID, 0)));
+        ApiInterface fastService = Storage.getAPIService();
+//        ApiInterface fastService =
+//                HttpClientBuilder.create(ApiInterface.class, Utility.buildUrl(Storage.getPreferenceAsInt(ctx, Storage.KEY_SERVER_ID, 0)));
 
         RequestZipCode requestZipCode = new RequestZipCode();
 //        request.setZipCode("11058");
@@ -367,7 +370,7 @@ public class DataUtil {
     public static void retrieveServerInfo(final String collCode, final Realm realm, final Context ctx, final OnPostRetrieveServerInfo listener) throws Exception {
 
         if (!NetUtil.isConnected(ctx)) {
-            if (DemoUtil.isDemo(ctx)) {
+            if (DemoUtil.isDemo()) {
                 final ServerInfo si = new ServerInfo();
                 si.setServerDate(new Date());
 
@@ -387,8 +390,9 @@ public class DataUtil {
             return;
         }
 
-        ApiInterface fastService =
-                ServiceGenerator.createService(ApiInterface.class, Utility.buildUrl(Storage.getPreferenceAsInt(ctx, Storage.KEY_SERVER_ID, 0)));
+        ApiInterface fastService = Storage.getAPIService();
+//        ApiInterface fastService =
+//                HttpClientBuilder.create(ApiInterface.class, Utility.buildUrl(Storage.getPreferenceAsInt(ctx, Storage.KEY_SERVER_ID, 0)));
 
         Call<ResponseServerInfo> call = fastService.getServerInfo();
         call.enqueue(new Callback<ResponseServerInfo>() {
@@ -884,6 +888,41 @@ public class DataUtil {
         TrnLDVHeader trnLDVHeader = getLDVHeaderByContract(realm, contractNo);
 
         return trnLDVHeader != null && trnLDVHeader.getCloseBatch() != null && trnLDVHeader.getCloseBatch().equals("Y");
+    }
+
+    public static void convertUserDataToLoginInfo(UserData userData) {
+        Realm realm = Realm.getDefaultInstance();
+        try{
+            realm.beginTransaction();
+
+            realm.copyToRealmOrUpdate(new LoginInfo(Storage.KEY_USERID, userData.getUserId()));
+            realm.copyToRealmOrUpdate(new LoginInfo(Storage.KEY_USER_BRANCH_ID, userData.getBranchId()));
+            realm.copyToRealmOrUpdate(new LoginInfo(Storage.KEY_USER_BRANCH_NAME, userData.getBranchName()));
+            realm.copyToRealmOrUpdate(new LoginInfo(Storage.KEY_USER_EMAIL, userData.getEmailAddr()));
+            realm.copyToRealmOrUpdate(new LoginInfo(Storage.KEY_USER_JABATAN, userData.getJabatan()));
+            realm.copyToRealmOrUpdate(new LoginInfo(Storage.KEY_USER_NIK, userData.getNik()));
+            realm.copyToRealmOrUpdate(new LoginInfo(Storage.KEY_USER_ADDRESS, userData.getAlamat()));
+            realm.copyToRealmOrUpdate(new LoginInfo(Storage.KEY_USER_PHONE, userData.getPhoneNo()));
+            realm.copyToRealmOrUpdate(new LoginInfo(Storage.KEY_USER_COLL_TYPE, userData.getCollectorType()));
+            realm.copyToRealmOrUpdate(new LoginInfo(Storage.KEY_PASSWORD, userData.getUserPwd()));
+            realm.copyToRealmOrUpdate(new LoginInfo(Storage.KEY_USER_BIRTH_PLACE, userData.getBirthPlace()));
+            realm.copyToRealmOrUpdate(new LoginInfo(Storage.KEY_USER_BIRTH_DATE, userData.getBirthDate()));
+            realm.copyToRealmOrUpdate(new LoginInfo(Storage.KEY_USER_FULLNAME, userData.getFullName()));
+            realm.copyToRealmOrUpdate(new LoginInfo(Storage.KEY_USER_BUSS_UNIT, userData.getBussUnit()));
+
+            realm.commitTransaction();
+        }finally {
+            if (realm != null) {
+                realm.close();
+            }
+        }
+
+//        loginInfo.setDeviceId(userData.getConfig().getDeviceId());
+//        loginInfo.setImeiDevice(userData.getConfig().getImeiDevice());
+//        loginInfo.setLastLogin(userData.getConfig().getLastLogin());
+//        loginInfo.setSyncMinute(userData.getConfig().getSyncMinute());
+//        loginInfo.setServerDate(userData.getConfig().getServerDate());
+//        loginInfo.setPhotoProfileUri(userData.getConfig().getPhotoProfileUri());
     }
 }
 

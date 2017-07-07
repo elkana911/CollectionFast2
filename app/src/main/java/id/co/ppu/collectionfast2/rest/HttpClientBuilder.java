@@ -28,8 +28,9 @@ import retrofit2.converter.gson.GsonConverterFactory;
 
 /**
  * Created by Eric on 19-Aug-16.
+ * was named ServiceGenerator
  */
-public class ServiceGenerator {
+public class HttpClientBuilder {
     public static final String SERVER_USERNAME = "admin";
     public static final String SERVER_PWD = "4dminMobil3";
 
@@ -39,11 +40,15 @@ public class ServiceGenerator {
     // probably stackoverflowerror. moved to local
 //    private static OkHttpClient.Builder httpClient = new OkHttpClient.Builder();
 
-    public static <S> S createService(Class<S> serviceClass, HttpUrl host) {
-        return createService(serviceClass, host, SERVER_USERNAME, SERVER_PWD);
+    public static ApiInterface create(HttpUrl host) {
+        return create(ApiInterface.class, host, SERVER_USERNAME, SERVER_PWD);
     }
 
-    public static <S> S createService(Class<S> serviceClass, HttpUrl host, String username, String password) {
+    public static <S> S create(Class<S> api, HttpUrl host) {
+        return create(api, host, SERVER_USERNAME, SERVER_PWD);
+    }
+
+    public static <S> S create(Class<S> serviceCls, HttpUrl host, String username, String password) {
         OkHttpClient.Builder httpClient = new OkHttpClient.Builder();
 
         if (username != null && password != null) {
@@ -153,6 +158,6 @@ public class ServiceGenerator {
 
         Retrofit retrofit = builder.client(client)
                 .build();
-        return retrofit.create(serviceClass);
+        return retrofit.create(serviceCls);
     }
 }

@@ -41,7 +41,6 @@ import id.co.ppu.collectionfast2.poa.ActivityPoA;
 import id.co.ppu.collectionfast2.pojo.DisplayTrnContractBuckets;
 import id.co.ppu.collectionfast2.pojo.ServerInfo;
 import id.co.ppu.collectionfast2.pojo.UserConfig;
-import id.co.ppu.collectionfast2.pojo.UserData;
 import id.co.ppu.collectionfast2.pojo.master.MstParam;
 import id.co.ppu.collectionfast2.pojo.sync.SyncTrnRVB;
 import id.co.ppu.collectionfast2.pojo.sync.SyncTrnRVColl;
@@ -165,9 +164,9 @@ public class ActivityPaymentEntri extends BasicActivity implements FragmentActiv
             onContractSelected(contractNo);
 
         } else {
-            UserData userData = (UserData) Storage.getObjPreference(getApplicationContext(), Storage.KEY_USER, UserData.class);
+//            LoginInfo userData = (LoginInfo) Storage.getPreference(Storage.KEY_USER, null);
 
-            this.collectorId = userData.getUserId();
+            this.collectorId = Storage.getPref(Storage.KEY_USERID, null);
 
             Date serverDate = this.realm.where(ServerInfo.class).findFirst().getServerDate();
 
@@ -753,10 +752,14 @@ public class ActivityPaymentEntri extends BasicActivity implements FragmentActiv
         final Date serverDate = realm.where(ServerInfo.class).findFirst().getServerDate();
         final String finalLongitude = longitude;
         final String finalLatitude = latitude;
+
+        final String userId = Storage.getPref(Storage.KEY_USERID, null);
+        final String userBranchId = Storage.getPref(Storage.KEY_USER_BRANCH_ID, null);
+
         this.realm.executeTransactionAsync(new Realm.Transaction() {
             @Override
             public void execute(Realm realm) {
-                UserData userData = (UserData) Storage.getObjPreference(getApplicationContext(), Storage.KEY_USER, UserData.class);
+//                LoginInfo userData = (LoginInfo) Storage.getPreference(Storage.KEY_USER, null);
 
                 SyncTrnRVColl trnSync = realm.where(SyncTrnRVColl.class)
                         .equalTo("ldvNo", ldvNo)
@@ -819,8 +822,8 @@ public class ActivityPaymentEntri extends BasicActivity implements FragmentActiv
 
                 trnRVColl.setPaymentFlag(2L);
 
-                trnRVColl.setCollId(userData.getUserId());
-                trnRVColl.setOfficeCode(userData.getBranchId());
+                trnRVColl.setCollId(userId);
+                trnRVColl.setOfficeCode(userBranchId);
 //                trnRVColl.setCollId(userData.getUser().get(0).getUserId());
 //                trnRVColl.setOfficeCode(userData.getUser().get(0).getBranchId());
                 trnRVColl.setInstNo(Long.parseLong(etAngsuranKe.getText().toString()));

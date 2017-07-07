@@ -156,7 +156,7 @@ public class PoAUtil {
                 @Override
                 public void execute(Realm realm) {
 
-                    TrnFlagTimestamp obj = (TrnFlagTimestamp) Storage.getObjPreference(activity.getApplicationContext(), Storage.KEY_POA_DATA_TEMPORARY, TrnFlagTimestamp.class);
+                    TrnFlagTimestamp obj = (TrnFlagTimestamp) Storage.getPrefAsJson(Storage.KEY_POA_DATA_TEMPORARY, TrnFlagTimestamp.class, null);
 
                     if (obj == null) {
                         throw new NullPointerException("No Temporary PoA found !");
@@ -358,7 +358,7 @@ public class PoAUtil {
         pk.setLdvNo(ldvNo);
         obj.setPk(pk);
 
-        Storage.saveObjPreference(activity.getApplicationContext(), Storage.KEY_POA_DATA_TEMPORARY, obj);
+        Storage.savePrefAsJson(Storage.KEY_POA_DATA_TEMPORARY, obj);
     }
 
     /**

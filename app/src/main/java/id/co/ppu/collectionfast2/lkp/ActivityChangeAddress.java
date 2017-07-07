@@ -41,7 +41,7 @@ import id.co.ppu.collectionfast2.pojo.trn.TrnChangeAddr;
 import id.co.ppu.collectionfast2.pojo.trn.TrnChangeAddrPK;
 import id.co.ppu.collectionfast2.pojo.trn.TrnLDVDetails;
 import id.co.ppu.collectionfast2.rest.ApiInterface;
-import id.co.ppu.collectionfast2.rest.ServiceGenerator;
+import id.co.ppu.collectionfast2.rest.HttpClientBuilder;
 import id.co.ppu.collectionfast2.rest.request.RequestArea;
 import id.co.ppu.collectionfast2.rest.response.ResponseArea;
 import id.co.ppu.collectionfast2.rest.response.ResponseAreaList;
@@ -198,7 +198,7 @@ public class ActivityChangeAddress extends BasicActivity {
         mProgressDialog.show();
 
         ApiInterface fastService =
-                ServiceGenerator.createService(ApiInterface.class, Utility.buildUrl(Storage.getPreferenceAsInt(getApplicationContext(), Storage.KEY_SERVER_ID, 0)));
+                HttpClientBuilder.create(ApiInterface.class, Utility.buildUrl(Storage.getPrefAsInt(Storage.KEY_SERVER_ID, 0)));
 
         RequestArea req = new RequestArea();
 
@@ -297,8 +297,7 @@ public class ActivityChangeAddress extends BasicActivity {
         mProgressDialog.setMessage("Please wait...");
         mProgressDialog.show();
 
-        ApiInterface fastService =
-                ServiceGenerator.createService(ApiInterface.class, Utility.buildUrl(Storage.getPreferenceAsInt(getApplicationContext(), Storage.KEY_SERVER_ID, 0)));
+        ApiInterface api = HttpClientBuilder.create(Utility.buildUrl(Storage.getPrefAsInt(Storage.KEY_SERVER_ID, 0)));
 
         RequestArea req = new RequestArea();
 
@@ -308,7 +307,7 @@ public class ActivityChangeAddress extends BasicActivity {
             req.setKelurahan(kelurahanOrZipCode);
         }
 
-        Call<ResponseAreaList> callArea = fastService.getAreaList(req);
+        Call<ResponseAreaList> callArea = api.getAreaList(req);
 
         callArea.enqueue(new Callback<ResponseAreaList>() {
             @Override

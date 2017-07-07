@@ -10,6 +10,7 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_margin="@dimen/text_margin"
+        android:layout_gravity="center"
         android:orientation="vertical"
         android:paddingBottom="16dp">
 
@@ -127,6 +128,8 @@
 
         <Button
             android:id="@+id/btnUpload"
+            style="@style/Widget.AppCompat.Button.Colored"
+            android:layout_marginTop="10dp"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:text="Upload" />

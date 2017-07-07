@@ -20,7 +20,6 @@ import id.co.ppu.collectionfast2.component.BasicActivity;
 import id.co.ppu.collectionfast2.component.RVBAdapter;
 import id.co.ppu.collectionfast2.location.Location;
 import id.co.ppu.collectionfast2.pojo.ServerInfo;
-import id.co.ppu.collectionfast2.pojo.UserData;
 import id.co.ppu.collectionfast2.pojo.master.MstParam;
 import id.co.ppu.collectionfast2.pojo.sync.SyncTrnRVB;
 import id.co.ppu.collectionfast2.pojo.sync.SyncTrnRVColl;
@@ -490,12 +489,12 @@ public class ActivityPaymentReceive extends BasicActivity {
 
 
         final Date serverDate = realm.where(ServerInfo.class).findFirst().getServerDate();
-        final UserData userData = (UserData) Storage.getObjPreference(getApplicationContext(), Storage.KEY_USER, UserData.class);
+//        final LoginInfo userData = (LoginInfo) Storage.getPreference(Storage.KEY_USER, null);
 
-        if (userData == null) {
-            Snackbar.make(activityPaymentReceive, "Invalid User Data. Please relogin.", Snackbar.LENGTH_SHORT).show();
-            return;
-        }
+//        if (userData == null) {
+//            Snackbar.make(activityPaymentReceive, "Invalid User Data. Please relogin.", Snackbar.LENGTH_SHORT).show();
+//            return;
+//        }
         // better use async so you can throw and automatic canceltransaction
         final String finalLatitude = latitude;
         final String finalLongitude = longitude;
@@ -566,7 +565,10 @@ public class ActivityPaymentReceive extends BasicActivity {
                 trnRVColl.setPlatform(trnLDVDetails.getPlatform());
 
                 trnRVColl.setCollId(collectorId);
-                trnRVColl.setOfficeCode(userData.getBranchId());
+
+                final String userBranchId = Storage.getPref(Storage.KEY_USER_BRANCH_ID, null);
+                trnRVColl.setOfficeCode(userBranchId);
+
                 trnRVColl.setInstNo(Long.parseLong(etAngsuranKe.getText().toString()));
                 trnRVColl.setFlagDone("Y");
                 trnRVColl.setTransDate(serverDate);

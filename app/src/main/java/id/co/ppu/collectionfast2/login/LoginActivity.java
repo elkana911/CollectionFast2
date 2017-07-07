@@ -52,12 +52,11 @@ import id.co.ppu.collectionfast2.exceptions.ExpiredException;
 import id.co.ppu.collectionfast2.listener.OnPostRetrieveServerInfo;
 import id.co.ppu.collectionfast2.listener.OnSuccessError;
 import id.co.ppu.collectionfast2.pojo.ServerInfo;
-import id.co.ppu.collectionfast2.pojo.UserData;
 import id.co.ppu.collectionfast2.pojo.master.MstSecUser;
 import id.co.ppu.collectionfast2.pojo.master.MstUser;
 import id.co.ppu.collectionfast2.pojo.trn.TrnLDVHeader;
 import id.co.ppu.collectionfast2.rest.ApiInterface;
-import id.co.ppu.collectionfast2.rest.ServiceGenerator;
+import id.co.ppu.collectionfast2.rest.HttpClientBuilder;
 import id.co.ppu.collectionfast2.rest.request.RequestLogin;
 import id.co.ppu.collectionfast2.rest.response.ResponseLogin;
 import id.co.ppu.collectionfast2.rest.response.ResponseServerInfo;
@@ -132,20 +131,29 @@ public class LoginActivity extends BasicActivity {
 
     public ApiInterface getAPIService() {
         return
-                ServiceGenerator.createService(ApiInterface.class, Utility.buildUrl(Utility.getServerID(spServers.getSelectedItem().toString())));
+                HttpClientBuilder.create(ApiInterface.class, Utility.buildUrl(Utility.getServerID(spServers.getSelectedItem().toString())));
     }
 
     @Override
     protected void onPostCreate(@Nullable Bundle savedInstanceState) {
         super.onPostCreate(savedInstanceState);
 
-        String loginDate = Storage.getPreference(getApplicationContext(), Storage.KEY_LOGIN_DATE);
+        Date loginDate = Storage.getPrefAsDate(Storage.KEY_LOGIN_DATE, null);
+//        Date loginDate = (Date) Storage.getPreference(Storage.KEY_LOGIN_DATE, null);
+//        String loginDate = Storage.getPreference(getApplicationContext(), Storage.KEY_LOGIN_DATE);
 
-        if (!TextUtils.isEmpty(loginDate)) {
-            UserData prevUserData = (UserData) Storage.getObjPreference(getApplicationContext(), Storage.KEY_USER, UserData.class);
+        if (loginDate != null) {
+//        if (!TextUtils.isEmpty(loginDate)) {
+//            LoginInfo prevUser = (LoginInfo) Storage.getPreference(Storage.KEY_USER, null);
+//            UserData prevUser = (UserData) Storage.getObjPreference(getApplicationContext(), Storage.KEY_USER, UserData.class);
+            String userId = Storage.getPref(Storage.KEY_USERID, null);
+            String userPwd = Storage.getPref(Storage.KEY_PASSWORD, null);
 
-            if (prevUserData != null)
-                loginOffline(prevUserData.getUserId(), prevUserData.getUserPwd());
+//            if (prevUser != null)
+            if (userId != null && userPwd != null)
+                loginOffline(userId, userPwd);
+//                loginOffline(prevUser.getUserId(), prevUser.getUserPwd());
+
         } else {
             boolean b = DataUtil.isMasterDataDownloaded(this, this.realm);
         }
@@ -182,7 +190,7 @@ public class LoginActivity extends BasicActivity {
             tvDebug.setVisibility(View.VISIBLE);
         }
 
-            // ATTENTION: This was auto-generated to implement the App Indexing API.
+        // ATTENTION: This was auto-generated to implement the App Indexing API.
         // See https://g.co/AppIndexing/AndroidStudio for more information.
         client = new GoogleApiClient.Builder(this).addApi(AppIndex.API).build();
 
@@ -209,7 +217,7 @@ public class LoginActivity extends BasicActivity {
 
                 if (itemAtPosition.startsWith("dev")) {
                     llServerDev.setVisibility(View.VISIBLE);
-                }else
+                } else
                     llServerDev.setVisibility(View.GONE);
             }
 
@@ -219,30 +227,39 @@ public class LoginActivity extends BasicActivity {
             }
         });
 
-        UserData prevUserData = (UserData) Storage.getObjPreference(getApplicationContext(), Storage.KEY_USER, UserData.class);
+//        LoginInfo prevUser = (LoginInfo) Storage.getPreference(Storage.KEY_USER, null);
 
-//        String lastUsername = Storage.getPreference(getApplicationContext(), Storage.KEY_USER_NAME_LAST);
-        if (prevUserData != null)
-            mUserNameView.setText(prevUserData.getUserId());
+//        UserData prevUserData = (UserData) Storage.getObjPreference(getApplicationContext(), Storage.KEY_USER, UserData.class);
 
-        String password_rem = Storage.getPreference(getApplicationContext(), Storage.KEY_PASSWORD_REMEMBER);
+        String userId = Storage.getPref(Storage.KEY_USERID, null);
+
+        if (userId != null)
+            mUserNameView.setText(userId);
+
+        String password_rem = Storage.getPref(Storage.KEY_PASSWORD_REMEMBER, null);
+//        String password_rem = (String) Storage.getPreference(Storage.KEY_PASSWORD_REMEMBER, null);
+//            String password_rem = Storage.getPreference(getApplicationContext(), Storage.KEY_PASSWORD_REMEMBER);
+
         if (!TextUtils.isEmpty(password_rem)) {
             if (password_rem.equalsIgnoreCase("true")) {
                 cbRememberPwd.setChecked(true);
 
                 // load user & password
-                String lastPwd = Storage.getPreference(getApplicationContext(), Storage.KEY_PASSWORD_LAST);
+                String lastPwd = Storage.getPref(Storage.KEY_PASSWORD_LAST, null);
+//                String lastPwd = Storage.getPreference(getApplicationContext(), Storage.KEY_PASSWORD_LAST);
 
                 String username = mUserNameView.getText().toString();
-                if (prevUserData != null && username.equalsIgnoreCase(prevUserData.getUserId())) {
+                if (userId != null && username.equalsIgnoreCase(userId)) {
                     mPasswordView.setText(lastPwd);
                 } else
                     mPasswordView.setText(null);
             }
         }
 
-        String ipDev = Storage.getPreference(getApplicationContext(), Storage.KEY_SERVER_DEV_IP);
-        String portDev = Storage.getPreference(getApplicationContext(), Storage.KEY_SERVER_DEV_PORT);
+        String ipDev = Storage.getPref(Storage.KEY_SERVER_DEV_IP, null);
+        String portDev = Storage.getPref(Storage.KEY_SERVER_DEV_PORT, null);
+//            String ipDev = Storage.getPreference(getApplicationContext(), Storage.KEY_SERVER_DEV_IP);
+//            String portDev = Storage.getPreference(getApplicationContext(), Storage.KEY_SERVER_DEV_PORT);
 
         if (TextUtils.isEmpty(ipDev))
             ipDev = Utility.SERVER_DEV_IP; // Utility.SERVERS[Utility.getServerID(Utility.SERVER_DEV_NAME)][1];
@@ -253,7 +270,8 @@ public class LoginActivity extends BasicActivity {
         etServerDevIP.setText(ipDev);
         etServerDevPort.setText(portDev);
 
-        int x = Storage.getPreferenceAsInt(getApplicationContext(), Storage.KEY_SERVER_ID, 0);
+        int x = Storage.getPrefAsInt(Storage.KEY_SERVER_ID, new Integer(0));
+//        int x = Storage.getPreferenceAsInt(getApplicationContext(), Storage.KEY_SERVER_ID, 0);
         Utility.setSpinnerAsString(spServers, Utility.getServerName(x));
 
     }
@@ -366,16 +384,22 @@ public class LoginActivity extends BasicActivity {
             return;
         }
 
-        Storage.savePreferenceAsInt(getApplicationContext(), Storage.KEY_SERVER_ID, Utility.getServerID(spServers.getSelectedItem().toString()));
+        Storage.savePref(Storage.KEY_SERVER_ID, String.valueOf(Utility.getServerID(spServers.getSelectedItem().toString())));
+//        Storage.savePreferenceAsInt(Storage.KEY_SERVER_ID, Utility.getServerID(spServers.getSelectedItem().toString()));
 
-        UserData prevUserData = (UserData) Storage.getObjPreference(getApplicationContext(), Storage.KEY_USER, UserData.class);
 
-        if (prevUserData == null) {
+//        Storage.savePreferenceAsInt(getApplicationContext(), Storage.KEY_SERVER_ID, Utility.getServerID(spServers.getSelectedItem().toString()));
+
+//        UserData prevUser = (UserData) Storage.getPreference(Storage.KEY_USER, null);
+//        UserData prevUser = (UserData) Storage.getObjPreference(getApplicationContext(), Storage.KEY_USER, UserData.class);
+        String prevUserId = Storage.getPref(Storage.KEY_USERID, null);
+
+        if (prevUserId == null) {
 
             loginOnline(username, password);
 
         } else {
-            if (!username.equalsIgnoreCase(prevUserData.getUserId())) {
+            if (!username.equalsIgnoreCase(prevUserId)) {
 
                 AlertDialog.Builder alertDialogBuilder = new AlertDialog.Builder(this);
                 alertDialogBuilder.setTitle("Reset Data");
@@ -416,10 +440,12 @@ public class LoginActivity extends BasicActivity {
                 alertDialogBuilder.show();
 
             } else {
-                Date lastMorning = (Date) Storage.getObjPreference(getApplicationContext(), Storage.KEY_USER_LAST_DAY, Date.class);
-                if (lastMorning == null) {
+
+                Date lastLogin = Storage.getPrefAsDate(Storage.KEY_LOGIN_DATE, null);
+//                Date lastMorning = (Date) Storage.getObjPreference(getApplicationContext(), Storage.KEY_USER_LAST_DAY, Date.class);
+                if (lastLogin == null) {
                     loginOffline(username, password);
-                } else if (Utility.isSameDay(lastMorning, new Date())) {
+                } else if (Utility.isSameDay(lastLogin, new Date())) {
                     loginOffline(username, password);
                 } else
                     loginOnline(username, password);
@@ -607,13 +633,20 @@ public class LoginActivity extends BasicActivity {
                     public void execute(Realm realm) {
                         realm.delete(ServerInfo.class);
                         realm.copyToRealm(si);
+
                     }
                 });
 
-                Storage.saveObjPreference(getApplicationContext(), Storage.KEY_USER, DemoUtil.buildDemoUser());
+                // to replace demouser
+                DemoUtil.buildDemoLoginInfo();
+                Storage.savePrefAsDate(Storage.KEY_LOGIN_DATE, new Date());
 
+                //will be removed soon
+//                Storage.saveObjPreference(getApplicationContext(), Storage.KEY_USER, DemoUtil.buildDemoUser());
+
+                //will be removed soon
                 // able to control nextday shpuld re-login to server
-                Storage.saveObjPreference(getApplicationContext(), Storage.KEY_USER_LAST_DAY, new Date());
+//                Storage.saveObjPreference(getApplicationContext(), Storage.KEY_USER_LAST_DAY, new Date());
 
                 // final check
                 startMainActivity();
@@ -674,12 +707,20 @@ public class LoginActivity extends BasicActivity {
                                     }, new Realm.Transaction.OnSuccess() {
                                         @Override
                                         public void onSuccess() {
+                                            // to replace Storage.KEY_USER
+                                            DataUtil.convertUserDataToLoginInfo(respLogin.getData());
+                                            Storage.savePrefAsDate(Storage.KEY_LOGIN_DATE, new Date());
+
                                             Utility.dismissDialog(mProgressDialog);
 
-                                            Storage.saveObjPreference(getApplicationContext(), Storage.KEY_USER, respLogin.getData());
+//                                            Storage.savePreference(Storage.KEY_USER, respLogin.getData());
 
+                                            //will be removed soon
+//                                            Storage.saveObjPreference(getApplicationContext(), Storage.KEY_USER, respLogin.getData());
+
+                                            //will be removed soon
                                             // able to control nextday shpuld re-login to server
-                                            Storage.saveObjPreference(getApplicationContext(), Storage.KEY_USER_LAST_DAY, new Date());
+//                                            Storage.saveObjPreference(getApplicationContext(), Storage.KEY_USER_LAST_DAY, new Date());
 
                                             // final check
                                             startMainActivity();
@@ -735,26 +776,36 @@ public class LoginActivity extends BasicActivity {
             });
         } catch (Exception e) {
             e.printStackTrace();
-        } finally{
+        } finally {
             Utility.dismissDialog(mProgressDialog);
         }
 
     }
 
     private void startMainActivity() {
-        String ipDev = etServerDevIP.getText().toString();
-        String portDev = etServerDevPort.getText().toString();
+        final String ipDev = etServerDevIP.getText().toString();
+        final String portDev = etServerDevPort.getText().toString();
 
-        Storage.savePreference(getApplicationContext(), Storage.KEY_SERVER_DEV_IP, ipDev);
-        Storage.savePreference(getApplicationContext(), Storage.KEY_SERVER_DEV_PORT, portDev);
+        Storage.savePref(Storage.KEY_SERVER_DEV_IP, ipDev);
+        Storage.savePref(Storage.KEY_SERVER_DEV_PORT, portDev);
+
+        // 31may17 will be replace see loginInfo.serverDevIP
+//        Storage.savePreference(getApplicationContext(), Storage.KEY_SERVER_DEV_IP, ipDev);
+        // 31may17 will be replace see loginInfo.serverDevPort
+//        Storage.savePreference(getApplicationContext(), Storage.KEY_SERVER_DEV_PORT, portDev);
 
         if (cbRememberPwd.isChecked()) {
             final String password = mPasswordView.getText().toString();
 
             String cbRememberPwds = String.valueOf(cbRememberPwd.isChecked());
 
-            Storage.savePreference(getApplicationContext(), Storage.KEY_PASSWORD_REMEMBER, cbRememberPwds);
-            Storage.savePreference(getApplicationContext(), Storage.KEY_PASSWORD_LAST, password);
+            Storage.savePref(Storage.KEY_PASSWORD_REMEMBER, cbRememberPwds);
+            Storage.savePref(Storage.KEY_PASSWORD_LAST, password);
+
+            // 31may17 will be replace see loginInfo.passwordRemember
+//            Storage.savePreference(getApplicationContext(), Storage.KEY_PASSWORD_REMEMBER, cbRememberPwds);
+            // 31may17 will be replace see loginInfo.passwordLast
+//            Storage.savePreference(getApplicationContext(), Storage.KEY_PASSWORD_LAST, password);
 
         }
         startActivity(new Intent(getApplicationContext(), MainActivity.class));
@@ -764,20 +815,24 @@ public class LoginActivity extends BasicActivity {
 
     private void loginOffline(@NonNull String username, @NonNull String password) {
 
-        String logoutDate = Storage.getPreference(getApplicationContext(), Storage.KEY_LOGOUT_DATE);
+        Date logoutDate = Storage.getPrefAsDate(Storage.KEY_LOGOUT_DATE, null);
 
-        if (TextUtils.isEmpty(logoutDate)) {
+//        String logoutDate = Storage.getPreference(getApplicationContext(), Storage.KEY_LOGOUT_DATE);
+
+        if (logoutDate == null) {
+//        if (TextUtils.isEmpty(logoutDate)) {
             resetData();
 
             Utility.showDialog(this, "Logout Warning", getString(R.string.error_uncleaned_exit));
             return;
         }
 
-        UserData prevUserData = (UserData) Storage.getObjPreference(getApplicationContext(), Storage.KEY_USER, UserData.class);
+        String userId = Storage.getPref(Storage.KEY_USERID, null);
+        String userPwd = Storage.getPref(Storage.KEY_PASSWORD, null);
+//        LoginInfo user = (LoginInfo) Storage.getPreference(Storage.KEY_USERID, null);
+//        UserData user = (UserData) Storage.getObjPreference(getApplicationContext(), Storage.KEY_USER, UserData.class);
 
-//        String pwd = prevUserData.getUserPwd() == null ? "" : prevUserData.getUserPwd();
-
-        if (prevUserData != null && prevUserData.getUserId().equals(username) && prevUserData.getUserPwd().equals(password)) {
+        if (userId != null && userPwd != null && userId.equals(username) && userPwd.equals(password)) {
             startMainActivity();
         } else {
             Utility.showDialog(this, "Invalid Login", getString(R.string.error_invalid_login));
@@ -865,7 +920,7 @@ public class LoginActivity extends BasicActivity {
     @Override
     public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
         switch (requestCode) {
-            case DeviceUtil.MY_PERMISSIONS_REQUEST_PHONE_AND_STORAGE:{
+            case DeviceUtil.MY_PERMISSIONS_REQUEST_PHONE_AND_STORAGE: {
                 if (grantResults.length > 1 && grantResults[0] == PackageManager.PERMISSION_GRANTED
                         && grantResults[1] == PackageManager.PERMISSION_GRANTED) {
                     if (Utility.DEVELOPER_MODE) {

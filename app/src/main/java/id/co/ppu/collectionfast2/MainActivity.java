@@ -92,7 +92,6 @@ import id.co.ppu.collectionfast2.pojo.DisplayTrnLDVDetails;
 import id.co.ppu.collectionfast2.pojo.LKPData;
 import id.co.ppu.collectionfast2.pojo.ServerInfo;
 import id.co.ppu.collectionfast2.pojo.UserConfig;
-import id.co.ppu.collectionfast2.pojo.UserData;
 import id.co.ppu.collectionfast2.pojo.trn.TrnCollPos;
 import id.co.ppu.collectionfast2.pojo.trn.TrnFlagTimestamp;
 import id.co.ppu.collectionfast2.pojo.trn.TrnLDVDetails;
@@ -101,7 +100,6 @@ import id.co.ppu.collectionfast2.pojo.trn.TrnPhoto;
 import id.co.ppu.collectionfast2.pojo.trn.TrnRVB;
 import id.co.ppu.collectionfast2.pojo.trn.TrnRVColl;
 import id.co.ppu.collectionfast2.rest.ApiInterface;
-import id.co.ppu.collectionfast2.rest.ServiceGenerator;
 import id.co.ppu.collectionfast2.rest.request.RequestLKPByDate;
 import id.co.ppu.collectionfast2.rest.request.RequestSyncLKP;
 import id.co.ppu.collectionfast2.rest.request.RequestSyncLocation;
@@ -178,19 +176,18 @@ public class MainActivity extends ChatActivity
     protected void onPostCreate(@Nullable Bundle savedInstanceState) {
         super.onPostCreate(savedInstanceState);
 
-        if (DemoUtil.isDemo(this)) {
+        if (DemoUtil.isDemo()) {
             promptSnackBar("WARNING! You're currently signed in as DEMO. Make sure you're OFFLINE");
         }
 
         if (!NetUtil.isConnected(this)
-                && DemoUtil.isDemo(this)) {
+                && DemoUtil.isDemo()) {
 
         } else {
             // handle mobile setup
             final ProgressDialog mProgressDialog = Utility.createAndShowProgressDialog(this, getString(R.string.message_please_wait));
 
-            ApiInterface fastService =
-                    ServiceGenerator.createService(ApiInterface.class, Utility.buildUrl(Storage.getPreferenceAsInt(getApplicationContext(), Storage.KEY_SERVER_ID, 0)));
+            ApiInterface fastService = Storage.getAPIService();
 
             Call<ResponseGetMobileConfig> call = fastService.getMobileConfig();
             call.enqueue(new Callback<ResponseGetMobileConfig>() {
@@ -242,7 +239,8 @@ public class MainActivity extends ChatActivity
 
         }
 
-        String androidId = getAndroidToken();
+        String androidId = Storage.getAndroidToken();
+//        String androidId = getAndroidToken();
 
     }
 
@@ -320,19 +318,23 @@ public class MainActivity extends ChatActivity
 
         View v = navigationView.getHeaderView(0);
 
-        currentUser = (UserData) Storage.getObjPreference(getApplicationContext(), Storage.KEY_USER, UserData.class);
+//        currentUser = (LoginInfo) Storage.getPreference(Storage.KEY_USER, null);
+//        currentUser = (UserData) Storage.getObjPreference(getApplicationContext(), Storage.KEY_USER, UserData.class);
+
+        String userFullname = Storage.getPref(Storage.KEY_USER_FULLNAME, null);
+        String userEmail = Storage.getPref(Storage.KEY_USER_EMAIL, null);
 
         TextView tvProfileName = ButterKnife.findById(v, R.id.tvProfileName);
-        tvProfileName.setText(currentUser.getFullName());
+        tvProfileName.setText(userFullname);
         Typeface font = Typeface.createFromAsset(getAssets(), Utility.FONT_SAMSUNG);
         tvProfileName.setTypeface(font);
 
         if (getSupportActionBar() != null) {
-            getSupportActionBar().setSubtitle(currentUser.getFullName());
+            getSupportActionBar().setSubtitle(userFullname);
         }
 
         TextView tvProfileEmail = ButterKnife.findById(v, R.id.tvProfileEmail);
-        tvProfileEmail.setText(currentUser.getEmailAddr());
+        tvProfileEmail.setText(userEmail);
 
         final ImageView imageView = ButterKnife.findById(v, R.id.imageView);
         imageView.setOnClickListener(new View.OnClickListener() {
@@ -424,7 +426,9 @@ public class MainActivity extends ChatActivity
         ServerInfo si = this.realm.where(ServerInfo.class).findFirst();
         if (si == null || si.getServerDate() == null) {
             try {
-                DataUtil.retrieveServerInfo(currentUser.getUserId(), this.realm, this, new OnPostRetrieveServerInfo() {
+                String userId = getCurrentUserId();
+
+                DataUtil.retrieveServerInfo(userId, this.realm, this, new OnPostRetrieveServerInfo() {
                     @Override
                     public void onSuccess(final ServerInfo serverInfo) {
                         realm.executeTransactionAsync(new Realm.Transaction() {
@@ -523,9 +527,11 @@ public class MainActivity extends ChatActivity
                 @Override
                 public void onSuccess() {
                     // check dates
-                    UserConfig userConfig = realm.where(UserConfig.class).findFirst();
+//                    UserConfig userConfig = realm.where(UserConfig.class).findFirst();
 
-                    if (DataUtil.isLDVHeaderValid(realm, currentUser.getUserId()) != null) {
+                    String userId = Storage.getPref(Storage.KEY_USERID, null);
+
+                    if (DataUtil.isLDVHeaderValid(realm, userId) != null) {
                         showSnackBar(getString(R.string.warning_close_batch));
                     }
 
@@ -533,9 +539,11 @@ public class MainActivity extends ChatActivity
 //                        Snackbar.make(coordinatorLayout, "Server date changed. Please Close Batch.", Snackbar.LENGTH_SHORT).show();
 //                    }
 
-                    if (userConfig.getPhotoProfileUri() != null) {
+                    String photoProfileUri = Storage.getPref(Storage.KEY_USER_PHOTO_PROFILE_URI, null);
+//                    if (userConfig.getPhotoProfileUri() != null) {
+                    if (photoProfileUri != null) {
                         Uri uri;
-                        uri = Uri.parse(userConfig.getPhotoProfileUri());
+                        uri = Uri.parse(photoProfileUri);
 
                         imageView.setImageURI(uri);
                     }
@@ -553,7 +561,9 @@ public class MainActivity extends ChatActivity
             e.printStackTrace();
         }
 
-        Storage.savePreference(getApplicationContext(), Storage.KEY_LOGIN_DATE, new Date().toString());
+        Storage.savePrefAsDate(Storage.KEY_LOGIN_DATE, new Date());
+//        Storage.savePreference(getApplicationContext(), Storage.KEY_LOGIN_DATE, new Date().toString());
+
     }
 
     @Override
@@ -720,8 +730,8 @@ public class MainActivity extends ChatActivity
                                 @Override
                                 public void onClick(DialogInterface dialogInterface, int i) {
                                     String value = input.getText().toString();
-
-                                    if (!value.equals(currentUser.getUserPwd())) {
+                                    String userPwd = Storage.getPref(Storage.KEY_PASSWORD, null);
+                                    if (!value.equals(userPwd)) {
                                         Snackbar.make(coordinatorLayout, "Invalid password !", Snackbar.LENGTH_LONG).show();
                                         return;
                                     }
@@ -764,6 +774,8 @@ public class MainActivity extends ChatActivity
         // Handle navigation view item clicks here.
         int id = item.getItemId();
 
+        final String collCode = getCurrentUserId();
+
         if (id == R.id.nav_paymentEntry) {
             openPaymentEntry();
 
@@ -781,8 +793,7 @@ public class MainActivity extends ChatActivity
             } catch (Exception e) {
                 e.printStackTrace();
 
-                if (currentUser != null)
-                    NetUtil.syncLogError(MainActivity.this, realm, currentUser.getUserId(), "refreshRVBFromServer", e.getMessage(), null);
+                NetUtil.syncLogError(MainActivity.this, realm, collCode, "refreshRVBFromServer", e.getMessage(), null);
             }
 
             return false;
@@ -831,9 +842,7 @@ public class MainActivity extends ChatActivity
                 attemptCloseBatch();
             } catch (Exception e) {
                 e.printStackTrace();
-
-                if (currentUser != null)
-                    NetUtil.syncLogError(MainActivity.this, realm, currentUser.getUserId(), "CloseBatch", e.getMessage(), null);
+                NetUtil.syncLogError(MainActivity.this, realm, collCode, "CloseBatch", e.getMessage(), null);
             }
 
             return false;
@@ -899,7 +908,7 @@ public class MainActivity extends ChatActivity
         navigationView.setCheckedItem(viewId);
 
         title = getString(R.string.app_name);
-
+        final String collCode = getCurrentUserId();
 
         fab.setImageDrawable(AppCompatDrawableManager.get().getDrawable(MainActivity.this, R.drawable.ic_assignment_black_24dp));
 
@@ -916,7 +925,7 @@ public class MainActivity extends ChatActivity
             fragment = new FragmentLKPList();
 
             Bundle bundle = new Bundle();
-            bundle.putString(FragmentLKPList.ARG_PARAM1, currentUser.getUserId());
+            bundle.putString(FragmentLKPList.ARG_PARAM1, collCode);
             fragment.setArguments(bundle);
 
             title = "LKP List";
@@ -924,7 +933,7 @@ public class MainActivity extends ChatActivity
             fragment = new FragmentSummaryLKP();
 
             Bundle bundle = new Bundle();
-            bundle.putString(FragmentSummaryLKP.ARG_PARAM1, currentUser.getUserId());
+            bundle.putString(FragmentSummaryLKP.ARG_PARAM1, collCode);
 //            bundle.putString(FragmentLKPList.ARG_PARAM1, currentUser.getSecUser().get(0).getUserName());
             fragment.setArguments(bundle);
 
@@ -935,7 +944,7 @@ public class MainActivity extends ChatActivity
             fragment = new FragmentChatActiveContacts();
 
             Bundle bundle = new Bundle();
-            bundle.putString(FragmentChatActiveContacts.PARAM_USERCODE, currentUser.getUserId());
+            bundle.putString(FragmentChatActiveContacts.PARAM_USERCODE, collCode);
 //            bundle.putString(FragmentLKPList.ARG_PARAM1, currentUser.getSecUser().get(0).getUserName());
             fragment.setArguments(bundle);
 
@@ -982,8 +991,9 @@ public class MainActivity extends ChatActivity
 
 
         if (getSupportActionBar() != null) {
+            final String userFullName = Storage.getPref(Storage.KEY_USER_FULLNAME, null);
             getSupportActionBar().setTitle(title);
-            getSupportActionBar().setSubtitle(currentUser.getFullName());
+            getSupportActionBar().setSubtitle(userFullName);
             getSupportActionBar().setDisplayUseLogoEnabled(true);
             getSupportActionBar().setDisplayShowHomeEnabled(true);
             getSupportActionBar().setElevation(0);
@@ -1007,8 +1017,10 @@ public class MainActivity extends ChatActivity
         }
 
         // flag as clean logout
-        Storage.savePreference(getApplicationContext(), Storage.KEY_LOGIN_DATE, null);
-        Storage.savePreference(getApplicationContext(), Storage.KEY_LOGOUT_DATE, new Date().toString());
+        Storage.savePrefAsDate(Storage.KEY_LOGIN_DATE, null);
+        Storage.savePrefAsDate(Storage.KEY_LOGOUT_DATE, new Date());
+//        Storage.savePreference(getApplicationContext(), Storage.KEY_LOGIN_DATE, null);
+//        Storage.savePreference(getApplicationContext(), Storage.KEY_LOGOUT_DATE, new Date().toString());
 
         NetUtil.chatLogOff(this, getCurrentUserId(), null);
 
@@ -1029,7 +1041,8 @@ public class MainActivity extends ChatActivity
             @Override
             public void onClick(DialogInterface dialog, int which) {
                 // TODO: clear cookie
-                Storage.savePreferenceAsBoolean(getApplicationContext(), "isLKPInquiry", false);
+                Storage.savePrefAsBoolean(Storage.KEY_IS_LKPINQUIRY, false);
+//                Storage.savePreferenceAsBoolean(getApplicationContext(), "isLKPInquiry", false);
 
                 backToLoginScreen();
             }
@@ -1063,7 +1076,8 @@ public class MainActivity extends ChatActivity
                                 clearLKPTables();
                                 clearSyncTables();
 
-                                attemptGetLKP(currentUser.getUserId(), getServerDateFromDB(realm), false, null);
+                                final String collCode = getCurrentUserId();
+                                attemptGetLKP(collCode, getServerDateFromDB(realm), false, null);
                             }
 
                         })
@@ -1086,9 +1100,10 @@ public class MainActivity extends ChatActivity
         fillRequest(Utility.ACTION_GET_LKP, requestLKP);
 
         if (!NetUtil.isConnected(this)
-                && DemoUtil.isDemo(this)) {
+                && DemoUtil.isDemo()) {
 
-            final LKPData lkpData = DemoUtil.buildLKP(lkpDate, currentUser.getUserId(), currentUser.getBranchId(), createdBy);
+            final String userBranchId = Storage.getPref(Storage.KEY_USER_BRANCH_ID, null);
+            final LKPData lkpData = DemoUtil.buildLKP(lkpDate, collectorCode, userBranchId, createdBy);
             currentLDVNo = lkpData.getHeader().getLdvNo();
 
             realm.executeTransaction(new Realm.Transaction() {
@@ -1106,8 +1121,7 @@ public class MainActivity extends ChatActivity
 
         final ProgressDialog mProgressDialog = Utility.createAndShowProgressDialog(this, "Getting your LKP from server.\nPlease wait...");
 
-        ApiInterface fastService =
-                ServiceGenerator.createService(ApiInterface.class, Utility.buildUrl(Storage.getPreferenceAsInt(getApplicationContext(), Storage.KEY_SERVER_ID, 0)));
+        ApiInterface fastService = Storage.getAPIService();
 
         Call<ResponseGetLKP> call = fastService.getLKPByDate(requestLKP);
         call.enqueue(new Callback<ResponseGetLKP>() {
@@ -1198,9 +1212,9 @@ public class MainActivity extends ChatActivity
     }
 
     public void attemptGetLKP(final String collectorCode, final Date lkpDate, boolean useCache, final OnPostRetrieveLKP listener) {
-        if (currentUser == null) {
-            return;
-        }
+//        if (currentUser == null) {
+//            return;
+//        }
 
         Date serverDate = getServerDateFromDB(this.realm);
 
@@ -1241,7 +1255,8 @@ public class MainActivity extends ChatActivity
     @Override
     public void onLKPSelected(DisplayTrnLDVDetails detail) {
 
-        if (DataUtil.isLDVHeaderValid(realm, currentUser.getUserId()) != null) {
+        String collCode = getCurrentUserId();
+        if (DataUtil.isLDVHeaderValid(realm, collCode) != null) {
             // di method ini terkadang penggunaan getString bisa ga ketemu lho, mungkin krn listener bisa beda context
             showSnackBar(getString(R.string.warning_close_batch));
             return;
@@ -1311,7 +1326,9 @@ public class MainActivity extends ChatActivity
     @Override
     public void onLKPCancelSync(DisplayTrnLDVDetails detail) {
 
-        if (DataUtil.isLDVHeaderValid(realm, currentUser.getUserId()) != null) {
+        final String collCode = getCurrentUserId();
+
+        if (DataUtil.isLDVHeaderValid(realm, collCode) != null) {
             showSnackBar(getString(R.string.warning_close_batch));
             return;
         }
@@ -1363,6 +1380,8 @@ public class MainActivity extends ChatActivity
             return false;
         }
 
+
+        final String collCode = getCurrentUserId();
 
         realm.executeTransaction(new Realm.Transaction() {
             @Override
@@ -1427,7 +1446,7 @@ public class MainActivity extends ChatActivity
 
                 // TODO: harusnya hapus foto juga, sementara di lokal dulu. photo yg terlanjur upload ke server biarin aja
                 b = realm.where(TrnPhoto.class)
-                        .equalTo("collCode", currentUser.getUserId())
+                        .equalTo("collCode", collCode)
                         .equalTo("contractNo", contractNo)
                         .equalTo("lastupdateBy", Utility.LAST_UPDATE_BY)
 //                        .equalTo("createdBy", createdBy)
@@ -1437,7 +1456,7 @@ public class MainActivity extends ChatActivity
             }
         });
 
-        PoAUtil.cancel(realm, currentUser.getUserId(), ldvNo, contractNo);
+        PoAUtil.cancel(realm, collCode, ldvNo, contractNo);
 
 
         // must sync (not async) to avoid process sequence
@@ -1561,12 +1580,13 @@ public class MainActivity extends ChatActivity
 
     public void openPaymentEntry() {
 
-        if (DataUtil.isLDVHeaderValid(realm, currentUser.getUserId()) != null) {
+        String collCode = getCurrentUserId();
+
+        if (DataUtil.isLDVHeaderValid(realm, collCode) != null) {
             showSnackBar(getString(R.string.warning_close_batch));
             return;
         }
 
-        String collectorId = currentUser.getUserId();
 
         Date serverDate = null;
         try {
@@ -1578,7 +1598,7 @@ public class MainActivity extends ChatActivity
         String createdBy = "JOB" + Utility.convertDateToString(serverDate, "yyyyMMdd");
 
         TrnLDVHeader trnLDVHeader = realm.where(TrnLDVHeader.class)
-                .equalTo("collCode", collectorId)
+                .equalTo("collCode", collCode)
                 .equalTo("createdBy", createdBy)
                 .findFirst();
 
@@ -1745,7 +1765,7 @@ public class MainActivity extends ChatActivity
 
         // override demo user
         if (!NetUtil.isConnected(MainActivity.this)
-                && DemoUtil.isDemo(MainActivity.this)) {
+                && DemoUtil.isDemo()) {
 
             resetData();
 
@@ -1766,6 +1786,8 @@ public class MainActivity extends ChatActivity
         }
 
 
+        final String collCode = getCurrentUserId();
+
         final ProgressDialog mProgressDialog = new ProgressDialog(this);
 
         if (showDialog) {
@@ -1775,10 +1797,9 @@ public class MainActivity extends ChatActivity
             mProgressDialog.show();
         }
 
-        ApiInterface fastService =
-                ServiceGenerator.createService(ApiInterface.class, Utility.buildUrl(Storage.getPreferenceAsInt(getApplicationContext(), Storage.KEY_SERVER_ID, 0)));
+        ApiInterface fastService = Storage.getAPIService();
 
-        Call<ResponseBody> cb = fastService.closeBatchYesterday(currentUser.getUserId());
+        Call<ResponseBody> cb = fastService.closeBatchYesterday(collCode);
         cb.enqueue(new Callback<ResponseBody>() {
             @Override
             public void onResponse(Call<ResponseBody> call, Response<ResponseBody> response) {
@@ -1816,16 +1837,17 @@ public class MainActivity extends ChatActivity
 
     private void closeBatchToday() {
 
-        if (currentUser == null) {
-            Utility.showDialog(MainActivity.this, "Login", "Please logout and login again.");
-            return;
-        }
+//        if (currentUser == null) {
+//            Utility.showDialog(MainActivity.this, "Login", "Please logout and login again.");
+//            return;
+//        }
 
         if (this.realm.where(TrnLDVHeader.class).count() < 1) {
             Utility.showDialog(MainActivity.this, "Invalid LKP", "Please try to Get LKP");
             return;
         }
 
+        final String collCode = getCurrentUserId();
 
         this.realm.executeTransaction(new Realm.Transaction() {
             @Override
@@ -1833,7 +1855,7 @@ public class MainActivity extends ChatActivity
 
                 TrnLDVHeader trnLDVHeader = realm.where(TrnLDVHeader.class)
 //                        .equalTo("ldvNo", currentLDVNo)   // dangerous, currentLDVNo maybe null on first time activity
-                        .equalTo("collCode", currentUser.getUserId())
+                        .equalTo("collCode", collCode)
                         .findFirst();
 
                 if (trnLDVHeader != null) {
@@ -1858,7 +1880,7 @@ public class MainActivity extends ChatActivity
 
             // override demo user
             if (!NetUtil.isConnected(MainActivity.this)
-                    && DemoUtil.isDemo(MainActivity.this)) {
+                    && DemoUtil.isDemo()) {
 
                 if (req.getLdvHeader() != null && req.getLdvHeader().size() > 0) {
                     syncLdvHeader.syncData();
@@ -1884,8 +1906,7 @@ public class MainActivity extends ChatActivity
 
             final ProgressDialog mProgressDialog = Utility.createAndShowProgressDialog(this, getString(R.string.message_please_wait));
 
-            ApiInterface fastService =
-                    ServiceGenerator.createService(ApiInterface.class, Utility.buildUrl(Storage.getPreferenceAsInt(getApplicationContext(), Storage.KEY_SERVER_ID, 0)));
+            ApiInterface fastService = Storage.getAPIService();
 
             Call<ResponseSync> call = fastService.syncLKP(req);
             call.enqueue(new Callback<ResponseSync>() {
@@ -1970,7 +1991,7 @@ public class MainActivity extends ChatActivity
                         clearLKPTables();
                         clearSyncTables();
 
-                        attemptGetLKP(currentUser.getUserId(), getServerDateFromDB(realm), false, null);
+                        attemptGetLKP(collCode, getServerDateFromDB(realm), false, null);
                     }
                 }
             });
@@ -1979,16 +2000,17 @@ public class MainActivity extends ChatActivity
     }
 
     private void closeBatchOldData(boolean showDialog) {
-        if (currentUser == null) {
-            Utility.showDialog(MainActivity.this, "Login", "Please logout and login again.");
-            return;
-        }
+//        if (currentUser == null) {
+//            Utility.showDialog(MainActivity.this, "Login", "Please logout and login again.");
+//            return;
+//        }
+        final String collCode = getCurrentUserId();
 
         this.realm.executeTransaction(new Realm.Transaction() {
             @Override
             public void execute(Realm realm) {
                 TrnLDVHeader trnLDVHeader = realm.where(TrnLDVHeader.class)
-                        .equalTo("collCode", currentUser.getUserId())
+                        .equalTo("collCode", collCode)
                         .notEqualTo("closeBatch", "Y")
                         .or()
                         .isEmpty("closeBatch")
@@ -2022,8 +2044,7 @@ public class MainActivity extends ChatActivity
 
             fillRequest(Utility.ACTION_CLOSEBATCH_PREVIOUS, req);
 
-            ApiInterface fastService =
-                    ServiceGenerator.createService(ApiInterface.class, Utility.buildUrl(Storage.getPreferenceAsInt(getApplicationContext(), Storage.KEY_SERVER_ID, 0)));
+            ApiInterface fastService = Storage.getAPIService();
 
             Call<ResponseSync> call = fastService.syncLKP(req);
             call.enqueue(new Callback<ResponseSync>() {
@@ -2107,7 +2128,7 @@ public class MainActivity extends ChatActivity
                         clearLKPTables();
                         clearSyncTables();
 
-                        attemptGetLKP(currentUser.getUserId(), getServerDateFromDB(realm), false, null);
+                        attemptGetLKP(getCurrentUserId(), getServerDateFromDB(realm), false, null);
                     }
                 }
             });
@@ -2123,8 +2144,10 @@ public class MainActivity extends ChatActivity
         try {
             final ProgressDialog mProgressDialog = Utility.createAndShowProgressDialog(this, getString(R.string.message_please_wait));
 
+            final String collCode = getCurrentUserId();
+
             // memastikan pengecekan closebatch menggunakan tanggal di server
-            DataUtil.retrieveServerInfo(currentUser.getUserId(), this.realm, this, new OnPostRetrieveServerInfo() {
+            DataUtil.retrieveServerInfo(collCode, this.realm, this, new OnPostRetrieveServerInfo() {
                 @Override
                 public void onSuccess(ServerInfo serverInfo) {
                     Utility.dismissDialog(mProgressDialog);
@@ -2132,14 +2155,14 @@ public class MainActivity extends ChatActivity
                     final String createdBy = "JOB" + Utility.convertDateToString(serverInfo.getServerDate(), "yyyyMMdd");
 
                     TrnLDVHeader trnLDVHeaderToday = realm.where(TrnLDVHeader.class)
-                            .equalTo("collCode", currentUser.getUserId())
+                            .equalTo("collCode", collCode)
                             .equalTo("createdBy", createdBy)
                             .findFirst();
 
                     if (trnLDVHeaderToday == null) {
 
                         // sapa tau ada data nyantol berhari2 (dengan syarat sudah tersync data transaksi)
-                        if (DataUtil.isLDVHeaderValid(realm, currentUser.getUserId()) != null) {
+                        if (DataUtil.isLDVHeaderValid(realm, collCode) != null) {
                             closeBatchOldData(true);
                         } else {
 
@@ -2169,8 +2192,8 @@ public class MainActivity extends ChatActivity
                                     Toast.makeText(MainActivity.this, t.getMessage(), Toast.LENGTH_SHORT).show();
                                     t.printStackTrace();
 
-                                    if (t != null && currentUser != null && !TextUtils.isEmpty(t.getMessage()))
-                                        NetUtil.syncLogError(MainActivity.this, realm, currentUser.getUserId(), "CloseBatch", t.getMessage(), null);
+                                    if (t != null && collCode != null && !TextUtils.isEmpty(t.getMessage()))
+                                        NetUtil.syncLogError(MainActivity.this, realm, collCode, "CloseBatch", t.getMessage(), null);
 
                                     Log.e("eric.onFailure", t.getMessage(), t);
                                 }
@@ -2193,8 +2216,7 @@ public class MainActivity extends ChatActivity
                     Utility.dismissDialog(mProgressDialog);
 
                     if (!Utility.throwableHandler(MainActivity.this, throwable, true)) {
-                        if (currentUser != null)
-                            NetUtil.syncLogError(MainActivity.this, realm, currentUser.getUserId(), "RetrieveServerInfo.CloseBatch", throwable.getMessage(), null);
+                        NetUtil.syncLogError(MainActivity.this, realm, collCode, "RetrieveServerInfo.CloseBatch", throwable.getMessage(), null);
 
                         Toast.makeText(MainActivity.this, throwable.getMessage(), Toast.LENGTH_SHORT).show();
                     }
@@ -2249,8 +2271,8 @@ public class MainActivity extends ChatActivity
                                 Utility.hideKeyboard(input);
 
                                 String value = input.getText().toString();
-
-                                if (!value.equals(currentUser.getUserPwd())) {
+                                final String userPwd = Storage.getPref(Storage.KEY_PASSWORD, null);
+                                if (!value.equals(userPwd)) {
                                     Snackbar.make(coordinatorLayout, "Invalid password !", Snackbar.LENGTH_LONG).show();
                                     return;
                                 }
@@ -2350,7 +2372,7 @@ public class MainActivity extends ChatActivity
             return;
         }
 
-        String collCode = currentUser.getUserId();
+        String collCode = getCurrentUserId();
 
         List<TrnCollPos> list = this.realm.copyFromRealm(this.realm.where(TrnCollPos.class).equalTo("collectorId", collCode).findAll());
 
@@ -2370,8 +2392,8 @@ public class MainActivity extends ChatActivity
 
         }
 
-        ApiInterface fastService =
-                ServiceGenerator.createService(ApiInterface.class, Utility.buildUrl(Storage.getPreferenceAsInt(getApplicationContext(), Storage.KEY_SERVER_ID, 0)));
+        ApiInterface fastService = Storage.getAPIService();
+
         Call<ResponseBody> call = fastService.syncLocation(req);
         call.enqueue(new Callback<ResponseBody>() {
             @Override
@@ -2494,8 +2516,8 @@ public class MainActivity extends ChatActivity
     @Override
     public void onLocationChanged(Location location) {
 
-        if (this.currentUser == null)
-            return;
+//        if (this.currentUser == null)
+//            return;
 
         // jangan dibatasi by jam kerja, karena bisa malem2
 //        if (!Utility.isWorkingHours())
@@ -2554,7 +2576,7 @@ public class MainActivity extends ChatActivity
             return;
         }
 
-        final String collCode = currentUser.getUserId();
+        final String collCode = getCurrentUserId();
         final Date lkpDate = new Date();
         final String createdBy = "JOB" + Utility.convertDateToString(lkpDate, "yyyyMMdd");
 
@@ -2595,8 +2617,7 @@ public class MainActivity extends ChatActivity
 
         fillRequest(Utility.ACTION_CHECK_PAID_LKP, requestLKP);
 
-        ApiInterface fastService =
-                ServiceGenerator.createService(ApiInterface.class, Utility.buildUrl(Storage.getPreferenceAsInt(getApplicationContext(), Storage.KEY_SERVER_ID, 0)));
+        ApiInterface fastService = Storage.getAPIService();
 
         Call<ResponseGetLKP> call = fastService.getLKPPaidByDate(requestLKP);
         call.enqueue(new Callback<ResponseGetLKP>() {
@@ -2635,7 +2656,7 @@ public class MainActivity extends ChatActivity
 
                 if (respGetLKP.getError() != null) {
                     Utility.showDialog(MainActivity.this, "Error (" + respGetLKP.getError().getErrorCode() + ")", respGetLKP.getError().getErrorDesc());
-                    NetUtil.syncLogError(MainActivity.this, realm, currentUser.getUserId(), "getLKPPaidByDate", respGetLKP.getError().getErrorCode(), respGetLKP.getError().getErrorDesc());
+                    NetUtil.syncLogError(MainActivity.this, realm, collCode, "getLKPPaidByDate", respGetLKP.getError().getErrorCode(), respGetLKP.getError().getErrorDesc());
 
                     if (listener != null)
                         listener.onSkip();
@@ -2723,10 +2744,10 @@ public class MainActivity extends ChatActivity
      * @see #onPostSyncTransactionSuccess(RequestSyncLKP, SyncLdvDetails, SyncLdvComments, SyncRvb, SyncRVColl, SyncBastbj, SyncRepo, SyncChangeAddr)
      */
     public void syncTransaction(final boolean showDialog, final OnSuccessError listener) {
-        if (currentUser == null) {
-            Snackbar.make(coordinatorLayout, "Please relogin", Snackbar.LENGTH_LONG).show();
-            return; // be careful
-        }
+//        if (currentUser == null) {
+//            Snackbar.make(coordinatorLayout, "Please relogin", Snackbar.LENGTH_LONG).show();
+//            return; // be careful
+//        }
 
         if (RootUtil.isDeviceRooted()) {
             Toast.makeText(this, getString(R.string.error_rooted), Toast.LENGTH_SHORT).show();
@@ -2828,7 +2849,7 @@ public class MainActivity extends ChatActivity
 
                         // override demo user
                         if (!NetUtil.isConnected(MainActivity.this)
-                                && DemoUtil.isDemo(MainActivity.this)) {
+                                && DemoUtil.isDemo()) {
 
                             // assume success
                             onPostSyncTransactionSuccess(req, syncLdvDetails, syncLdvComments, syncRvb, syncRVColl, syncBastbj, syncRepo, syncChangeAddr);
@@ -2854,8 +2875,7 @@ public class MainActivity extends ChatActivity
                             return;
                         }
 
-                        ApiInterface fastService =
-                                ServiceGenerator.createService(ApiInterface.class, Utility.buildUrl(Storage.getPreferenceAsInt(getApplicationContext(), Storage.KEY_SERVER_ID, 0)));
+                        ApiInterface fastService = Storage.getAPIService();
 
                         Call<ResponseSync> call = fastService.syncLKP(req);
                         call.enqueue(new Callback<ResponseSync>() {
@@ -2954,7 +2974,7 @@ public class MainActivity extends ChatActivity
                                     }
 
                                     resetData();
-                                    attemptGetLKP(currentUser.getUserId(), getServerDateFromDB(realm), false, null);
+                                    attemptGetLKP(getCurrentUserId(), getServerDateFromDB(realm), false, null);
                                 }
                             }
                         });

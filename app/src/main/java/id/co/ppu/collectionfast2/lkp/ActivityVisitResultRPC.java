@@ -16,13 +16,11 @@ import butterknife.OnClick;
 import id.co.ppu.collectionfast2.R;
 import id.co.ppu.collectionfast2.component.BasicActivity;
 import id.co.ppu.collectionfast2.pojo.ServerInfo;
-import id.co.ppu.collectionfast2.pojo.UserData;
 import id.co.ppu.collectionfast2.pojo.sync.SyncTrnLDVComments;
 import id.co.ppu.collectionfast2.pojo.trn.TrnFlagTimestamp;
 import id.co.ppu.collectionfast2.pojo.trn.TrnLDVComments;
 import id.co.ppu.collectionfast2.pojo.trn.TrnLDVDetails;
 import id.co.ppu.collectionfast2.util.PoAUtil;
-import id.co.ppu.collectionfast2.util.Storage;
 import id.co.ppu.collectionfast2.util.Utility;
 import io.realm.Realm;
 
@@ -125,7 +123,7 @@ public class ActivityVisitResultRPC extends BasicActivity {
         }
 
         final Date serverDate = realm.where(ServerInfo.class).findFirst().getServerDate();
-        final UserData userData = (UserData) Storage.getObjPreference(getApplicationContext(), Storage.KEY_USER, UserData.class);
+//        final UserData userData = (UserData) Storage.getPreference(Storage.KEY_USER, UserData.class);
         this.realm.executeTransactionAsync(new Realm.Transaction() {
             @Override
             public void execute(Realm realm) {

@@ -4,6 +4,7 @@ import android.content.Context;
 import android.net.ConnectivityManager;
 import android.net.Uri;
 import android.os.AsyncTask;
+import android.text.TextUtils;
 import android.util.Log;
 
 import com.google.gson.Gson;
@@ -22,7 +23,6 @@ import id.co.ppu.collectionfast2.exceptions.NoConnectionException;
 import id.co.ppu.collectionfast2.fcm.MyFirebaseMessagingService;
 import id.co.ppu.collectionfast2.listener.OnGetChatContactListener;
 import id.co.ppu.collectionfast2.listener.OnSuccessError;
-import id.co.ppu.collectionfast2.pojo.UserData;
 import id.co.ppu.collectionfast2.pojo.chat.TrnChatContact;
 import id.co.ppu.collectionfast2.pojo.chat.TrnChatMsg;
 import id.co.ppu.collectionfast2.pojo.trn.TrnCollPos;
@@ -32,7 +32,7 @@ import id.co.ppu.collectionfast2.pojo.trn.TrnLDVHeader;
 import id.co.ppu.collectionfast2.pojo.trn.TrnPhoto;
 import id.co.ppu.collectionfast2.pojo.trn.TrnRVB;
 import id.co.ppu.collectionfast2.rest.ApiInterface;
-import id.co.ppu.collectionfast2.rest.ServiceGenerator;
+import id.co.ppu.collectionfast2.rest.HttpClientBuilder;
 import id.co.ppu.collectionfast2.rest.request.RequestLogError;
 import id.co.ppu.collectionfast2.rest.request.RequestRVB;
 import id.co.ppu.collectionfast2.rest.request.RequestSyncLocation;
@@ -77,6 +77,9 @@ public class NetUtil {
      */
     public static void syncLogError(final Context ctx, final Realm realm, final String collectorId, final String moduleName, final String message1, final String message2) {
 
+        if (TextUtils.isEmpty(collectorId))
+            return;
+
         realm.executeTransactionAsync(new Realm.Transaction() {
             @Override
             public void execute(Realm realm) {
@@ -95,7 +98,7 @@ public class NetUtil {
                 if (isConnected(ctx)) {
 
                     ApiInterface fastService =
-                            ServiceGenerator.createService(ApiInterface.class, Utility.buildUrl(Storage.getPreferenceAsInt(ctx, Storage.KEY_SERVER_ID, 0)));
+                            HttpClientBuilder.create(ApiInterface.class, Utility.buildUrl(Storage.getPrefAsInt(Storage.KEY_SERVER_ID, 0)));
                     RequestLogError req = new RequestLogError();
 
                     RealmResults<TrnErrorLog> trnErrorLogs = realm.where(TrnErrorLog.class)
@@ -154,17 +157,20 @@ public class NetUtil {
         }
 
 
-        final UserData userData = (UserData) Storage.getObjPreference(ctx.getApplicationContext(), Storage.KEY_USER, UserData.class);
+//        final LoginInfo userData = (LoginInfo) Storage.getPreference(Storage.KEY_USER, null);
+//        final UserData userData = (UserData) Storage.getObjPreference(ctx.getApplicationContext(), Storage.KEY_USER, UserData.class);
 
-        if (userData == null) {
+        final String collCode = Storage.getPref(Storage.KEY_USERID, null);
+
+        if (collCode == null) {
             return;
         }
 
         ApiInterface fastService =
-                ServiceGenerator.createService(ApiInterface.class, Utility.buildUrl(Storage.getPreferenceAsInt(ctx, Storage.KEY_SERVER_ID, 0)));
+                HttpClientBuilder.create(ApiInterface.class, Utility.buildUrl(Storage.getPrefAsInt(Storage.KEY_SERVER_ID, 0)));
 
         RequestRVB req = new RequestRVB();
-        req.setCollectorId(userData.getUserId());
+        req.setCollectorId(collCode);
 
         Call<ResponseRVB> call = fastService.getRVB(req);
         call.enqueue(new Callback<ResponseRVB>() {
@@ -234,6 +240,11 @@ public class NetUtil {
      * @param offline if true will only store to local without syncing data to server
      */
     public static void syncLocation(final Context ctx, final double[] gps, boolean offline) {
+        final String collCode = Storage.getPref(Storage.KEY_USERID, null);
+
+        if (TextUtils.isEmpty(collCode))
+            return;
+
         Realm realm = Realm.getDefaultInstance();
         try {
 //            final double[] gps = Location.getGPS(ctx);
@@ -241,14 +252,10 @@ public class NetUtil {
             Log.i("eric.gps", "lat=" + String.valueOf(gps[0]) + ",lng=" + String.valueOf(gps[1]));
 //            final Date twoDaysAgo = Utility.getTwoDaysAgo(new Date());
 
-            final UserData userData = (UserData) Storage.getObjPreference(ctx.getApplicationContext(), Storage.KEY_USER, UserData.class);
-
-            if (userData == null) {
-                return;
-            }
+//            final UserData userData = (UserData) Storage.getObjPreference(ctx.getApplicationContext(), Storage.KEY_USER, UserData.class);
 
             // hanya kalo masih open saja
-            if (!DataUtil.isLDVHeaderAnyOpen(realm, userData.getUserId()))
+            if (!DataUtil.isLDVHeaderAnyOpen(realm, collCode))
                 return;
 
 
@@ -267,7 +274,7 @@ public class NetUtil {
 
                     trnCollPos.setUid(java.util.UUID.randomUUID().toString());
 
-                    trnCollPos.setCollectorId(userData.getUserId());
+                    trnCollPos.setCollectorId(collCode);
                     trnCollPos.setLatitude(String.valueOf(gps[0]));
                     trnCollPos.setLongitude(String.valueOf(gps[1]));
                     trnCollPos.setLastupdateTimestamp(new Date());
@@ -284,12 +291,12 @@ public class NetUtil {
             }
 
             ApiInterface fastService =
-                    ServiceGenerator.createService(ApiInterface.class, Utility.buildUrl(Storage.getPreferenceAsInt(ctx, Storage.KEY_SERVER_ID, 0)));
+                    HttpClientBuilder.create(ApiInterface.class, Utility.buildUrl(Storage.getPrefAsInt(Storage.KEY_SERVER_ID, 0)));
 
             RequestSyncLocation req = new RequestSyncLocation();
 
             RealmResults<TrnCollPos> trnCollPoses = realm.where(TrnCollPos.class)
-                    .equalTo("collectorId", userData.getUserId())
+                    .equalTo("collectorId", collCode)
                     .findAll();
 
             req.setList(realm.copyFromRealm(trnCollPoses));
@@ -305,7 +312,7 @@ public class NetUtil {
                             public void execute(Realm realm) {
                                 // delete local data, tapi sisain satu buat VisitResult
                                 TrnCollPos lastCollPos = realm.where(TrnCollPos.class)
-                                        .equalTo("collectorId", userData.getUserId())
+                                        .equalTo("collectorId", collCode)
                                         .findAllSorted("lastupdateTimestamp", Sort.DESCENDING)
                                         .first();
 
@@ -313,7 +320,7 @@ public class NetUtil {
                                     TrnCollPos firstCollPos = realm.copyFromRealm(lastCollPos);
 
                                     boolean b = realm.where(TrnCollPos.class)
-                                            .equalTo("collectorId", userData.getUserId())
+                                            .equalTo("collectorId", collCode)
                                             .findAll().deleteAllFromRealm();
 
                                     // masukin lagi
@@ -352,7 +359,7 @@ public class NetUtil {
             return false;
 
         ApiInterface fastService =
-                ServiceGenerator.createService(ApiInterface.class, Utility.buildUrl(Storage.getPreferenceAsInt(ctx, Storage.KEY_SERVER_ID, 0)));
+                HttpClientBuilder.create(ApiInterface.class, Utility.buildUrl(Storage.getPreferenceAsInt(ctx, Storage.KEY_SERVER_ID, 0)));
 
         File file4 = new File(DataUtil.getRealPathFromUri(ctx, uri));
 
@@ -442,7 +449,7 @@ public class NetUtil {
 
             // override demo user
             if (!NetUtil.isConnected(ctx)) {
-                if (DemoUtil.isDemo(ctx)) {
+                if (DemoUtil.isDemo()) {
 
                     if (callback != null) {
 
@@ -462,7 +469,7 @@ public class NetUtil {
             }
 
             ApiInterface fastService =
-                    ServiceGenerator.createService(ApiInterface.class, Utility.buildUrl(Storage.getPreferenceAsInt(ctx, Storage.KEY_SERVER_ID, 0)));
+                    HttpClientBuilder.create(ApiInterface.class, Utility.buildUrl(Storage.getPrefAsInt(Storage.KEY_SERVER_ID, 0)));
 
             Call<ResponseBody> call = fastService.upload_Photo(body_trnPhoto, body);
 
@@ -499,7 +506,7 @@ public class NetUtil {
 
     public static void chatLogOn(Context ctx, String collCode, final OnSuccessError listener) {
         // send to server that current contact is online
-        String androidId = Storage.getAndroidToken(ctx);
+        String androidId = Storage.getAndroidToken();
         String userStatus = ConstChat.FLAG_ONLINE;
         String userMsg = "Available";
 
@@ -510,7 +517,7 @@ public class NetUtil {
         req.setAndroidId(androidId);
 
         if (!isConnected(ctx)) {
-            if (DemoUtil.isDemo(ctx)) {
+            if (DemoUtil.isDemo()) {
                 if (listener != null)
                     listener.onSuccess(null);
             }
@@ -518,7 +525,7 @@ public class NetUtil {
             return;
         }
 
-        Call<ResponseBody> call = Storage.getAPIService(ctx).sendStatus(req);
+        Call<ResponseBody> call = Storage.getAPIService().sendStatus(req);
         call.enqueue(new Callback<ResponseBody>() {
             @Override
             public void onResponse(Call<ResponseBody> call, Response<ResponseBody> response) {
@@ -599,7 +606,7 @@ public class NetUtil {
         }
 
         ApiInterface fastService =
-                ServiceGenerator.createService(ApiInterface.class, Utility.buildUrl(Storage.getPreferenceAsInt(ctx, Storage.KEY_SERVER_ID, 0)));
+                HttpClientBuilder.create(ApiInterface.class, Utility.buildUrl(Storage.getPrefAsInt(Storage.KEY_SERVER_ID, 0)));
 
         Call<ResponseBody> call = fastService.upload_PhotoOnArrival(body_poaData, bodies);
 
@@ -610,7 +617,7 @@ public class NetUtil {
     public static boolean uploadPoA(Context ctx, TrnFlagTimestamp trnFlagTimestamp, File file, OnSuccessError listener) {
 
         ApiInterface fastService =
-                ServiceGenerator.createService(ApiInterface.class, Utility.buildUrl(Storage.getPreferenceAsInt(ctx, Storage.KEY_SERVER_ID, 0)));
+                HttpClientBuilder.create(ApiInterface.class, Utility.buildUrl(Storage.getPrefAsInt(Storage.KEY_SERVER_ID, 0)));
 
         if (!file.canRead()) {
             return false;
@@ -634,7 +641,7 @@ public class NetUtil {
 
             // override demo user
             if (!NetUtil.isConnected(ctx)
-                    && DemoUtil.isDemo(ctx)) {
+                    && DemoUtil.isDemo()) {
                 if (listener != null)
                     listener.onSuccess(file.getName());
 
@@ -726,7 +733,7 @@ public class NetUtil {
 
     public static void chatLogOff(Context ctx, String collCode, final OnSuccessError listener) {
 
-        String androidId = Storage.getAndroidToken(ctx);
+        String androidId = Storage.getAndroidToken();
         String userStatus = ConstChat.FLAG_OFFLINE;
         String userMsg = "Offline";
 
@@ -737,7 +744,7 @@ public class NetUtil {
         req.setAndroidId(androidId);
 
         if (!isConnected(ctx)) {
-            if (DemoUtil.isDemo(ctx)) {
+            if (DemoUtil.isDemo()) {
 
                 Realm r = Realm.getDefaultInstance();
                 try {
@@ -757,7 +764,7 @@ public class NetUtil {
             return;
         }
 
-        Call<ResponseBody> call = Storage.getAPIService(ctx).sendStatus(req);
+        Call<ResponseBody> call = Storage.getAPIService().sendStatus(req);
         call.enqueue(new Callback<ResponseBody>() {
             @Override
             public void onResponse(Call<ResponseBody> call, Response<ResponseBody> response) {
@@ -810,7 +817,7 @@ public class NetUtil {
         req.setMessage(null);
 
         if (!isConnected(ctx)) {
-            if (DemoUtil.isDemo(ctx)) {
+            if (DemoUtil.isDemo()) {
 
                 if (listener != null) {
 
@@ -825,7 +832,7 @@ public class NetUtil {
             return;
         }
 
-        Call<ResponseGetOnlineContacts> call = Storage.getAPIService(ctx).getOnlineContacts(req);
+        Call<ResponseGetOnlineContacts> call = Storage.getAPIService().getOnlineContacts(req);
         call.enqueue(new Callback<ResponseGetOnlineContacts>() {
             @Override
             public void onResponse(Call<ResponseGetOnlineContacts> call, Response<ResponseGetOnlineContacts> response) {
@@ -901,7 +908,7 @@ dangerous code
         req.setStatus(null);
         req.setMessage(null);
 
-        Call<ResponseGetOnlineContacts> call = Storage.getAPIService(ctx).getGroupContacts(req);
+        Call<ResponseGetOnlineContacts> call = Storage.getAPIService().getGroupContacts(req);
         call.enqueue(new Callback<ResponseGetOnlineContacts>() {
             @Override
             public void onResponse(Call<ResponseGetOnlineContacts> call, Response<ResponseGetOnlineContacts> response) {
@@ -977,7 +984,7 @@ dangerous code
         RequestChatContacts req = new RequestChatContacts();
         req.setCollsCode(collectorsCode);
 
-        Call<ResponseGetOnlineContacts> call = Storage.getAPIService(ctx).getChatContacts(req);
+        Call<ResponseGetOnlineContacts> call = Storage.getAPIService().getChatContacts(req);
         call.enqueue(new Callback<ResponseGetOnlineContacts>() {
             @Override
             public void onResponse(Call<ResponseGetOnlineContacts> call, Response<ResponseGetOnlineContacts> response) {
@@ -1103,7 +1110,7 @@ dangerous code
                     req.setMsg(r.copyFromRealm(pendings));
 
                     if (!NetUtil.isConnected(ctx)) {
-                        if (DemoUtil.isDemo(ctx)) {
+                        if (DemoUtil.isDemo()) {
 
                             r.executeTransaction(new Realm.Transaction() {
                                 @Override
@@ -1130,7 +1137,7 @@ dangerous code
                         return;
                     }
 
-                    Call<ResponseBody> call = Storage.getAPIService(ctx).sendMessages(req);
+                    Call<ResponseBody> call = Storage.getAPIService().sendMessages(req);
                     // ga boleh call.enqueue krn bisa hilang dr memory utk variable2 di atas
                     try {
                         Response<ResponseBody> execute = call.execute();

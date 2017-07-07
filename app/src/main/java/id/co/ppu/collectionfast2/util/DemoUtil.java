@@ -1,15 +1,12 @@
 package id.co.ppu.collectionfast2.util;
 
-import android.content.Context;
-
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 import java.util.UUID;
 
 import id.co.ppu.collectionfast2.pojo.LKPData;
-import id.co.ppu.collectionfast2.pojo.UserConfig;
-import id.co.ppu.collectionfast2.pojo.UserData;
+import id.co.ppu.collectionfast2.pojo.LoginInfo;
 import id.co.ppu.collectionfast2.pojo.chat.TrnChatContact;
 import id.co.ppu.collectionfast2.pojo.master.MasterData;
 import id.co.ppu.collectionfast2.pojo.master.MstDelqReasons;
@@ -33,6 +30,7 @@ import id.co.ppu.collectionfast2.pojo.trn.TrnRVB;
 import id.co.ppu.collectionfast2.pojo.trn.TrnRVColl;
 import id.co.ppu.collectionfast2.pojo.trn.TrnRepo;
 import id.co.ppu.collectionfast2.pojo.trn.TrnVehicleInfo;
+import io.realm.Realm;
 
 /**
  * Created by Eric on 06-Feb-17.
@@ -40,18 +38,41 @@ import id.co.ppu.collectionfast2.pojo.trn.TrnVehicleInfo;
 
 public class DemoUtil {
 
-    public static boolean isDemo(UserData userData) {
-        return userData != null
-                && userData.getCollectorType() != null
-                && userData.getCollectorType().equals(Utility.ROLE_DEMO);
+//    public static boolean isDemo(LoginInfo userData) {
+    public static boolean isDemo() {
+//        return userData != null
+//                && userData.getCollectorType() != null
+//                && userData.getCollectorType().equals(Utility.ROLE_DEMO);
+        Realm realm = Realm.getDefaultInstance();
+        try {
+//            return realm.where(LoginInfo.class)
+//                    .equalTo(Storage.KEY_USER_COLL_TYPE, Utility.ROLE_DEMO)
+//                    .count() > 0;
+            LoginInfo loginInfo = realm.where(LoginInfo.class)
+                    .equalTo("key", Storage.KEY_USER_COLL_TYPE)
+                    .findFirst();
+
+            if (loginInfo == null)
+                return false;
+
+            return loginInfo.getValue().equals(Utility.ROLE_DEMO);
+
+        }finally {
+            if (realm != null) {
+                realm.close();
+            }
+        }
+
     }
 
+    /*
     public static boolean isDemo(Context ctx) {
-        UserData currentUser = (UserData) Storage.getObjPreference(ctx.getApplicationContext(), Storage.KEY_USER, UserData.class);
+        LoginInfo currentUser = (LoginInfo) Storage.getPreference(Storage.KEY_USER, null);
 
         return isDemo(currentUser);
     }
 
+    @Deprecated
     public static UserData buildDemoUser() {
         UserData demo = new UserData();
 
@@ -79,6 +100,35 @@ public class DemoUtil {
         demo.setConfig(config);
 
         return demo;
+    }
+    */
+
+    public static void buildDemoLoginInfo() {
+        Realm realm = Realm.getDefaultInstance();
+        try{
+            realm.beginTransaction();
+
+            realm.copyToRealmOrUpdate(new LoginInfo(Storage.KEY_USERID, "demo"));
+            realm.copyToRealmOrUpdate(new LoginInfo(Storage.KEY_USER_BRANCH_ID, "71000"));
+            realm.copyToRealmOrUpdate(new LoginInfo(Storage.KEY_USER_BRANCH_NAME, "Gading Serpong"));
+            realm.copyToRealmOrUpdate(new LoginInfo(Storage.KEY_USER_EMAIL, "elkana911@radanafinance.co.id"));
+            realm.copyToRealmOrUpdate(new LoginInfo(Storage.KEY_USER_JABATAN, "Demo Coordinator"));
+            realm.copyToRealmOrUpdate(new LoginInfo(Storage.KEY_USER_NIK, "F.01.99.1234"));
+            realm.copyToRealmOrUpdate(new LoginInfo(Storage.KEY_USER_ADDRESS, "Faraday Utara 5/39"));
+            realm.copyToRealmOrUpdate(new LoginInfo(Storage.KEY_USER_PHONE, "555-1234"));
+            realm.copyToRealmOrUpdate(new LoginInfo(Storage.KEY_USER_COLL_TYPE, Utility.ROLE_DEMO));
+            realm.copyToRealmOrUpdate(new LoginInfo(Storage.KEY_PASSWORD, "demo"));
+            realm.copyToRealmOrUpdate(new LoginInfo(Storage.KEY_USER_BIRTH_PLACE, "Banten"));
+            realm.copyToRealmOrUpdate(new LoginInfo(Storage.KEY_USER_BIRTH_DATE, "20160809"));
+            realm.copyToRealmOrUpdate(new LoginInfo(Storage.KEY_USER_FULLNAME, "John Doe"));
+            realm.copyToRealmOrUpdate(new LoginInfo(Storage.KEY_USER_BUSS_UNIT, "NMC"));
+
+            realm.commitTransaction();
+        }finally {
+            if (realm != null) {
+                realm.close();
+            }
+        }
     }
 
     private static TrnCollectAddr generateTrnCollAddress(String contractNo, long seqNo, String collCode, String collAddress, String collRT, String collRW, String collKelKode, String collKel, String collKecCode, String collKec, String collCityCode, String collCity, String collZip, String collSubZip, String collProvCode, String collProv, String collFixPhArea, String collFixPhone, String collFaxArea, String collFax, String collMobPhone, String collName, String collEmail, String collMobPhone2, String collNickName, String createdBy, Date createdTimestamp, String officeCode) {

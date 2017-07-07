@@ -20,7 +20,6 @@ import butterknife.ButterKnife;
 import id.co.ppu.collectionfast2.R;
 import id.co.ppu.collectionfast2.component.BasicActivity;
 import id.co.ppu.collectionfast2.pojo.ServerInfo;
-import id.co.ppu.collectionfast2.pojo.UserData;
 import id.co.ppu.collectionfast2.pojo.trn.TrnContractBuckets;
 import id.co.ppu.collectionfast2.pojo.trn.TrnLDVDetails;
 import id.co.ppu.collectionfast2.pojo.trn.TrnLDVHeader;
@@ -58,11 +57,12 @@ public class ActivityDetailsLKPSummary extends BasicActivity {
             this.collectorId = extras.getString(PARAM_COLLECTOR_ID);
         }
 
-        UserData currentUser = (UserData) Storage.getObjPreference(getApplicationContext(), Storage.KEY_USER, UserData.class);
+//        UserData currentUser = (UserData) Storage.getPreference(Storage.KEY_USER, UserData.class);
+        final String userFullName = Storage.getPref(Storage.KEY_USER_FULLNAME, null);
 
         if (getSupportActionBar() != null) {
             getSupportActionBar().setTitle(R.string.title_activity_details_lkp);
-            getSupportActionBar().setSubtitle(currentUser.getFullName());
+            getSupportActionBar().setSubtitle(userFullName);
             getSupportActionBar().setDisplayHomeAsUpEnabled(true);
             getSupportActionBar().setHomeButtonEnabled(true);
         }
