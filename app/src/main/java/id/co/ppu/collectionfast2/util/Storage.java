@@ -175,7 +175,12 @@ public class Storage {
     public static String getAndroidToken() {
         String androidId = getPref(KEY_ANDROID_ID, null);
         if (TextUtils.isEmpty(androidId)) {
-            androidId = FirebaseInstanceId.getInstance().getToken();
+            try {
+                // may force close during disabling plugin com.google.gms.google-services
+                androidId = FirebaseInstanceId.getInstance().getToken();
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
         }
 
         return androidId;

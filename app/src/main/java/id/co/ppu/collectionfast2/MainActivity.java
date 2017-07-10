@@ -1289,13 +1289,23 @@ public class MainActivity extends ChatActivity
                 i.putExtra(ActivityPoA.PARAM_CONTRACT_NO, dtl.getContractNo());
                 i.putExtra(ActivityPoA.PARAM_CUSTOMER_NAME, dtl.getCustName());
 
-                String alamat = null;
+                /*
+                StringBuilder alamat = new StringBuilder();
                 if (detail.getAddress() != null) {
-                    alamat = "Kel/Kec: " + detail.getAddress().getCollKel() + "/" + detail
-                            .getAddress().getCollKec();
+                    alamat.append(detail.getAddress().getCollAddr())
+                    .append("\n").append(detail.getAddress().getCollCity()).append(", ").append(detail.getAddress().getCollZip())
+                    .append("\nRT/RW: ").append(detail.getAddress().getCollRt() + "/" + detail.getAddress().getCollRw())
+                    .append("\nKel/Kec: ").append(detail.getAddress().getCollKel() + "/" + detail.getAddress().getCollKec())
+                    ;
+
+                    if (TextUtils.isEmpty(detail.getAddress().getCollMobPhone())) {
+                        alamat.append("\nPhone").append(detail.getAddress().getCollMobPhone());
+                    }
+
                 }
 
-                i.putExtra(ActivityPoA.PARAM_CUSTOMER_ADDR, alamat);
+                i.putExtra(ActivityPoA.PARAM_CUSTOMER_ADDR, alamat.toString());
+                */
                 i.putExtra(ActivityPoA.PARAM_LDV_NO, dtl.getLdvNo());
 
                 startActivityForResult(i, 66);

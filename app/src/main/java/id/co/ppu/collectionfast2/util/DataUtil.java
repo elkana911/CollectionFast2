@@ -4,6 +4,7 @@ import android.content.Context;
 import android.database.Cursor;
 import android.net.Uri;
 import android.provider.MediaStore;
+import android.text.TextUtils;
 import android.util.Log;
 import android.widget.Toast;
 
@@ -923,6 +924,25 @@ public class DataUtil {
 //        loginInfo.setSyncMinute(userData.getConfig().getSyncMinute());
 //        loginInfo.setServerDate(userData.getConfig().getServerDate());
 //        loginInfo.setPhotoProfileUri(userData.getConfig().getPhotoProfileUri());
+    }
+
+    public static final String prettyAddress(TrnCollectAddr addr) {
+
+        if (addr == null) return "";
+
+        StringBuilder alamat = new StringBuilder();
+        alamat.append(addr.getCollAddr())
+                    .append("\n").append(addr.getCollCity()).append(", ").append(addr.getCollZip())
+                    .append("\nRT/RW: ").append(addr.getCollRt() + "/" + addr.getCollRw())
+                    .append("\nKel/Kec: ").append(addr.getCollKel() + "/" + addr.getCollKec())
+        ;
+
+        if (TextUtils.isEmpty(addr.getCollMobPhone())) {
+            alamat.append("\nPhone").append(addr.getCollMobPhone());
+        }
+
+        return alamat.toString();
+
     }
 }
 

@@ -7,6 +7,7 @@
 
     <color name="colorPrimary">#3d2698</color>
     <color name="colorPrimaryDark">#28166f</color>
+    <color name="colorPrimaryLight">#dad1ff</color>
 
     <color name="colorPrimaryPaymentRcv">#28166f</color>
     <color name="colorPrimaryVisit">#690609</color>

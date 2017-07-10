@@ -878,6 +878,10 @@ public class LoginActivity extends BasicActivity {
     public boolean onLongClickRadana(View view) {
         Toast.makeText(this, getDebugInfo(), Toast.LENGTH_SHORT).show();
 
+        //TODO: not working to stop animation?
+        //        view.setAnimation(null);
+//        View v = findViewById(R.id.rlRadana);
+//        v.clearAnimation();
         return true;
     }
 

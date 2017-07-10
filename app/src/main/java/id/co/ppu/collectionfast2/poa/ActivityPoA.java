@@ -6,12 +6,15 @@ import android.support.annotation.Nullable;
 import android.view.animation.Animation;
 import android.view.animation.AnimationUtils;
 import android.widget.ImageView;
+import android.widget.TextView;
 
 import butterknife.BindView;
 import butterknife.ButterKnife;
 import butterknife.OnClick;
 import id.co.ppu.collectionfast2.R;
 import id.co.ppu.collectionfast2.component.BasicActivity;
+import id.co.ppu.collectionfast2.pojo.trn.TrnCollectAddr;
+import id.co.ppu.collectionfast2.util.DataUtil;
 import id.co.ppu.collectionfast2.util.NetUtil;
 import id.co.ppu.collectionfast2.util.PoAUtil;
 import pl.bclogic.pulsator4droid.library.PulsatorLayout;
@@ -24,21 +27,27 @@ public class ActivityPoA extends BasicActivity {
     public static final String PARAM_LKP_DETAIL = "lkp.detail";
     public static final String PARAM_COLLECTOR_ID = "collector.id";
     public static final String PARAM_CUSTOMER_NAME = "customer.name";
-    public static final String PARAM_CUSTOMER_ADDR = "customer.address";
+//    public static final String PARAM_CUSTOMER_ADDR = "customer.address";
     public static final String PARAM_CONTRACT_NO = "customer.contractNo";
     public static final String PARAM_LDV_NO = "ldvNo";
 
     private String lkpDetail = null;
     private String collCode = null;
     private String contractNo = null;
-    private String custAddr = null;
+//    private String custAddr = null;
     private String custName = null;
 
     private String ldvNo = null;
+
+    private int seqAddressCounter = 0;
+
     @BindView(R.id.ivCamera)
     ImageView ivCamera;
     @BindView(R.id.pulsator)
     PulsatorLayout pulsator;
+
+    @BindView(R.id.tvAddressDetail)
+    TextView tvAddressDetail;
 
     @Override
     protected void onPostCreate(@Nullable Bundle savedInstanceState) {
@@ -62,7 +71,7 @@ public class ActivityPoA extends BasicActivity {
             this.collCode = extras.getString(PARAM_COLLECTOR_ID);
             this.contractNo = extras.getString(PARAM_CONTRACT_NO);  // bisa kosong di paymententry
             this.custName = extras.getString(PARAM_CUSTOMER_NAME);
-            this.custAddr = extras.getString(PARAM_CUSTOMER_ADDR);
+//            this.custAddr = extras.getString(PARAM_CUSTOMER_ADDR);
             this.ldvNo = extras.getString(PARAM_LDV_NO);
 
             setTitle(custName);
@@ -71,12 +80,35 @@ public class ActivityPoA extends BasicActivity {
         if (getSupportActionBar() != null) {
             getSupportActionBar().setDisplayHomeAsUpEnabled(true);
             getSupportActionBar().setHomeButtonEnabled(true);
-            getSupportActionBar().setSubtitle(this.custAddr);
+            getSupportActionBar().setSubtitle(this.contractNo);
             getSupportActionBar().setElevation(0);
+
         }
 
+        tvAddressDetail.performClick();
+
+        Animation fadeInAnimation = AnimationUtils.loadAnimation(this, android.R.anim.slide_in_left);
+        fadeInAnimation.setDuration(800);
+        tvAddressDetail.startAnimation(fadeInAnimation);
 
         pulsator.start();
+    }
+
+    @OnClick(R.id.tvAddressDetail)
+    public void onClickAddress() {
+
+        seqAddressCounter += 1;
+
+        if (seqAddressCounter > 2)
+            seqAddressCounter = 1;
+
+        TrnCollectAddr trnCollectAddr = this.realm.where(TrnCollectAddr.class)
+                .equalTo("pk.contractNo", this.contractNo)
+                .equalTo("pk.seqNo", seqAddressCounter)
+                .findFirst();
+
+        if (trnCollectAddr != null)
+            tvAddressDetail.setText(DataUtil.prettyAddress(trnCollectAddr));
     }
 
     @OnClick(R.id.llTakePhoto)
