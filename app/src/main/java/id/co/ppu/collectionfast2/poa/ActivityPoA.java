@@ -1,6 +1,7 @@
 package id.co.ppu.collectionfast2.poa;
 
 import android.content.Intent;
+import android.net.Uri;
 import android.os.Bundle;
 import android.support.annotation.Nullable;
 import android.view.animation.Animation;
@@ -11,6 +12,7 @@ import android.widget.TextView;
 import butterknife.BindView;
 import butterknife.ButterKnife;
 import butterknife.OnClick;
+import butterknife.OnLongClick;
 import id.co.ppu.collectionfast2.R;
 import id.co.ppu.collectionfast2.component.BasicActivity;
 import id.co.ppu.collectionfast2.pojo.trn.TrnCollectAddr;
@@ -85,17 +87,20 @@ public class ActivityPoA extends BasicActivity {
 
         }
 
-        tvAddressDetail.performClick();
+//        Typeface font = Typeface.createFromAsset(getAssets(), Utility.FONT_SAMSUNG);
+//        tvAddressDetail.setTypeface(font);
 
-        Animation fadeInAnimation = AnimationUtils.loadAnimation(this, android.R.anim.slide_in_left);
-        fadeInAnimation.setDuration(800);
+        tvAddressDetail.performLongClick();
+
+        Animation fadeInAnimation = AnimationUtils.loadAnimation(this, android.R.anim.fade_in);
+        fadeInAnimation.setDuration(1000);
         tvAddressDetail.startAnimation(fadeInAnimation);
 
         pulsator.start();
     }
 
-    @OnClick(R.id.tvAddressDetail)
-    public void onClickAddress() {
+    @OnLongClick(R.id.tvAddressDetail)
+    public boolean onLongClickAddress() {
 
         seqAddressCounter += 1;
 
@@ -109,6 +114,38 @@ public class ActivityPoA extends BasicActivity {
 
         if (trnCollectAddr != null)
             tvAddressDetail.setText(DataUtil.prettyAddress(trnCollectAddr));
+
+        return true;
+    }
+
+    @OnClick(R.id.tvAddressDetail)
+    public void onClickAddress() {
+
+        if (!NetUtil.isConnected(this))
+            return;
+
+        TrnCollectAddr trnCollectAddr = this.realm.where(TrnCollectAddr.class)
+                .equalTo("pk.contractNo", this.contractNo)
+                .equalTo("pk.seqNo", seqAddressCounter)
+                .findFirst();
+
+        if (trnCollectAddr == null)
+            return;
+
+        String parseAddr = trnCollectAddr.getCollAddr().toUpperCase()
+                .replace("NOMOR ", "")
+                .replace("NO ", "")
+                .replace("JALAN ", "")
+                .replace("JLN ", "")
+                .replace("JL ", "")
+                .replace("BLOK ", "")
+                .replaceAll("[0-9()?:!.,;{}]+", "")
+                ;
+        // hilangkan nomor, jalan, jln, no, no.
+
+        String map = "http://maps.google.co.in/maps?q=" + parseAddr + " " + trnCollectAddr.getCollKec();
+        Intent i = new Intent(Intent.ACTION_VIEW, Uri.parse(map));
+        startActivity(i);
     }
 
     @OnClick(R.id.llTakePhoto)

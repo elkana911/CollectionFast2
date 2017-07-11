@@ -199,11 +199,27 @@ public class ActivityRepoEntry extends BasicActivity {
         boolean cancel = false;
         View focusView = null;
         final String contractNo = etContractNo.getText().toString();
-        final String bastbjNo = spBASTKs.getSelectedItem().toString();
         final String repoNo = etKodeTarik.getText().toString();
         final String komentar = etKomentar.getText().toString();
 
         final boolean useStnk = radioSTNK.isChecked();
+
+        if (spBASTKs.getSelectedItem() == null) {
+//            spBASTKs.setError(getString(R.string.error_field_required));
+            Toast.makeText(this, "Sorry, No BASTK found", Toast.LENGTH_LONG).show();
+            focusView = spBASTKs;
+            focusView.requestFocus();
+            return;
+        }
+
+        final String bastbjNo = spBASTKs.getSelectedItem().toString();
+
+        if (TextUtils.isEmpty(bastbjNo)) {
+//            spBASTKs.setError(getString(R.string.error_field_required));
+            Toast.makeText(this, "Please select BASTK", Toast.LENGTH_SHORT).show();
+            focusView = spBASTKs;
+            cancel = true;
+        }
 
         if (TextUtils.isEmpty(contractNo)) {
             etContractNo.setError(getString(R.string.error_field_required));
@@ -220,13 +236,6 @@ public class ActivityRepoEntry extends BasicActivity {
         if (TextUtils.isEmpty(komentar)) {
             etKomentar.setError(getString(R.string.error_field_required));
             focusView = etKomentar;
-            cancel = true;
-        }
-
-        if (TextUtils.isEmpty(bastbjNo)) {
-//            spBASTKs.setError(getString(R.string.error_field_required));
-            Toast.makeText(this, "Please select BASTK", Toast.LENGTH_SHORT).show();
-            focusView = spBASTKs;
             cancel = true;
         }
 
